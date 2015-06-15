@@ -21,9 +21,7 @@ namespace Console.Messages
         }
 
         private IEnumerable<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message)
-        {
-            return message.Select(m => m.Buffer).ToArray();
-        }
+            => message.Select(m => m.Buffer).ToArray();
 
         private IEnumerable<byte[]> BuildMessageParts(IMessage message)
         {
@@ -34,19 +32,13 @@ namespace Console.Messages
         }
 
         private static byte[] EmptyFrame()
-        {
-            return new byte[0];
-        }
+            => new byte[0];
 
         private byte[] BuildMessageBody(IMessage message)
-        {
-            return message.Content;
-        }
+            => message.Content;
 
         private byte[] BuildMessageType(IMessage message)
-        {
-            return message.Type.GetBytes();
-        }
+            => message.Type.GetBytes();
 
 
         private static void AssertMessage(NetMQMessage message)
@@ -58,20 +50,14 @@ namespace Console.Messages
         }
 
 
-        internal string GetMessageType()
-        {
-            return Frames.Second().GetString();
-        }
+        internal string GetMessageType() 
+            => Frames.Second().GetString();
 
-        internal byte[] GetMessageTypeBytes()
-        {
-            return Frames.Second();
-        }
+        internal byte[] GetMessageTypeBytes() 
+            => Frames.Second();
 
-        internal byte[] GetMessage()
-        {
-            return Frames.Skip(3).Aggregate(new byte[0], (seed, array) => seed.Concat(array).ToArray());
-        }
+        internal byte[] GetMessage() 
+            => Frames.Skip(3).Aggregate(new byte[0], (seed, array) => seed.Concat(array).ToArray());
 
         internal IEnumerable<byte[]> Frames { get; }
     }

@@ -16,9 +16,7 @@
             Content = Serialize(payload);
         }
 
-        public T GetPayload()
-        {
-            return payload ?? (payload = Deserialize<T>(Content));
-        }
+        public T GetPayload() 
+            => payload ?? (payload = Deserialize<T>(Content));
     }
 }
