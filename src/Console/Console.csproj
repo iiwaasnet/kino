@@ -52,6 +52,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Framework\LinqExtensions.cs" />
+    <Compile Include="MessageHandler.cs" />
     <Compile Include="Messages\DataEncoder.cs" />
     <Compile Include="Messages\IMessage.cs" />
     <Compile Include="IMessageHub.cs" />
@@ -59,7 +60,6 @@
     <Compile Include="IWorkerHost.cs" />
     <Compile Include="MessageHub.cs" />
     <Compile Include="MessageMap.cs" />
-    <Compile Include="Messages\Body.cs" />
     <Compile Include="Messages\IMessageSerializer.cs" />
     <Compile Include="Messages\MultipartMessage.cs" />
     <Compile Include="Messages\ITypedMessage.cs" />

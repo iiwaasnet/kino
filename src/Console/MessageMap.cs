@@ -1,11 +1,8 @@
-﻿using System;
-using Console.Messages;
-
-namespace Console
+﻿namespace Console
 {
     public class MessageMap
     {
-        public Func<IMessage, IMessage> Handler { get; set; }
+        public MessageHandler Handler { get; set; }
         public MessageDefinition Message { get; set; }
     }
 

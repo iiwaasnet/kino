@@ -1,7 +1,10 @@
-﻿namespace Console.Messages
+﻿using System.Collections.Generic;
+
+namespace Console.Messages
 {
     public interface IMessage
     {
-        Body Body { get; }
+        byte[] Content { get; }
+        string Type { get; }
     }
 }

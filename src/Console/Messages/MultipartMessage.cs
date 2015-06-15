@@ -40,12 +40,12 @@ namespace Console.Messages
 
         private byte[] BuildMessageBody(IMessage message)
         {
-            return message.Body.Content;
+            return message.Content;
         }
 
         private byte[] BuildMessageType(IMessage message)
         {
-            return message.Body.MessageType.GetBytes();
+            return message.Type.GetBytes();
         }
 
 

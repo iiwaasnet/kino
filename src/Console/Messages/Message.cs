@@ -1,4 +1,6 @@
-﻿namespace Console.Messages
+﻿using System.Collections.Generic;
+
+namespace Console.Messages
 {
     public class Message : IMessage
     {
@@ -13,21 +15,19 @@
         {
         }
 
-        public Message(Body body)
+        public Message(byte[] content, string msgType)
         {
-            Body = body;
+            Content = content;
+            Type = msgType;
         }
 
         protected byte[] Serialize(object payload)
-        {
-            return messageSerializer.Serialize(payload);
-        }
+            => messageSerializer.Serialize(payload);
 
         protected static T Deserialize<T>(byte[] content)
-        {
-            return messageSerializer.Deserialize<T>(content);
-        }
+            => messageSerializer.Deserialize<T>(content);
 
-        public Body Body { get; protected set; }
+        public byte[] Content { get; protected set; }
+        public string Type { get; protected set; }
     }
 }

@@ -6,23 +6,19 @@
         private T payload;
 
         protected TypedMessage(IMessage message)
-            : base(message.Body)
+            : base(message.Content, message.Type)
         {
         }
 
         protected TypedMessage(T payload, string messageType)
         {
-            
-            Body = new Body
-                   {
-                       MessageType = messageType,
-                       Content = Serialize(payload)
-                   };
+            Type = messageType;
+            Content = Serialize(payload);
         }
 
         public T GetPayload()
         {
-            return payload ?? (payload = Deserialize<T>(Body.Content));
+            return payload ?? (payload = Deserialize<T>(Content));
         }
     }
 }
