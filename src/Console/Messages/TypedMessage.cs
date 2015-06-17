@@ -4,19 +4,22 @@
         where T : class
     {
         private T payload;
+        private const string MessagesVersion = "1.0";
 
         protected TypedMessage(IMessage message)
-            : base(message.Content, message.Type)
+            : base(message.Body, message.Identity)
         {
         }
 
-        protected TypedMessage(T payload, string messageType)
+        protected TypedMessage(T payload, string messageIdentity)
         {
-            Type = messageType;
-            Content = Serialize(payload);
+            Body = Serialize(payload);
+            Identity = messageIdentity;
+            Distribution = DistributionPattern.Unicast;
+            Version = MessagesVersion;
         }
 
-        public T GetPayload() 
-            => payload ?? (payload = Deserialize<T>(Content));
+        public T GetPayload()
+            => payload ?? (payload = Deserialize<T>(Body));
     }
 }

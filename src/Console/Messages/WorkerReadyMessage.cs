@@ -4,10 +4,10 @@ namespace Console.Messages
 {
     public class WorkerReadyMessage : TypedMessage<WorkerReadyMessage.Payload>
     {
-        public const string MessageType = "WRKRDY";
+        public const string MessageIdentity = "WRKRDY";
 
         public WorkerReadyMessage(Payload payload)
-            : base(payload, MessageType)
+            : base(payload, MessageIdentity)
         {
         }
 

@@ -47,12 +47,10 @@ namespace Console
 
         private Poller StartWorkerHost()
         {
-            requestSocket = context.CreateDealerSocket();
-            requestSocket.ReceiveReady += RequestArrived;
+            requestSocket = CreateSocket(RequestArrived);
             requestSocket.Connect(requestEndpoint);
 
-            responseSocket = context.CreateDealerSocket();
-            responseSocket.ReceiveReady += ResponseConfirmed;
+            responseSocket = CreateSocket(ResponseConfirmed);
             responseSocket.Connect(responseEndpoint);
 
             var poller = new Poller(requestSocket, responseSocket);
@@ -62,6 +60,16 @@ namespace Console
             poller.Start();
 
             return poller;
+        }
+
+        private NetMQSocket CreateSocket(EventHandler<NetMQSocketEventArgs> inMessageHandler)
+        {
+            var socket = context.CreateDealerSocket();
+            socket.Options.RouterMandatory = true;
+            socket.Options.Identity = Guid.NewGuid().ToByteArray();
+            responseSocket.ReceiveReady += inMessageHandler;
+
+            return socket;
         }
 
         private void ResponseConfirmed(object sender, NetMQSocketEventArgs e)
@@ -83,7 +91,7 @@ namespace Console
         {
             var msg = e.Socket.ReceiveMessage(receiveTimeout);
             var multipart = new MultipartMessage(msg);
-            var msgType = multipart.GetMessageType();
+            var msgType = multipart.GetMessageIdentity();
             var handler = messageHandlers[msgType];
 
             var messageOut = handler(new Message(multipart.GetMessageTypeBytes(), msgType));

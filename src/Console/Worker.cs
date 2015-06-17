@@ -11,7 +11,7 @@ namespace Console
                 new MessageMap
                 {
                     Handler = StartProcess,
-                    Message = new MessageDefinition {Type = StartProcessMessage.MessageType}
+                    Message = new MessageDefinition {Type = StartProcessMessage.MessageIdentity}
                 };
         }
 

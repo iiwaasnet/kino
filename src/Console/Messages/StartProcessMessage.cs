@@ -2,10 +2,10 @@
 {
     public class StartProcessMessage : TypedMessage<StartProcessMessage.Payload>
     {
-        public const string MessageType = "STRPROC";
+        public const string MessageIdentity = "STRPROC";
 
         public StartProcessMessage(Payload payload)
-            : base(payload, MessageType)
+            : base(payload, MessageIdentity)
         {
         }
 
