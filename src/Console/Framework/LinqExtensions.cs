@@ -23,14 +23,5 @@ namespace Console.Framework
         {
             return collection.Skip(2).First();
         }
-
-        public static IEnumerable<T> InsertFromEndAt<T>(this IEnumerable<T> collection, int position, T element)
-        {
-            var tmp = new List<T>(collection) {Capacity = collection.Count() + 1};
-
-            tmp.Insert(tmp.Count - 1 - position, element);
-
-            return tmp;
-        }
     }
 }

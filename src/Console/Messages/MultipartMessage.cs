@@ -9,6 +9,7 @@ namespace Console.Messages
     internal class MultipartMessage
     {
         private const int MinFramesCount = 7;
+        private List<byte[]> frames;
 
         internal MultipartMessage(IMessage message)
             : this(message, null)
@@ -17,14 +18,14 @@ namespace Console.Messages
 
         internal MultipartMessage(IMessage message, byte[] senderIdentity)
         {
-            Frames = BuildMessageParts(message, senderIdentity).ToArray();
+            frames = BuildMessageParts(message, senderIdentity).ToList();
         }
 
         internal MultipartMessage(NetMQMessage message)
         {
             AssertMessage(message);
 
-            Frames = SplitMessageToFrames(message);
+            frames = SplitMessageToFrames(message).ToList();
         }
 
         private IEnumerable<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message)
@@ -72,13 +73,14 @@ namespace Console.Messages
         {
             if (message.FrameCount < MinFramesCount)
             {
-                throw new Exception($"FrameCount expected (at least): [{MinFramesCount}], received: [{message.FrameCount}]");
+                throw new Exception(
+                    $"FrameCount expected (at least): [{MinFramesCount}], received: [{message.FrameCount}]");
             }
         }
 
         internal void PushRouterIdentity(byte[] routerId)
         {
-            Frames = Frames.InsertFromEndAt(6, routerId);
+            frames.Insert(6, routerId);
         }
 
         internal byte[] GetSocketIdentity()
@@ -91,8 +93,8 @@ namespace Console.Messages
             => Frames.Second();
 
         internal byte[] GetMessage()
-            => Frames.Third().Aggregate(new byte[0], (seed, array) => seed.Concat(array).ToArray());
+            => frames[frames.Count - 1];
 
-        internal IEnumerable<byte[]> Frames { get; private set; }
+        internal IEnumerable<byte[]> Frames => frames;
     }
 }

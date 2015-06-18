@@ -8,7 +8,7 @@
         {
         }
 
-        protected Message(byte[] body, string msgIdentity)
+        internal Message(byte[] body, string msgIdentity)
         {
             Body = body;
             Identity = msgIdentity;
