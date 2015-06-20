@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using Console.Messages;
 using NetMQ;
 
@@ -11,17 +11,15 @@ namespace Console
     {
         private IWorker worker;
         private IDictionary<string, MessageHandler> messageHandlers;
-        private NetMQSocket requestSocket;
-        private NetMQSocket responseSocket;
         private readonly NetMQContext context;
-        private const string requestEndpoint = "inproc://backend";
-        private const string responseEndpoint = "inproc://frontend";
-        private readonly TimeSpan receiveTimeout;
-        private Task<Poller> pollerTask;
+        private const string endpointAddress = "inproc://local";
+        private Thread workingThread;
+        private readonly CancellationTokenSource cancellationTokenSource;
 
         public WorkerHost(NetMQContext context)
         {
             this.context = context;
+            cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void AssignWorker(IWorker worker)
@@ -37,69 +35,66 @@ namespace Console
 
         public void Start()
         {
-            pollerTask = Task<Poller>.Factory.StartNew(StartWorkerHost);
+            workingThread = new Thread(_ => StartWorkerHost(cancellationTokenSource.Token));
         }
 
         public void Stop()
         {
-            pollerTask.Result.Stop(false);
+            cancellationTokenSource.Cancel(true);
+            workingThread.Join();
         }
 
-        private Poller StartWorkerHost()
+        private void StartWorkerHost(CancellationToken token)
         {
-            requestSocket = CreateSocket(RequestArrived);
-            requestSocket.Connect(requestEndpoint);
+            try
+            {
+                using (var socket = CreateSocket(context))
+                {
+                    while (!token.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            var request = socket.ReceiveMessage();
+                            var multipart = new MultipartMessage(request);
+                            var messageIn = new Message(multipart);
+                            var handler = messageHandlers[messageIn.Identity];
 
-            responseSocket = CreateSocket(ResponseConfirmed);
-            responseSocket.Connect(responseEndpoint);
+                            var messageOut = handler(messageIn);
 
-            var poller = new Poller(requestSocket, responseSocket);
+                            if (messageOut != null)
+                            {
+                                var response = new MultipartMessage(messageOut, socket.Options.Identity);
+                                socket.SendMessage(new NetMQMessage(response.Frames));
+                            }
 
-            SignalWorkerReady(requestSocket);
-
-            poller.Start();
-
-            return poller;
+                            SignalWorkerReady(socket);
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
         }
 
-        private NetMQSocket CreateSocket(EventHandler<NetMQSocketEventArgs> inMessageHandler)
+        private NetMQSocket CreateSocket(NetMQContext context)
         {
             var socket = context.CreateDealerSocket();
             socket.Options.RouterMandatory = true;
             socket.Options.Identity = Guid.NewGuid().ToByteArray();
-            responseSocket.ReceiveReady += inMessageHandler;
+            socket.Connect(endpointAddress);
 
             return socket;
         }
 
-        private void ResponseConfirmed(object sender, NetMQSocketEventArgs e)
-        {
-            e.Socket.ReceiveMessage(receiveTimeout);
-        }
-
         private void SignalWorkerReady(NetMQSocket socket)
         {
-            var payload = new WorkerReadyMessage.Payload
-                          {
-                              IncomeMessages = messageHandlers.Keys
-                          };
-            var multipartMessage = new MultipartMessage(new WorkerReadyMessage(payload));
+            var payload = new WorkerReady {MessageIdentities = messageHandlers.Keys};
+            var multipartMessage = new MultipartMessage(new Message(payload, WorkerReady.MessageIdentity), socket.Options.Identity);
             socket.SendMessage(new NetMQMessage(multipartMessage.Frames));
-        }
-
-        private void RequestArrived(object sender, NetMQSocketEventArgs e)
-        {
-            var msg = e.Socket.ReceiveMessage(receiveTimeout);
-            var multipart = new MultipartMessage(msg);
-            var msgType = multipart.GetMessageIdentity();
-            var handler = messageHandlers[msgType];
-
-            var messageOut = handler(new Message(multipart.GetMessageTypeBytes(), msgType));
-
-            var response = new MultipartMessage(messageOut);
-            responseSocket.SendMessage(new NetMQMessage(response.Frames));
-
-            SignalWorkerReady(e.Socket);
         }
     }
 }

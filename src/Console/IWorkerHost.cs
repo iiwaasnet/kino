@@ -4,5 +4,6 @@
     {
         void AssignWorker(IWorker worker);
         void Start();
+        void Stop();
     }
 }

@@ -1,25 +1,26 @@
-﻿namespace Console.Messages
-{
-    public class TypedMessage<T> : Message, ITypedMessage<T>
-        where T : class
-    {
-        private T payload;
-        private const string MessagesVersion = "1.0";
+﻿//using System;
 
-        protected TypedMessage(IMessage message)
-            : base(message.Body, message.Identity)
-        {
-        }
+//namespace Console.Messages
+//{
+//    public class TypedMessage<T> : Message
+//        where T : class
+//    {
+//        protected TypedMessage(IMessage message)
+//        {
+//            Body = message.Body;
+//            Distribution = message.Distribution;
+//            Identity = message.Identity;
+//            Version= message.Version;
+//            TTL = message.TTL;
+//        }
 
-        protected TypedMessage(T payload, string messageIdentity)
-        {
-            Body = Serialize(payload);
-            Identity = messageIdentity;
-            Distribution = DistributionPattern.Unicast;
-            Version = MessagesVersion;
-        }
-
-        public T GetPayload()
-            => payload ?? (payload = Deserialize<T>(Body));
-    }
-}
+//        protected TypedMessage(T payload, string messageIdentity)
+//        {
+//            Body = Serialize(payload);
+//            Identity = messageIdentity;
+//            Distribution = DistributionPattern.Unicast;
+//            Version = MessagesVersion;
+//            TTL = TimeSpan.Zero;
+//        }
+//    }
+//}

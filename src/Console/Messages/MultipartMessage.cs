@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Console.Framework;
+using Framework;
 using NetMQ;
 
 namespace Console.Messages
@@ -9,7 +9,7 @@ namespace Console.Messages
     internal class MultipartMessage
     {
         private const int MinFramesCount = 7;
-        private List<byte[]> frames;
+        private readonly List<byte[]> frames;
 
         internal MultipartMessage(IMessage message)
             : this(message, null)
@@ -33,11 +33,9 @@ namespace Console.Messages
 
         private IEnumerable<byte[]> BuildMessageParts(IMessage message, byte[] senderIdentity)
         {
-            if (senderIdentity != null)
-            {
-                yield return senderIdentity;
-                yield return EmptyFrame();
-            }
+            yield return senderIdentity ?? EmptyFrame();
+
+            yield return EmptyFrame();
             yield return EmptyFrame();
 
             yield return GetDistributionFrame(message);
@@ -83,17 +81,28 @@ namespace Console.Messages
             frames.Insert(6, routerId);
         }
 
+        internal void SetSocketIdentity(byte[] socketId)
+        {
+            frames[0] = socketId;
+        }
+
         internal byte[] GetSocketIdentity()
-            => Frames.First();
+            => frames[0];
 
-        internal string GetMessageIdentity()
-            => Frames.Second().GetString();
+        internal byte[] GetMessageIdentity()
+            => frames[frames.Count - 3];
+        
+        internal byte[] GetMessageVersion()
+            => frames[frames.Count - 5];
 
-        internal byte[] GetMessageTypeBytes()
-            => Frames.Second();
-
-        internal byte[] GetMessage()
+        internal byte[] GetMessageBody()
             => frames[frames.Count - 1];
+
+        internal byte[] GetMessageTTL()
+            => frames[frames.Count - 4];
+
+        internal byte[] GetMessageDistributionPattern()
+            => frames[frames.Count - 6];
 
         internal IEnumerable<byte[]> Frames => frames;
     }

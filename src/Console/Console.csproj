@@ -51,8 +51,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Framework\LinqExtensions.cs" />
     <Compile Include="MessageHandler.cs" />
+    <Compile Include="MessageHandlerStack.cs" />
+    <Compile Include="MessageIdentifier.cs" />
     <Compile Include="Messages\DataEncoder.cs" />
     <Compile Include="Messages\IMessage.cs" />
     <Compile Include="IMessageHub.cs" />
@@ -61,21 +62,30 @@
     <Compile Include="MessageHub.cs" />
     <Compile Include="MessageMap.cs" />
     <Compile Include="Messages\IMessageSerializer.cs" />
+    <Compile Include="Messages\IPayload.cs" />
     <Compile Include="Messages\MultipartMessage.cs" />
     <Compile Include="Messages\ITypedMessage.cs" />
     <Compile Include="Messages\Message.cs" />
     <Compile Include="Messages\MessageSerializer.cs" />
     <Compile Include="Messages\StartProcessMessage.cs" />
     <Compile Include="Messages\TypedMessage.cs" />
-    <Compile Include="Messages\WorkerReadyMessage.cs" />
+    <Compile Include="Messages\WorkerReady.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SocketIdentifier.cs" />
     <Compile Include="Worker.cs" />
     <Compile Include="WorkerHost.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Framework\Framework.csproj">
+      <Project>{a4fdec74-a641-456b-b902-f8cb59d7d6d3}</Project>
+      <Name>Framework</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
