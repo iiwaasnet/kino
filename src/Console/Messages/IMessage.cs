@@ -6,11 +6,18 @@ namespace Console.Messages
     {
         T GetPayload<T>() where T : IPayload;
 
-        byte[] Body { get; }
-        string Identity { get; }
-        string Version { get; }
-        TimeSpan TTL { get; set; }
         DistributionPattern Distribution { get; }
+
+        string Version { get; }
+        string Identity { get; }
+        byte[] CorrelationId { get; }
+        byte[] ReceiverId { get; }
+
+        byte EndOfFlowIdentity { get; }
+        byte[] EndOfFlowReceiverId { get; }
+
+        TimeSpan TTL { get; set; }
+        byte[] Body { get; }
     }
 
     public enum DistributionPattern

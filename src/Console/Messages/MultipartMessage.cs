@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Framework;
 using NetMQ;
 
 namespace Console.Messages
 {
-    internal class MultipartMessage
+    internal partial class MultipartMessage
     {
         private const int MinFramesCount = 7;
         private readonly List<byte[]> frames;
@@ -35,13 +34,19 @@ namespace Console.Messages
         {
             yield return senderIdentity ?? EmptyFrame();
 
+            // START Routing delimiters
             yield return EmptyFrame();
             yield return EmptyFrame();
+            // START Routing delimiters
 
-            yield return GetDistributionFrame(message);
             yield return GetVersionFrame(message);
-            yield return GetTTLFrame(message);
             yield return GetMessageIdentityFrame(message);
+            yield return GetReceiverIdentityFrame(message);
+            yield return GetDistributionFrame(message);
+            yield return GetCorrelationIdFrame(message);
+            yield return GetEndOfFlowIdentityFrame(message);
+            yield return GetEndOfFlowReceiverIdentityFrame(message);
+            yield return GetTTLFrame(message);
 
             yield return EmptyFrame();
 
@@ -78,31 +83,43 @@ namespace Console.Messages
 
         internal void PushRouterIdentity(byte[] routerId)
         {
-            frames.Insert(6, routerId);
+            frames.Insert(ReversedFrames.NextRouterInsertPosition, routerId);
         }
 
         internal void SetSocketIdentity(byte[] socketId)
         {
-            frames[0] = socketId;
+            frames[ForwardFrames.SocketIdentity] = socketId;
         }
 
         internal byte[] GetSocketIdentity()
-            => frames[0];
+            => frames[ForwardFrames.SocketIdentity];
 
         internal byte[] GetMessageIdentity()
-            => frames[frames.Count - 3];
-        
+            => frames[frames.Count - ReversedFrames.Identity];
+
         internal byte[] GetMessageVersion()
-            => frames[frames.Count - 5];
+            => frames[frames.Count - ReversedFrames.Version];
 
         internal byte[] GetMessageBody()
-            => frames[frames.Count - 1];
+            => frames[frames.Count - ReversedFrames.Body];
 
         internal byte[] GetMessageTTL()
-            => frames[frames.Count - 4];
+            => frames[frames.Count - ReversedFrames.TTL];
 
         internal byte[] GetMessageDistributionPattern()
-            => frames[frames.Count - 6];
+            => frames[frames.Count - ReversedFrames.DistributionPattern];
+
+        internal byte[] GetEndOfFlowReceiverIdentity()
+            => frames[frames.Count - ReversedFrames.EndOfFlowReceiverIdentity];
+
+        internal byte[] GetEndOfFlowIdentity()
+            => frames[frames.Count - ReversedFrames.EndOfFlowIdentity];
+
+        internal byte[] GetCorrelationId()
+            => frames[frames.Count - ReversedFrames.CorrelationId];
+
+        internal byte[] GetReceiverIdentity()
+            => frames[frames.Count - ReversedFrames.ReceiverIdentity];
 
         internal IEnumerable<byte[]> Frames => frames;
     }

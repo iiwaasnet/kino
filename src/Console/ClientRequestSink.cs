@@ -1,42 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Console.Messages;
 using NetMQ;
 
 namespace Console
 {
-    public class WorkerHost : IWorkerHost
+    public class ClientRequestSink : IClientRequestSink
     {
-        private IWorker worker;
-        private IDictionary<string, MessageHandler> messageHandlers;
         private readonly NetMQContext context;
+        private IDictionary<string, MessageHandler> messageHandlers;
         private const string endpointAddress = "inproc://local";
         private Thread workingThread;
         private readonly CancellationTokenSource cancellationTokenSource;
 
-        public WorkerHost(NetMQContext context)
+        public ClientRequestSink(NetMQContext context)
         {
             this.context = context;
-            cancellationTokenSource = new CancellationTokenSource();
-        }
-
-        public void AssignWorker(IWorker worker)
-        {
-            messageHandlers = BuildMessageHandlersMap(worker);
-            this.worker = worker;
-        }
-
-        private static IDictionary<string, MessageHandler> BuildMessageHandlersMap(IWorker worker)
-        {
-            return worker.GetInterfaceDefinition().ToDictionary(d => d.Message.Type, d => d.Handler);
         }
 
         public void Start()
         {
-            workingThread = new Thread(_ => StartWorkerHost(cancellationTokenSource.Token));
+            workingThread = new Thread(_ => StartProcessingRequests(cancellationTokenSource.Token));
         }
+
 
         public void Stop()
         {
@@ -44,7 +31,7 @@ namespace Console
             workingThread.Join();
         }
 
-        private void StartWorkerHost(CancellationToken token)
+        private void StartProcessingRequests(CancellationToken token)
         {
             try
             {
@@ -66,8 +53,6 @@ namespace Console
                                 var response = new MultipartMessage(messageOut, socket.Options.Identity);
                                 socket.SendMessage(new NetMQMessage(response.Frames));
                             }
-
-                            SignalWorkerReady(socket);
                         }
                         catch (Exception)
                         {
@@ -90,11 +75,9 @@ namespace Console
             return socket;
         }
 
-        private void SignalWorkerReady(NetMQSocket socket)
+        public IPromise<T> EnqueueRequest<T>(IMessage message) where T : IMessage
         {
-            var payload = new WorkerReady {MessageIdentities = messageHandlers.Keys};
-            var multipartMessage = new MultipartMessage(new Message(payload, WorkerReady.MessageIdentity), socket.Options.Identity);
-            socket.SendMessage(new NetMQMessage(multipartMessage.Frames));
+            throw new NotImplementedException();
         }
     }
 }

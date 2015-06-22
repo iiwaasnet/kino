@@ -2,7 +2,7 @@
 
 namespace Console
 {
-    public interface IWorker
+    public interface IActor
     {
         IEnumerable<MessageMap> GetInterfaceDefinition();
     }

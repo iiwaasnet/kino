@@ -6,7 +6,7 @@ using NetMQ;
 
 namespace Console
 {
-    public class MessageHub : IMessageHub
+    public class MessageRouter : IMessageRouter
     {
         private const string localEndpointAddress = "inproc://local";
         private readonly CancellationTokenSource cancellationTokenSource;
@@ -14,7 +14,7 @@ namespace Console
         private readonly MessageHandlerStack messageHandlers;
         private readonly NetMQContext context;
 
-        public MessageHub(NetMQContext context)
+        public MessageRouter(NetMQContext context)
         {
             this.context = context;
             cancellationTokenSource = new CancellationTokenSource();

@@ -1,8 +1,8 @@
 ﻿namespace Console
 {
-    public interface IWorkerHost
+    public interface IActorHost
     {
-        void AssignWorker(IWorker worker);
+        void AssignActor(IActor actor);
         void Start();
         void Stop();
     }

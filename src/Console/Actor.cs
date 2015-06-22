@@ -1,10 +1,9 @@
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using Console.Messages;
 
 namespace Console
 {
-    public class Worker : IWorker
+    public class Actor : IActor
     {
         public IEnumerable<MessageMap> GetInterfaceDefinition()
         {
