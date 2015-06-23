@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Framework;
 using NetMQ;
 
 namespace Console.Messages
@@ -52,6 +53,18 @@ namespace Console.Messages
 
             yield return GetMessageBodyFrame(message);
         }
+
+        private byte[] GetReceiverIdentityFrame(IMessage message)
+            => message.EndOfFlowReceiverIdentity ?? EmptyFrame();
+
+        private byte[] GetEndOfFlowReceiverIdentityFrame(IMessage message)
+            => message.EndOfFlowReceiverIdentity ?? EmptyFrame();
+
+        private byte[] GetEndOfFlowIdentityFrame(IMessage message)
+            => message.EndOfFlowIdentity ?? EmptyFrame();
+
+        private byte[] GetCorrelationIdFrame(IMessage message)
+            => message.CorrelationId ?? EmptyFrame();
 
         private byte[] GetTTLFrame(IMessage message)
             => message.TTL.GetBytes();

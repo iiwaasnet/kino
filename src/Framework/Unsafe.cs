@@ -2,7 +2,7 @@
 {
     public static class Unsafe
     {
-        public static unsafe bool Compare(byte[] a1, byte[] a2)
+        public static unsafe bool Equals(byte[] a1, byte[] a2)
         {
             if (a1 == null || a2 == null || a1.Length != a2.Length)
             {

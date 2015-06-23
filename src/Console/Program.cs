@@ -18,8 +18,8 @@ namespace Console
             actorHost.Stop();
 
             var requestSink = new ClientRequestSink(NetMQContext.Create());
-            var client = new Client(requestSink);
-            
+            //var client = new Client(requestSink);
+            //client.
 
         }
     }

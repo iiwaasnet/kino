@@ -51,7 +51,7 @@ namespace Console
 
         private bool StructuralCompare(MessageIdentifier other)
         {
-            return Unsafe.Compare(MessageId, other.MessageId) && Unsafe.Compare(Version, other.Version);
+            return Unsafe.Equals(MessageId, other.MessageId) && Unsafe.Equals(Version, other.Version);
         }
 
 

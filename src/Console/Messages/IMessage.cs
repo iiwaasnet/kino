@@ -4,6 +4,7 @@ namespace Console.Messages
 {
     public interface IMessage
     {
+        IMessage RegisterEndOfFlowReceiver(string endOfFlowMessageIdentity, string endOfFlowReceiverIdentity);
         T GetPayload<T>() where T : IPayload;
 
         DistributionPattern Distribution { get; }
@@ -11,10 +12,10 @@ namespace Console.Messages
         string Version { get; }
         string Identity { get; }
         byte[] CorrelationId { get; }
-        byte[] ReceiverId { get; }
+        byte[] ReceiverIdentity { get; }
 
-        byte EndOfFlowIdentity { get; }
-        byte[] EndOfFlowReceiverId { get; }
+        byte[] EndOfFlowIdentity { get; }
+        byte[] EndOfFlowReceiverIdentity { get; }
 
         TimeSpan TTL { get; set; }
         byte[] Body { get; }

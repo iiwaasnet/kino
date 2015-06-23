@@ -59,10 +59,14 @@ namespace Console
                             var messageIn = new Message(multipart);
                             var handler = messageHandlers[messageIn.Identity];
 
-                            var messageOut = handler(messageIn);
+                            var messageOut = (Message) handler(messageIn);
 
                             if (messageOut != null)
                             {
+                                messageOut = messageOut
+                                    .RegisterEndOfFlowReceiver(messageIn.EndOfFlowIdentity, messageIn.EndOfFlowReceiverIdentity)
+                                    .SetCorrelationId(messageIn.CorrelationId);
+
                                 var response = new MultipartMessage(messageOut, socket.Options.Identity);
                                 socket.SendMessage(new NetMQMessage(response.Frames));
                             }
@@ -93,7 +97,7 @@ namespace Console
         private void SignalWorkerReady(NetMQSocket socket)
         {
             var payload = new WorkerReady {MessageIdentities = messageHandlers.Keys};
-            var multipartMessage = new MultipartMessage(new Message(payload, WorkerReady.MessageIdentity), socket.Options.Identity);
+            var multipartMessage = new MultipartMessage(Message.Create(payload, WorkerReady.MessageIdentity), socket.Options.Identity);
             socket.SendMessage(new NetMQMessage(multipartMessage.Frames));
         }
     }

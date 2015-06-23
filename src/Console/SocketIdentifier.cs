@@ -45,7 +45,7 @@ namespace Console
 
         private bool StructuralCompare(SocketIdentifier other)
         {
-            return Unsafe.Compare(SocketId, other.SocketId);
+            return Unsafe.Equals(SocketId, other.SocketId);
         }
 
         internal byte[] SocketId { get; }
