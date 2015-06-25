@@ -5,6 +5,6 @@ namespace Console.Messages
     public class WorkerReady : IPayload
     {
         public const string MessageIdentity = "WRKRDY";
-        public IEnumerable<string> MessageIdentities { get; set; }
+        public IEnumerable<MessageIdentity> MessageIdentities { get; set; }
     }
 }

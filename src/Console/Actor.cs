@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Console.Messages;
 
 namespace Console
@@ -10,16 +11,20 @@ namespace Console
             yield return new MessageMap
                          {
                              Handler = StartProcess,
-                             Message = new MessageDefinition {Type = StartProcessMessage.MessageIdentity}
+                             Message = new MessageDefinition
+                                       {
+                                           Identity = HelloMessage.MessageIdentity,
+                                           Version = Message.MessagesVersion
+                                       }
                          };
         }
 
         private IMessage StartProcess(IMessage message)
         {
-            var startProcess = message.GetPayload<StartProcessMessage>();
-            System.Console.WriteLine(startProcess.Arg);
+            var hello = message.GetPayload<HelloMessage>();
+            System.Console.WriteLine(hello.Greeting);
 
-            return null;
+            return Message.Create(new EhlloMessage {Ehllo = hello.Greeting.Reverse().ToString()}, EhlloMessage.MessageIdentity);
         }
     }
 }

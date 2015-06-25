@@ -8,6 +8,7 @@
 
     public class MessageDefinition
     {
-        public string Type { get; set; }
+        public string Identity { get; set; }
+        public string Version { get; set; }
     }
 }

@@ -5,10 +5,11 @@ namespace Console
 {
     internal class MessageIdentifier : IEquatable<MessageIdentifier>
     {
-        public MessageIdentifier(byte[] version, byte[] messageId)
+        public MessageIdentifier(byte[] version, byte[] messageIdentity, byte[] receiverIdentity)
         {
             Version = version;
-            MessageId = messageId;
+            MessageIdentity = messageIdentity;
+            ReceiverIdentity = receiverIdentity;
         }
 
         public override bool Equals(object obj)
@@ -21,18 +22,24 @@ namespace Console
             {
                 return true;
             }
-            return obj.GetType() == GetType()
-                   && StructuralCompare((MessageIdentifier) obj);
+            if (obj.GetType() != this.GetType())
+            {
+                return false;
+            }
+            return Equals((MessageIdentifier) obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((Version != null ? Version.GetHashCode() : 0)*397) ^
-                       (MessageId != null ? MessageId.GetHashCode() : 0);
+                var hashCode = (Version != null ? Version.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (MessageIdentity != null ? MessageIdentity.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (ReceiverIdentity != null ? ReceiverIdentity.GetHashCode() : 0);
+                return hashCode;
             }
         }
+
 
         public bool Equals(MessageIdentifier other)
         {
@@ -40,22 +47,23 @@ namespace Console
             {
                 return false;
             }
-
             if (ReferenceEquals(this, other))
             {
                 return true;
             }
-
             return StructuralCompare(other);
         }
 
         private bool StructuralCompare(MessageIdentifier other)
         {
-            return Unsafe.Equals(MessageId, other.MessageId) && Unsafe.Equals(Version, other.Version);
+            return Unsafe.Equals(MessageIdentity, other.MessageIdentity) 
+                && Unsafe.Equals(Version, other.Version)
+                && Unsafe.Equals(ReceiverIdentity, other.ReceiverIdentity);
         }
 
 
         internal byte[] Version { get; }
-        internal byte[] MessageId { get; }
+        internal byte[] MessageIdentity { get; }
+        internal byte[] ReceiverIdentity { get; }
     }
 }

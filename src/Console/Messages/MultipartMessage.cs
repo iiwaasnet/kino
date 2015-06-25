@@ -45,8 +45,8 @@ namespace Console.Messages
             yield return GetReceiverIdentityFrame(message);
             yield return GetDistributionFrame(message);
             yield return GetCorrelationIdFrame(message);
-            yield return GetEndOfFlowIdentityFrame(message);
-            yield return GetEndOfFlowReceiverIdentityFrame(message);
+            yield return GetCallbackIdentityFrame(message);
+            yield return GetCallbackReceiverIdentityFrame(message);
             yield return GetTTLFrame(message);
 
             yield return EmptyFrame();
@@ -55,13 +55,13 @@ namespace Console.Messages
         }
 
         private byte[] GetReceiverIdentityFrame(IMessage message)
-            => message.EndOfFlowReceiverIdentity ?? EmptyFrame();
+            => message.ReceiverIdentity ?? EmptyFrame();
 
-        private byte[] GetEndOfFlowReceiverIdentityFrame(IMessage message)
-            => message.EndOfFlowReceiverIdentity ?? EmptyFrame();
+        private byte[] GetCallbackReceiverIdentityFrame(IMessage message)
+            => message.CallbackReceiverIdentity ?? EmptyFrame();
 
-        private byte[] GetEndOfFlowIdentityFrame(IMessage message)
-            => message.EndOfFlowIdentity ?? EmptyFrame();
+        private byte[] GetCallbackIdentityFrame(IMessage message)
+            => message.CallbackIdentity ?? EmptyFrame();
 
         private byte[] GetCorrelationIdFrame(IMessage message)
             => message.CorrelationId ?? EmptyFrame();

@@ -3,9 +3,8 @@ using Console.Messages;
 
 namespace Console
 {
-    public interface IPromise<T>
-        where T : IMessage
+    public interface IPromise
     {
-        Task<T> GetResult();
+        Task<IMessage> GetResponse();
     }
 }

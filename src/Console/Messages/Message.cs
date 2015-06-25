@@ -5,7 +5,7 @@ namespace Console.Messages
 {
     public class Message : IMessage
     {
-        protected const string MessagesVersion = "1.0";
+        public const string MessagesVersion = "1.0";
         private static readonly IMessageSerializer messageSerializer = new MessageSerializer();
         private object payload;
 
@@ -41,43 +41,37 @@ namespace Console.Messages
             Version = multipartMessage.GetMessageVersion().GetString();
             TTL = multipartMessage.GetMessageTTL().GetTimeSpan();
             Distribution = multipartMessage.GetMessageDistributionPattern().GetEnum<DistributionPattern>();
-            EndOfFlowIdentity = multipartMessage.GetEndOfFlowIdentity();
-            EndOfFlowReceiverIdentity = multipartMessage.GetEndOfFlowReceiverIdentity();
+            CallbackIdentity = multipartMessage.GetEndOfFlowIdentity();
+            CallbackReceiverIdentity = multipartMessage.GetEndOfFlowReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
             CorrelationId = multipartMessage.GetCorrelationId();
         }
 
-        public IMessage RegisterEndOfFlowReceiver(string endOfFlowMessageIdentity, string endOfFlowReceiverIdentity)
+        public void RegisterCallbackPoint(ICallbackPoint callbackPoint)
         {
-            EndOfFlowReceiverIdentity = endOfFlowReceiverIdentity.GetBytes();
-            EndOfFlowIdentity = endOfFlowMessageIdentity.GetBytes();
+            CallbackReceiverIdentity = callbackPoint.ReceiverIdentity.GetBytes();
+            CallbackIdentity = callbackPoint.MessageIdentity.GetBytes();
 
-            if (Identity == endOfFlowMessageIdentity)
+            if (Identity == callbackPoint.MessageIdentity)
             {
-                ReceiverIdentity = endOfFlowMessageIdentity.GetBytes();
+                ReceiverIdentity = CallbackReceiverIdentity;
             }
-
-            return this;
         }
 
-        internal Message RegisterEndOfFlowReceiver(byte[] endOfFlowMessageIdentity, byte[] endOfFlowReceiverIdentity)
+        internal void RegisterCallbackPoint(byte[] callbackIdentity, byte[] callbackReceiverIdentity)
         {
-            EndOfFlowReceiverIdentity = endOfFlowReceiverIdentity;
-            EndOfFlowIdentity = endOfFlowMessageIdentity;
+            CallbackReceiverIdentity = callbackReceiverIdentity;
+            CallbackIdentity = callbackIdentity;
 
-            if (Unsafe.Equals(Identity.GetBytes(), endOfFlowMessageIdentity))
+            if (Unsafe.Equals(Identity.GetBytes(), callbackIdentity))
             {
-                ReceiverIdentity = endOfFlowMessageIdentity;
+                ReceiverIdentity = callbackReceiverIdentity;
             }
-
-            return this;
         }
 
-        internal Message SetCorrelationId(byte[] correlationId)
+        internal void SetCorrelationId(byte[] correlationId)
         {
             CorrelationId = correlationId;
-
-            return this;
         }
 
         public T GetPayload<T>()
@@ -97,7 +91,7 @@ namespace Console.Messages
         public DistributionPattern Distribution { get; }
         public byte[] CorrelationId { get; private set; }
         public byte[] ReceiverIdentity { get; private set; }
-        public byte[] EndOfFlowIdentity { get; private set; }
-        public byte[] EndOfFlowReceiverIdentity { get; private set; }
+        public byte[] CallbackIdentity { get; private set; }
+        public byte[] CallbackReceiverIdentity { get; private set; }
     }
 }

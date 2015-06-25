@@ -4,7 +4,7 @@ namespace Console.Messages
 {
     public interface IMessage
     {
-        IMessage RegisterEndOfFlowReceiver(string endOfFlowMessageIdentity, string endOfFlowReceiverIdentity);
+        void RegisterCallbackPoint(ICallbackPoint callbackPoint);
         T GetPayload<T>() where T : IPayload;
 
         DistributionPattern Distribution { get; }
@@ -14,11 +14,12 @@ namespace Console.Messages
         byte[] CorrelationId { get; }
         byte[] ReceiverIdentity { get; }
 
-        byte[] EndOfFlowIdentity { get; }
-        byte[] EndOfFlowReceiverIdentity { get; }
+        byte[] CallbackIdentity { get; }
+        byte[] CallbackReceiverIdentity { get; }
 
         TimeSpan TTL { get; set; }
         byte[] Body { get; }
+        
     }
 
     public enum DistributionPattern

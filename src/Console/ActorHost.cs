@@ -10,11 +10,12 @@ namespace Console
     public class ActorHost : IActorHost
     {
         private IActor actor;
-        private IDictionary<string, MessageHandler> messageHandlers;
+        private IDictionary<MessageIdentifier, MessageHandler> messageHandlers;
         private readonly NetMQContext context;
-        private const string endpointAddress = "inproc://local";
+        private const string endpointAddress = Program.EndpointAddress;
         private Thread workingThread;
         private readonly CancellationTokenSource cancellationTokenSource;
+        private static readonly byte[] AnyReceiver = new byte[0];
 
         public ActorHost(NetMQContext context)
         {
@@ -28,14 +29,19 @@ namespace Console
             this.actor = actor;
         }
 
-        private static IDictionary<string, MessageHandler> BuildMessageHandlersMap(IActor actor)
+        private static IDictionary<MessageIdentifier, MessageHandler> BuildMessageHandlersMap(IActor actor)
         {
-            return actor.GetInterfaceDefinition().ToDictionary(d => d.Message.Type, d => d.Handler);
+            return actor
+                .GetInterfaceDefinition()
+                .ToDictionary(d => new MessageIdentifier(d.Message.Version.GetBytes(),
+                                                         d.Message.Identity.GetBytes(),
+                                                         AnyReceiver), d => d.Handler);
         }
 
         public void Start()
         {
             workingThread = new Thread(_ => StartWorkerHost(cancellationTokenSource.Token));
+            workingThread.Start();
         }
 
         public void Stop()
@@ -57,15 +63,16 @@ namespace Console
                             var request = socket.ReceiveMessage();
                             var multipart = new MultipartMessage(request);
                             var messageIn = new Message(multipart);
-                            var handler = messageHandlers[messageIn.Identity];
+                            var handler = messageHandlers[new MessageIdentifier(multipart.GetMessageVersion(),
+                                                                                multipart.GetMessageIdentity(),
+                                                                                multipart.GetReceiverIdentity())];
 
                             var messageOut = (Message) handler(messageIn);
 
                             if (messageOut != null)
                             {
-                                messageOut = messageOut
-                                    .RegisterEndOfFlowReceiver(messageIn.EndOfFlowIdentity, messageIn.EndOfFlowReceiverIdentity)
-                                    .SetCorrelationId(messageIn.CorrelationId);
+                                messageOut.RegisterCallbackPoint(messageIn.CallbackIdentity, messageIn.CallbackReceiverIdentity);
+                                messageOut.SetCorrelationId(messageIn.CorrelationId);
 
                                 var response = new MultipartMessage(messageOut, socket.Options.Identity);
                                 socket.SendMessage(new NetMQMessage(response.Frames));
@@ -73,30 +80,44 @@ namespace Console
 
                             SignalWorkerReady(socket);
                         }
-                        catch (Exception)
+                        catch (Exception err)
                         {
+                            System.Console.WriteLine(err);
                         }
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception err)
             {
+                System.Console.WriteLine(err);
             }
         }
 
         private NetMQSocket CreateSocket(NetMQContext context)
         {
             var socket = context.CreateDealerSocket();
-            socket.Options.RouterMandatory = true;
+            //socket.Options.RouterMandatory = true;
             socket.Options.Identity = Guid.NewGuid().ToByteArray();
             socket.Connect(endpointAddress);
+
+            SignalWorkerReady(socket);
 
             return socket;
         }
 
         private void SignalWorkerReady(NetMQSocket socket)
         {
-            var payload = new WorkerReady {MessageIdentities = messageHandlers.Keys};
+            var payload = new WorkerReady
+                          {
+                              MessageIdentities = messageHandlers
+                                  .Keys
+                                  .Select(mh => new MessageIdentity
+                                                {
+                                                    Identity = mh.MessageIdentity.GetString(),
+                                                    Version = mh.Version.GetString(),
+                                                    ReceiverIdentity = mh.ReceiverIdentity.GetString()
+                                                })
+                          };
             var multipartMessage = new MultipartMessage(Message.Create(payload, WorkerReady.MessageIdentity), socket.Options.Identity);
             socket.SendMessage(new NetMQMessage(multipartMessage.Frames));
         }

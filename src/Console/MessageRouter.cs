@@ -8,7 +8,7 @@ namespace Console
 {
     public class MessageRouter : IMessageRouter
     {
-        private const string localEndpointAddress = "inproc://local";
+        private const string localEndpointAddress = Program.EndpointAddress;
         private readonly CancellationTokenSource cancellationTokenSource;
         private Thread workingThread;
         private readonly MessageHandlerStack messageHandlers;
@@ -17,6 +17,7 @@ namespace Console
         public MessageRouter(NetMQContext context)
         {
             this.context = context;
+            messageHandlers = new MessageHandlerStack();
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -54,28 +55,30 @@ namespace Console
                             var multipart = new MultipartMessage(request);
 
 
-                            if (multipart.GetMessageIdentity() == WorkerReady.MessageIdentity.GetBytes())
+                            if (Unsafe.Equals(multipart.GetMessageIdentity(), WorkerReady.MessageIdentity.GetBytes()))
                             {
                                 RegisterWorkers(multipart);
                             }
                             else
                             {
                                 var handler = messageHandlers.Pop(new MessageIdentifier(multipart.GetMessageVersion(),
-                                                                                        multipart.GetMessageIdentity()));
+                                                                                        multipart.GetMessageIdentity(),
+                                                                                        multipart.GetReceiverIdentity()));
 
                                 multipart.SetSocketIdentity(handler.SocketId);
                                 socket.SendMessage(new NetMQMessage(multipart.Frames));
                             }
                         }
-                        catch (Exception)
+                        catch (Exception err)
                         {
+                            System.Console.WriteLine(err);
                         }
-                        
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception err)
             {
+                System.Console.WriteLine(err);
             }
         }
 
@@ -83,11 +86,10 @@ namespace Console
         {
             var message = new Message(multipartMessage);
             var payload = message.GetPayload<WorkerReady>();
-            payload
-                .MessageIdentities
-                .ForEach(mi => messageHandlers.Push(new MessageIdentifier(multipartMessage.GetMessageVersion(),
-                                                                          multipartMessage.GetMessageIdentity()),
-                                                    new SocketIdentifier(multipartMessage.GetSocketIdentity())));
+            payload.MessageIdentities.ForEach(mi => messageHandlers.Push(new MessageIdentifier(mi.Version.GetBytes(),
+                                                                                               mi.Identity.GetBytes(),
+                                                                                               mi.ReceiverIdentity.GetBytes()),
+                                                                         new SocketIdentifier(multipartMessage.GetSocketIdentity())));
         }
     }
 }
