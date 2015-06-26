@@ -33,9 +33,9 @@ namespace Console
         {
             unchecked
             {
-                var hashCode = (Version != null ? Version.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (MessageIdentity != null ? MessageIdentity.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (ReceiverIdentity != null ? ReceiverIdentity.GetHashCode() : 0);
+                var hashCode = (Version != null ? Version.Length : 0);
+                hashCode = (hashCode*397) ^ (MessageIdentity != null ? MessageIdentity.Length : 0);
+                hashCode = (hashCode*397) ^ (ReceiverIdentity != null ? ReceiverIdentity.Length : 0);
                 return hashCode;
             }
         }
