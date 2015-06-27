@@ -1,5 +1,4 @@
-﻿using System;
-using Console.Messages;
+﻿using Console.Messages;
 
 namespace Console
 {

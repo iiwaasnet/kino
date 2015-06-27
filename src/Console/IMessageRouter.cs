@@ -1,6 +1,4 @@
-﻿using Console.Messages;
-
-namespace Console
+﻿namespace Console
 {
     public interface IMessageRouter
     {
