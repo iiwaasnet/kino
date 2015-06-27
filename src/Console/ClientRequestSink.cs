@@ -126,7 +126,6 @@ namespace Console
         private NetMQSocket CreateSocket(NetMQContext context, byte[] socketIdentity = null)
         {
             var socket = context.CreateDealerSocket();
-            //socket.Options.RouterMandatory = true;
             if (socketIdentity != null)
             {
                 socket.Options.Identity = socketIdentity;

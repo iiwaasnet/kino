@@ -8,7 +8,7 @@ namespace Console
     internal class Program
     {
         //internal const string EndpointAddress = "tcp://127.0.0.1:5555";
-        internal const string EndpointAddress = "inproc://local";
+        internal const string EndpointAddress = "inproc://localsocket";
 
         private static void Main(string[] args)
         {
@@ -16,7 +16,7 @@ namespace Console
             var messageRouter = new MessageRouter(context);
             messageRouter.Start();
 
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            Thread.Sleep(TimeSpan.FromSeconds(5));
 
             var actorHost = new ActorHost(context);
             actorHost.Start();

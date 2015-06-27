@@ -24,6 +24,7 @@ namespace Console
         private NetMQSocket CreateSocket(NetMQContext context)
         {
             var socket = context.CreateRouterSocket();
+            socket.Options.RouterMandatory = true;
             socket.Bind(localEndpointAddress);
 
             return socket;
