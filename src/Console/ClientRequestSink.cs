@@ -55,7 +55,7 @@ namespace Console
                             var message = callbackRegistration.Message;
                             var promise = callbackRegistration.Promise;
 
-                            callbackHandlers.Push(new MessageIdentifier(message.Version.GetBytes(),
+                            callbackHandlers.Push(new MessageIdentifier(message.Version,
                                                                         message.CallbackIdentity,
                                                                         message.CallbackReceiverIdentity),
                                                   promise);
@@ -64,9 +64,9 @@ namespace Console
                                                                                                  {
                                                                                                      new MessageIdentity
                                                                                                      {
-                                                                                                         Identity = message.CallbackIdentity.GetString(),
+                                                                                                         Identity = message.CallbackIdentity,
                                                                                                          Version = message.Version,
-                                                                                                         ReceiverIdentity = message.CallbackReceiverIdentity.GetString()
+                                                                                                         ReceiverIdentity = message.CallbackReceiverIdentity
                                                                                                      }
                                                                                                  }}, WorkerReady.MessageIdentity);
                             var messageOut = new MultipartMessage(rdyMessage, receivingSocketIdentity);

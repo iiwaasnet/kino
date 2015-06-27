@@ -87,9 +87,9 @@ namespace Console
         {
             var message = new Message(multipartMessage);
             var payload = message.GetPayload<WorkerReady>();
-            payload.MessageIdentities.ForEach(mi => messageHandlers.Push(new MessageIdentifier(mi.Version.GetBytes(),
-                                                                                               mi.Identity.GetBytes(),
-                                                                                               mi.ReceiverIdentity.GetBytes()),
+            payload.MessageIdentities.ForEach(mi => messageHandlers.Push(new MessageIdentifier(mi.Version,
+                                                                                               mi.Identity,
+                                                                                               mi.ReceiverIdentity),
                                                                          new SocketIdentifier(multipartMessage.GetSocketIdentity())));
         }
     }

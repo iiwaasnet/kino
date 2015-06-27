@@ -70,7 +70,7 @@ namespace Console.Messages
             => message.TTL.GetBytes();
 
         private byte[] GetVersionFrame(IMessage message)
-            => message.Version.GetBytes();
+            => message.Version;
 
         private byte[] GetDistributionFrame(IMessage message)
             => ((int) message.Distribution).GetBytes();
@@ -79,7 +79,7 @@ namespace Console.Messages
             => message.Body;
 
         private byte[] GetMessageIdentityFrame(IMessage message)
-            => message.Identity.GetBytes();
+            => message.Identity;
 
 
         private static void AssertMessage(NetMQMessage message)

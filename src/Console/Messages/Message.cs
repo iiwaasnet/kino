@@ -12,8 +12,8 @@ namespace Console.Messages
         private Message(IPayload payload, string messageIdentity)
         {
             Body = Serialize(payload);
-            Version = MessagesVersion;
-            Identity = messageIdentity;
+            Version = MessagesVersion.GetBytes();
+            Identity = messageIdentity.GetBytes();
             Distribution = DistributionPattern.Unicast;
             TTL = TimeSpan.Zero;
         }
@@ -37,8 +37,8 @@ namespace Console.Messages
         internal Message(MultipartMessage multipartMessage)
         {
             Body = multipartMessage.GetMessageBody();
-            Identity = multipartMessage.GetMessageIdentity().GetString();
-            Version = multipartMessage.GetMessageVersion().GetString();
+            Identity = multipartMessage.GetMessageIdentity();
+            Version = multipartMessage.GetMessageVersion();
             TTL = multipartMessage.GetMessageTTL().GetTimeSpan();
             Distribution = multipartMessage.GetMessageDistributionPattern().GetEnum<DistributionPattern>();
             CallbackIdentity = multipartMessage.GetCallbackIdentity();
@@ -52,7 +52,7 @@ namespace Console.Messages
             CallbackReceiverIdentity = callbackPoint.ReceiverIdentity;
             CallbackIdentity = callbackPoint.MessageIdentity;
 
-            if (Unsafe.Equals(Identity.GetBytes(), callbackPoint.MessageIdentity))
+            if (Unsafe.Equals(Identity, callbackPoint.MessageIdentity))
             {
                 ReceiverIdentity = CallbackReceiverIdentity;
             }
@@ -63,7 +63,7 @@ namespace Console.Messages
             CallbackReceiverIdentity = callbackReceiverIdentity;
             CallbackIdentity = callbackIdentity;
 
-            if (Unsafe.Equals(Identity.GetBytes(), callbackIdentity))
+            if (Unsafe.Equals(Identity, callbackIdentity))
             {
                 ReceiverIdentity = callbackReceiverIdentity;
             }
@@ -85,8 +85,8 @@ namespace Console.Messages
             => messageSerializer.Deserialize<T>(content);
 
         public byte[] Body { get; }
-        public string Identity { get; }
-        public string Version { get; }
+        public byte[] Identity { get; }
+        public byte[] Version { get; }
         public TimeSpan TTL { get; set; }
         public DistributionPattern Distribution { get; }
         public byte[] CorrelationId { get; private set; }

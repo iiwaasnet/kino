@@ -40,7 +40,7 @@ namespace Console
 
         public void Start()
         {
-            workingThread = new Thread(_ => StartWorkerHost(cancellationTokenSource.Token));
+            workingThread = new Thread(_ => ProcessRequests(cancellationTokenSource.Token));
             workingThread.Start();
         }
 
@@ -50,7 +50,7 @@ namespace Console
             workingThread.Join();
         }
 
-        private void StartWorkerHost(CancellationToken token)
+        private void ProcessRequests(CancellationToken token)
         {
             try
             {
@@ -112,9 +112,9 @@ namespace Console
                                   .Keys
                                   .Select(mh => new MessageIdentity
                                                 {
-                                                    Identity = mh.MessageIdentity.GetString(),
-                                                    Version = mh.Version.GetString(),
-                                                    ReceiverIdentity = mh.ReceiverIdentity.GetString()
+                                                    Identity = mh.MessageIdentity,
+                                                    Version = mh.Version,
+                                                    ReceiverIdentity = mh.ReceiverIdentity
                                                 })
                           };
             var multipartMessage = new MultipartMessage(Message.Create(payload, WorkerReady.MessageIdentity), socket.Options.Identity);

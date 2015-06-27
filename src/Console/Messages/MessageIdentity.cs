@@ -2,8 +2,8 @@
 {
     public class MessageIdentity
     {
-        public string Version { get; set; }
-        public string Identity { get; set; }
-        public string ReceiverIdentity { get; set; }
+        public byte[] Version { get; set; }
+        public byte[] Identity { get; set; }
+        public byte[] ReceiverIdentity { get; set; }
     }
 }

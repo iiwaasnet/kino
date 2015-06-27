@@ -9,8 +9,8 @@ namespace Console.Messages
 
         DistributionPattern Distribution { get; }
 
-        string Version { get; }
-        string Identity { get; }
+        byte[] Version { get; }
+        byte[] Identity { get; }
         byte[] CorrelationId { get; }
         byte[] ReceiverIdentity { get; }
 

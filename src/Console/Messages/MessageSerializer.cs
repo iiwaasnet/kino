@@ -1,5 +1,6 @@
 ﻿using System.IO;
-using ServiceStack.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 
 namespace Console.Messages
 {
@@ -9,9 +10,16 @@ namespace Console.Messages
         {
             using (var stream = new MemoryStream())
             {
-                JsonSerializer.SerializeToStream(obj, stream);
+                using (var writer = new BsonWriter(stream))
+                {
+                    JsonSerializer
+                        .Create()
+                        .Serialize(writer, obj);
 
-                return stream.GetBuffer();
+                    writer.Flush();
+
+                    return stream.GetBuffer();
+                }
             }
         }
 
@@ -19,7 +27,12 @@ namespace Console.Messages
         {
             using (var stream = new MemoryStream(buffer))
             {
-                return JsonSerializer.DeserializeFromStream<T>(stream);
+                using (var reader = new BsonReader(stream))
+                {
+                    return JsonSerializer
+                        .Create()
+                        .Deserialize<T>(reader);
+                }
             }
         }
     }
