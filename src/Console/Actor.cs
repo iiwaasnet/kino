@@ -24,7 +24,7 @@ namespace Console
             var hello = message.GetPayload<HelloMessage>();
             System.Console.WriteLine(hello.Greeting);
 
-            return Message.Create(new EhlloMessage {Ehllo = hello.Greeting.Reverse().ToString()}, EhlloMessage.MessageIdentity);
+            return Message.Create(new EhlloMessage {Ehllo = new string(hello.Greeting.Reverse().ToArray())}, EhlloMessage.MessageIdentity);
         }
     }
 }

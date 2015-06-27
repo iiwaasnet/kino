@@ -52,7 +52,7 @@ namespace Console
                         try
                         {
                             var request = socket.ReceiveMessage();
-                            var multipart = new MultipartMessage(request);
+                            var multipart = new MultipartMessage(request, true);
 
 
                             if (Unsafe.Equals(multipart.GetMessageIdentity(), WorkerReady.MessageIdentity.GetBytes()))

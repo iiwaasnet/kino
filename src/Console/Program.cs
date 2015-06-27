@@ -15,14 +15,14 @@ namespace Console
             var messageRouter = new MessageRouter(NetMQContext.Create());
             messageRouter.Start();
 
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            Thread.Sleep(TimeSpan.FromSeconds(1));
 
             var actorHost = new ActorHost(NetMQContext.Create());
             actorHost.Start();
             var actor = new Actor();
             actorHost.AssignActor(actor);
 
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            Thread.Sleep(TimeSpan.FromSeconds(1));
 
             var requestSink = new ClientRequestSink(NetMQContext.Create());
             requestSink.Start();
@@ -39,30 +39,6 @@ namespace Console
             actorHost.Stop();
             requestSink.Stop();
             messageRouter.Stop();
-        }
-    }
-
-    internal class Client
-    {
-        private readonly ClientRequestSink requestSink;
-
-        public Client(ClientRequestSink requestSink)
-        {
-            this.requestSink = requestSink;
-        }
-
-        public ICallbackPoint CreateCallbackPoint(string messageIdentity)
-        {
-            return new CallbackPoint
-                   {
-                       MessageIdentity = messageIdentity,
-                       ReceiverIdentity = Guid.NewGuid().ToString()
-                   };
-        }
-
-        public IPromise Send(IMessage message)
-        {
-            return requestSink.EnqueueRequest(message);
         }
     }
 }

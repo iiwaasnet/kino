@@ -2,7 +2,7 @@
 {
     public class CallbackPoint : ICallbackPoint
     {
-        public string MessageIdentity { get; set; }
-        public string ReceiverIdentity { get; set; }
+        public byte[] MessageIdentity { get; set; }
+        public byte[] ReceiverIdentity { get; set; }
     }
 }

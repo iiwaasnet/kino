@@ -53,6 +53,8 @@
   <ItemGroup>
     <Compile Include="CallbackHandlerStack.cs" />
     <Compile Include="CallbackPoint.cs" />
+    <Compile Include="CallbackRegistration.cs" />
+    <Compile Include="Client.cs" />
     <Compile Include="ClientRequestSink.cs" />
     <Compile Include="ICallbackPoint.cs" />
     <Compile Include="IClientRequestSink.cs" />

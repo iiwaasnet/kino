@@ -6,8 +6,8 @@
         {
             internal const int Body = 1;
             internal const int TTL = 3;
-            internal const int EndOfFlowReceiverIdentity = 4;
-            internal const int EndOfFlowIdentity = 5;
+            internal const int CallbackReceiverIdentity = 4;
+            internal const int CallbackIdentity = 5;
             internal const int CorrelationId = 6;
             internal const int DistributionPattern = 7;
             internal const int ReceiverIdentity = 8;

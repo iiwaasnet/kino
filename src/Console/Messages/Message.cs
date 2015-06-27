@@ -20,7 +20,7 @@ namespace Console.Messages
 
         public static IMessage CreateFlowStartMessage(IPayload payload, string messageIdentity)
         {
-            return new Message(payload, messageIdentity) {CorrelationId = GenerateCorrelationId() };
+            return new Message(payload, messageIdentity) {CorrelationId = GenerateCorrelationId()};
         }
 
         public static IMessage Create(IPayload payload, string messageIdentity)
@@ -41,18 +41,18 @@ namespace Console.Messages
             Version = multipartMessage.GetMessageVersion().GetString();
             TTL = multipartMessage.GetMessageTTL().GetTimeSpan();
             Distribution = multipartMessage.GetMessageDistributionPattern().GetEnum<DistributionPattern>();
-            CallbackIdentity = multipartMessage.GetEndOfFlowIdentity();
-            CallbackReceiverIdentity = multipartMessage.GetEndOfFlowReceiverIdentity();
+            CallbackIdentity = multipartMessage.GetCallbackIdentity();
+            CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
             CorrelationId = multipartMessage.GetCorrelationId();
         }
 
         public void RegisterCallbackPoint(ICallbackPoint callbackPoint)
         {
-            CallbackReceiverIdentity = callbackPoint.ReceiverIdentity.GetBytes();
-            CallbackIdentity = callbackPoint.MessageIdentity.GetBytes();
+            CallbackReceiverIdentity = callbackPoint.ReceiverIdentity;
+            CallbackIdentity = callbackPoint.MessageIdentity;
 
-            if (Identity == callbackPoint.MessageIdentity)
+            if (Unsafe.Equals(Identity.GetBytes(), callbackPoint.MessageIdentity))
             {
                 ReceiverIdentity = CallbackReceiverIdentity;
             }

@@ -2,7 +2,7 @@
 {
     public interface ICallbackPoint
     {
-        string MessageIdentity { get; set; }
-        string ReceiverIdentity { get; set; }
+        byte[] MessageIdentity { get; }
+        byte[] ReceiverIdentity { get; }
     }
 }

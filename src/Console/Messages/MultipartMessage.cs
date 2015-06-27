@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Framework;
 using NetMQ;
 
 namespace Console.Messages
@@ -10,6 +9,7 @@ namespace Console.Messages
     {
         private const int MinFramesCount = 7;
         private readonly List<byte[]> frames;
+        private static readonly byte[] EmptyFrame = new byte[0];
 
         internal MultipartMessage(IMessage message)
             : this(message, null)
@@ -21,23 +21,23 @@ namespace Console.Messages
             frames = BuildMessageParts(message, senderIdentity).ToList();
         }
 
-        internal MultipartMessage(NetMQMessage message)
+        internal MultipartMessage(NetMQMessage message, bool skipIdentityFrame = false)
         {
             AssertMessage(message);
 
-            frames = SplitMessageToFrames(message).ToList();
+            frames = SplitMessageToFrames(message, skipIdentityFrame).ToList();
         }
 
-        private IEnumerable<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message)
-            => message.Select(m => m.Buffer).ToList();
+        private IEnumerable<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message, bool skipIdentityFrame)
+            => message.Skip(skipIdentityFrame ? 1 : 0).Select(m => m.Buffer).ToList();
 
         private IEnumerable<byte[]> BuildMessageParts(IMessage message, byte[] senderIdentity)
         {
-            yield return senderIdentity ?? EmptyFrame();
+            yield return senderIdentity ?? EmptyFrame;
 
             // START Routing delimiters
-            yield return EmptyFrame();
-            yield return EmptyFrame();
+            yield return EmptyFrame;
+            yield return EmptyFrame;
             // START Routing delimiters
 
             yield return GetVersionFrame(message);
@@ -49,22 +49,22 @@ namespace Console.Messages
             yield return GetCallbackReceiverIdentityFrame(message);
             yield return GetTTLFrame(message);
 
-            yield return EmptyFrame();
+            yield return EmptyFrame;
 
             yield return GetMessageBodyFrame(message);
         }
 
         private byte[] GetReceiverIdentityFrame(IMessage message)
-            => message.ReceiverIdentity ?? EmptyFrame();
+            => message.ReceiverIdentity ?? EmptyFrame;
 
         private byte[] GetCallbackReceiverIdentityFrame(IMessage message)
-            => message.CallbackReceiverIdentity ?? EmptyFrame();
+            => message.CallbackReceiverIdentity ?? EmptyFrame;
 
         private byte[] GetCallbackIdentityFrame(IMessage message)
-            => message.CallbackIdentity ?? EmptyFrame();
+            => message.CallbackIdentity ?? EmptyFrame;
 
         private byte[] GetCorrelationIdFrame(IMessage message)
-            => message.CorrelationId ?? EmptyFrame();
+            => message.CorrelationId ?? EmptyFrame;
 
         private byte[] GetTTLFrame(IMessage message)
             => message.TTL.GetBytes();
@@ -74,9 +74,6 @@ namespace Console.Messages
 
         private byte[] GetDistributionFrame(IMessage message)
             => ((int) message.Distribution).GetBytes();
-
-        private static byte[] EmptyFrame()
-            => new byte[0];
 
         private byte[] GetMessageBodyFrame(IMessage message)
             => message.Body;
@@ -122,11 +119,11 @@ namespace Console.Messages
         internal byte[] GetMessageDistributionPattern()
             => frames[frames.Count - ReversedFrames.DistributionPattern];
 
-        internal byte[] GetEndOfFlowReceiverIdentity()
-            => frames[frames.Count - ReversedFrames.EndOfFlowReceiverIdentity];
+        internal byte[] GetCallbackReceiverIdentity()
+            => frames[frames.Count - ReversedFrames.CallbackReceiverIdentity];
 
-        internal byte[] GetEndOfFlowIdentity()
-            => frames[frames.Count - ReversedFrames.EndOfFlowIdentity];
+        internal byte[] GetCallbackIdentity()
+            => frames[frames.Count - ReversedFrames.CallbackIdentity];
 
         internal byte[] GetCorrelationId()
             => frames[frames.Count - ReversedFrames.CorrelationId];

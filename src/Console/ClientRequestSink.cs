@@ -23,7 +23,8 @@ namespace Console
             callbackHandlers = new CallbackHandlerStack();
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
             cancellationTokenSource = new CancellationTokenSource();
-            receivingSocketIdentity = Guid.NewGuid().ToByteArray();
+            receivingSocketIdentity = Guid.NewGuid().ToString().GetBytes();
+            receivingSocketIdentity = new byte[] {0, 1, 1, 1, 1, 10};
         }
 
         public void Start()
@@ -68,12 +69,12 @@ namespace Console
                                                                                                          ReceiverIdentity = message.CallbackReceiverIdentity.GetString()
                                                                                                      }
                                                                                                  }}, WorkerReady.MessageIdentity);
-                            var messageOut = new MultipartMessage(rdyMessage);
+                            var messageOut = new MultipartMessage(rdyMessage, receivingSocketIdentity);
                             socket.SendMessage(new NetMQMessage(messageOut.Frames));
 
-                            Thread.Sleep(TimeSpan.FromSeconds(5));
+                            Thread.Sleep(TimeSpan.FromSeconds(1));
 
-                            messageOut = new MultipartMessage(message, receivingSocketIdentity);
+                            messageOut = new MultipartMessage(message);
                             socket.SendMessage(new NetMQMessage(messageOut.Frames));
                         }
                         catch (Exception err)
@@ -147,11 +148,10 @@ namespace Console
 
             return promise;
         }
-    }
 
-    internal class CallbackRegistration
-    {
-        internal IPromise Promise { get; set; }
-        internal IMessage Message { get; set; }
+        public byte[] GetReceiverIdentity()
+        {
+            return receivingSocketIdentity;
+        }
     }
 }

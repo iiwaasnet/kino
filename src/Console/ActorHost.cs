@@ -97,7 +97,8 @@ namespace Console
         {
             var socket = context.CreateDealerSocket();
             //socket.Options.RouterMandatory = true;
-            socket.Options.Identity = Guid.NewGuid().ToByteArray();
+            socket.Options.Identity = Guid.NewGuid().ToString().GetBytes();
+            socket.Options.Identity = new byte[] {5, 5, 5};
             socket.Connect(endpointAddress);
 
             SignalWorkerReady(socket);
