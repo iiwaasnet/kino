@@ -7,24 +7,25 @@ namespace Console
 {
     internal class Program
     {
-        internal const string EndpointAddress = "tcp://127.0.0.1:5555";
-        //internal const string EndpointAddress = "inproc://local";
+        //internal const string EndpointAddress = "tcp://127.0.0.1:5555";
+        internal const string EndpointAddress = "inproc://local";
 
         private static void Main(string[] args)
         {
-            var messageRouter = new MessageRouter(NetMQContext.Create());
+            var context = NetMQContext.Create();
+            var messageRouter = new MessageRouter(context);
             messageRouter.Start();
 
-            Thread.Sleep(TimeSpan.FromSeconds(1));
+            Thread.Sleep(TimeSpan.FromSeconds(2));
 
-            var actorHost = new ActorHost(NetMQContext.Create());
+            var actorHost = new ActorHost(context);
             actorHost.Start();
             var actor = new Actor();
             actorHost.AssignActor(actor);
 
-            Thread.Sleep(TimeSpan.FromSeconds(1));
+            Thread.Sleep(TimeSpan.FromSeconds(2));
 
-            var requestSink = new ClientRequestSink(NetMQContext.Create());
+            var requestSink = new ClientRequestSink(context);
             requestSink.Start();
             var client = new Client(requestSink);
 
@@ -39,6 +40,7 @@ namespace Console
             actorHost.Stop();
             requestSink.Stop();
             messageRouter.Stop();
+            context.Dispose();
         }
     }
 }
