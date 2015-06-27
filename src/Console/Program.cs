@@ -7,8 +7,9 @@ namespace Console
 {
     internal class Program
     {
-        //internal const string EndpointAddress = "tcp://127.0.0.1:5555";
-        internal const string EndpointAddress = "inproc://localsocket";
+        internal const string EndpointAddress = "tcp://127.0.0.1:5555";
+        //TODO: Switch to inproc protocol after https://github.com/zeromq/netmq/pull/343 is released 
+        //internal const string EndpointAddress = "inproc://localsocket";
 
         private static void Main(string[] args)
         {
