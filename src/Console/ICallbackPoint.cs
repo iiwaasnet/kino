@@ -3,6 +3,5 @@
     public interface ICallbackPoint
     {
         byte[] MessageIdentity { get; }
-        byte[] ReceiverIdentity { get; }
     }
 }

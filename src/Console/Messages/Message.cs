@@ -47,25 +47,25 @@ namespace Console.Messages
             CorrelationId = multipartMessage.GetCorrelationId();
         }
 
-        public void RegisterCallbackPoint(ICallbackPoint callbackPoint)
-        {
-            CallbackReceiverIdentity = callbackPoint.ReceiverIdentity;
-            CallbackIdentity = callbackPoint.MessageIdentity;
+        //public void RegisterCallbackPoint(ICallbackPoint callbackPoint)
+        //{
+        //    //CallbackReceiverIdentity = callbackPoint.ReceiverIdentity;
+        //    CallbackIdentity = callbackPoint.MessageIdentity;
 
-            if (Unsafe.Equals(Identity, callbackPoint.MessageIdentity))
-            {
-                ReceiverIdentity = CallbackReceiverIdentity;
-            }
-        }
+        //    if (Unsafe.Equals(Identity, CallbackIdentity))
+        //    {
+        //        ReceiverIdentity = CallbackReceiverIdentity;
+        //    }
+        //}
 
         internal void RegisterCallbackPoint(byte[] callbackIdentity, byte[] callbackReceiverIdentity)
         {
             CallbackReceiverIdentity = callbackReceiverIdentity;
             CallbackIdentity = callbackIdentity;
 
-            if (Unsafe.Equals(Identity, callbackIdentity))
+            if (Unsafe.Equals(Identity, CallbackIdentity))
             {
-                ReceiverIdentity = callbackReceiverIdentity;
+                ReceiverIdentity = CallbackReceiverIdentity;
             }
         }
 

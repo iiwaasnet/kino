@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using Console.Messages;
+using Framework;
 using NetMQ;
 
 namespace Console
@@ -52,8 +53,11 @@ namespace Console
                     {
                         try
                         {
-                            var message = callbackRegistration.Message;
+                            var message = (Message)callbackRegistration.Message;
                             var promise = callbackRegistration.Promise;
+                            var callbackPoint = callbackRegistration.CallbackPoint;
+
+                            message.RegisterCallbackPoint(callbackPoint.MessageIdentity, receivingSocketIdentity);
 
                             callbackHandlers.Push(new MessageIdentifier(message.Version,
                                                                         message.CallbackIdentity,
@@ -66,7 +70,7 @@ namespace Console
                                                                                                      {
                                                                                                          Identity = message.CallbackIdentity,
                                                                                                          Version = message.Version,
-                                                                                                         ReceiverIdentity = message.CallbackReceiverIdentity
+                                                                                                         ReceiverIdentity = receivingSocketIdentity
                                                                                                      }
                                                                                                  }}, WorkerReady.MessageIdentity);
                             var messageOut = new MultipartMessage(rdyMessage, receivingSocketIdentity);
@@ -135,22 +139,18 @@ namespace Console
             return socket;
         }
 
-        public IPromise EnqueueRequest(IMessage message)
+        public IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint)
         {
             var promise = new Promise();
 
             registrationsQueue.Add(new CallbackRegistration
                                    {
                                        Message = message,
-                                       Promise = promise
+                                       Promise = promise,
+                                       CallbackPoint = callbackPoint
                                    });
 
             return promise;
-        }
-
-        public byte[] GetReceiverIdentity()
-        {
-            return receivingSocketIdentity;
         }
     }
 }

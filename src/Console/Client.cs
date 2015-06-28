@@ -15,14 +15,13 @@ namespace Console
         {
             return new CallbackPoint
                    {
-                       MessageIdentity = messageIdentity.GetBytes(),
-                       ReceiverIdentity = requestSink.GetReceiverIdentity()
+                       MessageIdentity = messageIdentity.GetBytes()
                    };
         }
 
-        public IPromise Send(IMessage message)
+        public IPromise Send(IMessage message, ICallbackPoint callbackPoint)
         {
-            return requestSink.EnqueueRequest(message);
+            return requestSink.EnqueueRequest(message, callbackPoint);
         }
     }
 }

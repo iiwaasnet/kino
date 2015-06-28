@@ -17,14 +17,14 @@ namespace Console
             var messageRouter = new MessageRouter(context);
             messageRouter.Start();
 
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            Thread.Sleep(TimeSpan.FromSeconds(1));
 
             var actorHost = new ActorHost(context);
             actorHost.Start();
             var actor = new Actor();
             actorHost.AssignActor(actor);
 
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            Thread.Sleep(TimeSpan.FromSeconds(1));
 
             var requestSink = new ClientRequestSink(context);
             requestSink.Start();
@@ -32,8 +32,7 @@ namespace Console
 
             var callbackPoint = client.CreateCallbackPoint(EhlloMessage.MessageIdentity);
             var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
-            message.RegisterCallbackPoint(callbackPoint);
-            var response = client.Send(message).GetResponse().Result;
+            var response = client.Send(message, client.CreateCallbackPoint(EhlloMessage.MessageIdentity)).GetResponse().Result;
             var msg = response.GetPayload<EhlloMessage>();
 
             System.Console.WriteLine($"Received: {msg.Ehllo}");

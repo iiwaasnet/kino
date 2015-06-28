@@ -4,7 +4,6 @@ namespace Console.Messages
 {
     public interface IMessage
     {
-        void RegisterCallbackPoint(ICallbackPoint callbackPoint);
         T GetPayload<T>() where T : IPayload;
 
         DistributionPattern Distribution { get; }
