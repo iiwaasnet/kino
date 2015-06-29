@@ -32,7 +32,7 @@ namespace Console
 
             var callbackPoint = client.CreateCallbackPoint(EhlloMessage.MessageIdentity);
             var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
-            var response = client.Send(message, client.CreateCallbackPoint(EhlloMessage.MessageIdentity)).GetResponse().Result;
+            var response = client.Send(message, callbackPoint).GetResponse().Result;
             var msg = response.GetPayload<EhlloMessage>();
 
             System.Console.WriteLine($"Received: {msg.Ehllo}");
