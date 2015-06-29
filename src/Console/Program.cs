@@ -14,7 +14,8 @@ namespace Console
 
         private static void Main(string[] args)
         {
-            var context = NetMQContext.Create();
+            var context = (NetMQContext)new SocketContextProvider().GetContext();
+
             var messageRouter = new MessageRouter(context);
             messageRouter.Start();
 

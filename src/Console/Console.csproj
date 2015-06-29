@@ -57,6 +57,7 @@
     <Compile Include="CallbackPoint.cs" />
     <Compile Include="CallbackRegistration.cs" />
     <Compile Include="Client.cs" />
+    <Compile Include="ISocketContextProvider.cs" />
     <Compile Include="MessageHub.cs" />
     <Compile Include="ICallbackPoint.cs" />
     <Compile Include="IMessageHub.cs" />
@@ -86,6 +87,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Promise.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SocketContextProvider.cs" />
     <Compile Include="SocketIdentifier.cs" />
     <Compile Include="Actor.cs" />
     <Compile Include="ActorHost.cs" />
