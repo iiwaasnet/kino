@@ -7,26 +7,27 @@ namespace Console
     //TODO: Add TTL for registrations, so that never consumed handlers are not staying forever
     internal class CallbackHandlerStack
     {
-        private readonly ConcurrentDictionary<MessageIdentifier, IPromise> handlers;
+        private readonly ConcurrentDictionary<CallbackHandlerKey, IPromise> handlers;
 
         public CallbackHandlerStack()
         {
-            handlers =  new ConcurrentDictionary<MessageIdentifier, IPromise>();
+            handlers =  new ConcurrentDictionary<CallbackHandlerKey, IPromise>();
         }
 
-        internal void Push(MessageIdentifier messageIdentifier, IPromise promise)
+        internal void Push(CallbackHandlerKey callbackIdentifier, IPromise promise)
         {
-            if (handlers.ContainsKey(messageIdentifier))
+            if (handlers.ContainsKey(callbackIdentifier))
             {
-                throw new Exception($"Duplicated key: MessageIdentity[{messageIdentifier.MessageIdentity.GetString()}]-ReceiverIdentity[{messageIdentifier.ReceiverIdentity.GetString()}]");
+                //TODO: Improve by implementing ToString()
+                throw new Exception($"Duplicated key: ReceiverIdentity[{callbackIdentifier}]-Version[{callbackIdentifier.Version.GetString()}]");
             }
-            handlers[messageIdentifier] = promise;
+            handlers[callbackIdentifier] = promise;
         }
 
-        internal IPromise Pop(MessageIdentifier messageIdentifier)
+        internal IPromise Pop(CallbackHandlerKey callbackIdentifier)
         {
             IPromise promise;
-            handlers.TryRemove(messageIdentifier, out promise);
+            handlers.TryRemove(callbackIdentifier, out promise);
 
             return promise;
         }

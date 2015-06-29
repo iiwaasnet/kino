@@ -9,7 +9,7 @@ namespace Console.Messages
     {
         private const int MinFramesCount = 7;
         private readonly List<byte[]> frames;
-        private static readonly byte[] EmptyFrame = new byte[0];
+        internal static readonly byte[] EmptyFrame = new byte[0];
 
         internal MultipartMessage(IMessage message)
             : this(message, null)

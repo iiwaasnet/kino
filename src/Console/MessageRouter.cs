@@ -13,6 +13,7 @@ namespace Console
         private Thread workingThread;
         private readonly MessageHandlerStack messageHandlers;
         private readonly NetMQContext context;
+        private static readonly byte[] ReadyMessageIdentity = RegisterMessageHandlers.MessageIdentity.GetBytes();
 
         public MessageRouter(NetMQContext context)
         {
@@ -55,16 +56,13 @@ namespace Console
                             var request = socket.ReceiveMessage();
                             var multipart = new MultipartMessage(request, true);
 
-
-                            if (Unsafe.Equals(multipart.GetMessageIdentity(), WorkerReady.MessageIdentity.GetBytes()))
+                            if (IsReadyMessage(multipart))
                             {
                                 RegisterWorkers(multipart);
                             }
                             else
                             {
-                                var handler = messageHandlers.Pop(new MessageIdentifier(multipart.GetMessageVersion(),
-                                                                                        multipart.GetMessageIdentity(),
-                                                                                        multipart.GetReceiverIdentity()));
+                                var handler = messageHandlers.Pop(CreateMessageHandlerIdentifier(multipart));
 
                                 multipart.SetSocketIdentity(handler.SocketId);
                                 socket.SendMessage(new NetMQMessage(multipart.Frames));
@@ -83,14 +81,56 @@ namespace Console
             }
         }
 
+        private static bool IsReadyMessage(MultipartMessage multipart)
+        {
+            return Unsafe.Equals(multipart.GetMessageIdentity(), ReadyMessageIdentity);
+        }
+
         private void RegisterWorkers(MultipartMessage multipartMessage)
         {
             var message = new Message(multipartMessage);
-            var payload = message.GetPayload<WorkerReady>();
-            payload.MessageIdentities.ForEach(mi => messageHandlers.Push(new MessageIdentifier(mi.Version,
-                                                                                               mi.Identity,
-                                                                                               mi.ReceiverIdentity),
-                                                                         new SocketIdentifier(multipartMessage.GetSocketIdentity())));
+            var payload = message.GetPayload<RegisterMessageHandlers>();
+            var handlerSocketIdentifier = new SocketIdentifier(multipartMessage.GetSocketIdentity());
+
+            foreach (var registration in payload.Registrations)
+            {
+                try
+                {
+                    messageHandlers.Push(CreateMessageHandlerIdentifier(registration), handlerSocketIdentifier);
+                }
+                catch (Exception err)
+                {
+                    System.Console.WriteLine(err);
+                }
+                
+            }
+        }
+
+        private static MessageHandlerIdentifier CreateMessageHandlerIdentifier(MessageHandlerRegistration registration)
+        {
+            switch (registration.IdentityType)
+            {
+                case IdentityType.Actor:
+                    return new ActorIdentifier(registration.Version, registration.Identity);
+                case IdentityType.Callback:
+                    return new CallbackIdentifier(registration.Version, registration.Identity);
+                default:
+                    throw new Exception($"IdentifierType {registration.IdentityType} is unknown!");
+            }
+        }
+
+        private static MessageHandlerIdentifier CreateMessageHandlerIdentifier(MultipartMessage message)
+        {
+            var version = message.GetMessageVersion();
+            var messageIdentity = message.GetMessageIdentity();
+            var receiverIdentity = message.GetReceiverIdentity();
+
+            if (Unsafe.Equals(receiverIdentity, MultipartMessage.EmptyFrame))
+            {
+                return new ActorIdentifier(version, messageIdentity);
+            }
+
+            return new CallbackIdentifier(version, receiverIdentity);
         }
     }
 }

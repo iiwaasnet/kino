@@ -5,14 +5,14 @@ namespace Console.Messages
 {
     public class Message : IMessage
     {
-        public const string MessagesVersion = "1.0";
+        public const string CurrentVersion = "1.0";
         private static readonly IMessageSerializer messageSerializer = new MessageSerializer();
         private object payload;
 
         private Message(IPayload payload, string messageIdentity)
         {
             Body = Serialize(payload);
-            Version = MessagesVersion.GetBytes();
+            Version = CurrentVersion.GetBytes();
             Identity = messageIdentity.GetBytes();
             Distribution = DistributionPattern.Unicast;
             TTL = TimeSpan.Zero;

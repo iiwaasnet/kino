@@ -2,8 +2,8 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using Console.Messages;
-using Framework;
 using NetMQ;
+using NetMQ.Sockets;
 
 namespace Console
 {
@@ -47,38 +47,28 @@ namespace Console
         {
             try
             {
-                using (var socket = CreateSocket(context))
+                using (var socket = CreateSendingSocket(context))
                 {
                     foreach (var callbackRegistration in registrationsQueue.GetConsumingEnumerable(token))
                     {
                         try
                         {
-                            var message = (Message)callbackRegistration.Message;
+                            var message = (Message) callbackRegistration.Message;
                             var promise = callbackRegistration.Promise;
                             var callbackPoint = callbackRegistration.CallbackPoint;
 
                             message.RegisterCallbackPoint(callbackPoint.MessageIdentity, receivingSocketIdentity);
 
-                            callbackHandlers.Push(new MessageIdentifier(message.Version,
-                                                                        message.CallbackIdentity,
-                                                                        message.CallbackReceiverIdentity),
+                            callbackHandlers.Push(new CallbackHandlerKey
+                                                  {
+                                                      Version = message.Version,
+                                                      Identity = callbackPoint.MessageIdentity,
+                                                      Correlation = message.CorrelationId
+                                                  },
                                                   promise);
 
-                            var rdyMessage = Message.Create(new WorkerReady {MessageIdentities = new []
-                                                                                                 {
-                                                                                                     new MessageIdentity
-                                                                                                     {
-                                                                                                         Identity = message.CallbackIdentity,
-                                                                                                         Version = message.Version,
-                                                                                                         ReceiverIdentity = receivingSocketIdentity
-                                                                                                     }
-                                                                                                 }}, WorkerReady.MessageIdentity);
-                            var messageOut = new MultipartMessage(rdyMessage, receivingSocketIdentity);
-                            socket.SendMessage(new NetMQMessage(messageOut.Frames));
 
-                            Thread.Sleep(TimeSpan.FromSeconds(1));
-
-                            messageOut = new MultipartMessage(message);
+                            var messageOut = new MultipartMessage(message);
                             socket.SendMessage(new NetMQMessage(messageOut.Frames));
                         }
                         catch (Exception err)
@@ -100,7 +90,7 @@ namespace Console
         {
             try
             {
-                using (var socket = CreateSocket(context, receivingSocketIdentity))
+                using (var socket = CreateReceivingSocket(context, receivingSocketIdentity))
                 {
                     while (!token.IsCancellationRequested)
                     {
@@ -109,9 +99,12 @@ namespace Console
                             var request = socket.ReceiveMessage();
                             var multipart = new MultipartMessage(request);
                             var messageIn = new Message(multipart);
-                            var callback = (Promise) callbackHandlers.Pop(new MessageIdentifier(multipart.GetMessageVersion(),
-                                                                                                multipart.GetMessageIdentity(),
-                                                                                                multipart.GetReceiverIdentity()));
+                            var callback = (Promise) callbackHandlers.Pop(new CallbackHandlerKey
+                                                                          {
+                                                                              Version = multipart.GetMessageVersion(),
+                                                                              Identity = multipart.GetMessageIdentity(),
+                                                                              Correlation = multipart.GetCorrelationId()
+                                                                          });
                             callback?.SetResult(messageIn);
                         }
                         catch (Exception err)
@@ -127,16 +120,41 @@ namespace Console
             }
         }
 
-        private NetMQSocket CreateSocket(NetMQContext context, byte[] socketIdentity = null)
+        private NetMQSocket CreateReceivingSocket(NetMQContext context, byte[] socketIdentity = null)
         {
             var socket = context.CreateDealerSocket();
-            if (socketIdentity != null)
-            {
-                socket.Options.Identity = socketIdentity;
-            }
+            socket.Options.Identity = socketIdentity;
             socket.Connect(endpointAddress);
 
             return socket;
+        }
+
+        private NetMQSocket CreateSendingSocket(NetMQContext context)
+        {
+            var socket = context.CreateDealerSocket();
+            socket.Connect(endpointAddress);
+
+            RegisterRequestSink(socket);
+
+            return socket;
+        }
+
+        private void RegisterRequestSink(DealerSocket socket)
+        {
+            var rdyMessage = Message.Create(new RegisterMessageHandlers
+                                            {
+                                                Registrations = new[]
+                                                                {
+                                                                    new MessageHandlerRegistration
+                                                                    {
+                                                                        Version = Message.CurrentVersion.GetBytes(),
+                                                                        Identity = receivingSocketIdentity,
+                                                                        IdentityType = IdentityType.Callback
+                                                                    }
+                                                                }
+                                            }, RegisterMessageHandlers.MessageIdentity);
+            var messageOut = new MultipartMessage(rdyMessage, receivingSocketIdentity);
+            socket.SendMessage(new NetMQMessage(messageOut.Frames));
         }
 
         public IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint)

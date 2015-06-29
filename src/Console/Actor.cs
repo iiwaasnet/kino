@@ -14,7 +14,7 @@ namespace Console
                              Message = new MessageDefinition
                                        {
                                            Identity = HelloMessage.MessageIdentity,
-                                           Version = Message.MessagesVersion
+                                           Version = Message.CurrentVersion
                                        }
                          };
         }
