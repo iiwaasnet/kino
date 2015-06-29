@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using Console.Messages;
 using NetMQ;
@@ -9,7 +10,7 @@ namespace Console
     {
         internal const string EndpointAddress = "tcp://127.0.0.1:5555";
         //TODO: Switch to inproc protocol after https://github.com/zeromq/netmq/pull/343 is released 
-        //internal const string EndpointAddress = "inproc://localsocket";
+        //internal const string EndpointAddress = "inproc://local";
 
         private static void Main(string[] args)
         {
@@ -26,19 +27,26 @@ namespace Console
 
             Thread.Sleep(TimeSpan.FromSeconds(1));
 
-            var requestSink = new ClientRequestSink(context);
-            requestSink.Start();
-            var client = new Client(requestSink);
+            var messageHub = new MessageHub(context);
+            messageHub.Start();
 
-            var callbackPoint = client.CreateCallbackPoint(EhlloMessage.MessageIdentity);
+            var timer = new Stopwatch();
+            timer.Start();
+
+            var client = new Client(messageHub);
+            var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
+
             var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
             var response = client.Send(message, callbackPoint).GetResponse().Result;
             var msg = response.GetPayload<EhlloMessage>();
 
             System.Console.WriteLine($"Received: {msg.Ehllo}");
+            timer.Stop();
+
+            System.Console.WriteLine($"Done in {timer.ElapsedMilliseconds} msec");
 
             actorHost.Stop();
-            requestSink.Stop();
+            messageHub.Stop();
             messageRouter.Stop();
             context.Dispose();
         }

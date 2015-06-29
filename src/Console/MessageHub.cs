@@ -7,7 +7,7 @@ using NetMQ.Sockets;
 
 namespace Console
 {
-    public class ClientRequestSink : IClientRequestSink
+    public class MessageHub : IMessageHub
     {
         private readonly NetMQContext context;
         private readonly CallbackHandlerStack callbackHandlers;
@@ -18,7 +18,7 @@ namespace Console
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
 
-        public ClientRequestSink(NetMQContext context)
+        public MessageHub(NetMQContext context)
         {
             this.context = context;
             callbackHandlers = new CallbackHandlerStack();

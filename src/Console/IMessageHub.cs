@@ -2,7 +2,7 @@
 
 namespace Console
 {
-    public interface IClientRequestSink
+    public interface IMessageHub
     {
         IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint);
     }
