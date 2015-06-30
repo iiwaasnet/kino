@@ -1,9 +1,13 @@
-﻿namespace Console.Messages
+﻿using ProtoBuf;
+
+namespace Console.Messages
 {
+    [ProtoContract]
     public class EhlloMessage : IPayload
     {
         public const string MessageIdentity = "EHHLO";
 
+        [ProtoMember(1)]
         public string Ehllo { get; set; }
     }
 }

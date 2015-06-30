@@ -31,7 +31,7 @@ namespace Console
             return actor
                 .GetInterfaceDefinition()
                 .ToDictionary(d => new ActorIdentifier(d.Message.Version.GetBytes(),
-                                                         d.Message.Identity.GetBytes()), d => d.Handler);
+                                                       d.Message.Identity.GetBytes()), d => d.Handler);
         }
 
         public void Start()
@@ -60,7 +60,7 @@ namespace Console
                             var multipart = new MultipartMessage(request);
                             var messageIn = new Message(multipart);
                             var handler = messageHandlers[new ActorIdentifier(multipart.GetMessageVersion(),
-                                                                                multipart.GetMessageIdentity())];
+                                                                              multipart.GetMessageIdentity())];
 
                             var messageOut = (Message) handler(messageIn);
 
@@ -73,7 +73,7 @@ namespace Console
                                 socket.SendMessage(new NetMQMessage(response.Frames));
                             }
 
-                            SignalWorkerReady(socket);
+                            //SignalWorkerReady(socket);
                         }
                         catch (Exception err)
                         {
@@ -111,6 +111,7 @@ namespace Console
                                                     Version = mh.Version,
                                                     IdentityType = IdentityType.Actor
                                                 })
+                                  .ToArray()
                           };
             var multipartMessage = new MultipartMessage(Message.Create(payload, RegisterMessageHandlers.MessageIdentity), socket.Options.Identity);
             socket.SendMessage(new NetMQMessage(multipartMessage.Frames));

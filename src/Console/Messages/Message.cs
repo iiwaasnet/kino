@@ -6,7 +6,8 @@ namespace Console.Messages
     public class Message : IMessage
     {
         public const string CurrentVersion = "1.0";
-        private static readonly IMessageSerializer messageSerializer = new MessageSerializer();
+        //private static readonly IMessageSerializer messageSerializer = new NewtonJsonMessageSerializer();
+        private static readonly IMessageSerializer messageSerializer = new ProtobufMessageSerializer();
         private object payload;
 
         private Message(IPayload payload, string messageIdentity)

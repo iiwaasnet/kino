@@ -41,6 +41,10 @@
       <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -78,10 +82,10 @@
     <Compile Include="Messages\IPayload.cs" />
     <Compile Include="Messages\MessageHandlerRegistration.cs" />
     <Compile Include="Messages\MultipartMessage.cs" />
-    <Compile Include="Messages\ITypedMessage.cs" />
     <Compile Include="Messages\Message.cs" />
-    <Compile Include="Messages\MessageSerializer.cs" />
+    <Compile Include="Messages\NewtonJsonMessageSerializer.cs" />
     <Compile Include="Messages\HelloMessage.cs" />
+    <Compile Include="Messages\ProtobufMessageSerializer.cs" />
     <Compile Include="Messages\TypedMessage.cs" />
     <Compile Include="Messages\RegisterMessageHandlers.cs" />
     <Compile Include="Program.cs" />

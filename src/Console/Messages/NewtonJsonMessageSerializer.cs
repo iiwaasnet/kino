@@ -4,7 +4,7 @@ using Newtonsoft.Json.Bson;
 
 namespace Console.Messages
 {
-    public class MessageSerializer : IMessageSerializer
+    public class NewtonJsonMessageSerializer : IMessageSerializer
     {
         public byte[] Serialize(object obj)
         {

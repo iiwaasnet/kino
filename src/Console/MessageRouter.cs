@@ -63,9 +63,15 @@ namespace Console
                             else
                             {
                                 var handler = messageHandlers.Pop(CreateMessageHandlerIdentifier(multipart));
-
-                                multipart.SetSocketIdentity(handler.SocketId);
-                                socket.SendMessage(new NetMQMessage(multipart.Frames));
+                                if (handler != null)
+                                {
+                                    multipart.SetSocketIdentity(handler.SocketId);
+                                    socket.SendMessage(new NetMQMessage(multipart.Frames));
+                                }
+                                else
+                                {
+                                    System.Console.WriteLine("No currently available handlers!");
+                                }
                             }
                         }
                         catch (Exception err)

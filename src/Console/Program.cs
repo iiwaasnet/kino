@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Console.Messages;
+using Framework;
 using NetMQ;
 
 namespace Console
@@ -14,17 +18,14 @@ namespace Console
 
         private static void Main(string[] args)
         {
-            var context = (NetMQContext)new SocketContextProvider().GetContext();
+            var context = (NetMQContext) new SocketContextProvider().GetContext();
 
             var messageRouter = new MessageRouter(context);
             messageRouter.Start();
 
             Thread.Sleep(TimeSpan.FromSeconds(1));
 
-            var actorHost = new ActorHost(context);
-            actorHost.Start();
-            var actor = new Actor();
-            actorHost.AssignActor(actor);
+            var actors = CreateActors(context, 1).ToList();
 
             Thread.Sleep(TimeSpan.FromSeconds(1));
 
@@ -36,20 +37,52 @@ namespace Console
 
             var client = new Client(messageHub);
             var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
+            var responses = new List<Task<IMessage>>();
+            for (var i = 0; i < 100000; i++)
+            {
+                var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
+                responses.Add(client.Send(message, callbackPoint).GetResponse());
+                //var msg = response.GetPayload<EhlloMessage>();
 
-            var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
-            var response = client.Send(message, callbackPoint).GetResponse().Result;
-            var msg = response.GetPayload<EhlloMessage>();
+                //System.Console.WriteLine($"{i} Received: {msg.Ehllo}");
+            }
 
-            System.Console.WriteLine($"Received: {msg.Ehllo}");
+            responses.ForEach(r => r.Wait());
+
             timer.Stop();
 
             System.Console.WriteLine($"Done in {timer.ElapsedMilliseconds} msec");
 
-            actorHost.Stop();
+            timer.Restart();
+            responses = new List<Task<IMessage>>();
+            for (var i = 0; i < 100000; i++)
+            {
+                var message = Message.CreateFlowStartMessage(new HelloMessage { Greeting = "Hello" }, HelloMessage.MessageIdentity);
+                responses.Add(client.Send(message, callbackPoint).GetResponse());
+            }
+
+            responses.ForEach(r => r.Wait());
+
+            timer.Stop();
+
+            System.Console.WriteLine($"Done in {timer.ElapsedMilliseconds} msec");
+
+            actors.ForEach(a => a.Stop());
             messageHub.Stop();
             messageRouter.Stop();
             context.Dispose();
+        }
+
+        private static IEnumerable<ActorHost> CreateActors(NetMQContext context, int count)
+        {
+            for (var i = 0; i < count; i++)
+            {
+                var actorHost = new ActorHost(context);
+                actorHost.Start();
+                var actor = new Actor();
+                actorHost.AssignActor(actor);
+                yield return actorHost;
+            }
         }
     }
 }

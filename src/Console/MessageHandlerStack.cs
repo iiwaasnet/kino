@@ -24,12 +24,14 @@ namespace Console
             Push(collection, socketIdentifier);
         }
 
-        
+
         internal SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier)
         {
+            //TODO: Implement round robin
             HashSet<SocketIdentifier> collection;
             return storage.TryGetValue(messageHandlerIdentifier, out collection)
-                       ? (IdentifyByMessage(messageHandlerIdentifier))?Pop(collection):Get(collection)
+                       ? Get(collection)
+                       //? (IdentifyByMessage(messageHandlerIdentifier)) ? Pop(collection) : Get(collection)
                        : null;
         }
 
@@ -45,14 +47,22 @@ namespace Console
 
         private static T Pop<T>(ICollection<T> hashSet)
         {
-            var el = hashSet.First();
-            hashSet.Remove(el);
+            if (hashSet.Any())
+            {
+                var el = hashSet.First();
+                hashSet.Remove(el);
 
-            return el;
+                return el;
+            }
+
+            return default(T);
         }
+
         private static T Get<T>(ICollection<T> hashSet)
         {
-            return hashSet.First();
+            return hashSet.Any()
+                       ? hashSet.First()
+                       : default(T);
         }
     }
 }
