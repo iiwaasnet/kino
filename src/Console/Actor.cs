@@ -22,7 +22,7 @@ namespace Console
         private IMessage StartProcess(IMessage message)
         {
             var hello = message.GetPayload<HelloMessage>();
-            System.Console.WriteLine(hello.Greeting);
+            //System.Console.WriteLine(hello.Greeting);
 
             return Message.Create(new EhlloMessage {Ehllo = new string(hello.Greeting.Reverse().ToArray())}, EhlloMessage.MessageIdentity);
         }

@@ -9,13 +9,11 @@ namespace Console
 {
     public class ActorHost : IActorHost
     {
-        private IActor actor;
         private IDictionary<ActorIdentifier, MessageHandler> messageHandlers;
         private readonly NetMQContext context;
         private const string endpointAddress = Program.EndpointAddress;
         private Thread workingThread;
         private readonly CancellationTokenSource cancellationTokenSource;
-        private static readonly byte[] AnyReceiver = new byte[0];
 
         public ActorHost(NetMQContext context)
         {
@@ -26,7 +24,6 @@ namespace Console
         public void AssignActor(IActor actor)
         {
             messageHandlers = BuildMessageHandlersMap(actor);
-            this.actor = actor;
         }
 
         private static IDictionary<ActorIdentifier, MessageHandler> BuildMessageHandlersMap(IActor actor)
