@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Console.Messages;
-using Framework;
 using NetMQ;
 
 namespace Console
@@ -32,11 +31,22 @@ namespace Console
             var messageHub = new MessageHub(context);
             messageHub.Start();
 
+            var client = new Client(messageHub);
+            var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
+
+            RunTest(client, callbackPoint);
+
+            actors.ForEach(a => a.Stop());
+            messageHub.Stop();
+            messageRouter.Stop();
+            context.Dispose();
+        }
+
+        private static void RunTest(Client client, CallbackPoint callbackPoint)
+        {
             var timer = new Stopwatch();
             timer.Start();
 
-            var client = new Client(messageHub);
-            var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
             var responses = new List<Task<IMessage>>();
             for (var i = 0; i < 100000; i++)
             {
@@ -52,25 +62,6 @@ namespace Console
             timer.Stop();
 
             System.Console.WriteLine($"Done in {timer.ElapsedMilliseconds} msec");
-
-            timer.Restart();
-            responses = new List<Task<IMessage>>();
-            for (var i = 0; i < 100000; i++)
-            {
-                var message = Message.CreateFlowStartMessage(new HelloMessage { Greeting = "Hello" }, HelloMessage.MessageIdentity);
-                responses.Add(client.Send(message, callbackPoint).GetResponse());
-            }
-
-            responses.ForEach(r => r.Wait());
-
-            timer.Stop();
-
-            System.Console.WriteLine($"Done in {timer.ElapsedMilliseconds} msec");
-
-            actors.ForEach(a => a.Stop());
-            messageHub.Stop();
-            messageRouter.Stop();
-            context.Dispose();
         }
 
         private static IEnumerable<ActorHost> CreateActors(NetMQContext context, int count)
