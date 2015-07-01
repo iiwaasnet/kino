@@ -22,11 +22,7 @@ namespace Console
             var messageRouter = new MessageRouter(context);
             messageRouter.Start();
 
-            Thread.Sleep(TimeSpan.FromSeconds(1));
-
             var actors = CreateActors(context, 1).ToList();
-
-            Thread.Sleep(TimeSpan.FromSeconds(1));
 
             var messageHub = new MessageHub(context);
             messageHub.Start();

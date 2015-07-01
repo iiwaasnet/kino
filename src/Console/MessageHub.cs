@@ -17,10 +17,12 @@ namespace Console
         private readonly byte[] receivingSocketIdentity;
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
+        private readonly ManualResetEventSlim hubRegistered;
 
         public MessageHub(NetMQContext context)
         {
             this.context = context;
+            hubRegistered = new ManualResetEventSlim();
             callbackHandlers = new CallbackHandlerStack();
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
             cancellationTokenSource = new CancellationTokenSource();
@@ -134,12 +136,12 @@ namespace Console
             var socket = context.CreateDealerSocket();
             socket.Connect(endpointAddress);
 
-            RegisterRequestSink(socket);
+            RegisterMessageHub(socket);
 
             return socket;
         }
 
-        private void RegisterRequestSink(DealerSocket socket)
+        private void RegisterMessageHub(DealerSocket socket)
         {
             var rdyMessage = Message.Create(new RegisterMessageHandlers
                                             {
@@ -155,10 +157,14 @@ namespace Console
                                             }, RegisterMessageHandlers.MessageIdentity);
             var messageOut = new MultipartMessage(rdyMessage, receivingSocketIdentity);
             socket.SendMessage(new NetMQMessage(messageOut.Frames));
+
+            hubRegistered.Set();
         }
 
         public IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint)
         {
+            hubRegistered.Wait();
+
             var promise = new Promise();
 
             registrationsQueue.Add(new CallbackRegistration
