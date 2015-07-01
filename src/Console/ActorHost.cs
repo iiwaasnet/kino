@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Console.Messages;
 using NetMQ;
 
@@ -31,7 +32,8 @@ namespace Console
             return actor
                 .GetInterfaceDefinition()
                 .ToDictionary(d => new ActorIdentifier(d.Message.Version.GetBytes(),
-                                                       d.Message.Identity.GetBytes()), d => d.Handler);
+                                                       d.Message.Identity.GetBytes()),
+                              d => d.Handler);
         }
 
         public void Start()
@@ -62,15 +64,22 @@ namespace Console
                             var handler = messageHandlers[new ActorIdentifier(multipart.GetMessageVersion(),
                                                                               multipart.GetMessageIdentity())];
 
-                            var messageOut = (Message) handler(messageIn);
-
-                            if (messageOut != null)
+                            var task = handler(messageIn);
+                            if(task != null)
                             {
-                                messageOut.RegisterCallbackPoint(messageIn.CallbackIdentity, messageIn.CallbackReceiverIdentity);
-                                messageOut.SetCorrelationId(messageIn.CorrelationId);
+                                //TODO: Implement logic for IsCanceled or IsFalted
+                                if (task.IsCompleted)
+                                {
+                                    var messageOut = (Message) task.Result;
+                                    if (messageOut != null)
+                                    {
+                                        messageOut.RegisterCallbackPoint(messageIn.CallbackIdentity, messageIn.CallbackReceiverIdentity);
+                                        messageOut.SetCorrelationId(messageIn.CorrelationId);
 
-                                var response = new MultipartMessage(messageOut, socket.Options.Identity);
-                                socket.SendMessage(new NetMQMessage(response.Frames));
+                                        var response = new MultipartMessage(messageOut, socket.Options.Identity);
+                                        socket.SendMessage(new NetMQMessage(response.Frames));
+                                    }
+                                }
                             }
 
                             //SignalWorkerReady(socket);

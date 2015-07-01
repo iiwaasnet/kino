@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Console.Messages;
 
 namespace Console
@@ -19,12 +20,18 @@ namespace Console
                          };
         }
 
-        private IMessage StartProcess(IMessage message)
+        private async Task<IMessage> StartProcess(IMessage message)
         {
             var hello = message.GetPayload<HelloMessage>();
             //System.Console.WriteLine(hello.Greeting);
 
-            return Message.Create(new EhlloMessage {Ehllo = new string(hello.Greeting.Reverse().ToArray())}, EhlloMessage.MessageIdentity);
+            var response = await Task.FromResult(Message.Create(new EhlloMessage
+                                                                {
+                                                                    Ehllo = new string(hello.Greeting.Reverse().ToArray())
+                                                                },
+                                                                EhlloMessage.MessageIdentity));
+
+            return response;
         }
     }
 }
