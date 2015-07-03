@@ -75,6 +75,7 @@ namespace Console
                         }
                         catch (Exception err)
                         {
+                            //TODO: Send error message
                             System.Console.WriteLine(err);
                         }
                     }
