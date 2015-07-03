@@ -6,6 +6,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Console.Messages;
 using NetMQ;
+using rawf.Actors;
+using rawf.Client;
+using rawf.Messaging;
 
 namespace Console
 {

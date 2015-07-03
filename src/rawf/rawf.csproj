@@ -4,17 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{005165F7-BA80-49E6-947A-B97EBE3012EB}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{AC984F96-6D8F-466B-B6A7-B241A7C5DEC1}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Console</RootNamespace>
-    <AssemblyName>Console</AssemblyName>
+    <RootNamespace>rawf</RootNamespace>
+    <AssemblyName>rawf</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,9 +20,9 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -55,22 +53,51 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Actor.cs" />
-    <Compile Include="Messages\EhlloMessage.cs" />
-    <Compile Include="Messages\HelloMessage.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Actors\ActorHost.cs" />
+    <Compile Include="Actors\ActorIdentifier.cs" />
+    <Compile Include="Actors\IActor.cs" />
+    <Compile Include="Actors\IActorHost.cs" />
+    <Compile Include="Actors\IMessageRouter.cs" />
+    <Compile Include="Actors\ISocketContextProvider.cs" />
+    <Compile Include="Actors\MessageDefinition.cs" />
+    <Compile Include="Actors\MessageHandler.cs" />
+    <Compile Include="Actors\MessageHandlerStack.cs" />
+    <Compile Include="Actors\MessageMap.cs" />
+    <Compile Include="Actors\MessageRouter.cs" />
+    <Compile Include="Actors\SocketContextProvider.cs" />
+    <Compile Include="Actors\SocketIdentifier.cs" />
+    <Compile Include="Client\CallbackHandlerKey.cs" />
+    <Compile Include="Client\CallbackHandlerStack.cs" />
+    <Compile Include="Client\CallbackIdentifier.cs" />
+    <Compile Include="Client\CallbackPoint.cs" />
+    <Compile Include="Client\CallbackRegistration.cs" />
+    <Compile Include="Client\Client.cs" />
+    <Compile Include="Client\ICallbackPoint.cs" />
+    <Compile Include="Client\IMessageHub.cs" />
+    <Compile Include="Client\IPromise.cs" />
+    <Compile Include="Client\MessageHub.cs" />
+    <Compile Include="Client\Promise.cs" />
+    <Compile Include="Framework\LinqExtensions.cs" />
+    <Compile Include="Framework\Unsafe.cs" />
+    <Compile Include="Messaging\DataEncoder.cs" />
+    <Compile Include="Messaging\IMessage.cs" />
+    <Compile Include="Messaging\IMessageSerializer.cs" />
+    <Compile Include="Messaging\IPayload.cs" />
+    <Compile Include="Messaging\Message.cs" />
+    <Compile Include="MessageHandlerIdentifier.cs" />
+    <Compile Include="Messaging\MessageHandlerRegistration.cs" />
+    <Compile Include="Messaging\MultipartMessage.cs" />
+    <Compile Include="Messaging\MultipartMessage.Frames.cs" />
+    <Compile Include="Messaging\NewtonJsonMessageSerializer.cs" />
+    <Compile Include="Messaging\ProtobufMessageSerializer.cs" />
+    <Compile Include="Messaging\RegisterMessageHandlers.cs" />
+    <Compile Include="Messaging\TypedMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\rawf\rawf.csproj">
-      <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
-      <Name>rawf</Name>
-    </ProjectReference>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

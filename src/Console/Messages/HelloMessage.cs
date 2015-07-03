@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using rawf.Messaging;
 
 namespace Console.Messages
 {

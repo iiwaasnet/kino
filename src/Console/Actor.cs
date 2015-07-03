@@ -1,8 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Console.Messages;
+using rawf.Actors;
+using rawf.Messaging;
 
 namespace Console
 {
@@ -26,7 +27,7 @@ namespace Console
             var hello = message.GetPayload<HelloMessage>();
             //System.Console.WriteLine(hello.Greeting);
 
-            await Task.Delay(TimeSpan.FromSeconds(1));
+            await Task.Delay(0);
 
             return Message.Create(new EhlloMessage
                                   {
