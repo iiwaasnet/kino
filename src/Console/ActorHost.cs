@@ -73,17 +73,23 @@ namespace Console
                                 socket.SendMessage(new NetMQMessage(response.Frames));
                             }
                         }
-                        catch (Exception)
+                        catch (Exception err)
                         {
-                            throw;
+                            System.Console.WriteLine(err);
                         }
                     }
-                    asyncResponses.Dispose();
                 }
+            }
+            catch (OperationCanceledException)
+            {
             }
             catch (Exception err)
             {
                 System.Console.WriteLine(err);
+            }
+            finally
+            {
+                asyncResponses.Dispose();
             }
         }
 
