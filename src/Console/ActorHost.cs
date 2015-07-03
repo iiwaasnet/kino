@@ -93,6 +93,8 @@ namespace Console
             {
                 using (var socket = CreateSocket(context, new byte[] {5, 5, 5}))
                 {
+                    SignalWorkerReady(socket);
+
                     while (!token.IsCancellationRequested)
                     {
                         try
@@ -154,10 +156,11 @@ namespace Console
         private NetMQSocket CreateSocket(NetMQContext context, byte[] identity)
         {
             var socket = context.CreateDealerSocket();
-            socket.Options.Identity = identity;
+            if (identity != null)
+            {
+                socket.Options.Identity = identity;
+            }
             socket.Connect(endpointAddress);
-
-            SignalWorkerReady(socket);
 
             return socket;
         }

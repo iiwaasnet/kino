@@ -30,6 +30,8 @@ namespace Console
             var client = new Client(messageHub);
             var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
 
+            Thread.Sleep(TimeSpan.FromSeconds(1));
+
             RunTest(client, callbackPoint);
 
             actors.ForEach(a => a.Stop());
@@ -44,7 +46,7 @@ namespace Console
             timer.Start();
 
             var responses = new List<Task<IMessage>>();
-            for (var i = 0; i < 100000; i++)
+            for (var i = 0; i < 1; i++)
             {
                 var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
                 responses.Add(client.Send(message, callbackPoint).GetResponse());
@@ -53,7 +55,12 @@ namespace Console
                 //System.Console.WriteLine($"{i} Received: {msg.Ehllo}");
             }
 
-            responses.ForEach(r => r.Wait());
+            responses.ForEach(r =>
+                              {
+                                  r.Wait();
+                                  var msg = r.Result.GetPayload<EhlloMessage>();
+                                  System.Console.WriteLine($"Received: {msg.Ehllo}");
+                              });
 
             timer.Stop();
 

@@ -62,6 +62,7 @@
     <Compile Include="CallbackRegistration.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="ISocketContextProvider.cs" />
+    <Compile Include="MessageDefinition.cs" />
     <Compile Include="MessageHub.cs" />
     <Compile Include="ICallbackPoint.cs" />
     <Compile Include="IMessageHub.cs" />
