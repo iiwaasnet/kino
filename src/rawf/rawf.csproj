@@ -58,13 +58,13 @@
     <Compile Include="Actors\IActor.cs" />
     <Compile Include="Actors\IActorHost.cs" />
     <Compile Include="Actors\IMessageRouter.cs" />
-    <Compile Include="Actors\ISocketContextProvider.cs" />
+    <Compile Include="Connectivity\IConnectivityProvider.cs" />
     <Compile Include="Actors\MessageDefinition.cs" />
     <Compile Include="Actors\MessageHandler.cs" />
     <Compile Include="Actors\MessageHandlerStack.cs" />
     <Compile Include="Actors\MessageMap.cs" />
     <Compile Include="Actors\MessageRouter.cs" />
-    <Compile Include="Actors\SocketContextProvider.cs" />
+    <Compile Include="Connectivity\ConnectivityProvider.cs" />
     <Compile Include="Actors\SocketIdentifier.cs" />
     <Compile Include="Client\CallbackHandlerKey.cs" />
     <Compile Include="Client\CallbackHandlerStack.cs" />

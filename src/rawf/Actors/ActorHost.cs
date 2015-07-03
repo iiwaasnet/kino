@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NetMQ;
+using rawf.Connectivity;
 using rawf.Messaging;
 
 namespace rawf.Actors
@@ -13,15 +14,16 @@ namespace rawf.Actors
     {
         private IDictionary<ActorIdentifier, MessageHandler> messageHandlers;
         private readonly NetMQContext context;
-        private const string endpointAddress = "tcp://127.0.0.1:5555";
+        private readonly string endpointAddress;
         private Task syncProcessingTask;
         private Task asyncProcessingTask;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly BlockingCollection<AsyncMessageContext> asyncResponses;
 
-        public ActorHost(NetMQContext context)
+        public ActorHost(IConnectivityProvider connectivityProvider)
         {
-            this.context = context;
+            context = (NetMQContext)((ConnectivityProvider)connectivityProvider).GetConnectivityContext();
+            endpointAddress = ((ConnectivityProvider)connectivityProvider).GetLocalEndpointAddress();
             asyncResponses = new BlockingCollection<AsyncMessageContext>(new ConcurrentQueue<AsyncMessageContext>());
             cancellationTokenSource = new CancellationTokenSource();
         }

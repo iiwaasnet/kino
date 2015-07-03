@@ -2,6 +2,7 @@
 using System.Threading;
 using NetMQ;
 using rawf.Client;
+using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
 
@@ -9,16 +10,17 @@ namespace rawf.Actors
 {
     public class MessageRouter : IMessageRouter
     {
-        private const string localEndpointAddress = "tcp://127.0.0.1:5555";
+        private readonly string localEndpointAddress;
         private readonly CancellationTokenSource cancellationTokenSource;
         private Thread workingThread;
         private readonly MessageHandlerStack messageHandlers;
         private readonly NetMQContext context;
         private static readonly byte[] ReadyMessageIdentity = RegisterMessageHandlers.MessageIdentity.GetBytes();
 
-        public MessageRouter(NetMQContext context)
+        public MessageRouter(IConnectivityProvider connectivityProvider)
         {
-            this.context = context;
+            context = (NetMQContext)((ConnectivityProvider)connectivityProvider).GetConnectivityContext();
+            localEndpointAddress = ((ConnectivityProvider)connectivityProvider).GetLocalEndpointAddress();
             messageHandlers = new MessageHandlerStack();
             cancellationTokenSource = new CancellationTokenSource();
         }

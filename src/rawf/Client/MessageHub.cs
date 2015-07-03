@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NetMQ;
 using NetMQ.Sockets;
+using rawf.Connectivity;
 using rawf.Messaging;
 
 namespace rawf.Client
@@ -12,7 +13,7 @@ namespace rawf.Client
     {
         private readonly NetMQContext context;
         private readonly CallbackHandlerStack callbackHandlers;
-        private const string endpointAddress = "tcp://127.0.0.1:5555";
+        private readonly string endpointAddress;
         private Task sendingTask;
         private Task receivingTask;
         private readonly byte[] receivingSocketIdentity;
@@ -20,9 +21,10 @@ namespace rawf.Client
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
 
-        public MessageHub(NetMQContext context)
+        public MessageHub(IConnectivityProvider connectivityProvider)
         {
-            this.context = context;
+            context = (NetMQContext)((ConnectivityProvider)connectivityProvider).GetConnectivityContext();
+            endpointAddress = ((ConnectivityProvider)connectivityProvider).GetLocalEndpointAddress();
             hubRegistered = new ManualResetEventSlim();
             callbackHandlers = new CallbackHandlerStack();
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());

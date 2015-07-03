@@ -8,6 +8,7 @@ using Console.Messages;
 using NetMQ;
 using rawf.Actors;
 using rawf.Client;
+using rawf.Connectivity;
 using rawf.Messaging;
 
 namespace Console
@@ -20,14 +21,14 @@ namespace Console
 
         private static void Main(string[] args)
         {
-            var context = (NetMQContext) new SocketContextProvider().GetContext();
+            var connectivityProvider = new ConnectivityProvider(EndpointAddress);
 
-            var messageRouter = new MessageRouter(context);
+            var messageRouter = new MessageRouter(connectivityProvider);
             messageRouter.Start();
 
-            var actors = CreateActors(context, 1).ToList();
+            var actors = CreateActors(connectivityProvider, 1).ToList();
 
-            var messageHub = new MessageHub(context);
+            var messageHub = new MessageHub(connectivityProvider);
             messageHub.Start();
 
             var client = new Client(messageHub);
@@ -40,7 +41,7 @@ namespace Console
             actors.ForEach(a => a.Stop());
             messageHub.Stop();
             messageRouter.Stop();
-            context.Dispose();
+            connectivityProvider.Dispose();
         }
 
         private static void RunTest(Client client, CallbackPoint callbackPoint)
@@ -70,11 +71,11 @@ namespace Console
             System.Console.WriteLine($"Done in {timer.ElapsedMilliseconds} msec");
         }
 
-        private static IEnumerable<ActorHost> CreateActors(NetMQContext context, int count)
+        private static IEnumerable<ActorHost> CreateActors(IConnectivityProvider connectivityProvider, int count)
         {
             for (var i = 0; i < count; i++)
             {
-                var actorHost = new ActorHost(context);
+                var actorHost = new ActorHost(connectivityProvider);
                 actorHost.Start();
                 var actor = new Actor();
                 actorHost.AssignActor(actor);
