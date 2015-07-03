@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 using Console.Messages;
 using NetMQ;
 using NetMQ.Sockets;
@@ -12,8 +13,8 @@ namespace Console
         private readonly NetMQContext context;
         private readonly CallbackHandlerStack callbackHandlers;
         private const string endpointAddress = Program.EndpointAddress;
-        private Thread sendingThread;
-        private Thread receivingThread;
+        private Task sendingTask;
+        private Task receivingTask;
         private readonly byte[] receivingSocketIdentity;
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
@@ -32,17 +33,15 @@ namespace Console
 
         public void Start()
         {
-            receivingThread = new Thread(_ => ReadReplies(cancellationTokenSource.Token));
-            sendingThread = new Thread(_ => SendClientRequests(cancellationTokenSource.Token));
-            sendingThread.Start();
-            receivingThread.Start();
+            receivingTask = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+            sendingTask = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
         }
 
         public void Stop()
         {
             cancellationTokenSource.Cancel(true);
-            sendingThread.Join();
-            receivingThread.Join();
+            sendingTask.Wait();
+            receivingTask.Wait();
         }
 
         private void SendClientRequests(CancellationToken token)
