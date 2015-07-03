@@ -130,17 +130,7 @@ namespace Console
                                 }
                                 else
                                 {
-                                    task.ContinueWith(t =>
-                                                      {
-                                                          var asyncMessageContext = new AsyncMessageContext
-                                                                                    {
-                                                                                        OutMessage = task.Result,
-                                                                                        CorrelationId = messageIn.CorrelationId,
-                                                                                        CallbackIdentity = messageIn.CallbackIdentity,
-                                                                                        CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity
-                                                                                    };
-                                                          asyncResponses.Add(asyncMessageContext, token);
-                                                      }, token)
+                                    task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, messageIn), token)
                                         .ConfigureAwait(false);
                                 }
                             }
@@ -149,10 +139,33 @@ namespace Console
                         }
                         catch (Exception err)
                         {
+                            //TODO: Send error message
                             System.Console.WriteLine(err);
                         }
                     }
                 }
+            }
+            catch (Exception err)
+            {
+                System.Console.WriteLine(err);
+            }
+        }
+
+        private void EnqueueTaskForCompletion(CancellationToken token, Task<IMessage> task, IMessage messageIn)
+        {
+            try
+            {
+                var asyncMessageContext = new AsyncMessageContext
+                                          {
+                                              OutMessage = task.Result,
+                                              CorrelationId = messageIn.CorrelationId,
+                                              CallbackIdentity = messageIn.CallbackIdentity,
+                                              CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity
+                                          };
+                asyncResponses.Add(asyncMessageContext, token);
+            }
+            catch (OperationCanceledException)
+            {
             }
             catch (Exception err)
             {
