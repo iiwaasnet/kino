@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NetMQ;
@@ -42,9 +41,11 @@ namespace rawf.Actors
 
         public void Start()
         {
-            localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
-            scaleOutRouting = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
-        }        
+            localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token),
+                                                 TaskCreationOptions.LongRunning);
+            scaleOutRouting = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token),
+                                                    TaskCreationOptions.LongRunning);
+        }
 
         public void Stop()
         {
@@ -67,7 +68,6 @@ namespace rawf.Actors
                             var multipart = new MultipartMessage(message, true);
                             multipart.SetSocketIdentity(localSocketIdentity);
                             peeringFrontend.SendMessage(new NetMQMessage(multipart.Frames));
-                            
                         }
                         catch (Exception err)
                         {
