@@ -12,24 +12,20 @@ namespace rawf.Actors
 {
     public class MessageRouter : IMessageRouter
     {
-        private readonly string localEndpointAddress;
-        private readonly IEnumerable<string> peers;
-        private readonly string localPeerAddress;
         private readonly CancellationTokenSource cancellationTokenSource;
         private Task localRouting;
-        private Task peerRouting;
+        private Task scaleOutRouting;
         private readonly MessageHandlerStack messageHandlers;
         private readonly NetMQContext context;
         private static readonly byte[] ReadyMessageIdentity = RegisterMessageHandlers.MessageIdentity.GetBytes();
-        private readonly byte[] peeringSocketIdentity = {1, 1, 1, 1, 1};
+        private readonly byte[] scaleOutSocketIdentity = {1, 1, 1, 1, 1};
         private readonly byte[] localSocketIdentity = {2, 2, 2, 2, 2};
+        private readonly IConnectivityProvider connectivityProvider;
 
         public MessageRouter(IConnectivityProvider connectivityProvider)
         {
+            this.connectivityProvider = connectivityProvider;
             context = (NetMQContext) connectivityProvider.GetConnectivityContext();
-            localEndpointAddress = connectivityProvider.GetLocalEndpointAddress();
-            localPeerAddress = connectivityProvider.GetLocalPeerAddress();
-            peers = connectivityProvider.GetPeerAddresses();
             messageHandlers = new MessageHandlerStack();
             cancellationTokenSource = new CancellationTokenSource();
         }
@@ -39,7 +35,7 @@ namespace rawf.Actors
             var socket = context.CreateRouterSocket();
             socket.Options.RouterMandatory = true;
             socket.Options.Identity = localSocketIdentity;
-            socket.Bind(localEndpointAddress);
+            socket.Bind(connectivityProvider.GetLocalEndpointAddress());
 
             return socket;
         }
@@ -47,14 +43,14 @@ namespace rawf.Actors
         public void Start()
         {
             localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
-            peerRouting = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+            scaleOutRouting = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
         }        
 
         public void Stop()
         {
             cancellationTokenSource.Cancel(true);
             localRouting.Wait();
-            peerRouting.Wait();
+            scaleOutRouting.Wait();
         }
 
         private void RoutePeerMessages(CancellationToken token)
@@ -116,7 +112,7 @@ namespace rawf.Actors
                                     else
                                     {
                                         Console.WriteLine("No currently available handlers!");
-                                        multipart.SetSocketIdentity(peeringSocketIdentity);
+                                        multipart.SetSocketIdentity(scaleOutSocketIdentity);
                                         peeringBackend.SendMessage(new NetMQMessage(multipart.Frames));
                                     }
                                 }
@@ -138,9 +134,9 @@ namespace rawf.Actors
         private NetMQSocket CreatePeeringBackendSocket(NetMQContext context)
         {
             var socket = context.CreateRouterSocket();
-            socket.Options.Identity = peeringSocketIdentity;
-            //socket.Options.RouterMandatory = true;
-            foreach (var peer in peers)
+            socket.Options.Identity = scaleOutSocketIdentity;
+            socket.Options.RouterMandatory = true;
+            foreach (var peer in connectivityProvider.GetScaleOutCluster())
             {
                 socket.Connect(peer);
             }
@@ -151,10 +147,10 @@ namespace rawf.Actors
         private NetMQSocket CreatePeeringFrontendSocket(NetMQContext context)
         {
             var socket = context.CreateRouterSocket();
-            socket.Options.Identity = peeringSocketIdentity;
-            //socket.Options.RouterMandatory = true;
-            socket.Connect(localEndpointAddress);
-            socket.Bind(localPeerAddress);
+            socket.Options.Identity = scaleOutSocketIdentity;
+            socket.Options.RouterMandatory = true;
+            socket.Connect(connectivityProvider.GetLocalEndpointAddress());
+            socket.Bind(connectivityProvider.GetLocalScaleOutAddress());
 
             return socket;
         }

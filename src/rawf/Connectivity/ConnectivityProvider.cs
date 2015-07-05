@@ -29,12 +29,12 @@ namespace rawf.Connectivity
             return localEndpointAddress;
         }
 
-        public string GetLocalPeerAddress()
+        public string GetLocalScaleOutAddress()
         {
             return localPeerAddress;
         }
 
-        public IEnumerable<string> GetPeerAddresses()
+        public IEnumerable<string> GetScaleOutCluster()
         {
             return peerAddresses;
         }
