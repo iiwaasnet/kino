@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace rawf.Connectivity
 {
@@ -6,5 +7,8 @@ namespace rawf.Connectivity
     {
         //TODO: Might extract full NetMQContext interface later
         IDisposable GetConnectivityContext();
+        string GetLocalEndpointAddress();
+        string GetLocalPeerAddress();
+        IEnumerable<string> GetPeerAddresses();
     }
 }

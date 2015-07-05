@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using NetMQ;
 using rawf.Client;
 using rawf.Connectivity;
@@ -11,16 +13,23 @@ namespace rawf.Actors
     public class MessageRouter : IMessageRouter
     {
         private readonly string localEndpointAddress;
+        private readonly IEnumerable<string> peers;
+        private readonly string localPeerAddress;
         private readonly CancellationTokenSource cancellationTokenSource;
-        private Thread workingThread;
+        private Task localRouting;
+        private Task peerRouting;
         private readonly MessageHandlerStack messageHandlers;
         private readonly NetMQContext context;
         private static readonly byte[] ReadyMessageIdentity = RegisterMessageHandlers.MessageIdentity.GetBytes();
+        private readonly byte[] peeringSocketIdentity = {1, 1, 1, 1, 1};
+        private readonly byte[] localSocketIdentity = {2, 2, 2, 2, 2};
 
         public MessageRouter(IConnectivityProvider connectivityProvider)
         {
-            context = (NetMQContext)((ConnectivityProvider)connectivityProvider).GetConnectivityContext();
-            localEndpointAddress = ((ConnectivityProvider)connectivityProvider).GetLocalEndpointAddress();
+            context = (NetMQContext) connectivityProvider.GetConnectivityContext();
+            localEndpointAddress = connectivityProvider.GetLocalEndpointAddress();
+            localPeerAddress = connectivityProvider.GetLocalPeerAddress();
+            peers = connectivityProvider.GetPeerAddresses();
             messageHandlers = new MessageHandlerStack();
             cancellationTokenSource = new CancellationTokenSource();
         }
@@ -29,6 +38,7 @@ namespace rawf.Actors
         {
             var socket = context.CreateRouterSocket();
             socket.Options.RouterMandatory = true;
+            socket.Options.Identity = localSocketIdentity;
             socket.Bind(localEndpointAddress);
 
             return socket;
@@ -36,58 +46,117 @@ namespace rawf.Actors
 
         public void Start()
         {
-            workingThread = new Thread(_ => MessageProcessingLoop(cancellationTokenSource.Token));
-            workingThread.Start();
-        }
+            localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+            peerRouting = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+        }        
 
         public void Stop()
         {
             cancellationTokenSource.Cancel(true);
-            workingThread.Join();
+            localRouting.Wait();
+            peerRouting.Wait();
         }
 
-        private void MessageProcessingLoop(CancellationToken token)
+        private void RoutePeerMessages(CancellationToken token)
         {
             try
             {
-                using (var socket = CreateSocket(context))
+                using (var peeringFrontend = CreatePeeringFrontendSocket(context))
                 {
                     while (!token.IsCancellationRequested)
                     {
                         try
                         {
-                            var request = socket.ReceiveMessage();
-                            var multipart = new MultipartMessage(request, true);
-
-                            if (IsReadyMessage(multipart))
-                            {
-                                RegisterWorkers(multipart);
-                            }
-                            else
-                            {
-                                var handler = messageHandlers.Pop(CreateMessageHandlerIdentifier(multipart));
-                                if (handler != null)
-                                {
-                                    multipart.SetSocketIdentity(handler.SocketId);
-                                    socket.SendMessage(new NetMQMessage(multipart.Frames));
-                                }
-                                else
-                                {
-                                    System.Console.WriteLine("No currently available handlers!");
-                                }
-                            }
+                            var message = peeringFrontend.ReceiveMessage();
+                            var multipart = new MultipartMessage(message, true);
+                            multipart.SetSocketIdentity(localSocketIdentity);
+                            peeringFrontend.SendMessage(new NetMQMessage(multipart.Frames));
+                            
                         }
                         catch (Exception err)
                         {
-                            System.Console.WriteLine(err);
+                            Console.WriteLine(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                System.Console.WriteLine(err);
+                Console.WriteLine(err);
             }
+        }
+
+        private void RouteLocalMessages(CancellationToken token)
+        {
+            try
+            {
+                using (var localSocket = CreateSocket(context))
+                {
+                    using (var peeringBackend = CreatePeeringBackendSocket(context))
+                    {
+                        while (!token.IsCancellationRequested)
+                        {
+                            try
+                            {
+                                var request = localSocket.ReceiveMessage();
+                                var multipart = new MultipartMessage(request, true);
+
+                                if (IsReadyMessage(multipart))
+                                {
+                                    RegisterWorkers(multipart);
+                                }
+                                else
+                                {
+                                    var handler = messageHandlers.Pop(CreateMessageHandlerIdentifier(multipart));
+                                    if (handler != null)
+                                    {
+                                        multipart.SetSocketIdentity(handler.SocketId);
+                                        localSocket.SendMessage(new NetMQMessage(multipart.Frames));
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("No currently available handlers!");
+                                        multipart.SetSocketIdentity(peeringSocketIdentity);
+                                        peeringBackend.SendMessage(new NetMQMessage(multipart.Frames));
+                                    }
+                                }
+                            }
+                            catch (Exception err)
+                            {
+                                Console.WriteLine(err);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine(err);
+            }
+        }
+
+        private NetMQSocket CreatePeeringBackendSocket(NetMQContext context)
+        {
+            var socket = context.CreateRouterSocket();
+            socket.Options.Identity = peeringSocketIdentity;
+            //socket.Options.RouterMandatory = true;
+            foreach (var peer in peers)
+            {
+                socket.Connect(peer);
+            }
+
+            return socket;
+        }
+
+        private NetMQSocket CreatePeeringFrontendSocket(NetMQContext context)
+        {
+            var socket = context.CreateRouterSocket();
+            socket.Options.Identity = peeringSocketIdentity;
+            //socket.Options.RouterMandatory = true;
+            socket.Connect(localEndpointAddress);
+            socket.Bind(localPeerAddress);
+
+            return socket;
         }
 
         private static bool IsReadyMessage(MultipartMessage multipart)
@@ -109,9 +178,8 @@ namespace rawf.Actors
                 }
                 catch (Exception err)
                 {
-                    System.Console.WriteLine(err);
+                    Console.WriteLine(err);
                 }
-                
             }
         }
 

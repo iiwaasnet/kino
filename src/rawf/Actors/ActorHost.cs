@@ -15,15 +15,15 @@ namespace rawf.Actors
         private IDictionary<ActorIdentifier, MessageHandler> messageHandlers;
         private readonly NetMQContext context;
         private readonly string endpointAddress;
-        private Task syncProcessingTask;
-        private Task asyncProcessingTask;
+        private Task syncProcessing;
+        private Task asyncProcessing;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly BlockingCollection<AsyncMessageContext> asyncResponses;
 
         public ActorHost(IConnectivityProvider connectivityProvider)
         {
-            context = (NetMQContext)((ConnectivityProvider)connectivityProvider).GetConnectivityContext();
-            endpointAddress = ((ConnectivityProvider)connectivityProvider).GetLocalEndpointAddress();
+            context = (NetMQContext) connectivityProvider.GetConnectivityContext();
+            endpointAddress = connectivityProvider.GetLocalEndpointAddress();
             asyncResponses = new BlockingCollection<AsyncMessageContext>(new ConcurrentQueue<AsyncMessageContext>());
             cancellationTokenSource = new CancellationTokenSource();
         }
@@ -44,22 +44,22 @@ namespace rawf.Actors
 
         public void Start()
         {
-            syncProcessingTask = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
-            asyncProcessingTask = Task.Factory.StartNew(_ => ProcessAsyncResponses(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+            syncProcessing = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+            asyncProcessing = Task.Factory.StartNew(_ => ProcessAsyncResponses(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
         }
 
         public void Stop()
         {
             cancellationTokenSource.Cancel(true);
-            syncProcessingTask.Wait();
-            asyncProcessingTask.Wait();
+            syncProcessing.Wait();
+            asyncProcessing.Wait();
         }
 
         private void ProcessAsyncResponses(CancellationToken token)
         {
             try
             {
-                using (var socket = CreateSocket(context, null))
+                using (var localSocket = CreateSocket(context, null))
                 {
                     foreach (var messageContext in asyncResponses.GetConsumingEnumerable(token))
                     {
@@ -71,14 +71,14 @@ namespace rawf.Actors
                                 messageOut.RegisterCallbackPoint(messageContext.CallbackIdentity, messageContext.CallbackReceiverIdentity);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
 
-                                var response = new MultipartMessage(messageOut, socket.Options.Identity);
-                                socket.SendMessage(new NetMQMessage(response.Frames));
+                                var response = new MultipartMessage(messageOut, localSocket.Options.Identity);
+                                localSocket.SendMessage(new NetMQMessage(response.Frames));
                             }
                         }
                         catch (Exception err)
                         {
                             //TODO: Send error message
-                            System.Console.WriteLine(err);
+                            Console.WriteLine(err);
                         }
                     }
                 }
@@ -88,7 +88,7 @@ namespace rawf.Actors
             }
             catch (Exception err)
             {
-                System.Console.WriteLine(err);
+                Console.WriteLine(err);
             }
             finally
             {
@@ -100,15 +100,15 @@ namespace rawf.Actors
         {
             try
             {
-                using (var socket = CreateSocket(context, new byte[] {5, 5, 5}))
+                using (var localSocket = CreateSocket(context, new byte[] {5, 5, 5}))
                 {
-                    SignalWorkerReady(socket);
+                    SignalWorkerReady(localSocket);
 
                     while (!token.IsCancellationRequested)
                     {
                         try
                         {
-                            var request = socket.ReceiveMessage();
+                            var request = localSocket.ReceiveMessage();
                             var multipart = new MultipartMessage(request);
                             var messageIn = new Message(multipart);
                             var handler = messageHandlers[new ActorIdentifier(multipart.GetMessageVersion(),
@@ -126,8 +126,8 @@ namespace rawf.Actors
                                         messageOut.RegisterCallbackPoint(messageIn.CallbackIdentity, messageIn.CallbackReceiverIdentity);
                                         messageOut.SetCorrelationId(messageIn.CorrelationId);
 
-                                        var response = new MultipartMessage(messageOut, socket.Options.Identity);
-                                        socket.SendMessage(new NetMQMessage(response.Frames));
+                                        var response = new MultipartMessage(messageOut, localSocket.Options.Identity);
+                                        localSocket.SendMessage(new NetMQMessage(response.Frames));
                                     }
                                 }
                                 else
@@ -142,14 +142,14 @@ namespace rawf.Actors
                         catch (Exception err)
                         {
                             //TODO: Send error message
-                            System.Console.WriteLine(err);
+                            Console.WriteLine(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                System.Console.WriteLine(err);
+                Console.WriteLine(err);
             }
         }
 
@@ -171,7 +171,7 @@ namespace rawf.Actors
             }
             catch (Exception err)
             {
-                System.Console.WriteLine(err);
+                Console.WriteLine(err);
             }
         }
 
@@ -204,13 +204,5 @@ namespace rawf.Actors
             var multipartMessage = new MultipartMessage(Message.Create(payload, RegisterMessageHandlers.MessageIdentity), socket.Options.Identity);
             socket.SendMessage(new NetMQMessage(multipartMessage.Frames));
         }
-    }
-
-    internal class AsyncMessageContext
-    {
-        internal IMessage OutMessage { get; set; }
-        internal byte[] CorrelationId { get; set; }
-        internal byte[] CallbackIdentity { get; set; }
-        internal byte[] CallbackReceiverIdentity { get; set; }
     }
 }

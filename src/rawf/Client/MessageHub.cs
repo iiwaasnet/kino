@@ -14,8 +14,8 @@ namespace rawf.Client
         private readonly NetMQContext context;
         private readonly CallbackHandlerStack callbackHandlers;
         private readonly string endpointAddress;
-        private Task sendingTask;
-        private Task receivingTask;
+        private Task sending;
+        private Task receiving;
         private readonly byte[] receivingSocketIdentity;
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
@@ -23,8 +23,8 @@ namespace rawf.Client
 
         public MessageHub(IConnectivityProvider connectivityProvider)
         {
-            context = (NetMQContext)((ConnectivityProvider)connectivityProvider).GetConnectivityContext();
-            endpointAddress = ((ConnectivityProvider)connectivityProvider).GetLocalEndpointAddress();
+            context = (NetMQContext)connectivityProvider.GetConnectivityContext();
+            endpointAddress = connectivityProvider.GetLocalEndpointAddress();
             hubRegistered = new ManualResetEventSlim();
             callbackHandlers = new CallbackHandlerStack();
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
@@ -35,15 +35,15 @@ namespace rawf.Client
 
         public void Start()
         {
-            receivingTask = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
-            sendingTask = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+            receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+            sending = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
         }
 
         public void Stop()
         {
             cancellationTokenSource.Cancel(true);
-            sendingTask.Wait();
-            receivingTask.Wait();
+            sending.Wait();
+            receiving.Wait();
         }
 
         private void SendClientRequests(CancellationToken token)

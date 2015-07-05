@@ -55,6 +55,7 @@
   <ItemGroup>
     <Compile Include="Actors\ActorHost.cs" />
     <Compile Include="Actors\ActorIdentifier.cs" />
+    <Compile Include="Actors\AsyncMessageContext.cs" />
     <Compile Include="Actors\IActor.cs" />
     <Compile Include="Actors\IActorHost.cs" />
     <Compile Include="Actors\IMessageRouter.cs" />
