@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using NetMQ;
 using rawf.Connectivity;
 using rawf.Messaging;
+using rawf.Messaging.Messages;
 
 namespace rawf.Actors
 {
@@ -77,8 +78,7 @@ namespace rawf.Actors
                         }
                         catch (Exception err)
                         {
-                            //TODO: Send error message
-                            Console.WriteLine(err);
+                            ProcessException(localSocket, err, messageContext.CorrelationId);
                         }
                     }
                 }
@@ -94,6 +94,14 @@ namespace rawf.Actors
             {
                 asyncResponses.Dispose();
             }
+        }
+
+        private void ProcessException(NetMQSocket localSocket, Exception err, byte[] correlationId)
+        {
+            var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
+            message.SetCorrelationId(correlationId);
+            var multipart = new MultipartMessage(message);
+            localSocket.SendMessage(new NetMQMessage(multipart.Frames));
         }
 
         private void ProcessRequests(CancellationToken token)

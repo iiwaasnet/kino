@@ -56,6 +56,7 @@
     <Compile Include="Actors\ActorHost.cs" />
     <Compile Include="Actors\ActorIdentifier.cs" />
     <Compile Include="Actors\AsyncMessageContext.cs" />
+    <Compile Include="Actors\Diagnostics\ExceptionHandlerActor.cs" />
     <Compile Include="Actors\IActor.cs" />
     <Compile Include="Actors\IActorHost.cs" />
     <Compile Include="Actors\IMessageRouter.cs" />
@@ -87,6 +88,7 @@
     <Compile Include="Messaging\Message.cs" />
     <Compile Include="MessageHandlerIdentifier.cs" />
     <Compile Include="Messaging\MessageHandlerRegistration.cs" />
+    <Compile Include="Messaging\Messages\ExceptionMessage.cs" />
     <Compile Include="Messaging\MultipartMessage.cs" />
     <Compile Include="Messaging\MultipartMessage.Frames.cs" />
     <Compile Include="Messaging\NewtonJsonMessageSerializer.cs" />
