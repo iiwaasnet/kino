@@ -69,6 +69,13 @@ namespace rawf.Client
                                                       Correlation = message.CorrelationId
                                                   },
                                                   promise);
+                            callbackHandlers.Push(new CallbackHandlerKey
+                                                {
+                                                    Version = message.Version,
+                                                    Identity = ExceptionMessage.MessageIdentity,
+                                                    Correlation = message.CorrelationId
+                                                },
+                                                promise);
 
 
                             var messageOut = new MultipartMessage(message);
