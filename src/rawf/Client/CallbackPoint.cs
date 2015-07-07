@@ -1,12 +1,13 @@
-﻿using rawf.Messaging;
+﻿using rawf.Framework;
+using rawf.Messaging;
 
 namespace rawf.Client
 {
     public class CallbackPoint : ICallbackPoint
     {
-        public CallbackPoint(string messageIdentity)
+        public CallbackPoint(byte[] messageIdentity)
         {
-            MessageIdentity = messageIdentity.GetBytes();
+            MessageIdentity = messageIdentity;
         }
 
         public byte[] MessageIdentity { get; }

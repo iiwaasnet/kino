@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using NetMQ;
+using rawf.Framework;
 
 namespace rawf.Messaging
 {
     internal partial class MultipartMessage
     {
-        private const int MinFramesCount = 7;
-        private readonly List<byte[]> frames;
-        internal static readonly byte[] EmptyFrame = new byte[0];
+        private const int MinFramesCount = 12;
+        private readonly IList<byte[]> frames;
+        private static readonly byte[] EmptyFrame = new byte[0];
 
         internal MultipartMessage(IMessage message)
             : this(message, null)
@@ -21,14 +22,14 @@ namespace rawf.Messaging
             frames = BuildMessageParts(message, senderIdentity).ToList();
         }
 
-        internal MultipartMessage(NetMQMessage message, bool skipIdentityFrame = false)
+        internal MultipartMessage(NetMQMessage message, bool removeRouterAddedSocketIdentity = false)
         {
             AssertMessage(message);
 
-            frames = SplitMessageToFrames(message, skipIdentityFrame).ToList();
+            frames = SplitMessageToFrames(message, removeRouterAddedSocketIdentity);
         }
 
-        private IEnumerable<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message, bool skipIdentityFrame)
+        private IList<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message, bool skipIdentityFrame)
             => message.Skip(skipIdentityFrame ? 1 : 0).Select(m => m.Buffer).ToList();
 
         private IEnumerable<byte[]> BuildMessageParts(IMessage message, byte[] senderIdentity)
@@ -86,8 +87,7 @@ namespace rawf.Messaging
         {
             if (message.FrameCount < MinFramesCount)
             {
-                throw new Exception(
-                    $"FrameCount expected (at least): [{MinFramesCount}], received: [{message.FrameCount}]");
+                throw new Exception($"FrameCount expected (at least): [{MinFramesCount}], received: [{message.FrameCount}]");
             }
         }
 

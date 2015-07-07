@@ -87,9 +87,17 @@ namespace Console
 
             responses.ForEach(r =>
                               {
-                                  r.Wait();
-                                  var msg = r.Result.GetPayload<EhlloMessage>();
-                                  System.Console.WriteLine($"Received: {msg.Ehllo}");
+                                  try
+                                  {
+                                      r.Wait();
+                                      var msg = r.Result.GetPayload<EhlloMessage>();
+                                      System.Console.WriteLine($"Received: {msg.Ehllo}");
+                                  }
+                                  catch (Exception err)
+                                  {
+                                      System.Console.WriteLine(err);
+                                  }
+                                  
                               });
 
             timer.Stop();

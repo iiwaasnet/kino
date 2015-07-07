@@ -1,11 +1,12 @@
 ﻿using ProtoBuf;
+using rawf.Framework;
 
 namespace rawf.Messaging
 {
     [ProtoContract]
     public class RegisterMessageHandlers : IPayload
     {
-        public const string MessageIdentity = "MSGHREG";
+        public static readonly byte[] MessageIdentity = "MSGHREG".GetBytes();
         [ProtoMember(1)]
         public MessageHandlerRegistration[] Registrations { get; set; }
     }

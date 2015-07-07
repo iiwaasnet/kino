@@ -4,7 +4,7 @@ FRAME			OPT	CONTENT							DESCRIPTION
 (of n total)	
 ======================================================================
 0					[0]
-1					Sender socket ID				ID of the sending socket (not ROUTER)
+1					Sender socket ID				ID of the sending socket
 2					[0]
 3				*	Router ID						0-n ROUTER socket IDs added by every ROUTER, forwarding the message
 ..

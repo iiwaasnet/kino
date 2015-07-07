@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace rawf.Messaging
+namespace rawf.Framework
 {
     public static class DataEncoder
     {

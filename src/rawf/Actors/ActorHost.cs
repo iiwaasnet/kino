@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NetMQ;
 using rawf.Connectivity;
+using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
 
@@ -38,8 +39,8 @@ namespace rawf.Actors
         {
             return actor
                 .GetInterfaceDefinition()
-                .ToDictionary(d => new ActorIdentifier(d.Message.Version.GetBytes(),
-                                                       d.Message.Identity.GetBytes()),
+                .ToDictionary(d => new ActorIdentifier(d.Message.Version,
+                                                       d.Message.Identity),
                               d => d.Handler);
         }
 
@@ -78,7 +79,7 @@ namespace rawf.Actors
                         }
                         catch (Exception err)
                         {
-                            ProcessException(localSocket, err, messageContext.CorrelationId);
+                            NotifyCommonExceptionHandler(localSocket, err, CorrelationId.Infrastructural);
                         }
                     }
                 }
@@ -96,7 +97,7 @@ namespace rawf.Actors
             }
         }
 
-        private void ProcessException(NetMQSocket localSocket, Exception err, byte[] correlationId)
+        private void NotifyCommonExceptionHandler(NetMQSocket localSocket, Exception err, byte[] correlationId)
         {
             var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
             message.SetCorrelationId(correlationId);
@@ -114,10 +115,17 @@ namespace rawf.Actors
 
                     while (!token.IsCancellationRequested)
                     {
+                        IncomeMessageContext messageContext = null;
                         try
                         {
                             var request = localSocket.ReceiveMessage();
                             var multipart = new MultipartMessage(request);
+                            messageContext = new IncomeMessageContext
+                                             {
+                                                 CorrelationId = multipart.GetCorrelationId(),
+                                                 CallbackReceiverIdentity = multipart.GetCallbackReceiverIdentity()
+                                             };
+
                             var messageIn = new Message(multipart);
                             var handler = messageHandlers[new ActorIdentifier(multipart.GetMessageVersion(),
                                                                               multipart.GetMessageIdentity())];
@@ -144,13 +152,11 @@ namespace rawf.Actors
                                         .ConfigureAwait(false);
                                 }
                             }
-
-                            //SignalWorkerReady(socket);
                         }
                         catch (Exception err)
                         {
-                            //TODO: Send error message
-                            Console.WriteLine(err);
+                            CallbackException(localSocket, err, messageContext);
+                            NotifyCommonExceptionHandler(localSocket, err, CorrelationId.Infrastructural);
                         }
                     }
                 }
@@ -158,6 +164,18 @@ namespace rawf.Actors
             catch (Exception err)
             {
                 Console.WriteLine(err);
+            }
+        }
+
+        private void CallbackException(NetMQSocket localSocket, Exception err, IncomeMessageContext messageContext)
+        {
+            if (messageContext != null && messageContext.CallbackReceiverIdentity.IsSet())
+            {
+                var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
+                message.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, messageContext.CallbackReceiverIdentity);
+                message.SetCorrelationId(messageContext.CorrelationId);
+                var multipart = new MultipartMessage(message);
+                localSocket.SendMessage(new NetMQMessage(multipart.Frames));
             }
         }
 
@@ -211,6 +229,12 @@ namespace rawf.Actors
                           };
             var multipartMessage = new MultipartMessage(Message.Create(payload, RegisterMessageHandlers.MessageIdentity), socket.Options.Identity);
             socket.SendMessage(new NetMQMessage(multipartMessage.Frames));
+        }
+
+        private class IncomeMessageContext
+        {
+            internal byte[] CorrelationId { get; set; }
+            internal byte[] CallbackReceiverIdentity { get; set; }
         }
     }
 }

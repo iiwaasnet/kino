@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using NetMQ;
 using NetMQ.Sockets;
 using rawf.Connectivity;
+using rawf.Framework;
 using rawf.Messaging;
+using rawf.Messaging.Messages;
 
 namespace rawf.Client
 {
@@ -23,7 +25,7 @@ namespace rawf.Client
 
         public MessageHub(IConnectivityProvider connectivityProvider)
         {
-            context = (NetMQContext)connectivityProvider.GetConnectivityContext();
+            context = (NetMQContext) connectivityProvider.GetConnectivityContext();
             endpointAddress = connectivityProvider.GetLocalEndpointAddress();
             hubRegistered = new ManualResetEventSlim();
             callbackHandlers = new CallbackHandlerStack();
@@ -70,12 +72,12 @@ namespace rawf.Client
                                                   },
                                                   promise);
                             callbackHandlers.Push(new CallbackHandlerKey
-                                                {
-                                                    Version = message.Version,
-                                                    Identity = ExceptionMessage.MessageIdentity,
-                                                    Correlation = message.CorrelationId
-                                                },
-                                                promise);
+                                                  {
+                                                      Version = message.Version,
+                                                      Identity = ExceptionMessage.MessageIdentity,
+                                                      Correlation = message.CorrelationId
+                                                  },
+                                                  promise);
 
 
                             var messageOut = new MultipartMessage(message);
@@ -83,7 +85,7 @@ namespace rawf.Client
                         }
                         catch (Exception err)
                         {
-                            System.Console.WriteLine(err);
+                            Console.WriteLine(err);
                         }
                     }
                     registrationsQueue.Dispose();
@@ -91,7 +93,7 @@ namespace rawf.Client
             }
             catch (Exception err)
             {
-                System.Console.WriteLine(err);
+                Console.WriteLine(err);
             }
         }
 
@@ -119,14 +121,14 @@ namespace rawf.Client
                         }
                         catch (Exception err)
                         {
-                            System.Console.WriteLine(err);
+                            Console.WriteLine(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                System.Console.WriteLine(err);
+                Console.WriteLine(err);
             }
         }
 
@@ -157,7 +159,7 @@ namespace rawf.Client
                                                                 {
                                                                     new MessageHandlerRegistration
                                                                     {
-                                                                        Version = Message.CurrentVersion.GetBytes(),
+                                                                        Version = Message.CurrentVersion,
                                                                         Identity = receivingSocketIdentity,
                                                                         IdentityType = IdentityType.Callback
                                                                     }

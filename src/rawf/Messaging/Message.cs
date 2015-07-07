@@ -5,26 +5,27 @@ namespace rawf.Messaging
 {
     public class Message : IMessage
     {
-        public const string CurrentVersion = "1.0";
+        public static readonly byte[]CurrentVersion = "1.0".GetBytes();
         //private static readonly IMessageSerializer messageSerializer = new NewtonJsonMessageSerializer();
+        //TODO: Allow injection of the message serializer
         private static readonly IMessageSerializer messageSerializer = new ProtobufMessageSerializer();
         private object payload;
 
-        private Message(IPayload payload, string messageIdentity)
+        private Message(IPayload payload, byte[] messageIdentity)
         {
             Body = Serialize(payload);
-            Version = CurrentVersion.GetBytes();
-            Identity = messageIdentity.GetBytes();
+            Version = CurrentVersion;
+            Identity = messageIdentity;
             Distribution = DistributionPattern.Unicast;
             TTL = TimeSpan.Zero;
         }
 
-        public static IMessage CreateFlowStartMessage(IPayload payload, string messageIdentity)
+        public static IMessage CreateFlowStartMessage(IPayload payload, byte[] messageIdentity)
         {
             return new Message(payload, messageIdentity) {CorrelationId = GenerateCorrelationId()};
         }
 
-        public static IMessage Create(IPayload payload, string messageIdentity)
+        public static IMessage Create(IPayload payload, byte[] messageIdentity)
         {
             return new Message(payload, messageIdentity);
         }

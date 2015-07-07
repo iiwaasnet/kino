@@ -79,9 +79,11 @@
     <Compile Include="Client\IPromise.cs" />
     <Compile Include="Client\MessageHub.cs" />
     <Compile Include="Client\Promise.cs" />
+    <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />
     <Compile Include="Framework\Unsafe.cs" />
-    <Compile Include="Messaging\DataEncoder.cs" />
+    <Compile Include="Messaging\CorrelationId.cs" />
+    <Compile Include="Framework\DataEncoder.cs" />
     <Compile Include="Messaging\IMessage.cs" />
     <Compile Include="Messaging\IMessageSerializer.cs" />
     <Compile Include="Messaging\IPayload.cs" />

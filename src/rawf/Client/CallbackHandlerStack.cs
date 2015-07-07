@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using rawf.Framework;
 using rawf.Messaging;
 
 namespace rawf.Client

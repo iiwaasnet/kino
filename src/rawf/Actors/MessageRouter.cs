@@ -16,7 +16,6 @@ namespace rawf.Actors
         private Task scaleOutRouting;
         private readonly MessageHandlerStack messageHandlers;
         private readonly NetMQContext context;
-        private static readonly byte[] ReadyMessageIdentity = RegisterMessageHandlers.MessageIdentity.GetBytes();
         private readonly byte[] scaleOutSocketIdentity = {1, 1, 1, 1, 1};
         private readonly byte[] localSocketIdentity = {2, 2, 2, 2, 2};
         private readonly IConnectivityProvider connectivityProvider;
@@ -65,7 +64,7 @@ namespace rawf.Actors
                         try
                         {
                             var message = peeringFrontend.ReceiveMessage();
-                            var multipart = new MultipartMessage(message, true);
+                            var multipart = new MultipartMessage(message);
                             multipart.SetSocketIdentity(localSocketIdentity);
                             peeringFrontend.SendMessage(new NetMQMessage(multipart.Frames));
                         }
@@ -112,8 +111,10 @@ namespace rawf.Actors
                                     else
                                     {
                                         Console.WriteLine("No currently available handlers!");
-                                        multipart.SetSocketIdentity(scaleOutSocketIdentity);
-                                        peeringBackend.SendMessage(new NetMQMessage(multipart.Frames));
+
+                                        var forwardMessage = new MultipartMessage(request);
+                                        forwardMessage.SetSocketIdentity(scaleOutSocketIdentity);
+                                        peeringBackend.SendMessage(new NetMQMessage(forwardMessage.Frames));
                                     }
                                 }
                             }
@@ -157,7 +158,7 @@ namespace rawf.Actors
 
         private static bool IsReadyMessage(MultipartMessage multipart)
         {
-            return Unsafe.Equals(multipart.GetMessageIdentity(), ReadyMessageIdentity);
+            return Unsafe.Equals(multipart.GetMessageIdentity(), RegisterMessageHandlers.MessageIdentity);
         }
 
         private void RegisterWorkers(MultipartMessage multipartMessage)
@@ -198,7 +199,7 @@ namespace rawf.Actors
             var messageIdentity = message.GetMessageIdentity();
             var receiverIdentity = message.GetReceiverIdentity();
 
-            if (Unsafe.Equals(receiverIdentity, MultipartMessage.EmptyFrame))
+            if (!receiverIdentity.IsSet())
             {
                 return new ActorIdentifier(version, messageIdentity);
             }
