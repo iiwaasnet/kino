@@ -133,7 +133,7 @@ namespace rawf.Actors
                             var task = handler(messageIn);
                             if (task != null)
                             {
-                                //TODO: Implement logic for IsCanceled or IsFalted
+                                //TODO: Implement logic for IsCanceled or IsFaulted
                                 if (task.IsCompleted)
                                 {
                                     var messageOut = (Message) task.Result;
