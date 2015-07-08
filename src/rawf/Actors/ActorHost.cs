@@ -73,7 +73,7 @@ namespace rawf.Actors
                                 messageOut.RegisterCallbackPoint(messageContext.CallbackIdentity, messageContext.CallbackReceiverIdentity);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
 
-                                var response = new MultipartMessage(messageOut, localSocket.Options.Identity);
+                                var response = new MultipartMessage(messageOut);
                                 localSocket.SendMessage(new NetMQMessage(response.Frames));
                             }
                         }
@@ -111,7 +111,7 @@ namespace rawf.Actors
             {
                 using (var localSocket = CreateSocket(context, new byte[] {5, 5, 5}))
                 {
-                    SignalWorkerReady(localSocket);
+                    RegisterActor(localSocket);
 
                     while (!token.IsCancellationRequested)
                     {
@@ -142,7 +142,7 @@ namespace rawf.Actors
                                         messageOut.RegisterCallbackPoint(messageIn.CallbackIdentity, messageIn.CallbackReceiverIdentity);
                                         messageOut.SetCorrelationId(messageIn.CorrelationId);
 
-                                        var response = new MultipartMessage(messageOut, localSocket.Options.Identity);
+                                        var response = new MultipartMessage(messageOut);
                                         localSocket.SendMessage(new NetMQMessage(response.Frames));
                                     }
                                 }
@@ -213,10 +213,11 @@ namespace rawf.Actors
             return socket;
         }
 
-        private void SignalWorkerReady(NetMQSocket socket)
+        private void RegisterActor(NetMQSocket socket)
         {
             var payload = new RegisterMessageHandlers
                           {
+                              SocketIdentity = socket.Options.Identity,
                               Registrations = messageHandlers
                                   .Keys
                                   .Select(mh => new MessageHandlerRegistration
@@ -227,7 +228,7 @@ namespace rawf.Actors
                                                 })
                                   .ToArray()
                           };
-            var multipartMessage = new MultipartMessage(Message.Create(payload, RegisterMessageHandlers.MessageIdentity), socket.Options.Identity);
+            var multipartMessage = new MultipartMessage(Message.Create(payload, RegisterMessageHandlers.MessageIdentity));
             socket.SendMessage(new NetMQMessage(multipartMessage.Frames));
         }
 

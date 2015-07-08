@@ -13,29 +13,22 @@ namespace rawf.Messaging
         private static readonly byte[] EmptyFrame = new byte[0];
 
         internal MultipartMessage(IMessage message)
-            : this(message, null)
         {
+            frames = BuildMessageParts(message).ToList();
         }
 
-        internal MultipartMessage(IMessage message, byte[] senderIdentity)
-        {
-            frames = BuildMessageParts(message, senderIdentity).ToList();
-        }
-
-        internal MultipartMessage(NetMQMessage message, bool removeRouterAddedSocketIdentity = false)
+        internal MultipartMessage(NetMQMessage message)
         {
             AssertMessage(message);
 
-            frames = SplitMessageToFrames(message, removeRouterAddedSocketIdentity);
+            frames = SplitMessageToFrames(message);
         }
 
-        private IList<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message, bool skipIdentityFrame)
-            => message.Skip(skipIdentityFrame ? 1 : 0).Select(m => m.Buffer).ToList();
+        private IList<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message)
+            => message.Select(m => m.Buffer).ToList();
 
-        private IEnumerable<byte[]> BuildMessageParts(IMessage message, byte[] senderIdentity)
+        private IEnumerable<byte[]> BuildMessageParts(IMessage message)
         {
-            yield return senderIdentity ?? EmptyFrame;
-
             // START Routing delimiters
             yield return EmptyFrame;
             yield return EmptyFrame;
@@ -91,18 +84,15 @@ namespace rawf.Messaging
             }
         }
 
+        internal void SetSocketIdentity(byte[] socketIdentity)
+        {
+            frames.Insert(ForwardFrames.SocketIdentity, socketIdentity);
+        }
+
         internal void PushRouterIdentity(byte[] routerId)
         {
             frames.Insert(ReversedFrames.NextRouterInsertPosition, routerId);
         }
-
-        internal void SetSocketIdentity(byte[] socketId)
-        {
-            frames[ForwardFrames.SocketIdentity] = socketId;
-        }
-
-        internal byte[] GetSocketIdentity()
-            => frames[ForwardFrames.SocketIdentity];
 
         internal byte[] GetMessageIdentity()
             => frames[frames.Count - ReversedFrames.Identity];

@@ -94,7 +94,7 @@ namespace rawf.Actors
                             try
                             {
                                 var request = localSocket.ReceiveMessage();
-                                var multipart = new MultipartMessage(request, true);
+                                var multipart = new MultipartMessage(request);
 
                                 if (IsReadyMessage(multipart))
                                 {
@@ -112,9 +112,8 @@ namespace rawf.Actors
                                     {
                                         Console.WriteLine("No currently available handlers!");
 
-                                        var forwardMessage = new MultipartMessage(request);
-                                        forwardMessage.SetSocketIdentity(scaleOutSocketIdentity);
-                                        peeringBackend.SendMessage(new NetMQMessage(forwardMessage.Frames));
+                                        multipart.SetSocketIdentity(scaleOutSocketIdentity);
+                                        peeringBackend.SendMessage(new NetMQMessage(multipart.Frames));
                                     }
                                 }
                             }
@@ -165,7 +164,7 @@ namespace rawf.Actors
         {
             var message = new Message(multipartMessage);
             var payload = message.GetPayload<RegisterMessageHandlers>();
-            var handlerSocketIdentifier = new SocketIdentifier(multipartMessage.GetSocketIdentity());
+            var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
 
             foreach (var registration in payload.Registrations)
             {

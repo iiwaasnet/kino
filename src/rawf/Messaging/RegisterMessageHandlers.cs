@@ -7,7 +7,11 @@ namespace rawf.Messaging
     public class RegisterMessageHandlers : IPayload
     {
         public static readonly byte[] MessageIdentity = "MSGHREG".GetBytes();
+
         [ProtoMember(1)]
         public MessageHandlerRegistration[] Registrations { get; set; }
+
+        [ProtoMember(2)]
+        public byte[] SocketIdentity { get; set; }
     }
 }

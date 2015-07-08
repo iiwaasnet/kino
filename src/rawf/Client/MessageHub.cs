@@ -155,6 +155,7 @@ namespace rawf.Client
         {
             var rdyMessage = Message.Create(new RegisterMessageHandlers
                                             {
+                                                SocketIdentity = receivingSocketIdentity,
                                                 Registrations = new[]
                                                                 {
                                                                     new MessageHandlerRegistration
@@ -165,7 +166,7 @@ namespace rawf.Client
                                                                     }
                                                                 }
                                             }, RegisterMessageHandlers.MessageIdentity);
-            var messageOut = new MultipartMessage(rdyMessage, receivingSocketIdentity);
+            var messageOut = new MultipartMessage(rdyMessage);
             socket.SendMessage(new NetMQMessage(messageOut.Frames));
 
             hubRegistered.Set();
