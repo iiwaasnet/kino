@@ -46,8 +46,18 @@ namespace rawf.Actors
 
         public void Start()
         {
+            AssertActorIsAssigned();
+
             syncProcessing = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
             asyncProcessing = Task.Factory.StartNew(_ => ProcessAsyncResponses(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+        }
+
+        private void AssertActorIsAssigned()
+        {
+            if (messageHandlers == null)
+            {
+                throw new Exception("Actor is not assigned!");
+            }
         }
 
         public void Stop()
@@ -133,7 +143,6 @@ namespace rawf.Actors
                             var task = handler(messageIn);
                             if (task != null)
                             {
-                                //TODO: Implement logic for IsCanceled or IsFaulted
                                 if (task.IsCompleted)
                                 {
                                     var messageOut = (Message) task.Result;
