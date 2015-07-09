@@ -198,12 +198,12 @@ namespace rawf.Actors
             var messageIdentity = message.GetMessageIdentity();
             var receiverIdentity = message.GetReceiverIdentity();
 
-            if (!receiverIdentity.IsSet())
+            if (receiverIdentity.IsSet())
             {
-                return new ActorIdentifier(version, messageIdentity);
+                return new CallbackIdentifier(version, receiverIdentity);
             }
 
-            return new CallbackIdentifier(version, receiverIdentity);
+            return new ActorIdentifier(version, messageIdentity);
         }
     }
 }
