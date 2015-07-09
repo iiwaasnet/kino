@@ -95,7 +95,7 @@ namespace Console
                                   }
                                   catch (Exception err)
                                   {
-                                      System.Console.WriteLine(err);
+                                      System.Console.WriteLine($"Error happened: {err}");
                                   }
                                   
                               });

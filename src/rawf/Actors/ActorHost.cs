@@ -157,7 +157,7 @@ namespace rawf.Actors
                                 }
                                 else
                                 {
-                                    task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, messageIn), token)
+                                    task.ContinueWith(completed => { EnqueueTaskForCompletion(token, completed, messageIn); }, token)
                                         .ConfigureAwait(false);
                                 }
                             }
@@ -192,11 +192,27 @@ namespace rawf.Actors
         {
             try
             {
+                var message = task.Exception != null
+                                  ? Message.Create(new ExceptionMessage {Exception = task.Exception}, ExceptionMessage.MessageIdentity)
+                                  : task.Result;
+
+                //if (messageContext != null && messageContext.CallbackReceiverIdentity.IsSet())
+                //{
+                //    var message = (Message)Message.Create(new ExceptionMessage { Exception = err }, ExceptionMessage.MessageIdentity);
+                //    message.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, messageContext.CallbackReceiverIdentity);
+                //    message.SetCorrelationId(messageContext.CorrelationId);
+                //    var multipart = new MultipartMessage(message);
+                //    localSocket.SendMessage(new NetMQMessage(multipart.Frames));
+                //}
+
+
                 var asyncMessageContext = new AsyncMessageContext
                                           {
-                                              OutMessage = task.Result,
+                                              OutMessage = message,
                                               CorrelationId = messageIn.CorrelationId,
-                                              CallbackIdentity = messageIn.CallbackIdentity,
+                                              CallbackIdentity = task.Exception != null
+                                                                     ? ExceptionMessage.MessageIdentity
+                                                                     : messageIn.CallbackIdentity,
                                               CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity
                                           };
                 asyncResponses.Add(asyncMessageContext, token);
