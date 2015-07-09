@@ -124,56 +124,56 @@ namespace rawf.Actors
 
                     while (!token.IsCancellationRequested)
                     {
-                        IncomeMessageContext messageContext = null;
                         try
                         {
                             var request = localSocket.ReceiveMessage();
                             var multipart = new MultipartMessage(request);
-                            messageContext = new IncomeMessageContext
-                                             {
-                                                 CorrelationId = multipart.GetCorrelationId(),
-                                                 CallbackReceiverIdentity = multipart.GetCallbackReceiverIdentity()
-                                             };
 
-                            var messageIn = new Message(multipart);
-                            var handler = messageHandlers[new ActorIdentifier(multipart.GetMessageVersion(),
-                                                                              multipart.GetMessageIdentity())];
-
-                            var task = handler(messageIn);
-                            if (task != null)
+                            try
                             {
-                                switch (task.Status)
-                                {
-                                    case TaskStatus.RanToCompletion:
-                                    case TaskStatus.Faulted:
-                                        var messageOut = (Message) task.Result;
-                                        if (messageOut != null)
-                                        {
-                                            messageOut.RegisterCallbackPoint(messageIn.CallbackIdentity, messageIn.CallbackReceiverIdentity);
-                                            messageOut.SetCorrelationId(messageIn.CorrelationId);
+                                var inMessage = new Message(multipart);
+                                var handler = messageHandlers[new ActorIdentifier(multipart.GetMessageVersion(),
+                                                                                  multipart.GetMessageIdentity())];
 
-                                            var response = new MultipartMessage(messageOut);
-                                            localSocket.SendMessage(new NetMQMessage(response.Frames));
-                                        }
-                                        break;
-                                    case TaskStatus.Canceled:
-                                        throw new OperationCanceledException();
-                                    case TaskStatus.Created:
-                                    case TaskStatus.Running:
-                                    case TaskStatus.WaitingForActivation:
-                                    case TaskStatus.WaitingForChildrenToComplete:
-                                    case TaskStatus.WaitingToRun:
-                                        task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, messageIn), token)
-                                            .ConfigureAwait(false);
-                                        break;
-                                    default:
-                                        throw new ThreadStateException($"TaskStatus: {task.Status}");
+                                var task = handler(inMessage);
+                                if (task != null)
+                                {
+                                    switch (task.Status)
+                                    {
+                                        case TaskStatus.RanToCompletion:
+                                        case TaskStatus.Faulted:
+                                            var messageOut = (Message) task.Result;
+                                            if (messageOut != null)
+                                            {
+                                                messageOut.RegisterCallbackPoint(inMessage.CallbackIdentity, inMessage.CallbackReceiverIdentity);
+                                                messageOut.SetCorrelationId(inMessage.CorrelationId);
+
+                                                var response = new MultipartMessage(messageOut);
+                                                localSocket.SendMessage(new NetMQMessage(response.Frames));
+                                            }
+                                            break;
+                                        case TaskStatus.Canceled:
+                                            throw new OperationCanceledException();
+                                        case TaskStatus.Created:
+                                        case TaskStatus.Running:
+                                        case TaskStatus.WaitingForActivation:
+                                        case TaskStatus.WaitingForChildrenToComplete:
+                                        case TaskStatus.WaitingToRun:
+                                            task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, inMessage), token)
+                                                .ConfigureAwait(false);
+                                            break;
+                                        default:
+                                            throw new ThreadStateException($"TaskStatus: {task.Status}");
+                                    }
                                 }
+                            }
+                            catch (Exception err)
+                            {
+                                CallbackException(localSocket, err, multipart);
                             }
                         }
                         catch (Exception err)
                         {
-                            CallbackException(localSocket, err, messageContext);
                             NotifyCommonExceptionHandler(localSocket, err, CorrelationId.Infrastructural);
                         }
                     }
@@ -185,16 +185,14 @@ namespace rawf.Actors
             }
         }
 
-        private void CallbackException(NetMQSocket localSocket, Exception err, IncomeMessageContext messageContext)
+        private void CallbackException(NetMQSocket localSocket, Exception err, MultipartMessage inMessage)
         {
-            if (messageContext != null)
-            {
-                var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
-                message.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, messageContext.CallbackReceiverIdentity);
-                message.SetCorrelationId(messageContext.CorrelationId);
-                var multipart = new MultipartMessage(message);
-                localSocket.SendMessage(new NetMQMessage(multipart.Frames));
-            }
+            var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
+            message.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, inMessage.GetCallbackReceiverIdentity());
+            message.SetCorrelationId(inMessage.GetCorrelationId());
+            var multipart = new MultipartMessage(message);
+
+            localSocket.SendMessage(new NetMQMessage(multipart.Frames));
         }
 
         private void EnqueueTaskForCompletion(CancellationToken token, Task<IMessage> task, IMessage messageIn)
@@ -275,12 +273,6 @@ namespace rawf.Actors
                           };
             var multipartMessage = new MultipartMessage(Message.Create(payload, RegisterMessageHandlers.MessageIdentity));
             socket.SendMessage(new NetMQMessage(multipartMessage.Frames));
-        }
-
-        private class IncomeMessageContext
-        {
-            internal byte[] CorrelationId { get; set; }
-            internal byte[] CallbackReceiverIdentity { get; set; }
         }
     }
 }
