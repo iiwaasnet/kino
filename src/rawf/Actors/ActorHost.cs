@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NetMQ;
 using rawf.Connectivity;
-using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
 
@@ -192,7 +191,7 @@ namespace rawf.Actors
         {
             try
             {
-                var message = task.Exception != null
+                var message = task.IsFaulted
                                   ? Message.Create(new ExceptionMessage {Exception = task.Exception}, ExceptionMessage.MessageIdentity)
                                   : task.Result;
 
@@ -200,7 +199,7 @@ namespace rawf.Actors
                                           {
                                               OutMessage = message,
                                               CorrelationId = messageIn.CorrelationId,
-                                              CallbackIdentity = task.Exception != null
+                                              CallbackIdentity = task.IsFaulted
                                                                      ? ExceptionMessage.MessageIdentity
                                                                      : messageIn.CallbackIdentity,
                                               CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity
