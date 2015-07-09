@@ -110,9 +110,10 @@ namespace Console
             for (var i = 0; i < count; i++)
             {
                 var actorHost = new ActorHost(connectivityProvider);
-                actorHost.Start();
                 var actor = new Actor();
                 actorHost.AssignActor(actor);
+                actorHost.Start();
+
                 yield return actorHost;
             }
         }
