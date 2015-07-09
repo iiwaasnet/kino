@@ -196,16 +196,6 @@ namespace rawf.Actors
                                   ? Message.Create(new ExceptionMessage {Exception = task.Exception}, ExceptionMessage.MessageIdentity)
                                   : task.Result;
 
-                //if (messageContext != null && messageContext.CallbackReceiverIdentity.IsSet())
-                //{
-                //    var message = (Message)Message.Create(new ExceptionMessage { Exception = err }, ExceptionMessage.MessageIdentity);
-                //    message.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, messageContext.CallbackReceiverIdentity);
-                //    message.SetCorrelationId(messageContext.CorrelationId);
-                //    var multipart = new MultipartMessage(message);
-                //    localSocket.SendMessage(new NetMQMessage(multipart.Frames));
-                //}
-
-
                 var asyncMessageContext = new AsyncMessageContext
                                           {
                                               OutMessage = message,

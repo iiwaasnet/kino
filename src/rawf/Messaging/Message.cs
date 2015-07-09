@@ -49,17 +49,6 @@ namespace rawf.Messaging
             CorrelationId = multipartMessage.GetCorrelationId();
         }
 
-        //public void RegisterCallbackPoint(ICallbackPoint callbackPoint)
-        //{
-        //    //CallbackReceiverIdentity = callbackPoint.ReceiverIdentity;
-        //    CallbackIdentity = callbackPoint.MessageIdentity;
-
-        //    if (Unsafe.Equals(Identity, CallbackIdentity))
-        //    {
-        //        ReceiverIdentity = CallbackReceiverIdentity;
-        //    }
-        //}
-
         internal void RegisterCallbackPoint(byte[] callbackIdentity, byte[] callbackReceiverIdentity)
         {
             CallbackReceiverIdentity = callbackReceiverIdentity;
