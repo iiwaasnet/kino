@@ -157,7 +157,7 @@ namespace rawf.Actors
                                 }
                                 else
                                 {
-                                    task.ContinueWith(completed => { EnqueueTaskForCompletion(token, completed, messageIn); }, token)
+                                    task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, messageIn), token)
                                         .ConfigureAwait(false);
                                 }
                             }
@@ -178,7 +178,7 @@ namespace rawf.Actors
 
         private void CallbackException(NetMQSocket localSocket, Exception err, IncomeMessageContext messageContext)
         {
-            if (messageContext != null && messageContext.CallbackReceiverIdentity.IsSet())
+            if (messageContext != null)
             {
                 var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
                 message.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, messageContext.CallbackReceiverIdentity);
