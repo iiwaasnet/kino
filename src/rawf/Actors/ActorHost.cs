@@ -142,22 +142,32 @@ namespace rawf.Actors
                             var task = handler(messageIn);
                             if (task != null)
                             {
-                                if (task.IsCompleted)
+                                switch (task.Status)
                                 {
-                                    var messageOut = (Message) task.Result;
-                                    if (messageOut != null)
-                                    {
-                                        messageOut.RegisterCallbackPoint(messageIn.CallbackIdentity, messageIn.CallbackReceiverIdentity);
-                                        messageOut.SetCorrelationId(messageIn.CorrelationId);
+                                    case TaskStatus.RanToCompletion:
+                                    case TaskStatus.Faulted:
+                                        var messageOut = (Message) task.Result;
+                                        if (messageOut != null)
+                                        {
+                                            messageOut.RegisterCallbackPoint(messageIn.CallbackIdentity, messageIn.CallbackReceiverIdentity);
+                                            messageOut.SetCorrelationId(messageIn.CorrelationId);
 
-                                        var response = new MultipartMessage(messageOut);
-                                        localSocket.SendMessage(new NetMQMessage(response.Frames));
-                                    }
-                                }
-                                else
-                                {
-                                    task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, messageIn), token)
-                                        .ConfigureAwait(false);
+                                            var response = new MultipartMessage(messageOut);
+                                            localSocket.SendMessage(new NetMQMessage(response.Frames));
+                                        }
+                                        break;
+                                    case TaskStatus.Canceled:
+                                        throw new OperationCanceledException();
+                                    case TaskStatus.Created:
+                                    case TaskStatus.Running:
+                                    case TaskStatus.WaitingForActivation:
+                                    case TaskStatus.WaitingForChildrenToComplete:
+                                    case TaskStatus.WaitingToRun:
+                                        task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, messageIn), token)
+                                            .ConfigureAwait(false);
+                                        break;
+                                    default:
+                                        throw new ThreadStateException($"TaskStatus: {task.Status}");
                                 }
                             }
                         }
@@ -191,17 +201,11 @@ namespace rawf.Actors
         {
             try
             {
-                var message = task.IsFaulted
-                                  ? Message.Create(new ExceptionMessage {Exception = task.Exception}, ExceptionMessage.MessageIdentity)
-                                  : task.Result;
-
                 var asyncMessageContext = new AsyncMessageContext
                                           {
-                                              OutMessage = message,
+                                              OutMessage = CreateTaskResultMessage(task),
                                               CorrelationId = messageIn.CorrelationId,
-                                              CallbackIdentity = task.IsFaulted
-                                                                     ? ExceptionMessage.MessageIdentity
-                                                                     : messageIn.CallbackIdentity,
+                                              CallbackIdentity = GetTaskCallbackIdentity(task, messageIn),
                                               CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity
                                           };
                 asyncResponses.Add(asyncMessageContext, token);
@@ -213,6 +217,33 @@ namespace rawf.Actors
             {
                 Console.WriteLine(err);
             }
+        }
+
+        private static byte[] GetTaskCallbackIdentity(Task<IMessage> task, IMessage messageIn)
+        {
+            return task.IsCanceled || task.IsFaulted
+                       ? ExceptionMessage.MessageIdentity
+                       : messageIn.CallbackIdentity;
+        }
+
+        private static IMessage CreateTaskResultMessage(Task<IMessage> task)
+        {
+            if (task.IsCanceled)
+            {
+                return Message.Create(new ExceptionMessage
+                                      {
+                                          Exception = new OperationCanceledException()
+                                      }, ExceptionMessage.MessageIdentity);
+            }
+            if (task.IsFaulted)
+            {
+                return Message.Create(new ExceptionMessage
+                                      {
+                                          Exception = task.Exception
+                                      }, ExceptionMessage.MessageIdentity);
+            }
+
+            return task.Result;
         }
 
         private NetMQSocket CreateSocket(NetMQContext context, byte[] identity)
