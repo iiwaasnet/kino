@@ -19,8 +19,16 @@ n-3					TTL								Message Time-to-Live in (msec)
 n-2					[0]
 n-1					Body							Message content
 
-[Version] && [Message ID] && [Receiver ID] are unique identifiers of the message
-
-Hosting component is responsible for:
+Actor Hosting component is responsible for:
 - setting of Receiver ID to the value of EndOfFlow Receiver ID, when for the current message Message ID == EndOfFlow Message ID
 - propagation of Correlation ID from incoming messages to all outgoing messages
+
+Message handler is selected based on the following algorithm:
+if 
+	ReceiverIdentifier is set, 
+then
+	Version && Receiver ID
+else
+	Version && MEssage ID
+	
+	
