@@ -136,39 +136,12 @@ namespace rawf.Actors
                                                                                   multipart.GetMessageIdentity())];
 
                                 var task = handler(inMessage);
-                                if (task != null)
-                                {
-                                    switch (task.Status)
-                                    {
-                                        case TaskStatus.RanToCompletion:
-                                        case TaskStatus.Faulted:
-                                            var messageOut = (Message) task.Result;
-                                            if (messageOut != null)
-                                            {
-                                                messageOut.RegisterCallbackPoint(inMessage.CallbackIdentity, inMessage.CallbackReceiverIdentity);
-                                                messageOut.SetCorrelationId(inMessage.CorrelationId);
 
-                                                var response = new MultipartMessage(messageOut);
-                                                localSocket.SendMessage(new NetMQMessage(response.Frames));
-                                            }
-                                            break;
-                                        case TaskStatus.Canceled:
-                                            throw new OperationCanceledException();
-                                        case TaskStatus.Created:
-                                        case TaskStatus.Running:
-                                        case TaskStatus.WaitingForActivation:
-                                        case TaskStatus.WaitingForChildrenToComplete:
-                                        case TaskStatus.WaitingToRun:
-                                            task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, inMessage), token)
-                                                .ConfigureAwait(false);
-                                            break;
-                                        default:
-                                            throw new ThreadStateException($"TaskStatus: {task.Status}");
-                                    }
-                                }
+                                HandleTaskResult(token, task, inMessage, localSocket);
                             }
                             catch (Exception err)
                             {
+                                //TODO: Add more context to exception about which Actor failed
                                 CallbackException(localSocket, err, multipart);
                             }
                         }
@@ -182,6 +155,37 @@ namespace rawf.Actors
             catch (Exception err)
             {
                 Console.WriteLine(err);
+            }
+        }
+
+        private void HandleTaskResult(CancellationToken token, Task<IMessage> task, Message inMessage, NetMQSocket localSocket)
+        {
+            switch (task.Status)
+            {
+                case TaskStatus.RanToCompletion:
+                case TaskStatus.Faulted:
+                    var messageOut = (Message) task.Result;
+                    if (messageOut != null)
+                    {
+                        messageOut.RegisterCallbackPoint(inMessage.CallbackIdentity, inMessage.CallbackReceiverIdentity);
+                        messageOut.SetCorrelationId(inMessage.CorrelationId);
+
+                        var response = new MultipartMessage(messageOut);
+                        localSocket.SendMessage(new NetMQMessage(response.Frames));
+                    }
+                    break;
+                case TaskStatus.Canceled:
+                    throw new OperationCanceledException();
+                case TaskStatus.Created:
+                case TaskStatus.Running:
+                case TaskStatus.WaitingForActivation:
+                case TaskStatus.WaitingForChildrenToComplete:
+                case TaskStatus.WaitingToRun:
+                    task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, inMessage), token)
+                        .ConfigureAwait(false);
+                    break;
+                default:
+                    throw new ThreadStateException($"TaskStatus: {task.Status}");
             }
         }
 
