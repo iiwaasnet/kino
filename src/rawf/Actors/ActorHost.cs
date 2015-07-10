@@ -21,10 +21,10 @@ namespace rawf.Actors
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly BlockingCollection<AsyncMessageContext> asyncResponses;
 
-        public ActorHost(IConnectivityProvider connectivityProvider)
+        public ActorHost(IConnectivityProvider connectivityProvider, IHostConfiguration config)
         {
             context = (NetMQContext) connectivityProvider.GetConnectivityContext();
-            endpointAddress = connectivityProvider.GetLocalEndpointAddress();
+            endpointAddress = config.GetRouterAddress();
             asyncResponses = new BlockingCollection<AsyncMessageContext>(new ConcurrentQueue<AsyncMessageContext>());
             cancellationTokenSource = new CancellationTokenSource();
         }

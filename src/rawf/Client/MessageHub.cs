@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NetMQ;
 using NetMQ.Sockets;
+using rawf.Actors;
 using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
@@ -23,10 +24,10 @@ namespace rawf.Client
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
 
-        public MessageHub(IConnectivityProvider connectivityProvider)
+        public MessageHub(IConnectivityProvider connectivityProvider, IHostConfiguration config)
         {
             context = (NetMQContext) connectivityProvider.GetConnectivityContext();
-            endpointAddress = connectivityProvider.GetLocalEndpointAddress();
+            endpointAddress = config.GetRouterAddress();
             hubRegistered = new ManualResetEventSlim();
             callbackHandlers = new CallbackHandlerStack();
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());

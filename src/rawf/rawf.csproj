@@ -54,12 +54,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Actors\ActorHost.cs" />
+    <Compile Include="Actors\HostConfiguration.cs" />
     <Compile Include="Actors\ActorIdentifier.cs" />
     <Compile Include="Actors\AsyncMessageContext.cs" />
     <Compile Include="Actors\Diagnostics\ExceptionHandlerActor.cs" />
     <Compile Include="Actors\IActor.cs" />
     <Compile Include="Actors\IActorHost.cs" />
     <Compile Include="Actors\IMessageRouter.cs" />
+    <Compile Include="Actors\IHostConfiguration.cs" />
+    <Compile Include="Actors\RouterConfiguration.cs" />
     <Compile Include="Connectivity\IConnectivityProvider.cs" />
     <Compile Include="Actors\MessageDefinition.cs" />
     <Compile Include="Actors\MessageHandler.cs" />
@@ -79,6 +82,7 @@
     <Compile Include="Client\IPromise.cs" />
     <Compile Include="Client\MessageHub.cs" />
     <Compile Include="Client\Promise.cs" />
+    <Compile Include="Actors\IRouterConfiguration.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />
     <Compile Include="Framework\Unsafe.cs" />

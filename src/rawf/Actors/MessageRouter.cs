@@ -19,10 +19,12 @@ namespace rawf.Actors
         private readonly byte[] scaleOutSocketIdentity = {1, 1, 1, 1, 1};
         private readonly byte[] localSocketIdentity = {2, 2, 2, 2, 2};
         private readonly IConnectivityProvider connectivityProvider;
+        private readonly IRouterConfiguration config;
 
-        public MessageRouter(IConnectivityProvider connectivityProvider)
+        public MessageRouter(IConnectivityProvider connectivityProvider, IRouterConfiguration config)
         {
             this.connectivityProvider = connectivityProvider;
+            this.config = config;
             context = (NetMQContext) connectivityProvider.GetConnectivityContext();
             messageHandlers = new MessageHandlerStack();
             cancellationTokenSource = new CancellationTokenSource();
@@ -33,7 +35,7 @@ namespace rawf.Actors
             var socket = context.CreateRouterSocket();
             socket.Options.RouterMandatory = true;
             socket.Options.Identity = localSocketIdentity;
-            socket.Bind(connectivityProvider.GetLocalEndpointAddress());
+            socket.Bind(config.GetRouterAddress());
 
             return socket;
         }
@@ -136,7 +138,7 @@ namespace rawf.Actors
             var socket = context.CreateRouterSocket();
             socket.Options.Identity = scaleOutSocketIdentity;
             socket.Options.RouterMandatory = true;
-            foreach (var peer in connectivityProvider.GetScaleOutCluster())
+            foreach (var peer in config.GetScaleOutCluster())
             {
                 socket.Connect(peer);
             }
@@ -149,8 +151,8 @@ namespace rawf.Actors
             var socket = context.CreateRouterSocket();
             socket.Options.Identity = scaleOutSocketIdentity;
             socket.Options.RouterMandatory = true;
-            socket.Connect(connectivityProvider.GetLocalEndpointAddress());
-            socket.Bind(connectivityProvider.GetLocalScaleOutAddress());
+            socket.Connect(config.GetRouterAddress());
+            socket.Bind(config.GetLocalScaleOutAddress());
 
             return socket;
         }
