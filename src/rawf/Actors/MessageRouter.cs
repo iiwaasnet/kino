@@ -25,7 +25,7 @@ namespace rawf.Actors
         {
             this.connectivityProvider = connectivityProvider;
             this.config = config;
-            context = (NetMQContext) connectivityProvider.GetConnectivityContext();
+            context = connectivityProvider.GetConnectivityContext();
             messageHandlers = new MessageHandlerStack();
             cancellationTokenSource = new CancellationTokenSource();
         }

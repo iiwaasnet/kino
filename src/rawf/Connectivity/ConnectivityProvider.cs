@@ -12,7 +12,7 @@ namespace rawf.Connectivity
             context = NetMQContext.Create();
         }
 
-        public IDisposable GetConnectivityContext()
+        public NetMQContext GetConnectivityContext()
         {
             return context;
         }

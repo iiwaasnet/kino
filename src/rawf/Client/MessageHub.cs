@@ -26,7 +26,7 @@ namespace rawf.Client
 
         public MessageHub(IConnectivityProvider connectivityProvider, IHostConfiguration config)
         {
-            context = (NetMQContext) connectivityProvider.GetConnectivityContext();
+            context = connectivityProvider.GetConnectivityContext();
             endpointAddress = config.GetRouterAddress();
             hubRegistered = new ManualResetEventSlim();
             callbackHandlers = new CallbackHandlerStack();

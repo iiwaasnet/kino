@@ -23,7 +23,7 @@ namespace rawf.Actors
 
         public ActorHost(IConnectivityProvider connectivityProvider, IHostConfiguration config)
         {
-            context = (NetMQContext) connectivityProvider.GetConnectivityContext();
+            context = connectivityProvider.GetConnectivityContext();
             endpointAddress = config.GetRouterAddress();
             asyncResponses = new BlockingCollection<AsyncMessageContext>(new ConcurrentQueue<AsyncMessageContext>());
             cancellationTokenSource = new CancellationTokenSource();
