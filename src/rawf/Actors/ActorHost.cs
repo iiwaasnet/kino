@@ -8,6 +8,7 @@ using NetMQ;
 using rawf.Connectivity;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
+using rawf.Sockets;
 
 namespace rawf.Actors
 {
@@ -20,9 +21,11 @@ namespace rawf.Actors
         private Task asyncProcessing;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly BlockingCollection<AsyncMessageContext> asyncResponses;
+        private readonly IConnectivityProvider connectivityProvider;
 
         public ActorHost(IConnectivityProvider connectivityProvider, IHostConfiguration config)
         {
+            this.connectivityProvider = connectivityProvider;
             context = connectivityProvider.GetConnectivityContext();
             endpointAddress = config.GetRouterAddress();
             asyncResponses = new BlockingCollection<AsyncMessageContext>(new ConcurrentQueue<AsyncMessageContext>());
@@ -70,7 +73,7 @@ namespace rawf.Actors
         {
             try
             {
-                using (var localSocket = CreateSocket(context, null))
+                using (var localSocket = CreateSocket(null))
                 {
                     foreach (var messageContext in asyncResponses.GetConsumingEnumerable(token))
                     {
@@ -82,8 +85,8 @@ namespace rawf.Actors
                                 messageOut.RegisterCallbackPoint(messageContext.CallbackIdentity, messageContext.CallbackReceiverIdentity);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
 
-                                var response = new MultipartMessage(messageOut);
-                                localSocket.SendMessage(new NetMQMessage(response.Frames));
+                                
+                                localSocket.SendMessage(messageOut);
                             }
                         }
                         catch (Exception err)
@@ -106,19 +109,18 @@ namespace rawf.Actors
             }
         }
 
-        private void NotifyCommonExceptionHandler(NetMQSocket localSocket, Exception err, byte[] correlationId)
+        private void NotifyCommonExceptionHandler(ISocket localSocket, Exception err, byte[] correlationId)
         {
             var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
             message.SetCorrelationId(correlationId);
-            var multipart = new MultipartMessage(message);
-            localSocket.SendMessage(new NetMQMessage(multipart.Frames));
+            localSocket.SendMessage(message);
         }
 
         private void ProcessRequests(CancellationToken token)
         {
             try
             {
-                using (var localSocket = CreateSocket(context, new byte[] {5, 5, 5}))
+                using (var localSocket = CreateSocket(new byte[] {5, 5, 5}))
                 {
                     RegisterActor(localSocket);
 
@@ -158,7 +160,7 @@ namespace rawf.Actors
             }
         }
 
-        private void HandleTaskResult(CancellationToken token, Task<IMessage> task, Message inMessage, NetMQSocket localSocket)
+        private void HandleTaskResult(CancellationToken token, Task<IMessage> task, Message inMessage, ISocket localSocket)
         {
             switch (task.Status)
             {
@@ -170,8 +172,7 @@ namespace rawf.Actors
                         messageOut.RegisterCallbackPoint(inMessage.CallbackIdentity, inMessage.CallbackReceiverIdentity);
                         messageOut.SetCorrelationId(inMessage.CorrelationId);
 
-                        var response = new MultipartMessage(messageOut);
-                        localSocket.SendMessage(new NetMQMessage(response.Frames));
+                        localSocket.SendMessage(messageOut);
                     }
                     break;
                 case TaskStatus.Canceled:
@@ -189,14 +190,13 @@ namespace rawf.Actors
             }
         }
 
-        private void CallbackException(NetMQSocket localSocket, Exception err, MultipartMessage inMessage)
+        private void CallbackException(ISocket localSocket, Exception err, MultipartMessage inMessage)
         {
             var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
             message.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, inMessage.GetCallbackReceiverIdentity());
             message.SetCorrelationId(inMessage.GetCorrelationId());
-            var multipart = new MultipartMessage(message);
 
-            localSocket.SendMessage(new NetMQMessage(multipart.Frames));
+            localSocket.SendMessage(message);
         }
 
         private void EnqueueTaskForCompletion(CancellationToken token, Task<IMessage> task, IMessage messageIn)
@@ -248,23 +248,23 @@ namespace rawf.Actors
             return task.Result;
         }
 
-        private NetMQSocket CreateSocket(NetMQContext context, byte[] identity)
+        private ISocket CreateSocket(byte[] identity)
         {
-            var socket = context.CreateDealerSocket();
+            var socket = connectivityProvider.CreateDealerSocket();
             if (identity != null)
             {
-                socket.Options.Identity = identity;
+                socket.SetIdentity(identity);
             }
             socket.Connect(endpointAddress);
 
             return socket;
         }
 
-        private void RegisterActor(NetMQSocket socket)
+        private void RegisterActor(ISocket socket)
         {
             var payload = new RegisterMessageHandlers
                           {
-                              SocketIdentity = socket.Options.Identity,
+                              SocketIdentity = socket.GetIdentity(),
                               Registrations = messageHandlers
                                   .Keys
                                   .Select(mh => new MessageHandlerRegistration
@@ -275,8 +275,8 @@ namespace rawf.Actors
                                                 })
                                   .ToArray()
                           };
-            var multipartMessage = new MultipartMessage(Message.Create(payload, RegisterMessageHandlers.MessageIdentity));
-            socket.SendMessage(new NetMQMessage(multipartMessage.Frames));
+
+            socket.SendMessage(Message.Create(payload, RegisterMessageHandlers.MessageIdentity));
         }
     }
 }

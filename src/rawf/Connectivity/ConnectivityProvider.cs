@@ -1,5 +1,6 @@
 ﻿using System;
 using NetMQ;
+using rawf.Sockets;
 
 namespace rawf.Connectivity
 {
@@ -15,6 +16,11 @@ namespace rawf.Connectivity
         public NetMQContext GetConnectivityContext()
         {
             return context;
+        }
+
+        public ISocket CreateDealerSocket()
+        {
+            return new Socket(context.CreateDealerSocket());
         }
 
         public void Dispose()

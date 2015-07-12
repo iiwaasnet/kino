@@ -102,6 +102,8 @@
     <Compile Include="Messaging\RegisterMessageHandlers.cs" />
     <Compile Include="Messaging\TypedMessage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Sockets\ISocket.cs" />
+    <Compile Include="Sockets\Socket.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
