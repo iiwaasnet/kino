@@ -113,7 +113,7 @@ namespace Console
         {
             for (var i = 0; i < count; i++)
             {
-                var actorHost = new ActorHost(connectivityProvider, config);
+                var actorHost = new ActorHost(new ActorHandlersMap(), connectivityProvider, config);
                 var actor = new Actor();
                 actorHost.AssignActor(actor);
                 actorHost.Start();

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using NetMQ;
 using rawf.Connectivity;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
@@ -14,8 +12,7 @@ namespace rawf.Actors
 {
     public class ActorHost : IActorHost
     {
-        private IDictionary<ActorIdentifier, MessageHandler> messageHandlers;
-        private readonly NetMQContext context;
+        private readonly IActorHandlersMap actorHandlersesMap;
         private readonly string endpointAddress;
         private Task syncProcessing;
         private Task asyncProcessing;
@@ -23,10 +20,11 @@ namespace rawf.Actors
         private readonly BlockingCollection<AsyncMessageContext> asyncResponses;
         private readonly IConnectivityProvider connectivityProvider;
 
-        public ActorHost(IConnectivityProvider connectivityProvider, IHostConfiguration config)
+        public ActorHost(IActorHandlersMap actorHandlersesMap, IConnectivityProvider connectivityProvider, IHostConfiguration config)
         {
+            this.actorHandlersesMap = actorHandlersesMap;
             this.connectivityProvider = connectivityProvider;
-            context = connectivityProvider.GetConnectivityContext();
+            connectivityProvider.GetConnectivityContext();
             endpointAddress = config.GetRouterAddress();
             asyncResponses = new BlockingCollection<AsyncMessageContext>(new ConcurrentQueue<AsyncMessageContext>());
             cancellationTokenSource = new CancellationTokenSource();
@@ -34,16 +32,7 @@ namespace rawf.Actors
 
         public void AssignActor(IActor actor)
         {
-            messageHandlers = BuildMessageHandlersMap(actor);
-        }
-
-        private static IDictionary<ActorIdentifier, MessageHandler> BuildMessageHandlersMap(IActor actor)
-        {
-            return actor
-                .GetInterfaceDefinition()
-                .ToDictionary(d => new ActorIdentifier(d.Message.Version,
-                                                       d.Message.Identity),
-                              d => d.Handler);
+            actorHandlersesMap.Add(actor);
         }
 
         public void Start()
@@ -56,7 +45,7 @@ namespace rawf.Actors
 
         private void AssertActorIsAssigned()
         {
-            if (messageHandlers == null)
+            if (actorHandlersesMap == null)
             {
                 throw new Exception("Actor is not assigned!");
             }
@@ -85,13 +74,13 @@ namespace rawf.Actors
                                 messageOut.RegisterCallbackPoint(messageContext.CallbackIdentity, messageContext.CallbackReceiverIdentity);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
 
-                                
+
                                 localSocket.SendMessage(messageOut);
                             }
                         }
                         catch (Exception err)
                         {
-                            NotifyCommonExceptionHandler(localSocket, err, CorrelationId.Infrastructural);
+                            Console.WriteLine(err);
                         }
                     }
                 }
@@ -109,12 +98,6 @@ namespace rawf.Actors
             }
         }
 
-        private void NotifyCommonExceptionHandler(ISocket localSocket, Exception err, byte[] correlationId)
-        {
-            var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
-            message.SetCorrelationId(correlationId);
-            localSocket.SendMessage(message);
-        }
 
         private void ProcessRequests(CancellationToken token)
         {
@@ -133,13 +116,13 @@ namespace rawf.Actors
 
                             try
                             {
-                                var inMessage = new Message(multipart);
-                                var handler = messageHandlers[new ActorIdentifier(multipart.GetMessageVersion(),
-                                                                                  multipart.GetMessageIdentity())];
+                                var messageIn = new Message(multipart);
+                                var actorIdentifier = new ActorIdentifier(messageIn.Version, messageIn.Identity);
+                                var handler = actorHandlersesMap.Get(actorIdentifier);
 
-                                var task = handler(inMessage);
+                                var task = handler(messageIn);
 
-                                HandleTaskResult(token, task, inMessage, localSocket);
+                                HandleTaskResult(token, task, messageIn, localSocket);
                             }
                             catch (Exception err)
                             {
@@ -149,7 +132,8 @@ namespace rawf.Actors
                         }
                         catch (Exception err)
                         {
-                            NotifyCommonExceptionHandler(localSocket, err, CorrelationId.Infrastructural);
+                            //TODO: Replace with proper logging
+                            Console.WriteLine(err);
                         }
                     }
                 }
@@ -160,33 +144,20 @@ namespace rawf.Actors
             }
         }
 
-        private void HandleTaskResult(CancellationToken token, Task<IMessage> task, Message inMessage, ISocket localSocket)
+        private void HandleTaskResult(CancellationToken token, Task<IMessage> task, IMessage messageIn, ISocket localSocket)
         {
-            switch (task.Status)
+            if (task.IsCompleted)
             {
-                case TaskStatus.RanToCompletion:
-                case TaskStatus.Faulted:
-                    var messageOut = (Message) task.Result;
-                    if (messageOut != null)
-                    {
-                        messageOut.RegisterCallbackPoint(inMessage.CallbackIdentity, inMessage.CallbackReceiverIdentity);
-                        messageOut.SetCorrelationId(inMessage.CorrelationId);
+                var messageOut = (Message) CreateTaskResultMessage(task);
+                messageOut.RegisterCallbackPoint(GetTaskCallbackIdentity(task, messageIn), messageIn.CallbackReceiverIdentity);
+                messageOut.SetCorrelationId(messageIn.CorrelationId);
 
-                        localSocket.SendMessage(messageOut);
-                    }
-                    break;
-                case TaskStatus.Canceled:
-                    throw new OperationCanceledException();
-                case TaskStatus.Created:
-                case TaskStatus.Running:
-                case TaskStatus.WaitingForActivation:
-                case TaskStatus.WaitingForChildrenToComplete:
-                case TaskStatus.WaitingToRun:
-                    task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, inMessage), token)
-                        .ConfigureAwait(false);
-                    break;
-                default:
-                    throw new ThreadStateException($"TaskStatus: {task.Status}");
+                localSocket.SendMessage(messageOut);
+            }
+            else
+            {
+                task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, messageIn), token)
+                    .ConfigureAwait(false);
             }
         }
 
@@ -206,9 +177,9 @@ namespace rawf.Actors
                 var asyncMessageContext = new AsyncMessageContext
                                           {
                                               OutMessage = CreateTaskResultMessage(task),
-                                              CorrelationId = messageIn.CorrelationId,
                                               CallbackIdentity = GetTaskCallbackIdentity(task, messageIn),
-                                              CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity
+                                              CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
+                                              CorrelationId = messageIn.CorrelationId
                                           };
                 asyncResponses.Add(asyncMessageContext, token);
             }
@@ -265,8 +236,8 @@ namespace rawf.Actors
             var payload = new RegisterMessageHandlers
                           {
                               SocketIdentity = socket.GetIdentity(),
-                              Registrations = messageHandlers
-                                  .Keys
+                              Registrations = actorHandlersesMap
+                                  .GetRegisteredIdentifiers()
                                   .Select(mh => new MessageHandlerRegistration
                                                 {
                                                     Identity = mh.Identity,

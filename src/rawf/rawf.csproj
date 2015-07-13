@@ -54,11 +54,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Actors\ActorHost.cs" />
+    <Compile Include="Actors\ActorHandlersMap.cs" />
     <Compile Include="Actors\HostConfiguration.cs" />
     <Compile Include="Actors\ActorIdentifier.cs" />
     <Compile Include="Actors\AsyncMessageContext.cs" />
     <Compile Include="Actors\Diagnostics\ExceptionHandlerActor.cs" />
     <Compile Include="Actors\IActor.cs" />
+    <Compile Include="Actors\IActorHandlersMap.cs" />
     <Compile Include="Actors\IActorHost.cs" />
     <Compile Include="Actors\IMessageRouter.cs" />
     <Compile Include="Actors\IHostConfiguration.cs" />
@@ -83,6 +85,7 @@
     <Compile Include="Client\MessageHub.cs" />
     <Compile Include="Client\Promise.cs" />
     <Compile Include="Actors\IRouterConfiguration.cs" />
+    <Compile Include="Framework\DuplicatedKeyException.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />
     <Compile Include="Framework\Unsafe.cs" />

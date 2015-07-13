@@ -3,7 +3,6 @@ using rawf.Framework;
 
 namespace rawf
 {
-
     //TODO: Probably better to duplicate functionality for every derived class
     public abstract class MessageHandlerIdentifier : IEquatable<MessageHandlerIdentifier>
     {
@@ -60,6 +59,10 @@ namespace rawf
                    && Unsafe.Equals(Version, other.Version);
         }
 
+        public override string ToString()
+        {
+            return string.Format($"Identity[{Identity?.GetString()}]-Version[{Version?.GetString()}]");
+        }
 
         internal byte[] Version { get; }
         internal byte[] Identity { get; }
