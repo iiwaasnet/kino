@@ -63,7 +63,7 @@ namespace Console
             var client = new Client(messageHub);
             var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
 
-            Thread.Sleep(TimeSpan.FromSeconds(1));
+            //Thread.Sleep(TimeSpan.FromSeconds(1));
 
             RunTest(client, callbackPoint);
 

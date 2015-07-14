@@ -38,8 +38,15 @@ namespace rawf.Client
 
         public void Start()
         {
-            receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
-            sending = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+            using (var gateway = new CountdownEvent(2))
+            {
+                receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token, gateway),
+                                                  TaskCreationOptions.LongRunning);
+                sending = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token, gateway),
+                                                TaskCreationOptions.LongRunning);
+
+                gateway.Wait(cancellationTokenSource.Token);
+            }
         }
 
         public void Stop()
@@ -49,12 +56,14 @@ namespace rawf.Client
             receiving.Wait();
         }
 
-        private void SendClientRequests(CancellationToken token)
+        private void SendClientRequests(CancellationToken token, CountdownEvent gateway)
         {
             try
             {
                 using (var socket = CreateSendingSocket(context))
                 {
+                    gateway.Signal();
+
                     foreach (var callbackRegistration in registrationsQueue.GetConsumingEnumerable(token))
                     {
                         try
@@ -99,12 +108,14 @@ namespace rawf.Client
         }
 
 
-        private void ReadReplies(CancellationToken token)
+        private void ReadReplies(CancellationToken token, CountdownEvent gateway)
         {
             try
             {
                 using (var socket = CreateReceivingSocket(context, receivingSocketIdentity))
                 {
+                    gateway.Signal();
+
                     while (!token.IsCancellationRequested)
                     {
                         try

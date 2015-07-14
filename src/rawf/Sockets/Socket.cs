@@ -1,4 +1,6 @@
-﻿using NetMQ;
+﻿using System;
+using System.Threading;
+using NetMQ;
 using rawf.Messaging;
 
 namespace rawf.Sockets
@@ -6,6 +8,12 @@ namespace rawf.Sockets
     internal class Socket : ISocket
     {
         private readonly NetMQSocket socket;
+        private static readonly TimeSpan ReceiveWaitTimeout;
+
+        static Socket()
+        {
+            ReceiveWaitTimeout = TimeSpan.FromSeconds(3);
+        }
 
         public Socket(NetMQSocket socket)
         {
@@ -18,12 +26,20 @@ namespace rawf.Sockets
             socket.SendMessage(new NetMQMessage(multipart.Frames));
         }
 
-        public IMessage ReceiveMessage()
+        public IMessage ReceiveMessage(CancellationToken cancellationToken)
         {
-            var message = socket.ReceiveMessage();
-            var multipart = new MultipartMessage(message);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var message = socket.ReceiveMessage(ReceiveWaitTimeout);
+                if (message != null)
+                {
+                    var multipart = new MultipartMessage(message);
 
-            return new Message(multipart);
+                    return new Message(multipart);
+                }
+            }
+
+            return null;
         }
 
         public void Connect(string address)

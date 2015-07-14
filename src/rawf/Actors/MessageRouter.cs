@@ -42,10 +42,15 @@ namespace rawf.Actors
 
         public void Start()
         {
-            localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token),
-                                                 TaskCreationOptions.LongRunning);
-            scaleOutRouting = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token),
-                                                    TaskCreationOptions.LongRunning);
+            using (var gateway = new CountdownEvent(2))
+            {
+                localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, gateway),
+                                                     TaskCreationOptions.LongRunning);
+                scaleOutRouting = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, gateway),
+                                                        TaskCreationOptions.LongRunning);
+
+                gateway.Wait(cancellationTokenSource.Token);
+            }
         }
 
         public void Stop()
@@ -55,12 +60,14 @@ namespace rawf.Actors
             scaleOutRouting.Wait();
         }
 
-        private void RoutePeerMessages(CancellationToken token)
+        private void RoutePeerMessages(CancellationToken token, CountdownEvent gateway)
         {
             try
             {
                 using (var peeringFrontend = CreatePeeringFrontendSocket(context))
                 {
+                    gateway.Signal();
+
                     while (!token.IsCancellationRequested)
                     {
                         try
@@ -83,7 +90,7 @@ namespace rawf.Actors
             }
         }
 
-        private void RouteLocalMessages(CancellationToken token)
+        private void RouteLocalMessages(CancellationToken token, CountdownEvent gateway)
         {
             try
             {
@@ -91,6 +98,8 @@ namespace rawf.Actors
                 {
                     using (var peeringBackend = CreatePeeringBackendSocket(context))
                     {
+                        gateway.Signal();
+
                         while (!token.IsCancellationRequested)
                         {
                             try

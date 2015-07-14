@@ -51,6 +51,7 @@
     <Compile Include="Actor\ActorHostTests.cs" />
     <Compile Include="Actor\Setup\EchoActor.cs" />
     <Compile Include="Actor\Setup\EmptyMessage.cs" />
+    <Compile Include="Actor\Setup\StubSocket.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -38,8 +38,15 @@ namespace rawf.Actors
         {
             AssertActorIsAssigned();
 
-            syncProcessing = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
-            asyncProcessing = Task.Factory.StartNew(_ => ProcessAsyncResponses(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+            using (var gateway = new CountdownEvent(2))
+            {
+                syncProcessing = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token, gateway)
+                                                       , TaskCreationOptions.LongRunning);
+                asyncProcessing = Task.Factory.StartNew(_ => ProcessAsyncResponses(cancellationTokenSource.Token, gateway),
+                                                        TaskCreationOptions.LongRunning);
+
+                gateway.Wait(cancellationTokenSource.Token);
+            }
         }
 
         private void AssertActorIsAssigned()
@@ -57,12 +64,14 @@ namespace rawf.Actors
             asyncProcessing.Wait();
         }
 
-        private void ProcessAsyncResponses(CancellationToken token)
+        private void ProcessAsyncResponses(CancellationToken token, CountdownEvent gateway)
         {
             try
             {
                 using (var localSocket = CreateSocket(null))
                 {
+                    gateway.Signal();
+
                     foreach (var messageContext in asyncResponses.GetConsumingEnumerable(token))
                     {
                         try
@@ -72,7 +81,6 @@ namespace rawf.Actors
                             {
                                 messageOut.RegisterCallbackPoint(messageContext.CallbackIdentity, messageContext.CallbackReceiverIdentity);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
-
 
                                 localSocket.SendMessage(messageOut);
                             }
@@ -98,7 +106,7 @@ namespace rawf.Actors
         }
 
 
-        private void ProcessRequests(CancellationToken token)
+        private void ProcessRequests(CancellationToken token, CountdownEvent gateway)
         {
             try
             {
@@ -106,27 +114,32 @@ namespace rawf.Actors
                 {
                     RegisterActor(localSocket);
 
+                    gateway.Signal();
+
                     while (!token.IsCancellationRequested)
                     {
                         try
                         {
-                            var request = localSocket.ReceiveMessage();
-                            var multipart = new MultipartMessage(request);
-
-                            try
+                            var request = localSocket.ReceiveMessage(token);
+                            if (request != null)
                             {
-                                var messageIn = new Message(multipart);
-                                var actorIdentifier = new ActorIdentifier(messageIn.Version, messageIn.Identity);
-                                var handler = actorHandlersMap.Get(actorIdentifier);
+                                var multipart = new MultipartMessage(request);
 
-                                var task = handler(messageIn);
+                                try
+                                {
+                                    var messageIn = new Message(multipart);
+                                    var actorIdentifier = new ActorIdentifier(messageIn.Version, messageIn.Identity);
+                                    var handler = actorHandlersMap.Get(actorIdentifier);
 
-                                HandleTaskResult(token, task, messageIn, localSocket);
-                            }
-                            catch (Exception err)
-                            {
-                                //TODO: Add more context to exception about which Actor failed
-                                CallbackException(localSocket, err, multipart);
+                                    var task = handler(messageIn);
+
+                                    HandleTaskResult(token, task, messageIn, localSocket);
+                                }
+                                catch (Exception err)
+                                {
+                                    //TODO: Add more context to exception about which Actor failed
+                                    CallbackException(localSocket, err, multipart);
+                                }
                             }
                         }
                         catch (Exception err)
