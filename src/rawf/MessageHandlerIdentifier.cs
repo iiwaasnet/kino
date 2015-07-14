@@ -64,7 +64,7 @@ namespace rawf
             return string.Format($"Identity[{Identity?.GetString()}]-Version[{Version?.GetString()}]");
         }
 
-        internal byte[] Version { get; }
-        internal byte[] Identity { get; }
+        public byte[] Version { get; }
+        public byte[] Identity { get; }
     }
 }
