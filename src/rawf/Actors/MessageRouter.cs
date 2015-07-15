@@ -121,7 +121,7 @@ namespace rawf.Actors
                                     }
                                     else
                                     {
-                                        Console.WriteLine("No currently available handlers!");
+                                        //Console.WriteLine("No currently available handlers!");
 
                                         multipart.SetSocketIdentity(scaleOutSocketIdentity);
                                         peeringBackend.SendMessage(new NetMQMessage(multipart.Frames));
