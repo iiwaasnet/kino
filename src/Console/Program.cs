@@ -14,9 +14,11 @@ namespace Console
 {
     internal class Program
     {
+        //internal const string LocalEndpointAddress1 = "inproc://loc1";
         internal const string LocalEndpointAddress1 = "tcp://127.0.0.1:5555";
         internal const string PeerEndpointAddress1 = "tcp://127.0.0.1:5554";
 
+        //internal const string LocalEndpointAddress2 = "inproc://loc2";
         internal const string LocalEndpointAddress2 = "tcp://127.0.0.1:4555";
         internal const string PeerEndpointAddress2 = "tcp://127.0.0.1:4554";
         //TODO: Switch to inproc protocol after https://github.com/zeromq/netmq/pull/343 is released 
@@ -95,13 +97,12 @@ namespace Console
                                   {
                                       r.Wait();
                                       var msg = r.Result.GetPayload<EhlloMessage>();
-                                      System.Console.WriteLine($"Received: {msg.Ehllo}");
+                                      //System.Console.WriteLine($"Received: {msg.Ehllo}");
                                   }
                                   catch (Exception err)
                                   {
-                                      System.Console.WriteLine($"Error happened: {err}");
+                                      System.Console.WriteLine($"Error happened: {err?.InnerException?.Message}");
                                   }
-                                  
                               });
 
             timer.Stop();

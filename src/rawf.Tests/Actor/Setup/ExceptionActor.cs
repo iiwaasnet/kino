@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using rawf.Actors;
 using rawf.Messaging;
-using rawf.Messaging.Messages;
 
-namespace rawf.Actors.Diagnostics
+namespace rawf.Tests.Actor.Setup
 {
-    public class ExceptionHandlerActor : IActor
+    public class ExceptionActor : IActor
     {
-        private Task<IMessage> HandleException(IMessage message)
+        private readonly string exceptionMessage;
+        public ExceptionActor(string exceptionMessage)
         {
-            var payload = message.GetPayload<ExceptionMessage>();
-
-            Console.WriteLine(payload.Message);
-
-            return null;
+            this.exceptionMessage = exceptionMessage;
         }
 
         public IEnumerable<MessageMap> GetInterfaceDefinition()
@@ -23,11 +20,16 @@ namespace rawf.Actors.Diagnostics
                          {
                              Message = new MessageDefinition
                                        {
-                                           Identity = ExceptionMessage.MessageIdentity,
+                                           Identity = EmptyMessage.MessageIdentity,
                                            Version = Message.CurrentVersion
                                        },
-                             Handler = HandleException
+                             Handler = Process
                          };
+        }
+
+        private async Task<IMessage> Process(IMessage messageIn)
+        {
+            throw new Exception(exceptionMessage);
         }
     }
 }

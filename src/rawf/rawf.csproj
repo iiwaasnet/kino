@@ -91,7 +91,6 @@
     <Compile Include="Actors\IRouterConfiguration.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
-    <Compile Include="Framework\ITaskScheduler.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />
     <Compile Include="Framework\Unsafe.cs" />
     <Compile Include="Messaging\CorrelationId.cs" />

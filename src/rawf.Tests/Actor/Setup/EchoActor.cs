@@ -20,9 +20,9 @@ namespace rawf.Tests.Actor.Setup
                          };
         }
 
-        private Task<IMessage> Process(IMessage messageIn)
+        private async Task<IMessage> Process(IMessage messageIn)
         {
-            return Task.FromResult(messageIn);
+            return messageIn;
         }
     }
 }

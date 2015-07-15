@@ -6,6 +6,7 @@ using NUnit.Framework;
 using rawf.Actors;
 using rawf.Connectivity;
 using rawf.Messaging;
+using rawf.Messaging.Messages;
 using rawf.Tests.Actor.Setup;
 
 namespace rawf.Tests.Actor
@@ -55,6 +56,61 @@ namespace rawf.Tests.Actor
             var regMessage = Message.Create(payload, RegisterMessageHandlers.MessageIdentity);
 
             CollectionAssert.AreEqual(registration.Body, regMessage.Body);
+        }
+
+        [Test]
+        [ExpectedException]
+        public void TestStartingActorHostWithoutActorAssigned_ThrowsException()
+        {
+            var actorHandlersMap = new ActorHandlersMap();
+
+            var actorHost = new ActorHost(actorHandlersMap, new ConnectivityProvider(), new HostConfiguration(string.Empty));
+            actorHost.Start();
+        }
+
+        [Test]
+        public void TestSyncActorResponse_SendImmediately()
+        {
+            var actorHandlersMap = new ActorHandlersMap();
+            var connectivityProvider = new Mock<IConnectivityProvider>();
+            var socket = new StubSocket();
+            connectivityProvider.Setup(m => m.CreateDealerSocket()).Returns(socket);
+
+            var actorHost = new ActorHost(actorHandlersMap, connectivityProvider.Object, new HostConfiguration(string.Empty));
+            actorHost.AssignActor(new EchoActor());
+            actorHost.Start();
+
+            var messageIn = Message.CreateFlowStartMessage(new EmptyMessage(), EmptyMessage.MessageIdentity);
+            socket.DeliverMessage(messageIn);
+
+            Thread.Sleep(TimeSpan.FromMilliseconds(100));
+
+            var messageOut = socket.GetSentMessages().Last();
+
+            CollectionAssert.AreEqual(messageOut.Body, messageIn.Body);
+        }
+
+        [Test]
+        public void TestExceptionThrownFromActorHandler_DeliveredAsExceptionMessage()
+        {
+            var actorHandlersMap = new ActorHandlersMap();
+            var connectivityProvider = new Mock<IConnectivityProvider>();
+            var socket = new StubSocket();
+            connectivityProvider.Setup(m => m.CreateDealerSocket()).Returns(socket);
+
+            var errorMessage = "Bla";
+            var actorHost = new ActorHost(actorHandlersMap, connectivityProvider.Object, new HostConfiguration(string.Empty));
+            actorHost.AssignActor(new ExceptionActor(errorMessage));
+            actorHost.Start();
+
+            var messageIn = Message.CreateFlowStartMessage(new EmptyMessage(), EmptyMessage.MessageIdentity);
+            socket.DeliverMessage(messageIn);
+
+            Thread.Sleep(TimeSpan.FromMilliseconds(3000));
+
+            var messageOut = socket.GetSentMessages().Last();
+
+            Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Message);
         }
     }
 }

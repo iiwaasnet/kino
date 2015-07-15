@@ -51,7 +51,7 @@ namespace rawf.Actors
 
         private void AssertActorIsAssigned()
         {
-            if (actorHandlersMap == null)
+            if (!actorHandlersMap.GetRegisteredIdentifiers().Any())
             {
                 throw new Exception("Actor is not assigned!");
             }
@@ -175,7 +175,13 @@ namespace rawf.Actors
 
         private void CallbackException(ISocket localSocket, Exception err, MultipartMessage inMessage)
         {
-            var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
+            var message = (Message) Message.Create(new ExceptionMessage
+                                                   {
+                                                       Message = err.Message,
+                                                       Source = err.Source,
+                                                       StackTrace = err.StackTrace,
+                                                       InnerException = err.InnerException?.ToString()
+                                                   }, ExceptionMessage.MessageIdentity);
             message.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, inMessage.GetCallbackReceiverIdentity());
             message.SetCorrelationId(inMessage.GetCorrelationId());
 
@@ -217,14 +223,19 @@ namespace rawf.Actors
             {
                 return Message.Create(new ExceptionMessage
                                       {
-                                          Exception = new OperationCanceledException()
+                                          Message = new OperationCanceledException().Message
                                       }, ExceptionMessage.MessageIdentity);
             }
             if (task.IsFaulted)
             {
+                var err = task.Exception?.InnerException ?? task.Exception;
+
                 return Message.Create(new ExceptionMessage
                                       {
-                                          Exception = task.Exception
+                                          Message = err.Message,
+                                          Source = err.Source,
+                                          StackTrace = err.StackTrace,
+                                          InnerException = err.InnerException?.ToString()
                                       }, ExceptionMessage.MessageIdentity);
             }
 

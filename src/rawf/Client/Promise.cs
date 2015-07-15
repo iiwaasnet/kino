@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
@@ -23,8 +24,10 @@ namespace rawf.Client
         {
             if (Unsafe.Equals(message.Identity, ExceptionMessage.MessageIdentity))
             {
-                var error = message.GetPayload<ExceptionMessage>().Exception;
-                result.SetException(error);
+                var error = message.GetPayload<ExceptionMessage>();
+                var errorText = string.Format($"Message:{error.Message}. StackTrace:{error.StackTrace}. InnerException:{error.InnerException}");
+
+                result.SetException(new Exception(errorText) {Source = error.Source});
             }
             else
             {
