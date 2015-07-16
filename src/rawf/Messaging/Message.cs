@@ -6,9 +6,7 @@ namespace rawf.Messaging
     public class Message : IMessage
     {
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
-        private static readonly IMessageSerializer messageSerializer = new NewtonJsonMessageSerializer();
-        //TODO: Allow injection of the message serializer
-        //private static readonly IMessageSerializer messageSerializer = new ProtobufMessageSerializer();
+
         private object payload;
 
         private Message(IPayload payload, byte[] messageIdentity)
@@ -66,14 +64,15 @@ namespace rawf.Messaging
         }
 
         public T GetPayload<T>()
-            where T : IPayload
+            where T : IPayload, new()
             => (T) (payload ?? (payload = Deserialize<T>(Body)));
 
-        private static byte[] Serialize(object payload)
-            => messageSerializer.Serialize(payload);
+        private byte[] Serialize(IPayload payload)
+            => payload.Serialize();
 
-        private static T Deserialize<T>(byte[] content)
-            => messageSerializer.Deserialize<T>(content);
+        private T Deserialize<T>(byte[] content)
+            where T : IPayload, new()
+            => new T().Deserialize<T>(content);
 
         public byte[] Body { get; }
         public byte[] Identity { get; }

@@ -105,6 +105,7 @@
     <Compile Include="Messaging\MultipartMessage.cs" />
     <Compile Include="Messaging\MultipartMessage.Frames.cs" />
     <Compile Include="Messaging\NewtonJsonMessageSerializer.cs" />
+    <Compile Include="Messaging\Payload.cs" />
     <Compile Include="Messaging\ProtobufMessageSerializer.cs" />
     <Compile Include="Messaging\RegisterMessageHandlers.cs" />
     <Compile Include="Messaging\TypedMessage.cs" />

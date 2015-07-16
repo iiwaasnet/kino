@@ -5,7 +5,7 @@ using rawf.Messaging;
 namespace Console.Messages
 {
     [ProtoContract]
-    public class HelloMessage : IPayload
+    public class HelloMessage : Payload
     {
         public static readonly byte[] MessageIdentity = "HELLO".GetBytes();
 

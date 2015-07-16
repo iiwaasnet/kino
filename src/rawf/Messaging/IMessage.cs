@@ -4,7 +4,7 @@ namespace rawf.Messaging
 {
     public interface IMessage
     {
-        T GetPayload<T>() where T : IPayload;
+        T GetPayload<T>() where T : IPayload, new();
 
         DistributionPattern Distribution { get; }
 

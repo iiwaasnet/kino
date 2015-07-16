@@ -5,7 +5,7 @@ using rawf.Messaging;
 namespace rawf.Tests.Actor.Setup
 {
     [ProtoContract]
-    public class EmptyMessage : IPayload
+    public class EmptyMessage : Payload
     {
         public static readonly byte[] MessageIdentity = "EMPTY".GetBytes();
     }

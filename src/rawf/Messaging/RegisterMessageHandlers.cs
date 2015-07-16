@@ -4,7 +4,7 @@ using rawf.Framework;
 namespace rawf.Messaging
 {
     [ProtoContract]
-    public class RegisterMessageHandlers : IPayload
+    public class RegisterMessageHandlers : Payload
     {
         public static readonly byte[] MessageIdentity = "MSGHREG".GetBytes();
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Console.Messages;
 using rawf.Actors;
@@ -26,10 +25,36 @@ namespace Console
 
         private static void Main(string[] args)
         {
+            //IMessageSerializer messageSerializer;
+            //messageSerializer = new NewtonJsonMessageSerializer();
+            //Serialize(messageSerializer, "Newton");
+            //Serialize(messageSerializer, "Newton");
+
+            //messageSerializer = new ProtobufMessageSerializer();
+            //Serialize(messageSerializer, "Protobuf");
+            //Serialize(messageSerializer, "Protobuf");
+
+
             StartProcessingNode();
             StartSendingNode();
 
             System.Console.ReadLine();
+        }
+
+        private static void Serialize(IMessageSerializer messageSerializer, string test)
+        {
+            var msg = new HelloMessage {Greeting = new string('w', 500)};
+            var times = 10000;
+
+            var timer = new Stopwatch();
+            timer.Start();
+            for (var i = 0; i < times; i++)
+            {
+                messageSerializer.Deserialize<HelloMessage>(messageSerializer.Serialize(msg));
+            }
+            timer.Stop();
+
+            System.Console.WriteLine($"{test}: {timer.ElapsedMilliseconds}");
         }
 
         private static void StartProcessingNode()
@@ -101,7 +126,7 @@ namespace Console
                                   }
                                   catch (Exception err)
                                   {
-                                      System.Console.WriteLine($"Error happened: {err?.InnerException?.Message}");
+                                      System.Console.WriteLine($"Error happened: {err.ToString()}");
                                   }
                               });
 
