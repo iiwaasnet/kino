@@ -110,7 +110,7 @@ namespace rawf.Tests.Actor
 
             var messageOut = socket.GetSentMessages().Last();
 
-            Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Message);
+            Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
         }
     }
 }

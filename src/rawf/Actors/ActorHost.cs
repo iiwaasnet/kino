@@ -175,13 +175,7 @@ namespace rawf.Actors
 
         private void CallbackException(ISocket localSocket, Exception err, MultipartMessage inMessage)
         {
-            var message = (Message) Message.Create(new ExceptionMessage
-                                                   {
-                                                       Message = err.Message,
-                                                       Source = err.Source,
-                                                       StackTrace = err.StackTrace,
-                                                       InnerException = err.InnerException?.ToString()
-                                                   }, ExceptionMessage.MessageIdentity);
+            var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
             message.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, inMessage.GetCallbackReceiverIdentity());
             message.SetCorrelationId(inMessage.GetCorrelationId());
 
@@ -223,7 +217,7 @@ namespace rawf.Actors
             {
                 return Message.Create(new ExceptionMessage
                                       {
-                                          Message = new OperationCanceledException().Message
+                                          Exception = new OperationCanceledException()
                                       }, ExceptionMessage.MessageIdentity);
             }
             if (task.IsFaulted)
@@ -232,10 +226,7 @@ namespace rawf.Actors
 
                 return Message.Create(new ExceptionMessage
                                       {
-                                          Message = err.Message,
-                                          Source = err.Source,
-                                          StackTrace = err.StackTrace,
-                                          InnerException = err.InnerException?.ToString()
+                                          Exception = err
                                       }, ExceptionMessage.MessageIdentity);
             }
 

@@ -24,10 +24,8 @@ namespace rawf.Client
         {
             if (Unsafe.Equals(message.Identity, ExceptionMessage.MessageIdentity))
             {
-                var error = message.GetPayload<ExceptionMessage>();
-                var errorText = string.Format($"Message:{error.Message}. StackTrace:{error.StackTrace}. InnerException:{error.InnerException}");
-
-                result.SetException(new Exception(errorText) {Source = error.Source});
+                var error = message.GetPayload<ExceptionMessage>().Exception;
+                result.SetException(error);
             }
             else
             {

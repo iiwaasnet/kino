@@ -5,10 +5,10 @@ namespace rawf.Messaging
 {
     public class Message : IMessage
     {
-        public static readonly byte[]CurrentVersion = "1.0".GetBytes();
-        //private static readonly IMessageSerializer messageSerializer = new NewtonJsonMessageSerializer();
+        public static readonly byte[] CurrentVersion = "1.0".GetBytes();
+        private static readonly IMessageSerializer messageSerializer = new NewtonJsonMessageSerializer();
         //TODO: Allow injection of the message serializer
-        private static readonly IMessageSerializer messageSerializer = new ProtobufMessageSerializer();
+        //private static readonly IMessageSerializer messageSerializer = new ProtobufMessageSerializer();
         private object payload;
 
         private Message(IPayload payload, byte[] messageIdentity)

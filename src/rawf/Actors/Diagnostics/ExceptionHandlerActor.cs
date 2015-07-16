@@ -12,7 +12,7 @@ namespace rawf.Actors.Diagnostics
         {
             var payload = message.GetPayload<ExceptionMessage>();
 
-            Console.WriteLine(payload.Message);
+            Console.WriteLine(payload.Exception.ToString());
 
             return null;
         }
