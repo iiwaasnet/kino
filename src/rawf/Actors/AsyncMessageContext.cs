@@ -2,11 +2,11 @@ using rawf.Messaging;
 
 namespace rawf.Actors
 {
-    internal class AsyncMessageContext
+    public class AsyncMessageContext
     {
-        internal IMessage OutMessage { get; set; }
-        internal byte[] CorrelationId { get; set; }
-        internal byte[] CallbackIdentity { get; set; }
-        internal byte[] CallbackReceiverIdentity { get; set; }
+        public IMessage OutMessage { get; internal set; }
+        public byte[] CorrelationId { get; internal set; }
+        public byte[] CallbackIdentity { get; internal set; }
+        public byte[] CallbackReceiverIdentity { get; internal set; }
     }
 }

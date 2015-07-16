@@ -63,6 +63,11 @@ namespace rawf.Messaging
             CorrelationId = correlationId;
         }
 
+        internal string GetIdentityString()
+        {
+            return Identity.GetString();
+        }
+
         public T GetPayload<T>()
             where T : IPayload, new()
             => (T) (payload ?? (payload = Deserialize<T>(Body)));

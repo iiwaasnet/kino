@@ -111,9 +111,6 @@ namespace Console
             {
                 var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
                 responses.Add(client.Send(message, callbackPoint).GetResponse());
-                //var msg = response.GetPayload<EhlloMessage>();
-
-                //System.Console.WriteLine($"{i} Received: {msg.Ehllo}");
             }
 
             responses.ForEach(r =>
@@ -122,7 +119,7 @@ namespace Console
                                   {
                                       r.Wait();
                                       var msg = r.Result.GetPayload<EhlloMessage>();
-                                      //System.Console.WriteLine($"Received: {msg.Ehllo}");
+                                      System.Console.WriteLine($"Received: {msg.Ehllo}");
                                   }
                                   catch (Exception err)
                                   {
@@ -139,7 +136,7 @@ namespace Console
         {
             for (var i = 0; i < count; i++)
             {
-                var actorHost = new ActorHost(new ActorHandlersMap(), connectivityProvider, config);
+                var actorHost = new ActorHost(new ActorHandlersMap(), new MessagesCompletionQueue(), connectivityProvider, config);
                 var actor = new Actor();
                 actorHost.AssignActor(actor);
                 actorHost.Start();

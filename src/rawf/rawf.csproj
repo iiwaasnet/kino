@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="Actors\ActorHost.cs" />
     <Compile Include="Actors\ActorHandlersMap.cs" />
+    <Compile Include="Actors\MessagesCompletionQueue.cs" />
     <Compile Include="Actors\HostConfiguration.cs" />
     <Compile Include="Actors\ActorIdentifier.cs" />
     <Compile Include="Actors\AsyncMessageContext.cs" />
@@ -66,6 +67,7 @@
     <Compile Include="Actors\IActor.cs" />
     <Compile Include="Actors\IActorHandlersMap.cs" />
     <Compile Include="Actors\IActorHost.cs" />
+    <Compile Include="Actors\IMessagesCompletionQueue.cs" />
     <Compile Include="Actors\IMessageRouter.cs" />
     <Compile Include="Actors\IHostConfiguration.cs" />
     <Compile Include="Actors\RouterConfiguration.cs" />

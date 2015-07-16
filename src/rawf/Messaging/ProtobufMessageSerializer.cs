@@ -1,7 +1,5 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using ProtoBuf;
-using ProtoBuf.Meta;
 
 namespace rawf.Messaging
 {

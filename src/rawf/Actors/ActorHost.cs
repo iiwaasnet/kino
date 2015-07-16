@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,15 +16,18 @@ namespace rawf.Actors
         private Task syncProcessing;
         private Task asyncProcessing;
         private readonly CancellationTokenSource cancellationTokenSource;
-        private readonly BlockingCollection<AsyncMessageContext> asyncResponses;
+        private readonly IMessagesCompletionQueue messagesCompletionQueue;
         private readonly IConnectivityProvider connectivityProvider;
 
-        public ActorHost(IActorHandlersMap actorHandlersMap, IConnectivityProvider connectivityProvider, IHostConfiguration config)
+        public ActorHost(IActorHandlersMap actorHandlersMap,
+                         IMessagesCompletionQueue messagesCompletionQueue,
+                         IConnectivityProvider connectivityProvider,
+                         IHostConfiguration config)
         {
             this.actorHandlersMap = actorHandlersMap;
             this.connectivityProvider = connectivityProvider;
+            this.messagesCompletionQueue = messagesCompletionQueue;
             endpointAddress = config.GetRouterAddress();
-            asyncResponses = new BlockingCollection<AsyncMessageContext>(new ConcurrentQueue<AsyncMessageContext>());
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -40,8 +42,8 @@ namespace rawf.Actors
 
             using (var gateway = new CountdownEvent(2))
             {
-                syncProcessing = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token, gateway)
-                                                       , TaskCreationOptions.LongRunning);
+                syncProcessing = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token, gateway),
+                                                       TaskCreationOptions.LongRunning);
                 asyncProcessing = Task.Factory.StartNew(_ => ProcessAsyncResponses(cancellationTokenSource.Token, gateway),
                                                         TaskCreationOptions.LongRunning);
 
@@ -72,7 +74,7 @@ namespace rawf.Actors
                 {
                     gateway.Signal();
 
-                    foreach (var messageContext in asyncResponses.GetConsumingEnumerable(token))
+                    foreach (var messageContext in messagesCompletionQueue.GetMessages(token))
                     {
                         try
                         {
@@ -101,7 +103,7 @@ namespace rawf.Actors
             }
             finally
             {
-                asyncResponses.Dispose();
+                messagesCompletionQueue.Dispose();
             }
         }
 
@@ -193,7 +195,7 @@ namespace rawf.Actors
                                               CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
                                               CorrelationId = messageIn.CorrelationId
                                           };
-                asyncResponses.Add(asyncMessageContext, token);
+                messagesCompletionQueue.Enqueue(asyncMessageContext, token);
             }
             catch (OperationCanceledException)
             {
