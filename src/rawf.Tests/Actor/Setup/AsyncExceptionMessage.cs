@@ -6,11 +6,14 @@ using rawf.Messaging;
 namespace rawf.Tests.Actor.Setup
 {
     [ProtoContract]
-    public class AsyncMessage : Payload
+    public class AsyncExceptionMessage : Payload
     {
-        public static readonly byte[] MessageIdentity = "ASYNCMSG".GetBytes();
+        public static readonly byte[] MessageIdentity = "ASYNCEXCMSG".GetBytes();
 
         [ProtoMember(1)]
         public TimeSpan Delay { get; set; }
+
+        [ProtoMember(2)]
+        public string ErrorMessage { get; set; }
     }
 }

@@ -14,7 +14,7 @@ namespace rawf.Tests.Actor.Setup
                          {
                              Message = new MessageDefinition
                                        {
-                                           Identity = EmptyMessage.MessageIdentity,
+                                           Identity = SimpleMessage.MessageIdentity,
                                            Version = Message.CurrentVersion
                                        },
                              Handler = Process
