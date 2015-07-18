@@ -229,14 +229,16 @@ namespace rawf.Tests.Actor
             CollectionAssert.AreEqual(ExceptionMessage.MessageIdentity, messageOut.Identity);
         }
 
+        [Test]
+        [Ignore]
+        public void TestSyncMessageResponseHasSets_CorrelationId_CallbackIdentity_CallbackReceiverIdentity()
+        {
+            //TODO: Implement
+        }
+
         private static bool IsAsyncMessage(AsyncMessageContext amc)
         {
             return Unsafe.Equals(amc.OutMessage.Identity, AsyncMessage.MessageIdentity);
-        }
-
-        private static bool IsAsyncExceptionMessage(AsyncMessageContext amc)
-        {
-            return Unsafe.Equals(amc.OutMessage.Identity, ExceptionMessage.MessageIdentity);
         }
     }
 }
