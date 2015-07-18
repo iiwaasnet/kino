@@ -104,6 +104,7 @@ namespace rawf.Tests.Actor
             var messageOut = socket.GetSentMessages().Last();
 
             CollectionAssert.AreEqual(messageOut.Body, messageIn.Body);
+            CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
         }
 
         [Test]
@@ -128,10 +129,11 @@ namespace rawf.Tests.Actor
             var messageOut = socket.GetSentMessages().Last();
 
             Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
+            CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
         }
 
         [Test]
-        public void TestAsyncActorResult_IsSentAfterCompletion()
+        public void TestAsyncActorResult_IsAddedToMessageCompletionQueue()
         {
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
@@ -162,18 +164,48 @@ namespace rawf.Tests.Actor
         }
 
         [Test]
-        public void TestAsyncActorException_IsSentAfterCompletionAsExceptionMessage()
+        public void TestAsyncActorResult_IsSentAfterCompletion()
         {
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
             connectivityProvider.Setup(m => m.CreateDealerSocket()).Returns(socket);
-            var messageCompletionQueue = new Mock<IMessagesCompletionQueue>();
-            messageCompletionQueue.Setup(m => m.GetMessages(It.IsAny<CancellationToken>()))
-                                  .Returns(new BlockingCollection<AsyncMessageContext>().GetConsumingEnumerable());
 
             var actorHost = new ActorHost(actorHandlersMap,
-                                          messageCompletionQueue.Object,
+                                          new MessagesCompletionQueue(),
+                                          connectivityProvider.Object,
+                                          new HostConfiguration(string.Empty));
+            actorHost.AssignActor(new EchoActor());
+            actorHost.Start();
+
+            var delay = TimeSpan.FromMilliseconds(200);
+            var asyncMessage = new AsyncMessage {Delay = delay};
+            var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
+            socket.DeliverMessage(messageIn);
+
+            Thread.Sleep(delay);
+            Thread.Sleep(AsyncOpCompletionDelay);
+
+            var sentMessages = socket.GetSentMessages();
+            var messageOut = sentMessages.Last();
+
+            Assert.AreEqual(2, sentMessages.Count());
+            CollectionAssert.AreEqual(AsyncMessage.MessageIdentity, messageOut.Identity);
+            Assert.AreEqual(delay, messageOut.GetPayload<AsyncMessage>().Delay);
+            CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
+        }
+
+        [Test]
+        public void TestAsyncActorException_IsSentAfterCompletionAsExceptionMessage()
+        {
+            var actorHandlersMap = new ActorHandlersMap();
+            var connectivityProvider = new Mock<IConnectivityProvider> {CallBase = true};
+            var socket = new StubSocket();
+            connectivityProvider.Setup(m => m.CreateDealerSocket()).Returns(socket);
+            var messageCompletionQueue = new MessagesCompletionQueue();
+
+            var actorHost = new ActorHost(actorHandlersMap,
+                                          messageCompletionQueue,
                                           connectivityProvider.Object,
                                           new HostConfiguration(string.Empty));
             actorHost.AssignActor(new ExceptionActor());
@@ -183,7 +215,7 @@ namespace rawf.Tests.Actor
             var error = Guid.NewGuid().ToString();
             var asyncMessage = new AsyncExceptionMessage
                                {
-                                   Delay = delay, 
+                                   Delay = delay,
                                    ErrorMessage = error
                                };
             var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncExceptionMessage.MessageIdentity);
@@ -192,9 +224,9 @@ namespace rawf.Tests.Actor
             Thread.Sleep(delay);
             Thread.Sleep(AsyncOpCompletionDelay);
 
-            messageCompletionQueue.Verify(m => m.Enqueue(It.Is<AsyncMessageContext>(amc => IsAsyncExceptionMessage(amc)),
-                                                         It.IsAny<CancellationToken>()), Times.Once);
-            messageCompletionQueue.Verify(m => m.GetMessages(It.IsAny<CancellationToken>()), Times.Once);
+            var messageOut = socket.GetSentMessages().Last();
+
+            CollectionAssert.AreEqual(ExceptionMessage.MessageIdentity, messageOut.Identity);
         }
 
         private static bool IsAsyncMessage(AsyncMessageContext amc)
