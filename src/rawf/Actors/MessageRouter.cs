@@ -16,28 +16,25 @@ namespace rawf.Actors
         private Task localRouting;
         private Task scaleOutRouting;
         private readonly IMessageHandlerStack messageHandlers;
-        private readonly byte[] scaleOutSocketIdentity = {1, 1, 1, 1, 1};
-        private readonly byte[] localSocketIdentity = {2, 2, 2, 2, 2};
+        private byte[] localSocketIdentity;
         private readonly IConnectivityProvider connectivityProvider;
-        private readonly IRouterConfiguration config;
 
-        public MessageRouter(IConnectivityProvider connectivityProvider, IMessageHandlerStack messageHandlers, IRouterConfiguration config)
+        public MessageRouter(IConnectivityProvider connectivityProvider, IMessageHandlerStack messageHandlers)
         {
             this.connectivityProvider = connectivityProvider;
-            this.config = config;
             this.messageHandlers = messageHandlers;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
-        private ISocket CreateSocket()
-        {
-            var socket = connectivityProvider.CreateRouterSocket();
-            socket.SetMandatoryRouting();
-            socket.SetIdentity(localSocketIdentity);
-            socket.Bind(config.GetRouterAddress());
+        //private ISocket CreateSocket()
+        //{
+        //    //var socket = connectivityProvider.CreateRouterSocket();
+        //    //socket.SetMandatoryRouting();
+        //    //socket.SetIdentity(localSocketIdentity);
+        //    //socket.Bind(config.GetRouterAddress());
 
-            return socket;
-        }
+        //    //return socket;
+        //}
 
         public void Start()
         {
@@ -63,7 +60,7 @@ namespace rawf.Actors
         {
             try
             {
-                using (var peeringFrontend = CreatePeeringFrontendSocket())
+                using (var scaleOutFrontend = connectivityProvider.CreateFrontendScaleOutSocket())
                 {
                     gateway.Signal();
 
@@ -71,9 +68,9 @@ namespace rawf.Actors
                     {
                         try
                         {
-                            var message = (Message)peeringFrontend.ReceiveMessage(token);
+                            var message = (Message)scaleOutFrontend.ReceiveMessage(token);
                             message.SetSocketIdentity(localSocketIdentity);
-                            peeringFrontend.SendMessage(message);
+                            scaleOutFrontend.SendMessage(message);
                         }
                         catch (Exception err)
                         {
@@ -92,9 +89,11 @@ namespace rawf.Actors
         {
             try
             {
-                using (var localSocket = CreateSocket())
+                using (var localSocket = connectivityProvider.CreateRouterSocket())
                 {
-                    using (var peeringBackend = CreatePeeringBackendSocket())
+                    localSocketIdentity = localSocket.GetIdentity();
+
+                    using (var scaleOutBackend = connectivityProvider.CreateBackendScaleOutSocket())
                     {
                         gateway.Signal();
 
@@ -120,8 +119,8 @@ namespace rawf.Actors
                                     {
                                         //Console.WriteLine("No currently available handlers!");
 
-                                        message.SetSocketIdentity(scaleOutSocketIdentity);
-                                        peeringBackend.SendMessage(message);
+                                        message.SetSocketIdentity(scaleOutBackend.GetIdentity());
+                                        scaleOutBackend.SendMessage(message);
                                     }
                                 }
                             }
@@ -139,29 +138,29 @@ namespace rawf.Actors
             }
         }
 
-        private ISocket CreatePeeringBackendSocket()
-        {
-            var socket = connectivityProvider.CreateRouterSocket();
-            socket.SetIdentity(scaleOutSocketIdentity);
-            socket.SetMandatoryRouting();
-            foreach (var peer in config.GetScaleOutCluster())
-            {
-                socket.Connect(peer);
-            }
+        //private ISocket CreateScaleOutBackendSocket()
+        //{
+        //    //var socket = connectivityProvider.CreateRouterSocket();
+        //    //socket.SetIdentity(scaleOutSocketIdentity);
+        //    //socket.SetMandatoryRouting();
+        //    //foreach (var peer in config.GetScaleOutCluster())
+        //    //{
+        //    //    socket.Connect(peer);
+        //    //}
 
-            return socket;
-        }
+        //    //return socket;
+        //}
 
-        private ISocket CreatePeeringFrontendSocket()
-        {
-            var socket = connectivityProvider.CreateRouterSocket();
-            socket.SetIdentity(scaleOutSocketIdentity);
-            socket.SetMandatoryRouting();
-            socket.Connect(config.GetRouterAddress());
-            socket.Bind(config.GetLocalScaleOutAddress());
+        //private ISocket CreateScaleOutFrontendSocket()
+        //{
+        //    //var socket = connectivityProvider.CreateRouterSocket();
+        //    //socket.SetIdentity(scaleOutSocketIdentity);
+        //    //socket.SetMandatoryRouting();
+        //    //socket.Connect(config.GetRouterAddress());
+        //    //socket.Bind(config.GetLocalScaleOutAddress());
 
-            return socket;
-        }
+        //    //return socket;
+        //}
 
         private static bool IsReadyMessage(IMessage message)
         {

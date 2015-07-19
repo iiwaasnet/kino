@@ -8,6 +8,7 @@ using rawf.Actors;
 using rawf.Client;
 using rawf.Connectivity;
 using rawf.Messaging;
+using rawf.Sockets;
 
 namespace Console
 {
@@ -59,14 +60,13 @@ namespace Console
 
         private static void StartProcessingNode()
         {
-            var connectivityProvider = new ConnectivityProvider();
-            var hostConfig = new HostConfiguration(LocalEndpointAddress2);
-            var routerConfig = new RouterConfiguration(LocalEndpointAddress2, PeerEndpointAddress2, PeerEndpointAddress1);
+            var routerConfig = new ConnectivityConfiguration(LocalEndpointAddress2, PeerEndpointAddress2, PeerEndpointAddress1);
+            var connectivityProvider = new ConnectivityProvider(new SocketProvider(), routerConfig);
 
-            var messageRouter = new MessageRouter(connectivityProvider, new MessageHandlerStack(), routerConfig);
+            var messageRouter = new MessageRouter(connectivityProvider, new MessageHandlerStack());
             messageRouter.Start();
 
-            var actors = CreateActors(connectivityProvider, hostConfig, 1).ToList();
+            var actors = CreateActors(connectivityProvider, 1).ToList();
 
             //System.Console.WriteLine("Press ENTER to stop");
             //actors.ToList().ForEach(a => a.Stop());
@@ -77,14 +77,13 @@ namespace Console
 
         private static void StartSendingNode()
         {
-            var connectivityProvider = new ConnectivityProvider();
-            var hostConfig = new HostConfiguration(LocalEndpointAddress1);
-            var routerConfig = new RouterConfiguration(LocalEndpointAddress1, PeerEndpointAddress1, PeerEndpointAddress2);
-
-            var messageRouter = new MessageRouter(connectivityProvider, new MessageHandlerStack(), routerConfig);
+            
+            var routerConfig = new ConnectivityConfiguration(LocalEndpointAddress1, PeerEndpointAddress1, PeerEndpointAddress2);
+            var connectivityProvider = new ConnectivityProvider(new SocketProvider(), routerConfig);
+            var messageRouter = new MessageRouter(connectivityProvider, new MessageHandlerStack());
             messageRouter.Start();
 
-            var messageHub = new MessageHub(connectivityProvider, hostConfig);
+            var messageHub = new MessageHub(connectivityProvider);
             messageHub.Start();
 
             var client = new Client(messageHub);
@@ -132,11 +131,11 @@ namespace Console
             System.Console.WriteLine($"Done in {timer.ElapsedMilliseconds} msec");
         }
 
-        private static IEnumerable<IActorHost> CreateActors(IConnectivityProvider connectivityProvider, IHostConfiguration config, int count)
+        private static IEnumerable<IActorHost> CreateActors(IConnectivityProvider connectivityProvider, int count)
         {
             for (var i = 0; i < count; i++)
             {
-                var actorHost = new ActorHost(new ActorHandlersMap(), new MessagesCompletionQueue(), connectivityProvider, config);
+                var actorHost = new ActorHost(new ActorHandlersMap(), new MessagesCompletionQueue(), connectivityProvider);
                 var actor = new Actor();
                 actorHost.AssignActor(actor);
                 actorHost.Start();

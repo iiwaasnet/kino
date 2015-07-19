@@ -2,13 +2,13 @@ using System.Collections.Generic;
 
 namespace rawf.Actors
 {
-    public class RouterConfiguration : IRouterConfiguration
+    public class ConnectivityConfiguration : IConnectivityConfiguration
     {
         private readonly string routerAddress;
         private readonly string localScaleOutAddress;
         private readonly IEnumerable<string> scaleOutCluster;
 
-        public RouterConfiguration(string routerAddress, string localScaleOutAddress, string peerAddress)
+        public ConnectivityConfiguration(string routerAddress, string localScaleOutAddress, string peerAddress)
         {
             this.routerAddress = routerAddress;
             this.localScaleOutAddress = localScaleOutAddress;

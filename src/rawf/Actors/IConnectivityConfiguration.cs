@@ -2,7 +2,7 @@
 
 namespace rawf.Actors
 {
-    public interface IRouterConfiguration
+    public interface IConnectivityConfiguration
     {
         string GetRouterAddress();
         string GetLocalScaleOutAddress();

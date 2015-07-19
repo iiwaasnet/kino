@@ -88,11 +88,6 @@ namespace rawf.Messaging
             }
         }
 
-        //internal void SetSocketIdentity(byte[] socketIdentity)
-        //{
-        //    frames.Insert(ForwardFrames.SocketIdentity, socketIdentity);
-        //}
-
         internal void PushRouterIdentity(byte[] routerId)
         {
             frames.Insert(ReversedFrames.NextRouterInsertPosition, routerId);

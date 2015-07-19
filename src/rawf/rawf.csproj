@@ -61,7 +61,6 @@
     <Compile Include="Actors\ActorHandlersMap.cs" />
     <Compile Include="Actors\IMessageHandlerStack.cs" />
     <Compile Include="Actors\MessagesCompletionQueue.cs" />
-    <Compile Include="Actors\HostConfiguration.cs" />
     <Compile Include="Actors\ActorIdentifier.cs" />
     <Compile Include="Actors\AsyncMessageContext.cs" />
     <Compile Include="Actors\Diagnostics\ExceptionHandlerActor.cs" />
@@ -71,7 +70,7 @@
     <Compile Include="Actors\IMessagesCompletionQueue.cs" />
     <Compile Include="Actors\IMessageRouter.cs" />
     <Compile Include="Actors\IHostConfiguration.cs" />
-    <Compile Include="Actors\RouterConfiguration.cs" />
+    <Compile Include="Actors\ConnectivityConfiguration.cs" />
     <Compile Include="Connectivity\IConnectivityProvider.cs" />
     <Compile Include="Actors\MessageDefinition.cs" />
     <Compile Include="Actors\MessageHandler.cs" />
@@ -91,7 +90,7 @@
     <Compile Include="Client\IPromise.cs" />
     <Compile Include="Client\MessageHub.cs" />
     <Compile Include="Client\Promise.cs" />
-    <Compile Include="Actors\IRouterConfiguration.cs" />
+    <Compile Include="Actors\IConnectivityConfiguration.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />
@@ -113,7 +112,9 @@
     <Compile Include="Messaging\RegisterMessageHandlers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sockets\ISocket.cs" />
+    <Compile Include="Sockets\ISocketProvider.cs" />
     <Compile Include="Sockets\Socket.cs" />
+    <Compile Include="Sockets\SocketProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

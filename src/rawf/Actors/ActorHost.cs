@@ -12,7 +12,6 @@ namespace rawf.Actors
     public class ActorHost : IActorHost
     {
         private readonly IActorHandlersMap actorHandlersMap;
-        private readonly string endpointAddress;
         private Task syncProcessing;
         private Task asyncProcessing;
         private readonly CancellationTokenSource cancellationTokenSource;
@@ -21,13 +20,11 @@ namespace rawf.Actors
 
         public ActorHost(IActorHandlersMap actorHandlersMap,
                          IMessagesCompletionQueue messagesCompletionQueue,
-                         IConnectivityProvider connectivityProvider,
-                         IHostConfiguration config)
+                         IConnectivityProvider connectivityProvider)
         {
             this.actorHandlersMap = actorHandlersMap;
             this.connectivityProvider = connectivityProvider;
             this.messagesCompletionQueue = messagesCompletionQueue;
-            endpointAddress = config.GetRouterAddress();
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -70,7 +67,7 @@ namespace rawf.Actors
         {
             try
             {
-                using (var localSocket = CreateSocket(null))
+                using (var localSocket = connectivityProvider.CreateActorAsyncSocket())
                 {
                     gateway.Signal();
 
@@ -112,7 +109,7 @@ namespace rawf.Actors
         {
             try
             {
-                using (var localSocket = CreateSocket(new byte[] {5, 5, 5}))
+                using (var localSocket = connectivityProvider.CreateActorSyncSocket())
                 {
                     RegisterActor(localSocket);
 
@@ -233,18 +230,6 @@ namespace rawf.Actors
             }
 
             return task.Result;
-        }
-
-        private ISocket CreateSocket(byte[] identity)
-        {
-            var socket = connectivityProvider.CreateDealerSocket();
-            if (identity != null)
-            {
-                socket.SetIdentity(identity);
-            }
-            socket.Connect(endpointAddress);
-
-            return socket;
         }
 
         private void RegisterActor(ISocket socket)

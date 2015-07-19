@@ -9,6 +9,7 @@ using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
+using rawf.Sockets;
 
 namespace rawf.Client
 {
@@ -16,30 +17,28 @@ namespace rawf.Client
     {
         private readonly NetMQContext context;
         private readonly CallbackHandlerStack callbackHandlers;
-        private readonly string endpointAddress;
+        private readonly IConnectivityProvider connectivityProvider;
         private Task sending;
         private Task receiving;
-        private readonly byte[] receivingSocketIdentity;
+        private byte[] receivingSocketIdentity;
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
 
-        public MessageHub(IConnectivityProvider connectivityProvider, IHostConfiguration config)
+        public MessageHub(IConnectivityProvider connectivityProvider)
         {
-            context = connectivityProvider.GetConnectivityContext();
-            endpointAddress = config.GetRouterAddress();
+            this.connectivityProvider = connectivityProvider;
             hubRegistered = new ManualResetEventSlim();
             callbackHandlers = new CallbackHandlerStack();
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
             cancellationTokenSource = new CancellationTokenSource();
-            receivingSocketIdentity = Guid.NewGuid().ToString().GetBytes();
-            receivingSocketIdentity = new byte[] {0, 1, 1, 1, 1, 10};
         }
 
         public void Start()
         {
             using (var gateway = new CountdownEvent(2))
             {
+                //TODO: Force order of receiving/sending sockets creation because of receivingSocketIdentity initialization
                 receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token, gateway),
                                                   TaskCreationOptions.LongRunning);
                 sending = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token, gateway),
@@ -60,8 +59,10 @@ namespace rawf.Client
         {
             try
             {
-                using (var socket = CreateSendingSocket(context))
+                using (var socket = connectivityProvider.CreateClientSendingSocket())
                 {
+                    RegisterMessageHub(socket);
+
                     gateway.Signal();
 
                     foreach (var callbackRegistration in registrationsQueue.GetConsumingEnumerable(token))
@@ -90,8 +91,7 @@ namespace rawf.Client
                                                   promise);
 
 
-                            var messageOut = new MultipartMessage(message);
-                            socket.SendMessage(new NetMQMessage(messageOut.Frames));
+                            socket.SendMessage(message);
                         }
                         catch (Exception err)
                         {
@@ -112,15 +112,16 @@ namespace rawf.Client
         {
             try
             {
-                using (var socket = CreateReceivingSocket(context, receivingSocketIdentity))
+                using (var socket = connectivityProvider.CreateClientReceivingSocket())
                 {
+                    receivingSocketIdentity = socket.GetIdentity();
                     gateway.Signal();
 
                     while (!token.IsCancellationRequested)
                     {
                         try
                         {
-                            var request = socket.ReceiveMessage();
+                            var request = socket.ReceiveMessage(token);
                             var multipart = new MultipartMessage(request);
                             var messageIn = new Message(multipart);
                             var callback = (Promise) callbackHandlers.Pop(new CallbackHandlerKey
@@ -144,26 +145,26 @@ namespace rawf.Client
             }
         }
 
-        private NetMQSocket CreateReceivingSocket(NetMQContext context, byte[] socketIdentity = null)
-        {
-            var socket = context.CreateDealerSocket();
-            socket.Options.Identity = socketIdentity;
-            socket.Connect(endpointAddress);
+        //private NetMQSocket CreateReceivingSocket(NetMQContext context, byte[] socketIdentity = null)
+        //{
+        //    //var socket = context.CreateDealerSocket();
+        //    //socket.Options.Identity = socketIdentity;
+        //    //socket.Connect(endpointAddress);
 
-            return socket;
-        }
+        //    //return socket;
+        //}
 
-        private NetMQSocket CreateSendingSocket(NetMQContext context)
-        {
-            var socket = context.CreateDealerSocket();
-            socket.Connect(endpointAddress);
+        //private NetMQSocket CreateSendingSocket(NetMQContext context)
+        //{
+        //    //var socket = context.CreateDealerSocket();
+        //    //socket.Connect(endpointAddress);
 
-            RegisterMessageHub(socket);
+        //    //RegisterMessageHub(socket);
 
-            return socket;
-        }
+        //    //return socket;
+        //}
 
-        private void RegisterMessageHub(DealerSocket socket)
+        private void RegisterMessageHub(ISocket socket)
         {
             var rdyMessage = Message.Create(new RegisterMessageHandlers
                                             {
@@ -178,8 +179,7 @@ namespace rawf.Client
                                                                     }
                                                                 }
                                             }, RegisterMessageHandlers.MessageIdentity);
-            var messageOut = new MultipartMessage(rdyMessage);
-            socket.SendMessage(new NetMQMessage(messageOut.Frames));
+            socket.SendMessage(rdyMessage);
 
             hubRegistered.Set();
         }

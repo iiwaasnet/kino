@@ -4,12 +4,15 @@ using rawf.Sockets;
 
 namespace rawf.Connectivity
 {
-    public interface IConnectivityProvider : IDisposable
+    public interface IConnectivityProvider
     {
-        //TODO: Might extract full NetMQContext interface later
-        NetMQContext GetConnectivityContext();
-
-        ISocket CreateDealerSocket();
         ISocket CreateRouterSocket();
+        ISocket CreateFrontendScaleOutSocket();
+        ISocket CreateBackendScaleOutSocket();
+        ISocket CreateActorSyncSocket();
+        ISocket CreateActorAsyncSocket();
+        ISocket CreateClientSendingSocket();
+        ISocket CreateClientReceivingSocket();
+
     }
 }
