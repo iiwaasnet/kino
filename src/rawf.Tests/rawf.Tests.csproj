@@ -59,6 +59,7 @@
     <Compile Include="Actor\Setup\EchoActor.cs" />
     <Compile Include="Actor\Setup\SimpleMessage.cs" />
     <Compile Include="Actor\Setup\StubSocket.cs" />
+    <Compile Include="Messaging\MessageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
