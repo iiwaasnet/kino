@@ -17,6 +17,7 @@ namespace rawf.Tests.Actor
     public class ActorHostTests
     {
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(20);
 
         [Test]
         public void TestAssignActor_RegistersActorHandlers()
@@ -99,7 +100,7 @@ namespace rawf.Tests.Actor
             var messageIn = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
             socket.DeliverMessage(messageIn);
 
-            Thread.Sleep(TimeSpan.FromMilliseconds(100));
+            Thread.Sleep(AsyncOpCompletionDelay);
 
             var messageOut = socket.GetSentMessages().Last();
 
@@ -150,13 +151,12 @@ namespace rawf.Tests.Actor
             actorHost.AssignActor(new EchoActor());
             actorHost.Start();
 
-            var delay = TimeSpan.FromMilliseconds(200);
+            var delay = AsyncOp;
             var asyncMessage = new AsyncMessage {Delay = delay};
             var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
             socket.DeliverMessage(messageIn);
 
-            Thread.Sleep(delay);
-            Thread.Sleep(AsyncOpCompletionDelay);
+            Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
 
             messageCompletionQueue.Verify(m => m.Enqueue(It.Is<AsyncMessageContext>(amc => IsAsyncMessage(amc)),
                                                          It.IsAny<CancellationToken>()), Times.Once);
@@ -178,13 +178,12 @@ namespace rawf.Tests.Actor
             actorHost.AssignActor(new EchoActor());
             actorHost.Start();
 
-            var delay = TimeSpan.FromMilliseconds(200);
+            var delay = AsyncOp;
             var asyncMessage = new AsyncMessage {Delay = delay};
             var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
             socket.DeliverMessage(messageIn);
 
-            Thread.Sleep(delay);
-            Thread.Sleep(AsyncOpCompletionDelay);
+            Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
 
             var sentMessages = socket.GetSentMessages();
             var messageOut = sentMessages.Last();
@@ -211,7 +210,7 @@ namespace rawf.Tests.Actor
             actorHost.AssignActor(new ExceptionActor());
             actorHost.Start();
 
-            var delay = TimeSpan.FromMilliseconds(200);
+            var delay = AsyncOp;
             var error = Guid.NewGuid().ToString();
             var asyncMessage = new AsyncExceptionMessage
                                {
@@ -221,8 +220,7 @@ namespace rawf.Tests.Actor
             var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncExceptionMessage.MessageIdentity);
             socket.DeliverMessage(messageIn);
 
-            Thread.Sleep(delay);
-            Thread.Sleep(AsyncOpCompletionDelay);
+            Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
 
             var messageOut = socket.GetSentMessages().Last();
 
