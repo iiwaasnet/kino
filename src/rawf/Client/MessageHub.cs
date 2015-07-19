@@ -20,7 +20,7 @@ namespace rawf.Client
         private readonly IConnectivityProvider connectivityProvider;
         private Task sending;
         private Task receiving;
-        private byte[] receivingSocketIdentity;
+        private readonly TaskCompletionSource<byte[]> receivingSocketIdentityPromise;
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
@@ -28,6 +28,7 @@ namespace rawf.Client
         public MessageHub(IConnectivityProvider connectivityProvider)
         {
             this.connectivityProvider = connectivityProvider;
+            receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             hubRegistered = new ManualResetEventSlim();
             callbackHandlers = new CallbackHandlerStack();
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
@@ -36,15 +37,14 @@ namespace rawf.Client
 
         public void Start()
         {
-            using (var gateway = new CountdownEvent(2))
+            using (var gateway = new Barrier(3))
             {
-                //TODO: Force order of receiving/sending sockets creation because of receivingSocketIdentity initialization
                 receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token, gateway),
                                                   TaskCreationOptions.LongRunning);
                 sending = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token, gateway),
                                                 TaskCreationOptions.LongRunning);
 
-                gateway.Wait(cancellationTokenSource.Token);
+                gateway.SignalAndWait(cancellationTokenSource.Token);
             }
         }
 
@@ -55,15 +55,15 @@ namespace rawf.Client
             receiving.Wait();
         }
 
-        private void SendClientRequests(CancellationToken token, CountdownEvent gateway)
+        private void SendClientRequests(CancellationToken token, Barrier gateway)
         {
             try
             {
                 using (var socket = connectivityProvider.CreateClientSendingSocket())
                 {
-                    RegisterMessageHub(socket);
-
-                    gateway.Signal();
+                    var receivingSocketIdentity = receivingSocketIdentityPromise.Task.Result;
+                    RegisterMessageHub(socket, receivingSocketIdentity);
+                    gateway.SignalAndWait(token);
 
                     foreach (var callbackRegistration in registrationsQueue.GetConsumingEnumerable(token))
                     {
@@ -108,14 +108,14 @@ namespace rawf.Client
         }
 
 
-        private void ReadReplies(CancellationToken token, CountdownEvent gateway)
+        private void ReadReplies(CancellationToken token, Barrier gateway)
         {
             try
             {
                 using (var socket = connectivityProvider.CreateClientReceivingSocket())
                 {
-                    receivingSocketIdentity = socket.GetIdentity();
-                    gateway.Signal();
+                    receivingSocketIdentityPromise.SetResult(socket.GetIdentity());
+                    gateway.SignalAndWait(token);
 
                     while (!token.IsCancellationRequested)
                     {
@@ -164,7 +164,7 @@ namespace rawf.Client
         //    //return socket;
         //}
 
-        private void RegisterMessageHub(ISocket socket)
+        private void RegisterMessageHub(ISocket socket, byte[] receivingSocketIdentity)
         {
             var rdyMessage = Message.Create(new RegisterMessageHandlers
                                             {
