@@ -29,6 +29,7 @@ namespace rawf.Messaging
 
         private IEnumerable<byte[]> BuildMessageParts(IMessage message)
         {
+            yield return GetSocketIdentity(message);
             // START Routing delimiters
             yield return EmptyFrame;
             yield return EmptyFrame;
@@ -47,6 +48,9 @@ namespace rawf.Messaging
 
             yield return GetMessageBodyFrame(message);
         }
+
+        private byte[] GetSocketIdentity(IMessage message)
+            => ((Message) message).SocketIdentity ?? EmptyFrame;
 
         private byte[] GetReceiverIdentityFrame(IMessage message)
             => message.ReceiverIdentity ?? EmptyFrame;
@@ -84,10 +88,10 @@ namespace rawf.Messaging
             }
         }
 
-        internal void SetSocketIdentity(byte[] socketIdentity)
-        {
-            frames.Insert(ForwardFrames.SocketIdentity, socketIdentity);
-        }
+        //internal void SetSocketIdentity(byte[] socketIdentity)
+        //{
+        //    frames.Insert(ForwardFrames.SocketIdentity, socketIdentity);
+        //}
 
         internal void PushRouterIdentity(byte[] routerId)
         {

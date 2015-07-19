@@ -23,6 +23,11 @@ namespace rawf.Connectivity
             return new Socket(context.CreateDealerSocket());
         }
 
+        public ISocket CreateRouterSocket()
+        {
+            return new Socket(context.CreateRouterSocket());
+        }
+
         public void Dispose()
         {
             context.Dispose();

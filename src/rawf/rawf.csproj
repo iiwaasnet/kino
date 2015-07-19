@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="Actors\ActorHost.cs" />
     <Compile Include="Actors\ActorHandlersMap.cs" />
+    <Compile Include="Actors\IMessageHandlerStack.cs" />
     <Compile Include="Actors\MessagesCompletionQueue.cs" />
     <Compile Include="Actors\HostConfiguration.cs" />
     <Compile Include="Actors\ActorIdentifier.cs" />

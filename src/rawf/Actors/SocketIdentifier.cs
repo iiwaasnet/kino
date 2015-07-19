@@ -3,7 +3,7 @@ using rawf.Framework;
 
 namespace rawf.Actors
 {
-    internal class SocketIdentifier : IEquatable<SocketIdentifier>
+    public class SocketIdentifier : IEquatable<SocketIdentifier>
     {
         public SocketIdentifier(byte[] socketId)
         {

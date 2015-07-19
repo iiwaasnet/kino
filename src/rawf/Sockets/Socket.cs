@@ -47,10 +47,22 @@ namespace rawf.Sockets
             socket.Connect(address);
         }
 
+        public void Bind(string address)
+        {
+            socket.Bind(address);
+        }
+
+
         public void Disconnect(string address)
         {
             socket.Disconnect(address);
         }
+
+        public void SetMandatoryRouting(bool mandatory = true)
+        {
+            socket.Options.RouterMandatory = mandatory;
+        }
+
 
         public void SetIdentity(byte[] identity)
         {

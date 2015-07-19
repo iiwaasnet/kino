@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Actor\ActorHostTests.cs" />
+    <Compile Include="Actor\MessageRouterTests.cs" />
     <Compile Include="Actor\Setup\AsyncExceptionMessage.cs" />
     <Compile Include="Actor\Setup\AsyncMessage.cs" />
     <Compile Include="Actor\Setup\ExceptionActor.cs" />

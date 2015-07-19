@@ -10,5 +10,6 @@ namespace rawf.Connectivity
         NetMQContext GetConnectivityContext();
 
         ISocket CreateDealerSocket();
+        ISocket CreateRouterSocket();
     }
 }

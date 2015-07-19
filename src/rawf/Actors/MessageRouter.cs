@@ -6,6 +6,7 @@ using rawf.Client;
 using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
+using rawf.Sockets;
 
 namespace rawf.Actors
 {
@@ -14,27 +15,25 @@ namespace rawf.Actors
         private readonly CancellationTokenSource cancellationTokenSource;
         private Task localRouting;
         private Task scaleOutRouting;
-        private readonly MessageHandlerStack messageHandlers;
-        private readonly NetMQContext context;
+        private readonly IMessageHandlerStack messageHandlers;
         private readonly byte[] scaleOutSocketIdentity = {1, 1, 1, 1, 1};
         private readonly byte[] localSocketIdentity = {2, 2, 2, 2, 2};
         private readonly IConnectivityProvider connectivityProvider;
         private readonly IRouterConfiguration config;
 
-        public MessageRouter(IConnectivityProvider connectivityProvider, IRouterConfiguration config)
+        public MessageRouter(IConnectivityProvider connectivityProvider, IMessageHandlerStack messageHandlers, IRouterConfiguration config)
         {
             this.connectivityProvider = connectivityProvider;
             this.config = config;
-            context = connectivityProvider.GetConnectivityContext();
-            messageHandlers = new MessageHandlerStack();
+            this.messageHandlers = messageHandlers;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
-        private NetMQSocket CreateSocket(NetMQContext context)
+        private ISocket CreateSocket()
         {
-            var socket = context.CreateRouterSocket();
-            socket.Options.RouterMandatory = true;
-            socket.Options.Identity = localSocketIdentity;
+            var socket = connectivityProvider.CreateRouterSocket();
+            socket.SetMandatoryRouting();
+            socket.SetIdentity(localSocketIdentity);
             socket.Bind(config.GetRouterAddress());
 
             return socket;
@@ -64,7 +63,7 @@ namespace rawf.Actors
         {
             try
             {
-                using (var peeringFrontend = CreatePeeringFrontendSocket(context))
+                using (var peeringFrontend = CreatePeeringFrontendSocket())
                 {
                     gateway.Signal();
 
@@ -72,10 +71,9 @@ namespace rawf.Actors
                     {
                         try
                         {
-                            var message = peeringFrontend.ReceiveMessage();
-                            var multipart = new MultipartMessage(message);
-                            multipart.SetSocketIdentity(localSocketIdentity);
-                            peeringFrontend.SendMessage(new NetMQMessage(multipart.Frames));
+                            var message = (Message)peeringFrontend.ReceiveMessage(token);
+                            message.SetSocketIdentity(localSocketIdentity);
+                            peeringFrontend.SendMessage(message);
                         }
                         catch (Exception err)
                         {
@@ -94,9 +92,9 @@ namespace rawf.Actors
         {
             try
             {
-                using (var localSocket = CreateSocket(context))
+                using (var localSocket = CreateSocket())
                 {
-                    using (var peeringBackend = CreatePeeringBackendSocket(context))
+                    using (var peeringBackend = CreatePeeringBackendSocket())
                     {
                         gateway.Signal();
 
@@ -104,27 +102,26 @@ namespace rawf.Actors
                         {
                             try
                             {
-                                var request = localSocket.ReceiveMessage();
-                                var multipart = new MultipartMessage(request);
+                                var message = (Message)localSocket.ReceiveMessage(token);
 
-                                if (IsReadyMessage(multipart))
+                                if (IsReadyMessage(message))
                                 {
-                                    RegisterWorkers(multipart);
+                                    RegisterWorkers(message);
                                 }
                                 else
                                 {
-                                    var handler = messageHandlers.Pop(CreateMessageHandlerIdentifier(multipart));
+                                    var handler = messageHandlers.Pop(CreateMessageHandlerIdentifier(message));
                                     if (handler != null)
                                     {
-                                        multipart.SetSocketIdentity(handler.SocketId);
-                                        localSocket.SendMessage(new NetMQMessage(multipart.Frames));
+                                        message.SetSocketIdentity(handler.SocketId);
+                                        localSocket.SendMessage(message);
                                     }
                                     else
                                     {
                                         //Console.WriteLine("No currently available handlers!");
 
-                                        multipart.SetSocketIdentity(scaleOutSocketIdentity);
-                                        peeringBackend.SendMessage(new NetMQMessage(multipart.Frames));
+                                        message.SetSocketIdentity(scaleOutSocketIdentity);
+                                        peeringBackend.SendMessage(message);
                                     }
                                 }
                             }
@@ -142,11 +139,11 @@ namespace rawf.Actors
             }
         }
 
-        private NetMQSocket CreatePeeringBackendSocket(NetMQContext context)
+        private ISocket CreatePeeringBackendSocket()
         {
-            var socket = context.CreateRouterSocket();
-            socket.Options.Identity = scaleOutSocketIdentity;
-            socket.Options.RouterMandatory = true;
+            var socket = connectivityProvider.CreateRouterSocket();
+            socket.SetIdentity(scaleOutSocketIdentity);
+            socket.SetMandatoryRouting();
             foreach (var peer in config.GetScaleOutCluster())
             {
                 socket.Connect(peer);
@@ -155,25 +152,24 @@ namespace rawf.Actors
             return socket;
         }
 
-        private NetMQSocket CreatePeeringFrontendSocket(NetMQContext context)
+        private ISocket CreatePeeringFrontendSocket()
         {
-            var socket = context.CreateRouterSocket();
-            socket.Options.Identity = scaleOutSocketIdentity;
-            socket.Options.RouterMandatory = true;
+            var socket = connectivityProvider.CreateRouterSocket();
+            socket.SetIdentity(scaleOutSocketIdentity);
+            socket.SetMandatoryRouting();
             socket.Connect(config.GetRouterAddress());
             socket.Bind(config.GetLocalScaleOutAddress());
 
             return socket;
         }
 
-        private static bool IsReadyMessage(MultipartMessage multipart)
+        private static bool IsReadyMessage(IMessage message)
         {
-            return Unsafe.Equals(multipart.GetMessageIdentity(), RegisterMessageHandlers.MessageIdentity);
+            return Unsafe.Equals(message.Identity, RegisterMessageHandlers.MessageIdentity);
         }
 
-        private void RegisterWorkers(MultipartMessage multipartMessage)
+        private void RegisterWorkers(IMessage message)
         {
-            var message = new Message(multipartMessage);
             var payload = message.GetPayload<RegisterMessageHandlers>();
             var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
 
@@ -203,11 +199,11 @@ namespace rawf.Actors
             }
         }
 
-        private static MessageHandlerIdentifier CreateMessageHandlerIdentifier(MultipartMessage message)
+        private static MessageHandlerIdentifier CreateMessageHandlerIdentifier(IMessage message)
         {
-            var version = message.GetMessageVersion();
-            var messageIdentity = message.GetMessageIdentity();
-            var receiverIdentity = message.GetReceiverIdentity();
+            var version = message.Version;
+            var messageIdentity = message.Identity;
+            var receiverIdentity = message.ReceiverIdentity;
 
             if (receiverIdentity.IsSet())
             {

@@ -4,16 +4,17 @@ using System.Linq;
 namespace rawf.Actors
 {
     //TODO: Add TTL for registrations, so that never consumed handlers are not staying forever
-    internal class MessageHandlerStack
+
+    public class MessageHandlerStack : IMessageHandlerStack
     {
         private readonly IDictionary<MessageHandlerIdentifier, HashSet<SocketIdentifier>> storage;
 
-        internal MessageHandlerStack()
+        public MessageHandlerStack()
         {
             storage = new Dictionary<MessageHandlerIdentifier, HashSet<SocketIdentifier>>();
         }
 
-        internal void Push(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
+        public void Push(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
         {
             HashSet<SocketIdentifier> collection;
             if (!storage.TryGetValue(messageHandlerIdentifier, out collection))
@@ -25,7 +26,7 @@ namespace rawf.Actors
         }
 
 
-        internal SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier)
+        public SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier)
         {
             //TODO: Implement round robin
             HashSet<SocketIdentifier> collection;

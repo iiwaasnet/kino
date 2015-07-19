@@ -1,4 +1,5 @@
 ﻿using System;
+using rawf.Actors;
 using rawf.Framework;
 
 namespace rawf.Messaging
@@ -63,6 +64,11 @@ namespace rawf.Messaging
             CorrelationId = correlationId;
         }
 
+        internal void SetSocketIdentity(byte[] socketIdentity)
+        {
+            SocketIdentity =  socketIdentity;
+        }
+
         internal string GetIdentityString()
         {
             return Identity.GetString();
@@ -88,5 +94,6 @@ namespace rawf.Messaging
         public byte[] ReceiverIdentity { get; private set; }
         public byte[] CallbackIdentity { get; private set; }
         public byte[] CallbackReceiverIdentity { get; private set; }
+        public byte[] SocketIdentity { get; private set; }
     }
 }

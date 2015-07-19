@@ -63,7 +63,7 @@ namespace Console
             var hostConfig = new HostConfiguration(LocalEndpointAddress2);
             var routerConfig = new RouterConfiguration(LocalEndpointAddress2, PeerEndpointAddress2, PeerEndpointAddress1);
 
-            var messageRouter = new MessageRouter(connectivityProvider, routerConfig);
+            var messageRouter = new MessageRouter(connectivityProvider, new MessageHandlerStack(), routerConfig);
             messageRouter.Start();
 
             var actors = CreateActors(connectivityProvider, hostConfig, 1).ToList();
@@ -81,7 +81,7 @@ namespace Console
             var hostConfig = new HostConfiguration(LocalEndpointAddress1);
             var routerConfig = new RouterConfiguration(LocalEndpointAddress1, PeerEndpointAddress1, PeerEndpointAddress2);
 
-            var messageRouter = new MessageRouter(connectivityProvider, routerConfig);
+            var messageRouter = new MessageRouter(connectivityProvider, new MessageHandlerStack(), routerConfig);
             messageRouter.Start();
 
             var messageHub = new MessageHub(connectivityProvider, hostConfig);

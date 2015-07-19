@@ -46,6 +46,14 @@ namespace rawf.Tests.Actor.Setup
         {
         }
 
+        public void Bind(string address)
+        {
+        }
+
+        public void SetMandatoryRouting(bool mandatory = true)
+        {
+        }
+
         public void SetIdentity(byte[] identity)
             => this.identity = identity;
 
