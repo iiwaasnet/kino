@@ -12,7 +12,7 @@ namespace rawf.Tests.Actor
     [TestFixture]
     public class MessageRouterTests
     {
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(20);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
 
         [Test]
         public void TestRegisterMessageHandlers_AddsActorIdentifier()
@@ -20,10 +20,11 @@ namespace rawf.Tests.Actor
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
             connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateBackendScaleOutSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateFrontendScaleOutSocket()).Returns(new StubSocket());
 
             var messageHandlerStack = new MessageHandlerStack();
-            var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack,
-                                           new ConnectivityConfiguration(string.Empty, string.Empty, string.Empty));
+            var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack);
             router.Start();
 
             var messageIdentity = Guid.NewGuid().ToByteArray();

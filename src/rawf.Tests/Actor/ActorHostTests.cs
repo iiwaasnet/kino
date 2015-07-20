@@ -9,6 +9,7 @@ using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
+using rawf.Sockets;
 using rawf.Tests.Actor.Setup;
 
 namespace rawf.Tests.Actor
@@ -17,7 +18,13 @@ namespace rawf.Tests.Actor
     public class ActorHostTests
     {
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(20);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
+        private readonly IConnectivityConfiguration emptyConfiguration;
+
+        public ActorHostTests()
+        {
+            emptyConfiguration = new ConnectivityConfiguration(string.Empty, string.Empty, string.Empty);
+        }
 
         [Test]
         public void TestAssignActor_RegistersActorHandlers()
@@ -26,8 +33,8 @@ namespace rawf.Tests.Actor
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           new MessagesCompletionQueue(),
-                                          new ConnectivityProvider(),
-                                          new HostConfiguration(string.Empty));
+                                          new ConnectivityProvider(new SocketProvider(),
+                                                                   emptyConfiguration));
             actorHost.AssignActor(new EchoActor());
 
             var registration = actorHandlersMap.GetRegisteredIdentifiers().First();
@@ -41,14 +48,16 @@ namespace rawf.Tests.Actor
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateDealerSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(new StubSocket());
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           new MessagesCompletionQueue(),
-                                          connectivityProvider.Object,
-                                          new HostConfiguration(string.Empty));
+                                          connectivityProvider.Object);
             actorHost.AssignActor(new EchoActor());
             actorHost.Start();
+
+            Thread.Sleep(AsyncOp);
 
             var registration = socket.GetSentMessages().First();
             var payload = new RegisterMessageHandlers
@@ -77,8 +86,7 @@ namespace rawf.Tests.Actor
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           new MessagesCompletionQueue(),
-                                          new ConnectivityProvider(),
-                                          new HostConfiguration(string.Empty));
+                                          new ConnectivityProvider(new SocketProvider(), emptyConfiguration));
             actorHost.Start();
         }
 
@@ -88,12 +96,12 @@ namespace rawf.Tests.Actor
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateDealerSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(new StubSocket());
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           new MessagesCompletionQueue(),
-                                          connectivityProvider.Object,
-                                          new HostConfiguration(string.Empty));
+                                          connectivityProvider.Object);
             actorHost.AssignActor(new EchoActor());
             actorHost.Start();
 
@@ -114,15 +122,15 @@ namespace rawf.Tests.Actor
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateDealerSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(new StubSocket());
 
             var errorMessage = Guid.NewGuid().ToString();
-            var actorHost = new ActorHost(actorHandlersMap, new MessagesCompletionQueue(), connectivityProvider.Object,
-                                          new HostConfiguration(string.Empty));
+            var actorHost = new ActorHost(actorHandlersMap, new MessagesCompletionQueue(), connectivityProvider.Object);
             actorHost.AssignActor(new ExceptionActor());
             actorHost.Start();
 
-            var messageIn = Message.CreateFlowStartMessage(new SimpleMessage {Message = errorMessage}, SimpleMessage.MessageIdentity);
+            var messageIn = Message.CreateFlowStartMessage(new SimpleMessage { Message = errorMessage }, SimpleMessage.MessageIdentity);
             socket.DeliverMessage(messageIn);
 
             Thread.Sleep(AsyncOpCompletionDelay);
@@ -139,20 +147,21 @@ namespace rawf.Tests.Actor
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateDealerSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(new StubSocket());
+
             var messageCompletionQueue = new Mock<IMessagesCompletionQueue>();
             messageCompletionQueue.Setup(m => m.GetMessages(It.IsAny<CancellationToken>()))
                                   .Returns(new BlockingCollection<AsyncMessageContext>().GetConsumingEnumerable());
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           messageCompletionQueue.Object,
-                                          connectivityProvider.Object,
-                                          new HostConfiguration(string.Empty));
+                                          connectivityProvider.Object);
             actorHost.AssignActor(new EchoActor());
             actorHost.Start();
 
             var delay = AsyncOp;
-            var asyncMessage = new AsyncMessage {Delay = delay};
+            var asyncMessage = new AsyncMessage { Delay = delay };
             var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
             socket.DeliverMessage(messageIn);
 
@@ -168,27 +177,28 @@ namespace rawf.Tests.Actor
         {
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
-            var socket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateDealerSocket()).Returns(socket);
+            var syncSocket = new StubSocket();
+            var asyncSocket = new StubSocket();
+            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(syncSocket);
+            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(asyncSocket);
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           new MessagesCompletionQueue(),
-                                          connectivityProvider.Object,
-                                          new HostConfiguration(string.Empty));
+                                          connectivityProvider.Object);
             actorHost.AssignActor(new EchoActor());
             actorHost.Start();
 
             var delay = AsyncOp;
-            var asyncMessage = new AsyncMessage {Delay = delay};
+            var asyncMessage = new AsyncMessage { Delay = delay };
             var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
-            socket.DeliverMessage(messageIn);
+            syncSocket.DeliverMessage(messageIn);
 
             Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
 
-            var sentMessages = socket.GetSentMessages();
+            var sentMessages = asyncSocket.GetSentMessages();
             var messageOut = sentMessages.Last();
 
-            Assert.AreEqual(2, sentMessages.Count());
+            Assert.AreEqual(1, sentMessages.Count());
             CollectionAssert.AreEqual(AsyncMessage.MessageIdentity, messageOut.Identity);
             Assert.AreEqual(delay, messageOut.GetPayload<AsyncMessage>().Delay);
             CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
@@ -198,41 +208,44 @@ namespace rawf.Tests.Actor
         public void TestAsyncActorException_IsSentAfterCompletionAsExceptionMessage()
         {
             var actorHandlersMap = new ActorHandlersMap();
-            var connectivityProvider = new Mock<IConnectivityProvider> {CallBase = true};
-            var socket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateDealerSocket()).Returns(socket);
+            var connectivityProvider = new Mock<IConnectivityProvider> { CallBase = true };
+            var syncSocket = new StubSocket();
+            var asyncSocket = new StubSocket();
+            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(syncSocket);
+            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(asyncSocket);
             var messageCompletionQueue = new MessagesCompletionQueue();
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           messageCompletionQueue,
-                                          connectivityProvider.Object,
-                                          new HostConfiguration(string.Empty));
+                                          connectivityProvider.Object);
             actorHost.AssignActor(new ExceptionActor());
             actorHost.Start();
 
             var delay = AsyncOp;
             var error = Guid.NewGuid().ToString();
             var asyncMessage = new AsyncExceptionMessage
-                               {
-                                   Delay = delay,
-                                   ErrorMessage = error
-                               };
+            {
+                Delay = delay,
+                ErrorMessage = error
+            };
             var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncExceptionMessage.MessageIdentity);
-            socket.DeliverMessage(messageIn);
+            syncSocket.DeliverMessage(messageIn);
 
             Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
 
-            var messageOut = socket.GetSentMessages().Last();
+            var sentMessages = asyncSocket.GetSentMessages();
+            var messageOut = asyncSocket.GetSentMessages().Last();
 
+            Assert.AreEqual(1, sentMessages.Count());
             CollectionAssert.AreEqual(ExceptionMessage.MessageIdentity, messageOut.Identity);
         }
 
-        [Test]
-        [Ignore]
-        public void TestSyncMessageResponseHasSets_CorrelationId_CallbackIdentity_CallbackReceiverIdentity()
-        {
-            //TODO: Implement
-        }
+        //[Test]
+        //[Ignore]
+        //public void TestSyncMessageResponseHasSets_CorrelationId_CallbackIdentity_CallbackReceiverIdentity()
+        //{
+        //    //TODO: Implement
+        //}
 
         private static bool IsAsyncMessage(AsyncMessageContext amc)
         {
