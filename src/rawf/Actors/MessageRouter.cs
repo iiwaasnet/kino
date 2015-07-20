@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using NetMQ;
 using rawf.Client;
 using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
-using rawf.Sockets;
 
 namespace rawf.Actors
 {
@@ -16,12 +14,13 @@ namespace rawf.Actors
         private Task localRouting;
         private Task scaleOutRouting;
         private readonly IMessageHandlerStack messageHandlers;
-        private byte[] localSocketIdentity;
         private readonly IConnectivityProvider connectivityProvider;
+        private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
 
         public MessageRouter(IConnectivityProvider connectivityProvider, IMessageHandlerStack messageHandlers)
         {
             this.connectivityProvider = connectivityProvider;
+            localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.messageHandlers = messageHandlers;
             cancellationTokenSource = new CancellationTokenSource();
         }
@@ -38,14 +37,15 @@ namespace rawf.Actors
 
         public void Start()
         {
-            using (var gateway = new CountdownEvent(2))
+            var participantCount = 3;
+            using (var gateway = new Barrier(participantCount))
             {
                 localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, gateway),
                                                      TaskCreationOptions.LongRunning);
                 scaleOutRouting = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, gateway),
                                                         TaskCreationOptions.LongRunning);
 
-                gateway.Wait(cancellationTokenSource.Token);
+                gateway.SignalAndWait(cancellationTokenSource.Token);
             }
         }
 
@@ -56,19 +56,20 @@ namespace rawf.Actors
             scaleOutRouting.Wait();
         }
 
-        private void RoutePeerMessages(CancellationToken token, CountdownEvent gateway)
+        private void RoutePeerMessages(CancellationToken token, Barrier gateway)
         {
             try
             {
                 using (var scaleOutFrontend = connectivityProvider.CreateFrontendScaleOutSocket())
                 {
-                    gateway.Signal();
+                    var localSocketIdentity = localSocketIdentityPromise.Task.Result;
+                    gateway.SignalAndWait(token);
 
                     while (!token.IsCancellationRequested)
                     {
                         try
                         {
-                            var message = (Message)scaleOutFrontend.ReceiveMessage(token);
+                            var message = (Message) scaleOutFrontend.ReceiveMessage(token);
                             message.SetSocketIdentity(localSocketIdentity);
                             scaleOutFrontend.SendMessage(message);
                         }
@@ -85,23 +86,23 @@ namespace rawf.Actors
             }
         }
 
-        private void RouteLocalMessages(CancellationToken token, CountdownEvent gateway)
+        private void RouteLocalMessages(CancellationToken token, Barrier gateway)
         {
             try
             {
                 using (var localSocket = connectivityProvider.CreateRouterSocket())
                 {
-                    localSocketIdentity = localSocket.GetIdentity();
+                    localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
 
                     using (var scaleOutBackend = connectivityProvider.CreateBackendScaleOutSocket())
                     {
-                        gateway.Signal();
+                        gateway.SignalAndWait(token);
 
                         while (!token.IsCancellationRequested)
                         {
                             try
                             {
-                                var message = (Message)localSocket.ReceiveMessage(token);
+                                var message = (Message) localSocket.ReceiveMessage(token);
 
                                 if (IsReadyMessage(message))
                                 {

@@ -37,14 +37,15 @@ namespace rawf.Actors
         {
             AssertActorIsAssigned();
 
-            using (var gateway = new CountdownEvent(2))
+            var participantCount = 3;
+            using (var gateway = new Barrier(participantCount))
             {
                 syncProcessing = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token, gateway),
                                                        TaskCreationOptions.LongRunning);
                 asyncProcessing = Task.Factory.StartNew(_ => ProcessAsyncResponses(cancellationTokenSource.Token, gateway),
                                                         TaskCreationOptions.LongRunning);
 
-                gateway.Wait(cancellationTokenSource.Token);
+                gateway.SignalAndWait(cancellationTokenSource.Token);
             }
         }
 
@@ -63,13 +64,13 @@ namespace rawf.Actors
             asyncProcessing.Wait();
         }
 
-        private void ProcessAsyncResponses(CancellationToken token, CountdownEvent gateway)
+        private void ProcessAsyncResponses(CancellationToken token, Barrier gateway)
         {
             try
             {
                 using (var localSocket = connectivityProvider.CreateActorAsyncSocket())
                 {
-                    gateway.Signal();
+                    gateway.SignalAndWait(token);
 
                     foreach (var messageContext in messagesCompletionQueue.GetMessages(token))
                     {
@@ -105,7 +106,7 @@ namespace rawf.Actors
         }
 
 
-        private void ProcessRequests(CancellationToken token, CountdownEvent gateway)
+        private void ProcessRequests(CancellationToken token, Barrier gateway)
         {
             try
             {
@@ -113,7 +114,7 @@ namespace rawf.Actors
                 {
                     RegisterActor(localSocket);
 
-                    gateway.Signal();
+                    gateway.SignalAndWait(token);
 
                     while (!token.IsCancellationRequested)
                     {

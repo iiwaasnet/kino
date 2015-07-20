@@ -37,7 +37,8 @@ namespace rawf.Client
 
         public void Start()
         {
-            using (var gateway = new Barrier(3))
+            var participantCount = 3;
+            using (var gateway = new Barrier(participantCount))
             {
                 receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token, gateway),
                                                   TaskCreationOptions.LongRunning);
