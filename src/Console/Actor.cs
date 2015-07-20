@@ -28,7 +28,7 @@ namespace Console
             var hello = message.GetPayload<HelloMessage>();
             //System.Console.WriteLine(hello.Greeting);
 
-            await Task.Delay(1000);
+            //await Task.Delay(1000);
 
             //throw new Exception("Bla!");
 

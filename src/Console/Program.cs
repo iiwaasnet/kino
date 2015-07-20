@@ -91,7 +91,19 @@ namespace Console
 
             //Thread.Sleep(TimeSpan.FromSeconds(1));
 
-            RunTest(client, callbackPoint);
+            RunTest(client, callbackPoint, 1);
+            var timer = new Stopwatch();
+            timer.Start();
+
+            var runs = 100;
+            for (var i = 0; i < runs; i++)
+            {
+                RunTest(client, callbackPoint, 1000);
+            }
+
+            timer.Stop();
+
+            System.Console.WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} msec");
 
             //System.Console.WriteLine("Press ENTER to stop");
             //System.Console.ReadLine();
@@ -100,13 +112,13 @@ namespace Console
             //connectivityProvider.Dispose();
         }
 
-        private static void RunTest(Client client, CallbackPoint callbackPoint)
+        private static void RunTest(Client client, CallbackPoint callbackPoint, int runs)
         {
             var timer = new Stopwatch();
             timer.Start();
 
             var responses = new List<Task<IMessage>>();
-            for (var i = 0; i < 1; i++)
+            for (var i = 0; i < runs; i++)
             {
                 var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
                 responses.Add(client.Send(message, callbackPoint).GetResponse());
@@ -118,7 +130,7 @@ namespace Console
                                   {
                                       r.Wait();
                                       var msg = r.Result.GetPayload<EhlloMessage>();
-                                      System.Console.WriteLine($"Received: {msg.Ehllo}");
+                                      //System.Console.WriteLine($"Received: {msg.Ehllo}");
                                   }
                                   catch (Exception err)
                                   {
@@ -128,7 +140,7 @@ namespace Console
 
             timer.Stop();
 
-            System.Console.WriteLine($"Done in {timer.ElapsedMilliseconds} msec");
+            System.Console.WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} msec");
         }
 
         private static IEnumerable<IActorHost> CreateActors(IConnectivityProvider connectivityProvider, int count)

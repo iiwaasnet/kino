@@ -1,6 +1,4 @@
-﻿using System;
-using NetMQ;
-using rawf.Sockets;
+﻿using rawf.Sockets;
 
 namespace rawf.Connectivity
 {
@@ -13,6 +11,5 @@ namespace rawf.Connectivity
         ISocket CreateActorAsyncSocket();
         ISocket CreateClientSendingSocket();
         ISocket CreateClientReceivingSocket();
-
     }
 }
