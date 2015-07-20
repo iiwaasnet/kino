@@ -20,8 +20,8 @@ namespace rawf.Tests.Actor
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
             connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(socket);
-            connectivityProvider.Setup(m => m.CreateBackendScaleOutSocket()).Returns(new StubSocket());
-            connectivityProvider.Setup(m => m.CreateFrontendScaleOutSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
 
             var messageHandlerStack = new MessageHandlerStack();
             var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack);

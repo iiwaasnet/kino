@@ -60,7 +60,7 @@ namespace rawf.Actors
         {
             try
             {
-                using (var scaleOutFrontend = connectivityProvider.CreateFrontendScaleOutSocket())
+                using (var scaleOutFrontend = connectivityProvider.CreateScaleOutFrontendSocket())
                 {
                     var localSocketIdentity = localSocketIdentityPromise.Task.Result;
                     gateway.SignalAndWait(token);
@@ -94,7 +94,7 @@ namespace rawf.Actors
                 {
                     localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
 
-                    using (var scaleOutBackend = connectivityProvider.CreateBackendScaleOutSocket())
+                    using (var scaleOutBackend = connectivityProvider.CreateScaleOutBackendSocket())
                     {
                         gateway.SignalAndWait(token);
 
@@ -119,7 +119,8 @@ namespace rawf.Actors
                                     else
                                     {
                                         //Console.WriteLine("No currently available handlers!");
-
+                                        // NOTE: scaleOutBackend socket identities should be received with configuration,
+                                        // so that the next socket to which this message was not yet routed is selected
                                         message.SetSocketIdentity(scaleOutBackend.GetIdentity());
                                         scaleOutBackend.SendMessage(message);
                                     }

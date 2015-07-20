@@ -7,8 +7,8 @@ namespace rawf.Connectivity
     public interface IConnectivityProvider
     {
         ISocket CreateRouterSocket();
-        ISocket CreateFrontendScaleOutSocket();
-        ISocket CreateBackendScaleOutSocket();
+        ISocket CreateScaleOutFrontendSocket();
+        ISocket CreateScaleOutBackendSocket();
         ISocket CreateActorSyncSocket();
         ISocket CreateActorAsyncSocket();
         ISocket CreateClientSendingSocket();

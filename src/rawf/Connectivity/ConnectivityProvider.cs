@@ -28,7 +28,7 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        public ISocket CreateFrontendScaleOutSocket()
+        public ISocket CreateScaleOutFrontendSocket()
         {
             var socket = socketProvider.CreateRouterSocket();
             socket.SetIdentity(ScaleOutSocketIdentity);
@@ -39,7 +39,7 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        public ISocket CreateBackendScaleOutSocket()
+        public ISocket CreateScaleOutBackendSocket()
         {
             var socket = socketProvider.CreateRouterSocket();
             socket.SetIdentity(ScaleOutSocketIdentity);
