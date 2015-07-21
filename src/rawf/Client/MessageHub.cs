@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using NetMQ;
 using rawf.Connectivity;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
@@ -12,7 +11,6 @@ namespace rawf.Client
 {
     public class MessageHub : IMessageHub
     {
-        private readonly NetMQContext context;
         private readonly ICallbackHandlerStack callbackHandlers;
         private readonly IConnectivityProvider connectivityProvider;
         private Task sending;
