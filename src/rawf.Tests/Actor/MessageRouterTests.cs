@@ -15,6 +15,22 @@ namespace rawf.Tests.Actor
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
 
         [Test]
+        public void TestMessageRouterUponStart_CreatesRouterLocalAndScaleoutSockets()
+        {
+            var connectivityProvider = new Mock<IConnectivityProvider>();
+            connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
+            var messageHandlerStack = new MessageHandlerStack();
+            var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack);
+            router.Start();
+
+            connectivityProvider.Verify(m => m.CreateRouterSocket(), Times.Once);
+            connectivityProvider.Verify(m => m.CreateScaleOutBackendSocket(), Times.Once);
+            connectivityProvider.Verify(m => m.CreateScaleOutFrontendSocket(), Times.Once);
+        }
+
+        [Test]
         public void TestRegisterMessageHandlers_AddsActorIdentifier()
         {
             var connectivityProvider = new Mock<IConnectivityProvider>();
@@ -51,6 +67,7 @@ namespace rawf.Tests.Actor
 
             Assert.IsNotNull(identifier);
             Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
+            CollectionAssert.AreEqual(socketIdentity, identifier.SocketId);
         }
     }
 }

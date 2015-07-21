@@ -48,6 +48,6 @@ namespace rawf.Actors
             return Unsafe.Equals(SocketId, other.SocketId);
         }
 
-        internal byte[] SocketId { get; }
+        public byte[] SocketId { get; }
     }
 }
