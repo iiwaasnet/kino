@@ -1,47 +1,41 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using rawf.Framework;
 using rawf.Messaging;
 
 namespace rawf.Client
 {
     //TODO: Add TTL for registrations, so that never consumed handlers are not staying forever
-    internal class CallbackHandlerStack
+    public class CallbackHandlerStack
     {
-        private readonly ConcurrentDictionary<CorrelationId, ConcurrentDictionary<MessageHandlerIdentifier, IPromise>> handlers;
+        private readonly ConcurrentDictionary<CorrelationId, IDictionary<MessageHandlerIdentifier, IPromise>> handlers;
         
         public CallbackHandlerStack()
         {
-            handlers =  new ConcurrentDictionary<CorrelationId, ConcurrentDictionary<MessageHandlerIdentifier, IPromise>>();
+            handlers =  new ConcurrentDictionary<CorrelationId, IDictionary<MessageHandlerIdentifier, IPromise>>();
         }
 
-        internal void Push(CallbackHandlerKey callbackIdentifier, IPromise promise)
+        public void Push(CorrelationId correlation, IPromise promise, IEnumerable<MessageHandlerIdentifier> messageHandlerIdentifiers)
         {
-            var correlation = new CorrelationId(callbackIdentifier.Correlation)
-            ConcurrentDictionary<MessageHandlerIdentifier, IPromise> messageHandlers;
-            if (!handlers.TryGetValue(correlation, out messageHandlers))
+            IDictionary<MessageHandlerIdentifier, IPromise> messageHandlers;
+            if (handlers.TryGetValue(correlation, out messageHandlers))
             {
-                messagehandlers = new ConcurrentDictionary<MessageHandlerIdentifier, IPromise>();
-                handlers[correlation] = messageHandlers;                
+                throw new Exception($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
             }
-            var massageHandlerId = new MessageHandlerIdentifier(callbackIdentifier.Version, callbackIdentifier.Identity);
-            if (messageHandlers.ContainsValue(messagehandlerId))
-            {
-                //TODO: Improve by implementing ToString()
-                throw new Exception($"Duplicated key: Identity[{massageHandlerId.Identity.GetString()}]-Version[{massageHandlerId.Version.GetString()}]");
-            }
-            messageHandlers[messageHandlerId] = promise;
+            handlers[correlation] = messageHandlerIdentifiers.ToDictionary(mp => mp, mp => promise);
         }
 
-        internal IPromise Pop(CallbackHandlerKey callbackIdentifier)
+        public IPromise Pop(CallbackHandlerKey callbackIdentifier)
         {
             IPromise promise = null;
             
-            ConcurrentDictionary<MessageHandlerIdentifier, IPromise> messageHandlers;
-            if(handlers.TryRemove(new CorrelationId(callbackIdentifier.Correlation)))
+            IDictionary<MessageHandlerIdentifier, IPromise> messageHandlers;
+            if(handlers.TryRemove(new CorrelationId(callbackIdentifier.Correlation), out messageHandlers))
             {
                 var massageHandlerId = new MessageHandlerIdentifier(callbackIdentifier.Version, callbackIdentifier.Identity);
-                messageHandlers.TryGetValue(messageHandlerId, out promise);
+                messageHandlers.TryGetValue(massageHandlerId, out promise);
             }
             
             return promise;

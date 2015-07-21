@@ -3,10 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using NetMQ;
-using NetMQ.Sockets;
-using rawf.Actors;
 using rawf.Connectivity;
-using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
 using rawf.Sockets;
@@ -76,21 +73,13 @@ namespace rawf.Client
 
                             message.RegisterCallbackPoint(callbackPoint.MessageIdentity, receivingSocketIdentity);
 
-                            callbackHandlers.Push(new CallbackHandlerKey
+                            callbackHandlers.Push(new CorrelationId(message.CorrelationId),
+                                                  promise,
+                                                  new[]
                                                   {
-                                                      Version = message.Version,
-                                                      Identity = callbackPoint.MessageIdentity,
-                                                      Correlation = message.CorrelationId
-                                                  },
-                                                  promise);
-                            callbackHandlers.Push(new CallbackHandlerKey
-                                                  {
-                                                      Version = message.Version,
-                                                      Identity = ExceptionMessage.MessageIdentity,
-                                                      Correlation = message.CorrelationId
-                                                  },
-                                                  promise);
-
+                                                      new MessageHandlerIdentifier(message.Version, callbackPoint.MessageIdentity),
+                                                      new MessageHandlerIdentifier(message.Version, ExceptionMessage.MessageIdentity)
+                                                  });
 
                             socket.SendMessage(message);
                         }
@@ -122,14 +111,12 @@ namespace rawf.Client
                     {
                         try
                         {
-                            var request = socket.ReceiveMessage(token);
-                            var multipart = new MultipartMessage(request);
-                            var messageIn = new Message(multipart);
+                            var messageIn = socket.ReceiveMessage(token);
                             var callback = (Promise) callbackHandlers.Pop(new CallbackHandlerKey
                                                                           {
-                                                                              Version = multipart.GetMessageVersion(),
-                                                                              Identity = multipart.GetMessageIdentity(),
-                                                                              Correlation = multipart.GetCorrelationId()
+                                                                              Version = messageIn.Version,
+                                                                              Identity = messageIn.Identity,
+                                                                              Correlation = messageIn.CorrelationId
                                                                           });
                             callback?.SetResult(messageIn);
                         }

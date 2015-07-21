@@ -1,4 +1,8 @@
-﻿namespace rawf.Messaging
+﻿using System;
+using rawf.Client;
+using rawf.Framework;
+
+namespace rawf.Messaging
 {
     public class CorrelationId : IEquatable<CorrelationId>
     {
@@ -37,7 +41,7 @@
         }
 
 
-        public bool Equals(CallbackHandlerKey other)
+        public bool Equals(CorrelationId other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -50,7 +54,7 @@
             return StructuralCompare(other);
         }
 
-        private bool StructuralCompare(CallbackHandlerKey other)
+        private bool StructuralCompare(CorrelationId other)
         {
             return Unsafe.Equals(Value, other.Value);
         }

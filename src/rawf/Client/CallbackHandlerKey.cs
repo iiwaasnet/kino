@@ -3,7 +3,7 @@ using rawf.Framework;
 
 namespace rawf.Client
 {
-    internal class CallbackHandlerKey : IEquatable<CallbackHandlerKey>
+    public class CallbackHandlerKey : IEquatable<CallbackHandlerKey>
     {
         public override bool Equals(object obj)
         {

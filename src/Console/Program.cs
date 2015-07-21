@@ -95,10 +95,10 @@ namespace Console
             var timer = new Stopwatch();
             timer.Start();
 
-            var runs = 100;
+            var runs = 1;
             for (var i = 0; i < runs; i++)
             {
-                RunTest(client, callbackPoint, 1000);
+                RunTest(client, callbackPoint, 100000);
             }
 
             timer.Stop();
