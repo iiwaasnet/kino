@@ -25,16 +25,6 @@ namespace rawf.Actors
             cancellationTokenSource = new CancellationTokenSource();
         }
 
-        //private ISocket CreateSocket()
-        //{
-        //    //var socket = connectivityProvider.CreateRouterSocket();
-        //    //socket.SetMandatoryRouting();
-        //    //socket.SetIdentity(localSocketIdentity);
-        //    //socket.Bind(config.GetRouterAddress());
-
-        //    //return socket;
-        //}
-
         public void Start()
         {
             var participantCount = 3;
@@ -139,30 +129,6 @@ namespace rawf.Actors
                 Console.WriteLine(err);
             }
         }
-
-        //private ISocket CreateScaleOutBackendSocket()
-        //{
-        //    //var socket = connectivityProvider.CreateRouterSocket();
-        //    //socket.SetIdentity(scaleOutSocketIdentity);
-        //    //socket.SetMandatoryRouting();
-        //    //foreach (var peer in config.GetScaleOutCluster())
-        //    //{
-        //    //    socket.Connect(peer);
-        //    //}
-
-        //    //return socket;
-        //}
-
-        //private ISocket CreateScaleOutFrontendSocket()
-        //{
-        //    //var socket = connectivityProvider.CreateRouterSocket();
-        //    //socket.SetIdentity(scaleOutSocketIdentity);
-        //    //socket.SetMandatoryRouting();
-        //    //socket.Connect(config.GetRouterAddress());
-        //    //socket.Bind(config.GetLocalScaleOutAddress());
-
-        //    //return socket;
-        //}
 
         private static bool IsReadyMessage(IMessage message)
         {

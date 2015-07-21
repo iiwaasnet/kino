@@ -133,25 +133,6 @@ namespace rawf.Client
             }
         }
 
-        //private NetMQSocket CreateReceivingSocket(NetMQContext context, byte[] socketIdentity = null)
-        //{
-        //    //var socket = context.CreateDealerSocket();
-        //    //socket.Options.Identity = socketIdentity;
-        //    //socket.Connect(endpointAddress);
-
-        //    //return socket;
-        //}
-
-        //private NetMQSocket CreateSendingSocket(NetMQContext context)
-        //{
-        //    //var socket = context.CreateDealerSocket();
-        //    //socket.Connect(endpointAddress);
-
-        //    //RegisterMessageHub(socket);
-
-        //    //return socket;
-        //}
-
         private void RegisterMessageHub(ISocket socket, byte[] receivingSocketIdentity)
         {
             var rdyMessage = Message.Create(new RegisterMessageHandlers
