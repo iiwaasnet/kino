@@ -8,7 +8,7 @@ using rawf.Messaging;
 namespace rawf.Client
 {
     //TODO: Add TTL for registrations, so that never consumed handlers are not staying forever
-    public class CallbackHandlerStack
+    public class CallbackHandlerStack : ICallbackHandlerStack
     {
         private readonly ConcurrentDictionary<CorrelationId, IDictionary<MessageHandlerIdentifier, IPromise>> handlers;
         

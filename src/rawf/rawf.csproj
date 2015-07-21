@@ -71,6 +71,7 @@
     <Compile Include="Actors\IMessageRouter.cs" />
     <Compile Include="Actors\IHostConfiguration.cs" />
     <Compile Include="Actors\ConnectivityConfiguration.cs" />
+    <Compile Include="Client\ICallbackHandlerStack.cs" />
     <Compile Include="Connectivity\IConnectivityProvider.cs" />
     <Compile Include="Actors\MessageDefinition.cs" />
     <Compile Include="Actors\MessageHandler.cs" />

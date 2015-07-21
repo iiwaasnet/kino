@@ -83,7 +83,7 @@ namespace Console
             var messageRouter = new MessageRouter(connectivityProvider, new MessageHandlerStack());
             messageRouter.Start();
 
-            var messageHub = new MessageHub(connectivityProvider);
+            var messageHub = new MessageHub(connectivityProvider, new CallbackHandlerStack());
             messageHub.Start();
 
             var client = new Client(messageHub);

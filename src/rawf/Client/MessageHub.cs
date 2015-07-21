@@ -13,7 +13,7 @@ namespace rawf.Client
     public class MessageHub : IMessageHub
     {
         private readonly NetMQContext context;
-        private readonly CallbackHandlerStack callbackHandlers;
+        private readonly ICallbackHandlerStack callbackHandlers;
         private readonly IConnectivityProvider connectivityProvider;
         private Task sending;
         private Task receiving;
@@ -22,12 +22,12 @@ namespace rawf.Client
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
 
-        public MessageHub(IConnectivityProvider connectivityProvider)
+        public MessageHub(IConnectivityProvider connectivityProvider, ICallbackHandlerStack callbackHandlers)
         {
             this.connectivityProvider = connectivityProvider;
             receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             hubRegistered = new ManualResetEventSlim();
-            callbackHandlers = new CallbackHandlerStack();
+            this.callbackHandlers = callbackHandlers;
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
             cancellationTokenSource = new CancellationTokenSource();
         }
