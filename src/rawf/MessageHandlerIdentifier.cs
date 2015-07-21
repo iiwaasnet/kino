@@ -4,7 +4,7 @@ using rawf.Framework;
 namespace rawf
 {
     //TODO: Probably better to duplicate functionality for every derived class
-    public abstract class MessageHandlerIdentifier : IEquatable<MessageHandlerIdentifier>
+    public class MessageHandlerIdentifier : IEquatable<MessageHandlerIdentifier>
     {
         public MessageHandlerIdentifier(byte[] version, byte[] identity)
         {
