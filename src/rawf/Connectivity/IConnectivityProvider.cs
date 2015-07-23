@@ -1,4 +1,5 @@
-﻿using rawf.Sockets;
+﻿using System.Collections.Generic;
+using rawf.Sockets;
 
 namespace rawf.Connectivity
 {
@@ -11,5 +12,8 @@ namespace rawf.Connectivity
         ISocket CreateActorAsyncSocket();
         ISocket CreateClientSendingSocket();
         ISocket CreateClientReceivingSocket();
+        ISocket CreateHeartBeatSocket();
+        ISocket CreateClusterEventsSocket();
+        IEnumerable<NodeIdentity> GetClusterIdentities();
     }
 }

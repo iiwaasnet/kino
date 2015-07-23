@@ -2,11 +2,11 @@
 
 namespace rawf.Sockets
 {
-    public class SocketProvider : ISocketProvider
+    public class SocketFactory : ISocketFactory
     {
         private readonly NetMQContext context;
 
-        public SocketProvider()
+        public SocketFactory()
         {
             context = NetMQContext.Create();
         }

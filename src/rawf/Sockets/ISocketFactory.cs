@@ -2,7 +2,7 @@
 
 namespace rawf.Sockets
 {
-    public interface ISocketProvider : IDisposable
+    public interface ISocketFactory : IDisposable
     {
         ISocket CreateDealerSocket();
         ISocket CreateRouterSocket();

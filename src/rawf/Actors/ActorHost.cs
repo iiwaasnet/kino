@@ -128,7 +128,7 @@ namespace rawf.Actors
                                 try
                                 {
                                     var messageIn = new Message(multipart);
-                                    var actorIdentifier = new ActorIdentifier(messageIn.Version, messageIn.Identity);
+                                    var actorIdentifier = new MessageHandlerIdentifier(messageIn.Version, messageIn.Identity);
                                     var handler = actorHandlersMap.Get(actorIdentifier);
 
                                     var task = handler(messageIn);

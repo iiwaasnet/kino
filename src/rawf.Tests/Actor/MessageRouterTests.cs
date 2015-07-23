@@ -63,7 +63,7 @@ namespace rawf.Tests.Actor
 
             Thread.Sleep(AsyncOp);
 
-            var identifier = messageHandlerStack.Pop(new ActorIdentifier(version, messageIdentity));
+            var identifier = messageHandlerStack.Pop(new MessageHandlerIdentifier(version, messageIdentity));
 
             Assert.IsNotNull(identifier);
             Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));

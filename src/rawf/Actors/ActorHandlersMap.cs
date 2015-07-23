@@ -7,11 +7,11 @@ namespace rawf.Actors
 {
     public class ActorHandlersMap : IActorHandlersMap
     {
-        private readonly ConcurrentDictionary<ActorIdentifier, MessageHandler> messageHandlers;
+        private readonly ConcurrentDictionary<MessageHandlerIdentifier, MessageHandler> messageHandlers;
 
         public ActorHandlersMap()
         {
-            messageHandlers = new ConcurrentDictionary<ActorIdentifier, MessageHandler>();
+            messageHandlers = new ConcurrentDictionary<MessageHandlerIdentifier, MessageHandler>();
         }
 
         public void Add(IActor actor)
@@ -25,7 +25,7 @@ namespace rawf.Actors
             }
         }
 
-        public MessageHandler Get(ActorIdentifier identifier)
+        public MessageHandler Get(MessageHandlerIdentifier identifier)
         {
             MessageHandler value;
             if (messageHandlers.TryGetValue(identifier, out value))
@@ -36,18 +36,20 @@ namespace rawf.Actors
             throw new KeyNotFoundException(identifier.ToString());
         }
 
-        public IEnumerable<ActorIdentifier> GetRegisteredIdentifiers()
+        public IEnumerable<MessageHandlerIdentifier> GetRegisteredIdentifiers()
         {
             return messageHandlers.Keys;
         }
 
-        private static IEnumerable<KeyValuePair<ActorIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
+        private static IEnumerable<KeyValuePair<MessageHandlerIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
         {
             return actor
                 .GetInterfaceDefinition()
-                .Select(messageMap => new KeyValuePair<ActorIdentifier, MessageHandler>(new ActorIdentifier(messageMap.Message.Version,
-                                                                                                            messageMap.Message.Identity),
-                                                                                        messageMap.Handler));
+                .Select(messageMap =>
+                        new KeyValuePair<MessageHandlerIdentifier, MessageHandler>(
+                            new MessageHandlerIdentifier(messageMap.Message.Version,
+                                                         messageMap.Message.Identity),
+                            messageMap.Handler));
         }
     }
 }

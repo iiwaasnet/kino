@@ -38,7 +38,7 @@ namespace rawf.Actors
 
         private bool IdentifyByMessage(MessageHandlerIdentifier callbackIdentifier)
         {
-            return callbackIdentifier is ActorIdentifier;
+            return callbackIdentifier is MessageHandlerIdentifier;
         }
 
         private static void Push<T>(ISet<T> hashSet, T element)

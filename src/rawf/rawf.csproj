@@ -61,7 +61,6 @@
     <Compile Include="Actors\ActorHandlersMap.cs" />
     <Compile Include="Actors\IMessageHandlerStack.cs" />
     <Compile Include="Actors\MessagesCompletionQueue.cs" />
-    <Compile Include="Actors\ActorIdentifier.cs" />
     <Compile Include="Actors\AsyncMessageContext.cs" />
     <Compile Include="Actors\Diagnostics\ExceptionHandlerActor.cs" />
     <Compile Include="Actors\IActor.cs" />
@@ -70,7 +69,13 @@
     <Compile Include="Actors\IMessagesCompletionQueue.cs" />
     <Compile Include="Actors\IMessageRouter.cs" />
     <Compile Include="Actors\IHostConfiguration.cs" />
-    <Compile Include="Actors\ConnectivityConfiguration.cs" />
+    <Compile Include="Connectivity\AdsServerConfiguration.cs" />
+    <Compile Include="Connectivity\ClusterConfiguration.cs" />
+    <Compile Include="Connectivity\ClusterMember.cs" />
+    <Compile Include="Connectivity\IAdsConfiguration.cs" />
+    <Compile Include="Connectivity\IClusterConfiguration.cs" />
+    <Compile Include="Connectivity\IClusterConfigurationMonitor.cs" />
+    <Compile Include="Connectivity\NodeConfiguration.cs" />
     <Compile Include="Client\ICallbackHandlerStack.cs" />
     <Compile Include="Connectivity\IConnectivityProvider.cs" />
     <Compile Include="Actors\MessageDefinition.cs" />
@@ -82,7 +87,6 @@
     <Compile Include="Actors\SocketIdentifier.cs" />
     <Compile Include="Client\CallbackHandlerKey.cs" />
     <Compile Include="Client\CallbackHandlerStack.cs" />
-    <Compile Include="Client\CallbackIdentifier.cs" />
     <Compile Include="Client\CallbackPoint.cs" />
     <Compile Include="Client\CallbackRegistration.cs" />
     <Compile Include="Client\Client.cs" />
@@ -91,7 +95,8 @@
     <Compile Include="Client\IPromise.cs" />
     <Compile Include="Client\MessageHub.cs" />
     <Compile Include="Client\Promise.cs" />
-    <Compile Include="Actors\IConnectivityConfiguration.cs" />
+    <Compile Include="Connectivity\INodeConfiguration.cs" />
+    <Compile Include="Connectivity\NodeIdentity.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />
@@ -113,9 +118,9 @@
     <Compile Include="Messaging\RegisterMessageHandlers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sockets\ISocket.cs" />
-    <Compile Include="Sockets\ISocketProvider.cs" />
+    <Compile Include="Sockets\ISocketFactory.cs" />
     <Compile Include="Sockets\Socket.cs" />
-    <Compile Include="Sockets\SocketProvider.cs" />
+    <Compile Include="Sockets\SocketFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

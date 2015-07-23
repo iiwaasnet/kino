@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using rawf.Client;
 using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
@@ -158,9 +157,8 @@ namespace rawf.Actors
             switch (registration.IdentityType)
             {
                 case IdentityType.Actor:
-                    return new ActorIdentifier(registration.Version, registration.Identity);
                 case IdentityType.Callback:
-                    return new CallbackIdentifier(registration.Version, registration.Identity);
+                    return new MessageHandlerIdentifier(registration.Version, registration.Identity);
                 default:
                     throw new Exception($"IdentifierType {registration.IdentityType} is unknown!");
             }
@@ -168,16 +166,10 @@ namespace rawf.Actors
 
         private static MessageHandlerIdentifier CreateMessageHandlerIdentifier(IMessage message)
         {
-            var version = message.Version;
-            var messageIdentity = message.Identity;
-            var receiverIdentity = message.ReceiverIdentity;
-
-            if (receiverIdentity.IsSet())
-            {
-                return new CallbackIdentifier(version, receiverIdentity);
-            }
-
-            return new ActorIdentifier(version, messageIdentity);
+            return new MessageHandlerIdentifier(message.Version,
+                                                message.ReceiverIdentity.IsSet()
+                                                    ? message.ReceiverIdentity
+                                                    : message.Identity);
         }
     }
 }

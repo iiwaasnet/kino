@@ -5,7 +5,7 @@ namespace rawf.Actors
     public interface IActorHandlersMap
     {
         void Add(IActor actor);
-        MessageHandler Get(ActorIdentifier identifier);
-        IEnumerable<ActorIdentifier> GetRegisteredIdentifiers();
+        MessageHandler Get(MessageHandlerIdentifier identifier);
+        IEnumerable<MessageHandlerIdentifier> GetRegisteredIdentifiers();
     }
 }

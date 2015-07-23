@@ -19,11 +19,13 @@ namespace rawf.Tests.Actor
     {
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
-        private readonly IConnectivityConfiguration emptyConfiguration;
+        private readonly INodeConfiguration emptyNodeConfiguration;
+        private readonly IClusterConfiguration emptyClusterConfiguration;
 
         public ActorHostTests()
         {
-            emptyConfiguration = new ConnectivityConfiguration(string.Empty, string.Empty, string.Empty);
+            emptyNodeConfiguration = new NodeConfiguration(string.Empty, string.Empty);
+            emptyClusterConfiguration = new ClusterConfiguration(new ClusterMember());
         }
 
         [Test]
@@ -33,8 +35,9 @@ namespace rawf.Tests.Actor
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           new MessagesCompletionQueue(),
-                                          new ConnectivityProvider(new SocketProvider(),
-                                                                   emptyConfiguration));
+                                          new ConnectivityProvider(new SocketFactory(),
+                                                                   emptyNodeConfiguration,
+                                                                   emptyClusterConfiguration));
             actorHost.AssignActor(new EchoActor());
 
             var registration = actorHandlersMap.GetRegisteredIdentifiers().First();
@@ -86,7 +89,9 @@ namespace rawf.Tests.Actor
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           new MessagesCompletionQueue(),
-                                          new ConnectivityProvider(new SocketProvider(), emptyConfiguration));
+                                          new ConnectivityProvider(new SocketFactory(),
+                                                                   emptyNodeConfiguration,
+                                                                   emptyClusterConfiguration));
             actorHost.Start();
         }
 
@@ -130,7 +135,7 @@ namespace rawf.Tests.Actor
             actorHost.AssignActor(new ExceptionActor());
             actorHost.Start();
 
-            var messageIn = Message.CreateFlowStartMessage(new SimpleMessage { Message = errorMessage }, SimpleMessage.MessageIdentity);
+            var messageIn = Message.CreateFlowStartMessage(new SimpleMessage {Message = errorMessage}, SimpleMessage.MessageIdentity);
             socket.DeliverMessage(messageIn);
 
             Thread.Sleep(AsyncOpCompletionDelay);
@@ -161,7 +166,7 @@ namespace rawf.Tests.Actor
             actorHost.Start();
 
             var delay = AsyncOp;
-            var asyncMessage = new AsyncMessage { Delay = delay };
+            var asyncMessage = new AsyncMessage {Delay = delay};
             var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
             socket.DeliverMessage(messageIn);
 
@@ -189,7 +194,7 @@ namespace rawf.Tests.Actor
             actorHost.Start();
 
             var delay = AsyncOp;
-            var asyncMessage = new AsyncMessage { Delay = delay };
+            var asyncMessage = new AsyncMessage {Delay = delay};
             var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
             syncSocket.DeliverMessage(messageIn);
 
@@ -208,7 +213,7 @@ namespace rawf.Tests.Actor
         public void TestAsyncActorException_IsSentAfterCompletionAsExceptionMessage()
         {
             var actorHandlersMap = new ActorHandlersMap();
-            var connectivityProvider = new Mock<IConnectivityProvider> { CallBase = true };
+            var connectivityProvider = new Mock<IConnectivityProvider> {CallBase = true};
             var syncSocket = new StubSocket();
             var asyncSocket = new StubSocket();
             connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(syncSocket);
@@ -224,10 +229,10 @@ namespace rawf.Tests.Actor
             var delay = AsyncOp;
             var error = Guid.NewGuid().ToString();
             var asyncMessage = new AsyncExceptionMessage
-            {
-                Delay = delay,
-                ErrorMessage = error
-            };
+                               {
+                                   Delay = delay,
+                                   ErrorMessage = error
+                               };
             var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncExceptionMessage.MessageIdentity);
             syncSocket.DeliverMessage(messageIn);
 
