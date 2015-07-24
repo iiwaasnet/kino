@@ -101,6 +101,7 @@
     <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />
     <Compile Include="Framework\Unsafe.cs" />
+    <Compile Include="Framework\UriExtensions.cs" />
     <Compile Include="Messaging\CorrelationId.cs" />
     <Compile Include="Framework\DataEncoder.cs" />
     <Compile Include="Messaging\IMessage.cs" />

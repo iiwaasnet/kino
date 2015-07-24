@@ -8,9 +8,9 @@ namespace rawf.Sockets
     {
         void SendMessage(IMessage message);
         IMessage ReceiveMessage(CancellationToken cancellationToken);
-        void Connect(string address);
-        void Bind(string address);
-        void Disconnect(string address);
+        void Connect(Uri address);
+        void Bind(Uri address);
+        void Disconnect(Uri address);
         void SetIdentity(byte[] identity);
         void SetMandatoryRouting(bool mandatory = true);
         byte[] GetIdentity();

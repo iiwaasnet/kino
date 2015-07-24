@@ -26,7 +26,7 @@ namespace rawf.Connectivity
             var socket = socketFactory.CreateRouterSocket();
             socket.SetMandatoryRouting();
             socket.SetIdentity(RouterIdentity);
-            socket.Bind(nodeConfiguration.RouterAddress.AbsoluteUri);
+            socket.Bind(nodeConfiguration.RouterAddress);
 
             return socket;
         }
@@ -36,8 +36,8 @@ namespace rawf.Connectivity
             var socket = socketFactory.CreateRouterSocket();
             socket.SetIdentity(ScaleOutSocketIdentity);
             socket.SetMandatoryRouting();
-            socket.Connect(nodeConfiguration.RouterAddress.AbsoluteUri);
-            socket.Bind(nodeConfiguration.ScaleOutAddress.AbsoluteUri);
+            socket.Connect(nodeConfiguration.RouterAddress);
+            socket.Bind(nodeConfiguration.ScaleOutAddress);
 
             return socket;
         }
@@ -49,7 +49,7 @@ namespace rawf.Connectivity
             socket.SetMandatoryRouting();
             foreach (var peer in clusterConfiguration.GetClusterMembers())
             {
-                socket.Connect(peer.Address.AbsoluteUri);
+                socket.Connect(peer.Address);
             }
 
             return socket;
@@ -59,7 +59,7 @@ namespace rawf.Connectivity
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-            socket.Connect(nodeConfiguration.RouterAddress.AbsoluteUri);
+            socket.Connect(nodeConfiguration.RouterAddress);
 
             return socket;
         }
@@ -67,7 +67,7 @@ namespace rawf.Connectivity
         public ISocket CreateActorAsyncSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(nodeConfiguration.RouterAddress.AbsoluteUri);
+            socket.Connect(nodeConfiguration.RouterAddress);
 
             return socket;
         }
@@ -75,7 +75,7 @@ namespace rawf.Connectivity
         public ISocket CreateClientSendingSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(nodeConfiguration.RouterAddress.AbsoluteUri);
+            socket.Connect(nodeConfiguration.RouterAddress);
 
             return socket;
         }
@@ -84,7 +84,7 @@ namespace rawf.Connectivity
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-            socket.Connect(nodeConfiguration.RouterAddress.AbsoluteUri);
+            socket.Connect(nodeConfiguration.RouterAddress);
 
             return socket;
         }

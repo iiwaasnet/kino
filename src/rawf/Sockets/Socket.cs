@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using NetMQ;
+using rawf.Framework;
 using rawf.Messaging;
 
 namespace rawf.Sockets
@@ -42,20 +43,20 @@ namespace rawf.Sockets
             return null;
         }
 
-        public void Connect(string address)
+        public void Connect(Uri address)
         {
-            socket.Connect(address);
+            socket.Connect(address.ToSocketAddress());
         }
 
-        public void Bind(string address)
+        public void Bind(Uri address)
         {
-            socket.Bind(address);
+            socket.Bind(address.ToSocketAddress());
         }
 
 
-        public void Disconnect(string address)
+        public void Disconnect(Uri address)
         {
-            socket.Disconnect(address);
+            socket.Disconnect(address.ToSocketAddress());
         }
 
         public void SetMandatoryRouting(bool mandatory = true)

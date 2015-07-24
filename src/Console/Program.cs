@@ -61,7 +61,7 @@ namespace Console
         private static void StartProcessingNode()
         {
             var routerConfig = new NodeConfiguration(LocalEndpointAddress2, PeerEndpointAddress2);
-            var clusterConfig = new ClusterConfiguration(new ClusterMember {Address = new Uri(PeerEndpointAddress1) });
+            var clusterConfig = new ClusterConfiguration(new ClusterMember {Address = new Uri(PeerEndpointAddress1)});
             var connectivityProvider = new ConnectivityProvider(new SocketFactory(), routerConfig, clusterConfig);
 
             var messageRouter = new MessageRouter(connectivityProvider, new MessageHandlerStack());
@@ -79,7 +79,7 @@ namespace Console
         private static void StartSendingNode()
         {
             var routerConfig = new NodeConfiguration(LocalEndpointAddress1, PeerEndpointAddress1);
-            var clusterConfig = new ClusterConfiguration(new ClusterMember { Address = new Uri(PeerEndpointAddress2) });
+            var clusterConfig = new ClusterConfiguration(new ClusterMember {Address = new Uri(PeerEndpointAddress2)});
             var connectivityProvider = new ConnectivityProvider(new SocketFactory(), routerConfig, clusterConfig);
             var messageRouter = new MessageRouter(connectivityProvider, new MessageHandlerStack());
             messageRouter.Start();
@@ -93,18 +93,8 @@ namespace Console
             //Thread.Sleep(TimeSpan.FromSeconds(1));
 
             RunTest(client, callbackPoint, 1);
-            var timer = new Stopwatch();
-            timer.Start();
 
-            var runs = 1;
-            for (var i = 0; i < runs; i++)
-            {
-                RunTest(client, callbackPoint, 100000);
-            }
-
-            timer.Stop();
-
-            System.Console.WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} msec");
+            RunTest(client, callbackPoint, 1000);
 
             //System.Console.WriteLine("Press ENTER to stop");
             //System.Console.ReadLine();

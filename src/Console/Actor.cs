@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,14 +27,20 @@ namespace Console
             var hello = message.GetPayload<HelloMessage>();
             //System.Console.WriteLine(hello.Greeting);
 
-            //await Task.Delay(1000);
+            //return await Task.Delay(0)
+            //                 .ContinueWith(_ => Message.Create(new EhlloMessage
+            //                                                   {
+            //                                                       Ehllo = new string(hello.Greeting.Reverse().ToArray())
+            //                                                   },
+            //                                                   EhlloMessage.MessageIdentity))
+            //                                                   .ConfigureAwait(false);
 
             //throw new Exception("Bla!");
 
             return Message.Create(new EhlloMessage
-                                  {
-                                      Ehllo = new string(hello.Greeting.Reverse().ToArray())
-                                  },
+            {
+                Ehllo = new string(hello.Greeting.Reverse().ToArray())
+            },
                                   EhlloMessage.MessageIdentity);
         }
     }

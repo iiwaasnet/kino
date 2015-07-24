@@ -1,17 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace rawf.Connectivity
 {
     public class ClusterConfiguration : IClusterConfiguration
     {
+        private IEnumerable<ClusterMember> clusterMembers;
+
         public ClusterConfiguration(ClusterMember thisNodeFrontEndSocket)
         {
+            clusterMembers = new[] {thisNodeFrontEndSocket};
         }
 
         public IEnumerable<ClusterMember> GetClusterMembers()
         {
-            throw new NotImplementedException();
+            return clusterMembers;
         }
 
         public void UpdateClusterMembers(IEnumerable<ClusterMember> newConfig)

@@ -6,10 +6,14 @@ namespace rawf
     //TODO: Probably better to duplicate functionality for every derived class
     public class MessageHandlerIdentifier : IEquatable<MessageHandlerIdentifier>
     {
+        private readonly int hashCode;
+
         public MessageHandlerIdentifier(byte[] version, byte[] identity)
         {
             Version = version;
             Identity = identity;
+
+            hashCode = CalculateHashCode();
         }
 
         public override bool Equals(object obj)
@@ -29,7 +33,7 @@ namespace rawf
             return Equals((MessageHandlerIdentifier) obj);
         }
 
-        public override int GetHashCode()
+        private int CalculateHashCode()
         {
             unchecked
             {
@@ -37,6 +41,11 @@ namespace rawf
                 hashCode = (hashCode*397) ^ (Identity?.Length ?? 0);
                 return hashCode;
             }
+        }
+
+        public override int GetHashCode()
+        {
+            return hashCode;
         }
 
 
