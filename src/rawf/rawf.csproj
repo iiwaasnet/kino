@@ -89,7 +89,6 @@
     <Compile Include="Client\CallbackHandlerStack.cs" />
     <Compile Include="Client\CallbackPoint.cs" />
     <Compile Include="Client\CallbackRegistration.cs" />
-    <Compile Include="Client\Client.cs" />
     <Compile Include="Client\ICallbackPoint.cs" />
     <Compile Include="Client\IMessageHub.cs" />
     <Compile Include="Client\IPromise.cs" />

@@ -87,14 +87,13 @@ namespace Console
             var messageHub = new MessageHub(connectivityProvider, new CallbackHandlerStack());
             messageHub.Start();
 
-            var client = new Client(messageHub);
             var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
 
             //Thread.Sleep(TimeSpan.FromSeconds(1));
 
-            RunTest(client, callbackPoint, 1);
+            RunTest(messageHub, callbackPoint, 1);
 
-            RunTest(client, callbackPoint, 1000);
+            RunTest(messageHub, callbackPoint, 1000);
 
             //System.Console.WriteLine("Press ENTER to stop");
             //System.Console.ReadLine();
@@ -103,7 +102,7 @@ namespace Console
             //connectivityProvider.Dispose();
         }
 
-        private static void RunTest(Client client, CallbackPoint callbackPoint, int runs)
+        private static void RunTest(IMessageHub messageHub, CallbackPoint callbackPoint, int runs)
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -112,7 +111,7 @@ namespace Console
             for (var i = 0; i < runs; i++)
             {
                 var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
-                responses.Add(client.Send(message, callbackPoint).GetResponse());
+                responses.Add(messageHub.EnqueueRequest(message, callbackPoint).GetResponse());
             }
 
             responses.ForEach(r =>
