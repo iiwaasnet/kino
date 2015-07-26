@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,15 +39,15 @@ namespace rawf.Tests.Actor.Setup
             }
         }
 
-        public void Connect(string address)
+        public void Connect(Uri address)
         {
         }
 
-        public void Disconnect(string address)
+        public void Disconnect(Uri address)
         {
         }
 
-        public void Bind(string address)
+        public void Bind(Uri address)
         {
         }
 

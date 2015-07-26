@@ -1,5 +1,4 @@
 ﻿using System;
-using rawf.Actors;
 using rawf.Framework;
 
 namespace rawf.Messaging
@@ -66,7 +65,7 @@ namespace rawf.Messaging
 
         internal void SetSocketIdentity(byte[] socketIdentity)
         {
-            SocketIdentity =  socketIdentity;
+            SocketIdentity = socketIdentity;
         }
 
         internal string GetIdentityString()

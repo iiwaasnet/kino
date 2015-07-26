@@ -18,7 +18,6 @@ namespace rawf.Messaging
 
         TimeSpan TTL { get; set; }
         byte[] Body { get; }
-        
     }
 
     public enum DistributionPattern

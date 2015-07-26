@@ -21,10 +21,11 @@ namespace rawf.Tests.Actor
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
         private readonly INodeConfiguration emptyNodeConfiguration;
         private readonly IClusterConfiguration emptyClusterConfiguration;
+        private readonly string localhost = "tcp://localhost:43";
 
         public ActorHostTests()
         {
-            emptyNodeConfiguration = new NodeConfiguration(string.Empty, string.Empty);
+            emptyNodeConfiguration = new NodeConfiguration(localhost, localhost);
             emptyClusterConfiguration = new ClusterConfiguration(new ClusterMember());
         }
 

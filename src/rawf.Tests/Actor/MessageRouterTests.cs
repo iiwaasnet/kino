@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using Moq;
 using NUnit.Framework;
 using rawf.Actors;
+using rawf.Client;
 using rawf.Connectivity;
+using rawf.Framework;
 using rawf.Messaging;
 using rawf.Tests.Actor.Setup;
 
@@ -68,6 +71,54 @@ namespace rawf.Tests.Actor
             Assert.IsNotNull(identifier);
             Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
             CollectionAssert.AreEqual(socketIdentity, identifier.SocketId);
+        }
+
+        [Test]
+        public void TestWhenHandlerForReceiverIdentifier_HasHighestPriority()
+        {
+            var connectivityProvider = new Mock<IConnectivityProvider>();
+            var routerSocket = new StubSocket();
+            var callbackSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
+            var callbackIdentifier = new MessageHandlerIdentifier(Message.CurrentVersion, callbackSocketIdentity.SocketId);
+
+            connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(routerSocket);
+            connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
+
+            var messageHandlerStack = new Mock<IMessageHandlerStack>();
+            messageHandlerStack.Setup(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(callbackIdentifier))))
+                               .Returns(callbackSocketIdentity);
+
+            var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack.Object);
+            router.Start();
+            
+            var message = SendMessageOverMessageHub(callbackSocketIdentity);
+
+            routerSocket.DeliverMessage(message);
+
+            Thread.Sleep(AsyncOp);
+
+            messageHandlerStack.Verify(m=>m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(callbackIdentifier))), Times.Once());
+        }
+
+        private static IMessage SendMessageOverMessageHub(SocketIdentifier callbackSocketIdentifier)
+        {
+            var connectivityProvider = new Mock<IConnectivityProvider>();
+            var clientSendingSocket = new StubSocket();
+            var clientReceivingSocket = new StubSocket();
+            clientReceivingSocket.SetIdentity(callbackSocketIdentifier.SocketId);
+            connectivityProvider.Setup(m => m.CreateClientSendingSocket()).Returns(clientSendingSocket);
+            connectivityProvider.Setup(m => m.CreateClientReceivingSocket()).Returns(clientReceivingSocket);
+
+            var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+            var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+
+            var messageHub = new MessageHub(connectivityProvider.Object, new CallbackHandlerStack());
+            messageHub.Start();
+            messageHub.EnqueueRequest(message, callback);
+            Thread.Sleep(AsyncOp);
+
+            return clientSendingSocket.GetSentMessages().Last();
         }
     }
 }

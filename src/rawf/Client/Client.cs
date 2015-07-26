@@ -2,6 +2,8 @@
 
 namespace rawf.Client
 {
+    // TODO: This class is not really needed.
+    // Think of removing it and reorganizing the whole Client namespace
     public class Client
     {
         private readonly MessageHub messageHub;
