@@ -128,6 +128,37 @@ namespace rawf.Tests.Actor
             messageHandlerStack.Verify(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Once());
         }
 
+        [Test]
+        public void TestIfLocalRoutingTableHasNoMessageHandlerRegistration_MessageRoutedToOtherNodes()
+        {
+            var connectivityProvider = new Mock<IConnectivityProvider>();
+            var routerSocket = new StubSocket();
+            var scaleOutBackEndSocket = new StubSocket();
+            scaleOutBackEndSocket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
+            connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(routerSocket);
+            connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(scaleOutBackEndSocket);
+            connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
+
+            var messageHandlerStack = new Mock<IMessageHandlerStack>();
+
+            var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack.Object);
+            router.Start();
+
+            var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+            routerSocket.DeliverMessage(message);
+
+            Thread.Sleep(AsyncOp);
+
+            var messageOut = scaleOutBackEndSocket.GetSentMessages().Last();
+
+            Assert.AreEqual(message, messageOut);
+        }
+
+        [Test]
+        public void TestMessageReceivedFromOtherNode_ForwardedToLocalRouterSocket()
+        {
+        }
+
         private static IMessage SendMessageOverMessageHub(SocketIdentifier callbackSocketIdentifier)
         {
             var connectivityProvider = new Mock<IConnectivityProvider>();
