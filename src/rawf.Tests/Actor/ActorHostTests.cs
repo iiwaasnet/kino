@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using Moq;
 using NUnit.Framework;
-using rawf.Actors;
+using rawf.Backend;
 using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;

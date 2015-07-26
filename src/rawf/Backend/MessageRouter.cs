@@ -5,7 +5,7 @@ using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
 
-namespace rawf.Actors
+namespace rawf.Backend
 {
     public class MessageRouter : IMessageRouter
     {

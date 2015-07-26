@@ -1,6 +1,6 @@
 ﻿using rawf.Messaging;
 
-namespace rawf.Client
+namespace rawf.Frontend
 {
     public interface IMessageHub
     {

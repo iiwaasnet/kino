@@ -1,5 +1,4 @@
 ﻿using System;
-using rawf.Client;
 using rawf.Framework;
 
 namespace rawf.Messaging

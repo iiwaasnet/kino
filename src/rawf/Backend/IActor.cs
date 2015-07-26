@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace rawf.Actors
+namespace rawf.Backend
 {
     public interface IActor
     {

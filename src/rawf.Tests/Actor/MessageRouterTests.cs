@@ -3,10 +3,10 @@ using System.Linq;
 using System.Threading;
 using Moq;
 using NUnit.Framework;
-using rawf.Actors;
-using rawf.Client;
+using rawf.Backend;
 using rawf.Connectivity;
 using rawf.Framework;
+using rawf.Frontend;
 using rawf.Messaging;
 using rawf.Tests.Actor.Setup;
 

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace rawf.Actors
+namespace rawf.Backend
 {
     //TODO: Add TTL for registrations, so that never consumed handlers are not staying forever
 

@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Console.Messages;
-using rawf.Actors;
-using rawf.Client;
+using rawf.Backend;
 using rawf.Connectivity;
+using rawf.Frontend;
 using rawf.Messaging;
 using rawf.Sockets;
 

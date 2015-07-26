@@ -1,6 +1,6 @@
 using rawf.Messaging;
 
-namespace rawf.Actors
+namespace rawf.Backend
 {
     public class AsyncMessageContext
     {

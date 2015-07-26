@@ -1,7 +1,7 @@
 using System;
 using rawf.Framework;
 
-namespace rawf.Actors
+namespace rawf.Backend
 {
     public class SocketIdentifier : IEquatable<SocketIdentifier>
     {

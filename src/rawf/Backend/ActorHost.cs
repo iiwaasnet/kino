@@ -7,7 +7,7 @@ using rawf.Messaging;
 using rawf.Messaging.Messages;
 using rawf.Sockets;
 
-namespace rawf.Actors
+namespace rawf.Backend
 {
     public class ActorHost : IActorHost
     {

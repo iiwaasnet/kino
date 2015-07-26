@@ -7,7 +7,7 @@ using rawf.Messaging;
 using rawf.Messaging.Messages;
 using rawf.Sockets;
 
-namespace rawf.Client
+namespace rawf.Frontend
 {
     public class MessageHub : IMessageHub
     {

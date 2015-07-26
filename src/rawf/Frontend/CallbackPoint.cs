@@ -1,7 +1,4 @@
-﻿using rawf.Framework;
-using rawf.Messaging;
-
-namespace rawf.Client
+﻿namespace rawf.Frontend
 {
     public class CallbackPoint : ICallbackPoint
     {

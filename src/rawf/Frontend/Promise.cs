@@ -1,10 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
 
-namespace rawf.Client
+namespace rawf.Frontend
 {
     public class Promise : IPromise
     {

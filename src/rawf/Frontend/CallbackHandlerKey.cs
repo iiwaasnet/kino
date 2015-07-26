@@ -1,7 +1,7 @@
 ﻿using System;
 using rawf.Framework;
 
-namespace rawf.Client
+namespace rawf.Frontend
 {
     public class CallbackHandlerKey : IEquatable<CallbackHandlerKey>
     {

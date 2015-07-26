@@ -5,7 +5,7 @@ using System.Linq;
 using rawf.Framework;
 using rawf.Messaging;
 
-namespace rawf.Client
+namespace rawf.Frontend
 {
     //TODO: Add TTL for registrations, so that never consumed handlers are not staying forever
     public class CallbackHandlerStack : ICallbackHandlerStack

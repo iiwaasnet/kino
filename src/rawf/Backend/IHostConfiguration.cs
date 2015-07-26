@@ -1,4 +1,4 @@
-namespace rawf.Actors
+namespace rawf.Backend
 {
     public interface IHostConfiguration
     {

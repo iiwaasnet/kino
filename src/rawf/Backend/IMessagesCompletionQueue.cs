@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace rawf.Actors
+namespace rawf.Backend
 {
     public interface IMessagesCompletionQueue : IDisposable
     {
