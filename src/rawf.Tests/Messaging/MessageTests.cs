@@ -1,7 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using rawf.Messaging;
-using rawf.Tests.Actor.Setup;
+using rawf.Tests.Backend.Setup;
 
 namespace rawf.Tests.Messaging
 {

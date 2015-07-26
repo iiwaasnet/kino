@@ -10,9 +10,9 @@ using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
 using rawf.Sockets;
-using rawf.Tests.Actor.Setup;
+using rawf.Tests.Backend.Setup;
 
-namespace rawf.Tests.Actor
+namespace rawf.Tests.Backend
 {
     [TestFixture]
     public class ActorHostTests
