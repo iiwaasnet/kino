@@ -157,6 +157,27 @@ namespace rawf.Tests.Actor
         [Test]
         public void TestMessageReceivedFromOtherNode_ForwardedToLocalRouterSocket()
         {
+            var connectivityProvider = new Mock<IConnectivityProvider>();
+            var routerSocket = new StubSocket();
+            var scaleOutFrontEndSocket = new StubSocket();
+            scaleOutFrontEndSocket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
+            connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(routerSocket);
+            connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(scaleOutFrontEndSocket);
+
+            var messageHandlerStack = new Mock<IMessageHandlerStack>();
+
+            var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack.Object);
+            router.Start();
+
+            var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+            scaleOutFrontEndSocket.DeliverMessage(message);
+
+            Thread.Sleep(AsyncOp);
+
+            var messageOut = scaleOutFrontEndSocket.GetSentMessages().Last();
+
+            Assert.AreEqual(message, messageOut);
         }
 
         private static IMessage SendMessageOverMessageHub(SocketIdentifier callbackSocketIdentifier)
