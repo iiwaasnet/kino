@@ -6,7 +6,7 @@
 
         public static bool IsSet(this byte[] buffer)
         {
-            return !Unsafe.Equals(buffer, Empty);
+            return buffer != null && !Unsafe.Equals(buffer, Empty);
         }
     }
 }

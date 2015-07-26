@@ -74,7 +74,7 @@ namespace rawf.Tests.Actor
         }
 
         [Test]
-        public void TestWhenHandlerForReceiverIdentifier_HasHighestPriority()
+        public void TestHandlerForReceiverIdentifier_HasHighestPriority()
         {
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var routerSocket = new StubSocket();
@@ -91,14 +91,41 @@ namespace rawf.Tests.Actor
 
             var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack.Object);
             router.Start();
-            
+
             var message = SendMessageOverMessageHub(callbackSocketIdentity);
 
             routerSocket.DeliverMessage(message);
 
             Thread.Sleep(AsyncOp);
 
-            messageHandlerStack.Verify(m=>m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(callbackIdentifier))), Times.Once());
+            messageHandlerStack.Verify(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(callbackIdentifier))), Times.Once());
+        }
+
+        [Test]
+        public void TestMessageIsRouted_BasedOnHandlerIdentities()
+        {
+            var connectivityProvider = new Mock<IConnectivityProvider>();
+            var routerSocket = new StubSocket();
+            var actorSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
+            var actorIdentifier = new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+
+            connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(routerSocket);
+            connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
+
+            var messageHandlerStack = new Mock<IMessageHandlerStack>();
+            messageHandlerStack.Setup(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(actorIdentifier))))
+                               .Returns(actorSocketIdentity);
+
+            var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack.Object);
+            router.Start();
+
+            var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+            routerSocket.DeliverMessage(message);
+
+            Thread.Sleep(AsyncOp);
+
+            messageHandlerStack.Verify(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Once());
         }
 
         private static IMessage SendMessageOverMessageHub(SocketIdentifier callbackSocketIdentifier)
