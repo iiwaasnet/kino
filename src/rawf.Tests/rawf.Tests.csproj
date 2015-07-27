@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Backend\ActorHandlersMapTests.cs" />
     <Compile Include="Backend\ActorHostTests.cs" />
     <Compile Include="Backend\MessageRouterTests.cs" />
     <Compile Include="Backend\Setup\AsyncExceptionMessage.cs" />
@@ -60,7 +61,10 @@
     <Compile Include="Backend\Setup\EchoActor.cs" />
     <Compile Include="Backend\Setup\SimpleMessage.cs" />
     <Compile Include="Backend\Setup\StubSocket.cs" />
+    <Compile Include="Frontend\CallbackHandlerKeyTests.cs" />
+    <Compile Include="Frontend\CallbackHandlerStackTests.cs" />
     <Compile Include="Frontend\MessagHubTests.cs" />
+    <Compile Include="MessageHandlerIdentifierTests.cs" />
     <Compile Include="Messaging\MessageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -22,7 +22,7 @@ namespace rawf.Frontend
             IDictionary<MessageHandlerIdentifier, IPromise> messageHandlers;
             if (handlers.TryGetValue(correlation, out messageHandlers))
             {
-                throw new Exception($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
+                throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
             }
             handlers[correlation] = messageHandlerIdentifiers.ToDictionary(mp => mp, mp => promise);
         }
