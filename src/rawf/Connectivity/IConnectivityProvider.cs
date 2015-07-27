@@ -10,8 +10,8 @@ namespace rawf.Connectivity
         ISocket CreateScaleOutBackendSocket();
         ISocket CreateActorSyncSocket();
         ISocket CreateActorAsyncSocket();
-        ISocket CreateClientSendingSocket();
-        ISocket CreateClientReceivingSocket();
+        ISocket CreateMessageHubSendingSocket();
+        ISocket CreateMessageHubReceivingSocket();
         ISocket CreateHeartBeatSocket();
         ISocket CreateClusterEventsSocket();
         IEnumerable<NodeIdentity> GetClusterIdentities();

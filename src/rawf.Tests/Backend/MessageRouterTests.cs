@@ -186,8 +186,8 @@ namespace rawf.Tests.Backend
             var clientSendingSocket = new StubSocket();
             var clientReceivingSocket = new StubSocket();
             clientReceivingSocket.SetIdentity(callbackSocketIdentifier.SocketId);
-            connectivityProvider.Setup(m => m.CreateClientSendingSocket()).Returns(clientSendingSocket);
-            connectivityProvider.Setup(m => m.CreateClientReceivingSocket()).Returns(clientReceivingSocket);
+            connectivityProvider.Setup(m => m.CreateMessageHubSendingSocket()).Returns(clientSendingSocket);
+            connectivityProvider.Setup(m => m.CreateMessageHubReceivingSocket()).Returns(clientReceivingSocket);
 
             var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
             var callback = new CallbackPoint(SimpleMessage.MessageIdentity);

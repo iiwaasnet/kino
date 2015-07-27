@@ -55,7 +55,7 @@ namespace rawf.Frontend
         {
             try
             {
-                using (var socket = connectivityProvider.CreateClientSendingSocket())
+                using (var socket = connectivityProvider.CreateMessageHubSendingSocket())
                 {
                     var receivingSocketIdentity = receivingSocketIdentityPromise.Task.Result;
                     RegisterMessageHub(socket, receivingSocketIdentity);
@@ -100,7 +100,7 @@ namespace rawf.Frontend
         {
             try
             {
-                using (var socket = connectivityProvider.CreateClientReceivingSocket())
+                using (var socket = connectivityProvider.CreateMessageHubReceivingSocket())
                 {
                     receivingSocketIdentityPromise.SetResult(socket.GetIdentity());
                     gateway.SignalAndWait(token);

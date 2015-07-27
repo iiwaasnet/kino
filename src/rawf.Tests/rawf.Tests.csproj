@@ -52,14 +52,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Actor\ActorHostTests.cs" />
-    <Compile Include="Actor\MessageRouterTests.cs" />
-    <Compile Include="Actor\Setup\AsyncExceptionMessage.cs" />
-    <Compile Include="Actor\Setup\AsyncMessage.cs" />
-    <Compile Include="Actor\Setup\ExceptionActor.cs" />
-    <Compile Include="Actor\Setup\EchoActor.cs" />
-    <Compile Include="Actor\Setup\SimpleMessage.cs" />
-    <Compile Include="Actor\Setup\StubSocket.cs" />
+    <Compile Include="Backend\ActorHostTests.cs" />
+    <Compile Include="Backend\MessageRouterTests.cs" />
+    <Compile Include="Backend\Setup\AsyncExceptionMessage.cs" />
+    <Compile Include="Backend\Setup\AsyncMessage.cs" />
+    <Compile Include="Backend\Setup\ExceptionActor.cs" />
+    <Compile Include="Backend\Setup\EchoActor.cs" />
+    <Compile Include="Backend\Setup\SimpleMessage.cs" />
+    <Compile Include="Backend\Setup\StubSocket.cs" />
+    <Compile Include="Frontend\MessagHubTests.cs" />
     <Compile Include="Messaging\MessageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

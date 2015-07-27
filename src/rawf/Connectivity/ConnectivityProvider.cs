@@ -72,7 +72,7 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        public ISocket CreateClientSendingSocket()
+        public ISocket CreateMessageHubSendingSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.Connect(nodeConfiguration.RouterAddress);
@@ -80,7 +80,7 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        public ISocket CreateClientReceivingSocket()
+        public ISocket CreateMessageHubReceivingSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
