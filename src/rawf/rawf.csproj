@@ -59,7 +59,7 @@
   <ItemGroup>
     <Compile Include="Backend\ActorHost.cs" />
     <Compile Include="Backend\ActorHandlersMap.cs" />
-    <Compile Include="Backend\IMessageHandlerStack.cs" />
+    <Compile Include="Backend\IRoutingTable.cs" />
     <Compile Include="Backend\MessagesCompletionQueue.cs" />
     <Compile Include="Backend\AsyncMessageContext.cs" />
     <Compile Include="Backend\Diagnostics\ExceptionHandlerActor.cs" />
@@ -80,7 +80,7 @@
     <Compile Include="Connectivity\IConnectivityProvider.cs" />
     <Compile Include="Backend\MessageDefinition.cs" />
     <Compile Include="Backend\MessageHandler.cs" />
-    <Compile Include="Backend\MessageHandlerStack.cs" />
+    <Compile Include="Backend\RoutingTable.cs" />
     <Compile Include="Backend\MessageMap.cs" />
     <Compile Include="Backend\MessageRouter.cs" />
     <Compile Include="Connectivity\ConnectivityProvider.cs" />

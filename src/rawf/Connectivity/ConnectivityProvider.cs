@@ -11,8 +11,6 @@ namespace rawf.Connectivity
         private readonly ISocketFactory socketFactory;
         private readonly INodeConfiguration nodeConfiguration;
         private readonly IClusterConfiguration clusterConfiguration;
-        private static readonly byte[] RouterIdentity = {0, 1, 2, 3};
-        private static readonly byte[] ScaleOutSocketIdentity = {4, 5, 6, 7};
 
         public ConnectivityProvider(ISocketFactory socketFactory, INodeConfiguration nodeConfiguration, IClusterConfiguration clusterConfiguration)
         {
@@ -25,8 +23,8 @@ namespace rawf.Connectivity
         {
             var socket = socketFactory.CreateRouterSocket();
             socket.SetMandatoryRouting();
-            socket.SetIdentity(RouterIdentity);
-            socket.Bind(nodeConfiguration.RouterAddress);
+            socket.SetIdentity(nodeConfiguration.RouterAddress.Identity);
+            socket.Bind(nodeConfiguration.RouterAddress.Uri);
 
             return socket;
         }
@@ -34,10 +32,10 @@ namespace rawf.Connectivity
         public ISocket CreateScaleOutFrontendSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
-            socket.SetIdentity(ScaleOutSocketIdentity);
+            socket.SetIdentity(nodeConfiguration.ScaleOutAddress.Identity);
             socket.SetMandatoryRouting();
-            socket.Connect(nodeConfiguration.RouterAddress);
-            socket.Bind(nodeConfiguration.ScaleOutAddress);
+            socket.Connect(nodeConfiguration.RouterAddress.Uri);
+            socket.Bind(nodeConfiguration.ScaleOutAddress.Uri);
 
             return socket;
         }
@@ -45,11 +43,11 @@ namespace rawf.Connectivity
         public ISocket CreateScaleOutBackendSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
-            socket.SetIdentity(ScaleOutSocketIdentity);
+            socket.SetIdentity(nodeConfiguration.ScaleOutAddress.Identity);
             socket.SetMandatoryRouting();
             foreach (var peer in clusterConfiguration.GetClusterMembers())
             {
-                socket.Connect(peer.Address);
+                socket.Connect(peer.Uri);
             }
 
             return socket;
@@ -59,7 +57,7 @@ namespace rawf.Connectivity
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-            socket.Connect(nodeConfiguration.RouterAddress);
+            socket.Connect(nodeConfiguration.RouterAddress.Uri);
 
             return socket;
         }
@@ -67,7 +65,7 @@ namespace rawf.Connectivity
         public ISocket CreateActorAsyncSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(nodeConfiguration.RouterAddress);
+            socket.Connect(nodeConfiguration.RouterAddress.Uri);
 
             return socket;
         }
@@ -75,7 +73,7 @@ namespace rawf.Connectivity
         public ISocket CreateMessageHubSendingSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(nodeConfiguration.RouterAddress);
+            socket.Connect(nodeConfiguration.RouterAddress.Uri);
 
             return socket;
         }
@@ -84,7 +82,7 @@ namespace rawf.Connectivity
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-            socket.Connect(nodeConfiguration.RouterAddress);
+            socket.Connect(nodeConfiguration.RouterAddress.Uri);
 
             return socket;
         }

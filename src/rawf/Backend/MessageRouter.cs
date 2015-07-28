@@ -12,15 +12,19 @@ namespace rawf.Backend
         private readonly CancellationTokenSource cancellationTokenSource;
         private Task localRouting;
         private Task scaleOutRouting;
-        private readonly IMessageHandlerStack messageHandlers;
+        private readonly IRoutingTable routingTable;
         private readonly IConnectivityProvider connectivityProvider;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
+        private readonly IClusterConfigurationMonitor clusterConfigurationMonitor;
 
-        public MessageRouter(IConnectivityProvider connectivityProvider, IMessageHandlerStack messageHandlers)
+        public MessageRouter(IConnectivityProvider connectivityProvider,
+                             IRoutingTable routingTable,
+                             IClusterConfigurationMonitor clusterConfigurationMonitor = null)
         {
             this.connectivityProvider = connectivityProvider;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
-            this.messageHandlers = messageHandlers;
+            this.routingTable = routingTable;
+            this.clusterConfigurationMonitor = clusterConfigurationMonitor;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -99,7 +103,7 @@ namespace rawf.Backend
                                 }
                                 else
                                 {
-                                    var handler = messageHandlers.Pop(CreateMessageHandlerIdentifier(message));
+                                    var handler = routingTable.Pop(CreateMessageHandlerIdentifier(message));
                                     if (handler != null)
                                     {
                                         message.SetSocketIdentity(handler.SocketId);
@@ -143,7 +147,8 @@ namespace rawf.Backend
             {
                 try
                 {
-                    messageHandlers.Push(CreateMessageHandlerIdentifier(registration), handlerSocketIdentifier);
+                    routingTable.Push(CreateMessageHandlerIdentifier(registration), handlerSocketIdentifier);
+                    //clusterConfigurationMonitor.RegisterMember(new ClusterMember {Identity = });
                 }
                 catch (Exception err)
                 {

@@ -5,11 +5,11 @@ namespace rawf.Backend
 {
     //TODO: Add TTL for registrations, so that never consumed handlers are not staying forever
 
-    public class MessageHandlerStack : IMessageHandlerStack
+    public class RoutingTable : IRoutingTable
     {
         private readonly IDictionary<MessageHandlerIdentifier, HashSet<SocketIdentifier>> storage;
 
-        public MessageHandlerStack()
+        public RoutingTable()
         {
             storage = new Dictionary<MessageHandlerIdentifier, HashSet<SocketIdentifier>>();
         }

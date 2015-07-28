@@ -4,7 +4,7 @@ namespace rawf.Connectivity
 {
     public interface INodeConfiguration
     {
-        Uri RouterAddress { get; }
-        Uri ScaleOutAddress { get; }
+        ClusterMember RouterAddress { get; }
+        ClusterMember ScaleOutAddress { get; }
     }
 }
