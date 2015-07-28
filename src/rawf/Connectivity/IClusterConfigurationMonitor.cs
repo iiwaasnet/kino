@@ -1,8 +1,12 @@
-﻿namespace rawf.Connectivity
+﻿using System.Collections.Generic;
+
+namespace rawf.Connectivity
 {
     public interface IClusterConfigurationMonitor
     {
-        void RegisterMember(ClusterMember member);
+        void Start();
+        void Stop();
+        void RegisterMember(ClusterMember member, IEnumerable<MessageHandlerIdentifier> messageHandlers);
         void UnregisterMember(ClusterMember member);
     }
 }

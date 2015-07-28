@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using rawf.Connectivity;
@@ -16,15 +17,18 @@ namespace rawf.Backend
         private readonly IConnectivityProvider connectivityProvider;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly IClusterConfigurationMonitor clusterConfigurationMonitor;
+        private readonly INodeConfiguration nodeConfiguration;
 
         public MessageRouter(IConnectivityProvider connectivityProvider,
                              IRoutingTable routingTable,
+                             INodeConfiguration nodeConfiguration = null,
                              IClusterConfigurationMonitor clusterConfigurationMonitor = null)
         {
             this.connectivityProvider = connectivityProvider;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.routingTable = routingTable;
             this.clusterConfigurationMonitor = clusterConfigurationMonitor;
+            this.nodeConfiguration = nodeConfiguration;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -99,7 +103,7 @@ namespace rawf.Backend
 
                                 if (IsReadyMessage(message))
                                 {
-                                    RegisterWorkers(message);
+                                    RegisterMessageHandler(message);
                                 }
                                 else
                                 {
@@ -138,23 +142,40 @@ namespace rawf.Backend
             return Unsafe.Equals(message.Identity, RegisterMessageHandlers.MessageIdentity);
         }
 
-        private void RegisterWorkers(IMessage message)
+        private void RegisterMessageHandler(IMessage message)
         {
             var payload = message.GetPayload<RegisterMessageHandlers>();
             var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+
+            var handlers = UpdateLocalRoutingTable(payload, handlerSocketIdentifier);
+
+            clusterConfigurationMonitor.RegisterMember(new ClusterMember
+                                                       {
+                                                           Uri = nodeConfiguration.RouterAddress.Uri,
+                                                           Identity = nodeConfiguration.RouterAddress.Identity
+                                                       }, handlers);
+        }
+
+        private IEnumerable<MessageHandlerIdentifier> UpdateLocalRoutingTable(RegisterMessageHandlers payload,
+                                                                              SocketIdentifier handlerSocketIdentifier)
+        {
+            var handlers = new List<MessageHandlerIdentifier>();
 
             foreach (var registration in payload.Registrations)
             {
                 try
                 {
-                    routingTable.Push(CreateMessageHandlerIdentifier(registration), handlerSocketIdentifier);
-                    //clusterConfigurationMonitor.RegisterMember(new ClusterMember {Identity = });
+                    var messageHandlerIdentifier = CreateMessageHandlerIdentifier(registration);
+                    routingTable.Push(messageHandlerIdentifier, handlerSocketIdentifier);
+                    handlers.Add(messageHandlerIdentifier);
                 }
                 catch (Exception err)
                 {
                     Console.WriteLine(err);
                 }
             }
+
+            return handlers;
         }
 
         private static MessageHandlerIdentifier CreateMessageHandlerIdentifier(MessageHandlerRegistration registration)

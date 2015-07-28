@@ -12,8 +12,8 @@ namespace rawf.Connectivity
         ISocket CreateActorAsyncSocket();
         ISocket CreateMessageHubSendingSocket();
         ISocket CreateMessageHubReceivingSocket();
-        ISocket CreateHeartBeatSocket();
-        ISocket CreateClusterEventsSocket();
+        ISocket CreateRendezvousSubscriptionSocket();
+        ISocket CreateRendezvousSendingSocket();
         IEnumerable<NodeIdentity> GetClusterIdentities();
     }
 }

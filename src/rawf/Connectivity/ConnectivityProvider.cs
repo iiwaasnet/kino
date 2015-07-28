@@ -87,12 +87,12 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        public ISocket CreateClusterEventsSocket()
+        public ISocket CreateRendezvousSendingSocket()
         {
             throw new NotImplementedException();
         }
 
-        public ISocket CreateHeartBeatSocket()
+        public ISocket CreateRendezvousSubscriptionSocket()
         {
             throw new NotImplementedException();
         }

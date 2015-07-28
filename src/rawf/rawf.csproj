@@ -69,10 +69,11 @@
     <Compile Include="Backend\IMessagesCompletionQueue.cs" />
     <Compile Include="Backend\IMessageRouter.cs" />
     <Compile Include="Backend\IHostConfiguration.cs" />
-    <Compile Include="Connectivity\AdsServerConfiguration.cs" />
+    <Compile Include="Connectivity\RendezvousServerConfiguration.cs" />
     <Compile Include="Connectivity\ClusterConfiguration.cs" />
+    <Compile Include="Connectivity\ClusterConfigurationMonitor.cs" />
     <Compile Include="Connectivity\ClusterMember.cs" />
-    <Compile Include="Connectivity\IAdsConfiguration.cs" />
+    <Compile Include="Connectivity\IRendezvousConfiguration.cs" />
     <Compile Include="Connectivity\IClusterConfiguration.cs" />
     <Compile Include="Connectivity\IClusterConfigurationMonitor.cs" />
     <Compile Include="Connectivity\NodeConfiguration.cs" />
