@@ -4,7 +4,7 @@ namespace rawf.Connectivity
 {
     public class RendezvousServerConfiguration
     {
-        public Uri ClusterConfigurationEndpoint { get; set; }
-        public Uri HeartBeatEndpoint { get; set; }
+        public Uri BroadcastEndpoint { get; set; }
+        public ClusterMember P2PEndpoint { get; set; }
     }
 }

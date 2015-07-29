@@ -133,7 +133,7 @@ namespace rawf.Frontend
 
         private void RegisterMessageHub(ISocket socket, byte[] receivingSocketIdentity)
         {
-            var rdyMessage = Message.Create(new RegisterMessageHandlers
+            var rdyMessage = Message.Create(new RegisterMessageHandlersMessage
                                             {
                                                 SocketIdentity = receivingSocketIdentity,
                                                 Registrations = new[]
@@ -145,7 +145,7 @@ namespace rawf.Frontend
                                                                         IdentityType = IdentityType.Callback
                                                                     }
                                                                 }
-                                            }, RegisterMessageHandlers.MessageIdentity);
+                                            }, RegisterMessageHandlersMessage.MessageIdentity);
             socket.SendMessage(rdyMessage);
 
             hubRegistered.Set();

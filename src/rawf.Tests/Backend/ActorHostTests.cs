@@ -64,7 +64,7 @@ namespace rawf.Tests.Backend
             Thread.Sleep(AsyncOp);
 
             var registration = socket.GetSentMessages().First();
-            var payload = new RegisterMessageHandlers
+            var payload = new RegisterMessageHandlersMessage
                           {
                               SocketIdentity = socket.GetIdentity(),
                               Registrations = actorHandlersMap
@@ -77,7 +77,7 @@ namespace rawf.Tests.Backend
                                                 })
                                   .ToArray()
                           };
-            var regMessage = Message.Create(payload, RegisterMessageHandlers.MessageIdentity);
+            var regMessage = Message.Create(payload, RegisterMessageHandlersMessage.MessageIdentity);
 
             CollectionAssert.AreEqual(registration.Body, regMessage.Body);
         }

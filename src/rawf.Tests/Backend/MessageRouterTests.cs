@@ -8,6 +8,7 @@ using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Frontend;
 using rawf.Messaging;
+using rawf.Messaging.Messages;
 using rawf.Tests.Backend.Setup;
 
 namespace rawf.Tests.Backend
@@ -49,7 +50,7 @@ namespace rawf.Tests.Backend
             var messageIdentity = Guid.NewGuid().ToByteArray();
             var version = Guid.NewGuid().ToByteArray();
             var socketIdentity = Guid.NewGuid().ToByteArray();
-            var message = Message.Create(new RegisterMessageHandlers
+            var message = Message.Create(new RegisterMessageHandlersMessage
                                          {
                                              SocketIdentity = socketIdentity,
                                              Registrations = new[]
@@ -61,7 +62,7 @@ namespace rawf.Tests.Backend
                                                                      IdentityType = IdentityType.Actor
                                                                  }
                                                              }
-                                         }, RegisterMessageHandlers.MessageIdentity);
+                                         }, RegisterMessageHandlersMessage.MessageIdentity);
             socket.DeliverMessage(message);
 
             Thread.Sleep(AsyncOp);

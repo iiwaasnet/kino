@@ -1,10 +1,10 @@
 ﻿using ProtoBuf;
 using rawf.Framework;
 
-namespace rawf.Messaging
+namespace rawf.Messaging.Messages
 {
     [ProtoContract]
-    public class RegisterMessageHandlers : Payload
+    public class RegisterMessageHandlersMessage : Payload
     {
         public static readonly byte[] MessageIdentity = "MSGHREG".GetBytes();
 

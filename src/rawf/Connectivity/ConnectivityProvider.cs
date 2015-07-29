@@ -8,15 +8,22 @@ namespace rawf.Connectivity
 {
     public class ConnectivityProvider : IConnectivityProvider
     {
-        private readonly ISocketFactory socketFactory;
-        private readonly INodeConfiguration nodeConfiguration;
         private readonly IClusterConfiguration clusterConfiguration;
+        private readonly INodeConfiguration nodeConfiguration;
+        private readonly ISocketFactory socketFactory;
+        private readonly IRendezvousConfiguration rendezvousConfiguration;
+        private readonly RendezvousServerConfiguration currentRendezvousServer;
 
-        public ConnectivityProvider(ISocketFactory socketFactory, INodeConfiguration nodeConfiguration, IClusterConfiguration clusterConfiguration)
+        public ConnectivityProvider(ISocketFactory socketFactory,
+                                    INodeConfiguration nodeConfiguration,
+                                    IClusterConfiguration clusterConfiguration,
+                                    IRendezvousConfiguration rendezvousConfiguration)
         {
             this.socketFactory = socketFactory;
             this.nodeConfiguration = nodeConfiguration;
             this.clusterConfiguration = clusterConfiguration;
+            this.rendezvousConfiguration = rendezvousConfiguration;
+            currentRendezvousServer = rendezvousConfiguration.GetRendezvousServers().First();
         }
 
         public ISocket CreateRouterSocket()
@@ -89,12 +96,19 @@ namespace rawf.Connectivity
 
         public ISocket CreateRendezvousSendingSocket()
         {
-            throw new NotImplementedException();
+            var socket = socketFactory.CreateDealerSocket();
+            socket.SetIdentity(currentRendezvousServer.P2PEndpoint.Identity);
+            socket.Connect(currentRendezvousServer.P2PEndpoint.Uri);
+
+            return socket;
         }
 
         public ISocket CreateRendezvousSubscriptionSocket()
         {
-            throw new NotImplementedException();
+            var socket = socketFactory.CreateSubscriberSocket();
+            socket.Connect(currentRendezvousServer.BroadcastEndpoint);
+
+            return socket;
         }
 
         public IEnumerable<NodeIdentity> GetClusterIdentities()

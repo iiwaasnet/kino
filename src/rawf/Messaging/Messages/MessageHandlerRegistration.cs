@@ -1,6 +1,6 @@
 ﻿using ProtoBuf;
 
-namespace rawf.Messaging
+namespace rawf.Messaging.Messages
 {
     [ProtoContract]
     public class MessageHandlerRegistration

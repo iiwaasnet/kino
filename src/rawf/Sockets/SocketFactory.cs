@@ -21,6 +21,11 @@ namespace rawf.Sockets
             return new Socket(context.CreateRouterSocket());
         }
 
+        public ISocket CreateSubscriberSocket()
+        {
+            return new Socket(context.CreateSubscriberSocket());
+        }
+
         public void Dispose()
         {
             context.Dispose();

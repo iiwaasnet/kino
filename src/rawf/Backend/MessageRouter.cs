@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
+using rawf.Messaging.Messages;
 
 namespace rawf.Backend
 {
@@ -139,12 +140,12 @@ namespace rawf.Backend
 
         private static bool IsReadyMessage(IMessage message)
         {
-            return Unsafe.Equals(message.Identity, RegisterMessageHandlers.MessageIdentity);
+            return Unsafe.Equals(message.Identity, RegisterMessageHandlersMessage.MessageIdentity);
         }
 
         private void RegisterMessageHandler(IMessage message)
         {
-            var payload = message.GetPayload<RegisterMessageHandlers>();
+            var payload = message.GetPayload<RegisterMessageHandlersMessage>();
             var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
 
             var handlers = UpdateLocalRoutingTable(payload, handlerSocketIdentifier);
@@ -156,7 +157,7 @@ namespace rawf.Backend
                                                        }, handlers);
         }
 
-        private IEnumerable<MessageHandlerIdentifier> UpdateLocalRoutingTable(RegisterMessageHandlers payload,
+        private IEnumerable<MessageHandlerIdentifier> UpdateLocalRoutingTable(RegisterMessageHandlersMessage payload,
                                                                               SocketIdentifier handlerSocketIdentifier)
         {
             var handlers = new List<MessageHandlerIdentifier>();

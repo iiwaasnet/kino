@@ -235,7 +235,7 @@ namespace rawf.Backend
 
         private void RegisterActor(ISocket socket)
         {
-            var payload = new RegisterMessageHandlers
+            var payload = new RegisterMessageHandlersMessage
                           {
                               SocketIdentity = socket.GetIdentity(),
                               Registrations = actorHandlersMap
@@ -249,7 +249,7 @@ namespace rawf.Backend
                                   .ToArray()
                           };
 
-            socket.SendMessage(Message.Create(payload, RegisterMessageHandlers.MessageIdentity));
+            socket.SendMessage(Message.Create(payload, RegisterMessageHandlersMessage.MessageIdentity));
         }
     }
 }

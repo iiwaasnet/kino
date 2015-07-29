@@ -34,7 +34,7 @@ namespace rawf.Tests.Frontend
             var message = sendingSocket.GetSentMessages().Last();
 
             Assert.IsNotNull(message);
-            var registration = message.GetPayload<RegisterMessageHandlers>();
+            var registration = message.GetPayload<RegisterMessageHandlersMessage>();
             CollectionAssert.AreEqual(receivingSocket.GetIdentity(), registration.SocketIdentity);
             var handler = registration.Registrations.First();
             CollectionAssert.AreEqual(Message.CurrentVersion, handler.Version);
