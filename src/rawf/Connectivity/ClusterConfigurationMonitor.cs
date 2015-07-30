@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
+using rawf.Sockets;
 
 namespace rawf.Connectivity
 {
@@ -15,19 +16,24 @@ namespace rawf.Connectivity
         private readonly IConnectivityProvider connectivityProvider;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly BlockingCollection<IMessage> outgoingMessages;
+        private readonly IClusterConfiguration clusterConfiguration;
+        private readonly INodeConfiguration nodeConfiguration;
         private Task sendingMessages;
         private Task listenningMessages;
 
-        public ClusterConfigurationMonitor(IConnectivityProvider connectivityProvider)
+        public ClusterConfigurationMonitor(IConnectivityProvider connectivityProvider,
+                                           INodeConfiguration nodeConfiguration,
+                                           IClusterConfiguration clusterConfiguration)
         {
             this.connectivityProvider = connectivityProvider;
+            this.nodeConfiguration = nodeConfiguration;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void Start()
         {
-            var participantCount = 3;
+            const int participantCount = 3;
             using (var gateway = new Barrier(participantCount))
             {
                 sendingMessages = Task.Factory.StartNew(_ => SendMessages(cancellationTokenSource.Token, gateway),
@@ -73,11 +79,15 @@ namespace rawf.Connectivity
             {
                 using (var subscriber = connectivityProvider.CreateRendezvousSubscriptionSocket())
                 {
-                    gateway.SignalAndWait(token);
-
-                    while (!token.IsCancellationRequested)
+                    using (var routerNotificationSocket = connectivityProvider.CreateOneWaySocket())
                     {
-                        var message = subscriber.ReceiveMessage(token);
+                        gateway.SignalAndWait(token);
+
+                        while (!token.IsCancellationRequested)
+                        {
+                            var message = subscriber.ReceiveMessage(token);
+                            ProcessIncomingMessage(message, routerNotificationSocket);
+                        }
                     }
                 }
             }
@@ -87,19 +97,50 @@ namespace rawf.Connectivity
             }
         }
 
-        public void RegisterMember(ClusterMember member, IEnumerable<MessageHandlerIdentifier> messageHandlers)
+        private void ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)
         {
-            var message = Message.Create(new RouteRegistrationMessage
+            if (Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity))
+            {
+                var registration = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
+                clusterConfiguration.TryAddClusterMember(new ClusterMember
+                                                         {
+                                                             Uri = new Uri(registration.Uri),
+                                                             Identity = registration.SocketIdentity
+                                                         });
+                routerNotificationSocket.SendMessage(message);
+            }
+        }
+
+        public void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers)
+        {
+            var self = new ClusterMember
+                       {
+                           Uri = nodeConfiguration.ScaleOutAddress.Uri,
+                           Identity = nodeConfiguration.ScaleOutAddress.Identity
+                       };
+
+            var message = Message.Create(new RegisterMessageHandlersRoutingMessage
                                          {
-                                             Uri = member.Uri.ToSocketAddress(),
-                                             SocketIdentity = member.Identity,
-                                             Registrations = messageHandlers.Select(mh => new MessageRegistration
-                                                                                          {
-                                                                                              Version = mh.Version,
-                                                                                              Identity = mh.Identity
-                                                                                          }).ToArray()
+                                             Uri = self.Uri.ToSocketAddress(),
+                                             SocketIdentity = self.Identity,
+                                             MessageHandlers = messageHandlers.Select(mh => new MessageHandlerRegistration
+                                                                                            {
+                                                                                                Version = mh.Version,
+                                                                                                Identity = mh.Identity
+                                                                                            }).ToArray()
                                          },
-                                         RouteRegistrationMessage.MessageIdentity);
+                                         RegisterMessageHandlersRoutingMessage.MessageIdentity);
+            outgoingMessages.Add(message);
+        }
+
+        public void RequestMessageHandlersRouting()
+        {
+            var message = Message.Create(new RequestMessageHandlersRoutingMessage
+                                         {
+                                             RequestorSocketIdentity = nodeConfiguration.ScaleOutAddress.Identity,
+                                             RequestorUri = nodeConfiguration.ScaleOutAddress.Uri.ToSocketAddress()
+                                         },
+                                         RequestMessageHandlersRoutingMessage.MessageIdentity);
             outgoingMessages.Add(message);
         }
 

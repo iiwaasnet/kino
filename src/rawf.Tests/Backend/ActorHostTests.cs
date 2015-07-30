@@ -41,7 +41,7 @@ namespace rawf.Tests.Backend
                                                                    emptyClusterConfiguration));
             actorHost.AssignActor(new EchoActor());
 
-            var registration = actorHandlersMap.GetRegisteredIdentifiers().First();
+            var registration = actorHandlersMap.GetMessageHandlerIdentifiers().First();
             CollectionAssert.AreEqual(SimpleMessage.MessageIdentity, registration.Identity);
             CollectionAssert.AreEqual(Message.CurrentVersion, registration.Version);
         }
@@ -52,8 +52,8 @@ namespace rawf.Tests.Backend
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(socket);
-            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateRoutableSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateOneWaySocket()).Returns(new StubSocket());
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           new MessagesCompletionQueue(),
@@ -67,8 +67,8 @@ namespace rawf.Tests.Backend
             var payload = new RegisterMessageHandlersMessage
                           {
                               SocketIdentity = socket.GetIdentity(),
-                              Registrations = actorHandlersMap
-                                  .GetRegisteredIdentifiers()
+                              MessageHandlers = actorHandlersMap
+                                  .GetMessageHandlerIdentifiers()
                                   .Select(mh => new MessageHandlerRegistration
                                                 {
                                                     Identity = mh.Identity,
@@ -102,8 +102,8 @@ namespace rawf.Tests.Backend
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(socket);
-            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateRoutableSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateOneWaySocket()).Returns(new StubSocket());
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           new MessagesCompletionQueue(),
@@ -128,8 +128,8 @@ namespace rawf.Tests.Backend
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(socket);
-            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateRoutableSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateOneWaySocket()).Returns(new StubSocket());
 
             var errorMessage = Guid.NewGuid().ToString();
             var actorHost = new ActorHost(actorHandlersMap, new MessagesCompletionQueue(), connectivityProvider.Object);
@@ -153,8 +153,8 @@ namespace rawf.Tests.Backend
             var actorHandlersMap = new ActorHandlersMap();
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var socket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(socket);
-            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(new StubSocket());
+            connectivityProvider.Setup(m => m.CreateRoutableSocket()).Returns(socket);
+            connectivityProvider.Setup(m => m.CreateOneWaySocket()).Returns(new StubSocket());
 
             var messageCompletionQueue = new Mock<IMessagesCompletionQueue>();
             messageCompletionQueue.Setup(m => m.GetMessages(It.IsAny<CancellationToken>()))
@@ -185,8 +185,8 @@ namespace rawf.Tests.Backend
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var syncSocket = new StubSocket();
             var asyncSocket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(syncSocket);
-            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(asyncSocket);
+            connectivityProvider.Setup(m => m.CreateRoutableSocket()).Returns(syncSocket);
+            connectivityProvider.Setup(m => m.CreateOneWaySocket()).Returns(asyncSocket);
 
             var actorHost = new ActorHost(actorHandlersMap,
                                           new MessagesCompletionQueue(),
@@ -217,8 +217,8 @@ namespace rawf.Tests.Backend
             var connectivityProvider = new Mock<IConnectivityProvider> {CallBase = true};
             var syncSocket = new StubSocket();
             var asyncSocket = new StubSocket();
-            connectivityProvider.Setup(m => m.CreateActorSyncSocket()).Returns(syncSocket);
-            connectivityProvider.Setup(m => m.CreateActorAsyncSocket()).Returns(asyncSocket);
+            connectivityProvider.Setup(m => m.CreateRoutableSocket()).Returns(syncSocket);
+            connectivityProvider.Setup(m => m.CreateOneWaySocket()).Returns(asyncSocket);
             var messageCompletionQueue = new MessagesCompletionQueue();
 
             var actorHost = new ActorHost(actorHandlersMap,

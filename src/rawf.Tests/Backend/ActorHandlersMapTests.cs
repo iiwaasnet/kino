@@ -30,7 +30,7 @@ namespace rawf.Tests.Backend
 
             actorHandlersMap.Add(actor);
 
-            var identifiers = actorHandlersMap.GetRegisteredIdentifiers();
+            var identifiers = actorHandlersMap.GetMessageHandlerIdentifiers();
 
             Assert.AreEqual(2, identifiers.Count());
             CollectionAssert.Contains(identifiers, new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity));

@@ -38,7 +38,7 @@ namespace rawf
             unchecked
             {
                 var hashCode = (Version?.Length ?? 0);
-                hashCode = (hashCode*397) ^ (Identity?.Length ?? 0);
+                hashCode = (hashCode * 397) ^ (Identity?.Length ?? 0);
                 return hashCode;
             }
         }
@@ -47,7 +47,6 @@ namespace rawf
         {
             return hashCode;
         }
-
 
         public bool Equals(MessageHandlerIdentifier other)
         {

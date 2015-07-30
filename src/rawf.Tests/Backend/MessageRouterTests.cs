@@ -25,7 +25,7 @@ namespace rawf.Tests.Backend
             connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(new StubSocket());
             connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
             connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
-            var messageHandlerStack = new RoutingTable();
+            var messageHandlerStack = new InternalRoutingTable();
             var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack);
             router.Start();
 
@@ -43,7 +43,7 @@ namespace rawf.Tests.Backend
             connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
             connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
 
-            var messageHandlerStack = new RoutingTable();
+            var messageHandlerStack = new InternalRoutingTable();
             var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack);
             router.Start();
 
@@ -53,7 +53,7 @@ namespace rawf.Tests.Backend
             var message = Message.Create(new RegisterMessageHandlersMessage
                                          {
                                              SocketIdentity = socketIdentity,
-                                             Registrations = new[]
+                                             MessageHandlers = new[]
                                                              {
                                                                  new MessageHandlerRegistration
                                                                  {
@@ -86,7 +86,7 @@ namespace rawf.Tests.Backend
             connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
             connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
 
-            var messageHandlerStack = new Mock<IRoutingTable>();
+            var messageHandlerStack = new Mock<IInternalRoutingTable>();
             messageHandlerStack.Setup(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(callbackIdentifier))))
                                .Returns(callbackSocketIdentity);
 
@@ -114,7 +114,7 @@ namespace rawf.Tests.Backend
             connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
             connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
 
-            var messageHandlerStack = new Mock<IRoutingTable>();
+            var messageHandlerStack = new Mock<IInternalRoutingTable>();
             messageHandlerStack.Setup(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(actorIdentifier))))
                                .Returns(actorSocketIdentity);
 
@@ -140,7 +140,7 @@ namespace rawf.Tests.Backend
             connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(scaleOutBackEndSocket);
             connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
 
-            var messageHandlerStack = new Mock<IRoutingTable>();
+            var messageHandlerStack = new Mock<IInternalRoutingTable>();
 
             var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack.Object);
             router.Start();
@@ -166,7 +166,7 @@ namespace rawf.Tests.Backend
             connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
             connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(scaleOutFrontEndSocket);
 
-            var messageHandlerStack = new Mock<IRoutingTable>();
+            var messageHandlerStack = new Mock<IInternalRoutingTable>();
 
             var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack.Object);
             router.Start();

@@ -6,7 +6,8 @@ namespace rawf.Connectivity
     {
         void Start();
         void Stop();
-        void RegisterMember(ClusterMember member, IEnumerable<MessageHandlerIdentifier> messageHandlers);
+        void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers);
+        void RequestMessageHandlersRouting();
         void UnregisterMember(ClusterMember member);
     }
 }

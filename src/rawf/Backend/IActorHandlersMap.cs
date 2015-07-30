@@ -6,6 +6,6 @@ namespace rawf.Backend
     {
         void Add(IActor actor);
         MessageHandler Get(MessageHandlerIdentifier identifier);
-        IEnumerable<MessageHandlerIdentifier> GetRegisteredIdentifiers();
+        IEnumerable<MessageHandlerIdentifier> GetMessageHandlerIdentifiers();
     }
 }

@@ -36,7 +36,7 @@ namespace rawf.Tests.Frontend
             Assert.IsNotNull(message);
             var registration = message.GetPayload<RegisterMessageHandlersMessage>();
             CollectionAssert.AreEqual(receivingSocket.GetIdentity(), registration.SocketIdentity);
-            var handler = registration.Registrations.First();
+            var handler = registration.MessageHandlers.First();
             CollectionAssert.AreEqual(Message.CurrentVersion, handler.Version);
             CollectionAssert.AreEqual(receivingSocket.GetIdentity(), handler.Identity);
             Assert.AreEqual(IdentityType.Callback, handler.IdentityType);

@@ -60,7 +60,7 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        public ISocket CreateActorSyncSocket()
+        public ISocket CreateRoutableSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
@@ -69,26 +69,9 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        public ISocket CreateActorAsyncSocket()
+        public ISocket CreateOneWaySocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(nodeConfiguration.RouterAddress.Uri);
-
-            return socket;
-        }
-
-        public ISocket CreateMessageHubSendingSocket()
-        {
-            var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(nodeConfiguration.RouterAddress.Uri);
-
-            return socket;
-        }
-
-        public ISocket CreateMessageHubReceivingSocket()
-        {
-            var socket = socketFactory.CreateDealerSocket();
-            socket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
             socket.Connect(nodeConfiguration.RouterAddress.Uri);
 
             return socket;

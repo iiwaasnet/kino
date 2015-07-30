@@ -14,20 +14,23 @@ namespace rawf.Backend
         private readonly CancellationTokenSource cancellationTokenSource;
         private Task localRouting;
         private Task scaleOutRouting;
-        private readonly IRoutingTable routingTable;
+        private readonly IInternalRoutingTable internalRoutingTable;
+        private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IConnectivityProvider connectivityProvider;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly IClusterConfigurationMonitor clusterConfigurationMonitor;
         private readonly INodeConfiguration nodeConfiguration;
 
         public MessageRouter(IConnectivityProvider connectivityProvider,
-                             IRoutingTable routingTable,
+                             IInternalRoutingTable internalRoutingTable,
+                             IExternalRoutingTable externalRoutingTable,
                              INodeConfiguration nodeConfiguration = null,
                              IClusterConfigurationMonitor clusterConfigurationMonitor = null)
         {
             this.connectivityProvider = connectivityProvider;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
-            this.routingTable = routingTable;
+            this.internalRoutingTable = internalRoutingTable;
+            this.externalRoutingTable = externalRoutingTable;
             this.clusterConfigurationMonitor = clusterConfigurationMonitor;
             this.nodeConfiguration = nodeConfiguration;
             cancellationTokenSource = new CancellationTokenSource();
@@ -35,7 +38,7 @@ namespace rawf.Backend
 
         public void Start()
         {
-            var participantCount = 3;
+            const int participantCount = 3;
             using (var gateway = new Barrier(participantCount))
             {
                 localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, gateway),
@@ -91,6 +94,7 @@ namespace rawf.Backend
                 using (var localSocket = connectivityProvider.CreateRouterSocket())
                 {
                     localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
+                    clusterConfigurationMonitor.RequestMessageHandlersRouting();
 
                     using (var scaleOutBackend = connectivityProvider.CreateScaleOutBackendSocket())
                     {
@@ -102,13 +106,13 @@ namespace rawf.Backend
                             {
                                 var message = (Message) localSocket.ReceiveMessage(token);
 
-                                if (IsReadyMessage(message))
+                                var messageHandled = TryHandleServiceMessage(message);
+
+                                if(!messageHandled)
                                 {
-                                    RegisterMessageHandler(message);
-                                }
-                                else
-                                {
-                                    var handler = routingTable.Pop(CreateMessageHandlerIdentifier(message));
+                                    var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
+
+                                    var handler = internalRoutingTable.Pop(messageHandlerIdentifier);
                                     if (handler != null)
                                     {
                                         message.SetSocketIdentity(handler.SocketId);
@@ -116,11 +120,12 @@ namespace rawf.Backend
                                     }
                                     else
                                     {
-                                        //Console.WriteLine("No currently available handlers!");
-                                        // NOTE: scaleOutBackend socket identities should be received with configuration,
-                                        // so that the next socket to which this message was not yet routed is selected
-                                        message.SetSocketIdentity(scaleOutBackend.GetIdentity());
-                                        scaleOutBackend.SendMessage(message);
+                                        handler = externalRoutingTable.Pop(messageHandlerIdentifier);
+                                        if (handler != null)
+                                        {
+                                            message.SetSocketIdentity(handler.SocketId);
+                                            scaleOutBackend.SendMessage(message);
+                                        }
                                     }
                                 }
                             }
@@ -138,23 +143,87 @@ namespace rawf.Backend
             }
         }
 
-        private static bool IsReadyMessage(IMessage message)
+        private bool TryHandleServiceMessage(IMessage message)
         {
-            return Unsafe.Equals(message.Identity, RegisterMessageHandlersMessage.MessageIdentity);
+            return RegisterMessageHandler(message)
+                   || RegisterExternalRoute(message)
+                   || SendMessageHandlersRegistration(message);
         }
 
-        private void RegisterMessageHandler(IMessage message)
+        private bool SendMessageHandlersRegistration(IMessage message)
         {
-            var payload = message.GetPayload<RegisterMessageHandlersMessage>();
-            var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+            var shouldHandle = IsMessageHandlersRoutingRequest(message);
 
-            var handlers = UpdateLocalRoutingTable(payload, handlerSocketIdentifier);
+            if (shouldHandle)
+            {
+                var payload = message.GetPayload<RequestMessageHandlersRoutingMessage>();
 
-            clusterConfigurationMonitor.RegisterMember(new ClusterMember
-                                                       {
-                                                           Uri = nodeConfiguration.RouterAddress.Uri,
-                                                           Identity = nodeConfiguration.RouterAddress.Identity
-                                                       }, handlers);
+                if (NotSelfSentMessage(payload.RequestorSocketIdentity))
+                {
+                    clusterConfigurationMonitor.RegisterSelf(internalRoutingTable.GetMessageHandlerIdentifiers());
+                }
+            }
+
+            return shouldHandle;
+        }
+
+        private bool RegisterExternalRoute(IMessage message)
+        {
+            var shouldHandle = IsExternalRouteRegistration(message);
+
+            if (shouldHandle)
+            {
+                var payload = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
+
+                if (NotSelfSentMessage(payload.SocketIdentity))
+                {
+                    var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+                    var uri = new Uri(payload.Uri);
+
+                    foreach (var registration in payload.MessageHandlers)
+                    {
+                        try
+                        {
+                            var messageHandlerIdentifier = new MessageHandlerIdentifier(registration.Version, registration.Identity);
+                            externalRoutingTable.Push(messageHandlerIdentifier, handlerSocketIdentifier, uri);
+                        }
+                        catch (Exception err)
+                        {
+                            Console.WriteLine(err);
+                        }
+                    }
+                }
+            }
+
+            return shouldHandle;
+        }
+
+        private bool NotSelfSentMessage(byte[] socketIdentity)
+            => !Unsafe.Equals(nodeConfiguration.ScaleOutAddress.Identity, socketIdentity);
+
+        private static bool IsMessageHandlersRoutingRequest(IMessage message)
+            => Unsafe.Equals(RequestMessageHandlersRoutingMessage.MessageIdentity, message.Identity);
+
+        private static bool IsExternalRouteRegistration(IMessage message)
+            => Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity);
+
+        private static bool IsInternalHandlerRegistration(IMessage message)
+            => Unsafe.Equals(RegisterMessageHandlersMessage.MessageIdentity, message.Identity);
+
+        private bool RegisterMessageHandler(IMessage message)
+        {
+            var shouldHandle = IsInternalHandlerRegistration(message);
+            if (shouldHandle)
+            {
+                var payload = message.GetPayload<RegisterMessageHandlersMessage>();
+                var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+
+                var handlers = UpdateLocalRoutingTable(payload, handlerSocketIdentifier);
+
+                clusterConfigurationMonitor.RegisterSelf(handlers);
+            }
+
+            return shouldHandle;
         }
 
         private IEnumerable<MessageHandlerIdentifier> UpdateLocalRoutingTable(RegisterMessageHandlersMessage payload,
@@ -162,12 +231,12 @@ namespace rawf.Backend
         {
             var handlers = new List<MessageHandlerIdentifier>();
 
-            foreach (var registration in payload.Registrations)
+            foreach (var registration in payload.MessageHandlers)
             {
                 try
                 {
-                    var messageHandlerIdentifier = CreateMessageHandlerIdentifier(registration);
-                    routingTable.Push(messageHandlerIdentifier, handlerSocketIdentifier);
+                    var messageHandlerIdentifier = new MessageHandlerIdentifier(registration.Version, registration.Identity);
+                    internalRoutingTable.Push(messageHandlerIdentifier, handlerSocketIdentifier);
                     handlers.Add(messageHandlerIdentifier);
                 }
                 catch (Exception err)
@@ -179,24 +248,10 @@ namespace rawf.Backend
             return handlers;
         }
 
-        private static MessageHandlerIdentifier CreateMessageHandlerIdentifier(MessageHandlerRegistration registration)
-        {
-            switch (registration.IdentityType)
-            {
-                case IdentityType.Actor:
-                case IdentityType.Callback:
-                    return new MessageHandlerIdentifier(registration.Version, registration.Identity);
-                default:
-                    throw new Exception($"IdentifierType {registration.IdentityType} is unknown!");
-            }
-        }
-
         private static MessageHandlerIdentifier CreateMessageHandlerIdentifier(IMessage message)
-        {
-            return new MessageHandlerIdentifier(message.Version,
-                                                message.ReceiverIdentity.IsSet()
-                                                    ? message.ReceiverIdentity
-                                                    : message.Identity);
-        }
+            => new MessageHandlerIdentifier(message.Version,
+                                            message.ReceiverIdentity.IsSet()
+                                                ? message.ReceiverIdentity
+                                                : message.Identity);
     }
 }

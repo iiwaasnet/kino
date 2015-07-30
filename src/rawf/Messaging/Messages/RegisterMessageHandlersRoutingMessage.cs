@@ -4,7 +4,7 @@ using rawf.Framework;
 namespace rawf.Messaging.Messages
 {
     [ProtoContract]
-    public class RouteRegistrationMessage : Payload
+    public class RegisterMessageHandlersRoutingMessage : Payload
     {
         public static readonly byte[] MessageIdentity = "ROUTEREG".GetBytes();
 
@@ -15,6 +15,6 @@ namespace rawf.Messaging.Messages
         public byte[] SocketIdentity { get; set; }
 
         [ProtoMember(3)]
-        public MessageRegistration[] Registrations { get; set; }
+        public MessageHandlerRegistration[] MessageHandlers { get; set; }
     }
 }

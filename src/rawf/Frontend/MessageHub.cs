@@ -32,7 +32,7 @@ namespace rawf.Frontend
 
         public void Start()
         {
-            var participantCount = 3;
+            const int participantCount = 3;
             using (var gateway = new Barrier(participantCount))
             {
                 receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token, gateway),
@@ -55,7 +55,7 @@ namespace rawf.Frontend
         {
             try
             {
-                using (var socket = connectivityProvider.CreateMessageHubSendingSocket())
+                using (var socket = connectivityProvider.CreateOneWaySocket())
                 {
                     var receivingSocketIdentity = receivingSocketIdentityPromise.Task.Result;
                     RegisterMessageHub(socket, receivingSocketIdentity);
@@ -100,7 +100,7 @@ namespace rawf.Frontend
         {
             try
             {
-                using (var socket = connectivityProvider.CreateMessageHubReceivingSocket())
+                using (var socket = connectivityProvider.CreateRoutableSocket())
                 {
                     receivingSocketIdentityPromise.SetResult(socket.GetIdentity());
                     gateway.SignalAndWait(token);
@@ -136,7 +136,7 @@ namespace rawf.Frontend
             var rdyMessage = Message.Create(new RegisterMessageHandlersMessage
                                             {
                                                 SocketIdentity = receivingSocketIdentity,
-                                                Registrations = new[]
+                                                MessageHandlers = new[]
                                                                 {
                                                                     new MessageHandlerRegistration
                                                                     {

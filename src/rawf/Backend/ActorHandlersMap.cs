@@ -36,7 +36,7 @@ namespace rawf.Backend
             throw new KeyNotFoundException(identifier.ToString());
         }
 
-        public IEnumerable<MessageHandlerIdentifier> GetRegisteredIdentifiers()
+        public IEnumerable<MessageHandlerIdentifier> GetMessageHandlerIdentifiers()
         {
             return messageHandlers.Keys;
         }

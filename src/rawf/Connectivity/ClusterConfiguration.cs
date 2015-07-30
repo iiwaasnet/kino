@@ -18,7 +18,7 @@ namespace rawf.Connectivity
             return clusterMembers;
         }
 
-        public void UpdateClusterMembers(IEnumerable<ClusterMember> newConfig)
+        public void TryAddClusterMember(ClusterMember node)
         {
             throw new NotImplementedException();
         }

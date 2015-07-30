@@ -37,7 +37,7 @@ namespace rawf.Backend
         {
             AssertActorIsAssigned();
 
-            var participantCount = 3;
+            const int participantCount = 3;
             using (var gateway = new Barrier(participantCount))
             {
                 syncProcessing = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token, gateway),
@@ -51,7 +51,7 @@ namespace rawf.Backend
 
         private void AssertActorIsAssigned()
         {
-            if (!actorHandlersMap.GetRegisteredIdentifiers().Any())
+            if (!actorHandlersMap.GetMessageHandlerIdentifiers().Any())
             {
                 throw new Exception("Actor is not assigned!");
             }
@@ -68,7 +68,7 @@ namespace rawf.Backend
         {
             try
             {
-                using (var localSocket = connectivityProvider.CreateActorAsyncSocket())
+                using (var localSocket = connectivityProvider.CreateOneWaySocket())
                 {
                     gateway.SignalAndWait(token);
 
@@ -110,7 +110,7 @@ namespace rawf.Backend
         {
             try
             {
-                using (var localSocket = connectivityProvider.CreateActorSyncSocket())
+                using (var localSocket = connectivityProvider.CreateRoutableSocket())
                 {
                     RegisterActor(localSocket);
 
@@ -238,13 +238,12 @@ namespace rawf.Backend
             var payload = new RegisterMessageHandlersMessage
                           {
                               SocketIdentity = socket.GetIdentity(),
-                              Registrations = actorHandlersMap
-                                  .GetRegisteredIdentifiers()
+                              MessageHandlers = actorHandlersMap
+                                  .GetMessageHandlerIdentifiers()
                                   .Select(mh => new MessageHandlerRegistration
                                                 {
                                                     Identity = mh.Identity,
-                                                    Version = mh.Version,
-                                                    IdentityType = IdentityType.Actor
+                                                    Version = mh.Version
                                                 })
                                   .ToArray()
                           };

@@ -64,7 +64,7 @@ namespace Console
             var clusterConfig = new ClusterConfiguration(new ClusterMember {Uri = new Uri(PeerEndpointAddress1)});
             var connectivityProvider = new ConnectivityProvider(new SocketFactory(), routerConfig, clusterConfig);
 
-            var messageRouter = new MessageRouter(connectivityProvider, new RoutingTable());
+            var messageRouter = new MessageRouter(connectivityProvider, new InternalRoutingTable());
             messageRouter.Start();
 
             var actors = CreateActors(connectivityProvider, 1).ToList();
@@ -81,7 +81,7 @@ namespace Console
             var routerConfig = new NodeConfiguration(LocalEndpointAddress1, PeerEndpointAddress1);
             var clusterConfig = new ClusterConfiguration(new ClusterMember {Uri = new Uri(PeerEndpointAddress2)});
             var connectivityProvider = new ConnectivityProvider(new SocketFactory(), routerConfig, clusterConfig);
-            var messageRouter = new MessageRouter(connectivityProvider, new RoutingTable());
+            var messageRouter = new MessageRouter(connectivityProvider, new InternalRoutingTable());
             messageRouter.Start();
 
             var messageHub = new MessageHub(connectivityProvider, new CallbackHandlerStack());

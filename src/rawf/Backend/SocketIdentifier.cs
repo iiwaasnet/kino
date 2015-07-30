@@ -26,7 +26,7 @@ namespace rawf.Backend
 
         public override int GetHashCode()
         {
-            return SocketId?.GetHashCode() ?? 0;
+            return SocketId?.Length * 397 ?? 0;
         }
 
         public bool Equals(SocketIdentifier other)

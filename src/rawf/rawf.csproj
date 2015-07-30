@@ -59,7 +59,9 @@
   <ItemGroup>
     <Compile Include="Backend\ActorHost.cs" />
     <Compile Include="Backend\ActorHandlersMap.cs" />
-    <Compile Include="Backend\IRoutingTable.cs" />
+    <Compile Include="Backend\ExternalRoutingTable.cs" />
+    <Compile Include="Backend\IExternalRoutingTable.cs" />
+    <Compile Include="Backend\IInternalRoutingTable.cs" />
     <Compile Include="Backend\MessagesCompletionQueue.cs" />
     <Compile Include="Backend\AsyncMessageContext.cs" />
     <Compile Include="Backend\Diagnostics\ExceptionHandlerActor.cs" />
@@ -81,7 +83,7 @@
     <Compile Include="Connectivity\IConnectivityProvider.cs" />
     <Compile Include="Backend\MessageDefinition.cs" />
     <Compile Include="Backend\MessageHandler.cs" />
-    <Compile Include="Backend\RoutingTable.cs" />
+    <Compile Include="Backend\InternalRoutingTable.cs" />
     <Compile Include="Backend\MessageMap.cs" />
     <Compile Include="Backend\MessageRouter.cs" />
     <Compile Include="Connectivity\ConnectivityProvider.cs" />
@@ -111,8 +113,8 @@
     <Compile Include="MessageHandlerIdentifier.cs" />
     <Compile Include="Messaging\Messages\MessageHandlerRegistration.cs" />
     <Compile Include="Messaging\Messages\ExceptionMessage.cs" />
-    <Compile Include="Messaging\Messages\MessageRegistration.cs" />
-    <Compile Include="Messaging\Messages\RouteRegistrationMessage.cs" />
+    <Compile Include="Messaging\Messages\RegisterMessageHandlersRoutingMessage.cs" />
+    <Compile Include="Messaging\Messages\RequestMessageHandlersRoutingMessage.cs" />
     <Compile Include="Messaging\MultipartMessage.cs" />
     <Compile Include="Messaging\MultipartMessage.Frames.cs" />
     <Compile Include="Messaging\NewtonJsonMessageSerializer.cs" />
