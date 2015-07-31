@@ -7,5 +7,6 @@ namespace rawf.Sockets
         ISocket CreateDealerSocket();
         ISocket CreateRouterSocket();
         ISocket CreateSubscriberSocket();
+        ISocket CreatePublisherSocket();
     }
 }

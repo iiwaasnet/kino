@@ -26,6 +26,11 @@ namespace rawf.Sockets
             return new Socket(context.CreateSubscriberSocket());
         }
 
+        public ISocket CreatePublisherSocket()
+        {
+            return new Socket(context.CreatePublisherSocket());
+        }
+
         public void Dispose()
         {
             context.Dispose();

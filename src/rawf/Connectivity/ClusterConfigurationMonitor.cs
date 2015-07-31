@@ -54,7 +54,7 @@ namespace rawf.Connectivity
         {
             try
             {
-                using (var sendingSocket = connectivityProvider.CreateRendezvousSendingSocket())
+                using (var sendingSocket = connectivityProvider.CreateClusterMonitorSendingSocket())
                 {
                     gateway.SignalAndWait(token);
 
@@ -77,7 +77,7 @@ namespace rawf.Connectivity
         {
             try
             {
-                using (var subscriber = connectivityProvider.CreateRendezvousSubscriptionSocket())
+                using (var subscriber = connectivityProvider.CreateClusterMonitorSubscriptionSocket())
                 {
                     using (var routerNotificationSocket = connectivityProvider.CreateOneWaySocket())
                     {

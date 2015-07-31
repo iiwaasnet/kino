@@ -141,8 +141,7 @@ namespace rawf.Frontend
                                                                     new MessageHandlerRegistration
                                                                     {
                                                                         Version = Message.CurrentVersion,
-                                                                        Identity = receivingSocketIdentity,
-                                                                        IdentityType = IdentityType.Callback
+                                                                        Identity = receivingSocketIdentity
                                                                     }
                                                                 }
                                             }, RegisterMessageHandlersMessage.MessageIdentity);

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using rawf.Sockets;
 
 namespace rawf.Connectivity
@@ -10,8 +11,10 @@ namespace rawf.Connectivity
         ISocket CreateScaleOutBackendSocket();
         ISocket CreateRoutableSocket();
         ISocket CreateOneWaySocket();
-        ISocket CreateRendezvousSubscriptionSocket();
-        ISocket CreateRendezvousSendingSocket();
+        ISocket CreateClusterMonitorSubscriptionSocket();
+        ISocket CreateClusterMonitorSendingSocket();
         IEnumerable<NodeIdentity> GetClusterIdentities();
+        ISocket CreateRendezvousBroadcastSocket();
+        ISocket CreateRendezvousUnicastSocket();
     }
 }

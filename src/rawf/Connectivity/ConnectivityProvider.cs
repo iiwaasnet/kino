@@ -77,16 +77,16 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        public ISocket CreateRendezvousSendingSocket()
+        public ISocket CreateClusterMonitorSendingSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.SetIdentity(currentRendezvousServer.P2PEndpoint.Identity);
-            socket.Connect(currentRendezvousServer.P2PEndpoint.Uri);
+            socket.SetIdentity(currentRendezvousServer.UnicastEndpoint.Identity);
+            socket.Connect(currentRendezvousServer.UnicastEndpoint.Uri);
 
             return socket;
         }
 
-        public ISocket CreateRendezvousSubscriptionSocket()
+        public ISocket CreateClusterMonitorSubscriptionSocket()
         {
             var socket = socketFactory.CreateSubscriberSocket();
             socket.Connect(currentRendezvousServer.BroadcastEndpoint);
@@ -97,6 +97,16 @@ namespace rawf.Connectivity
         public IEnumerable<NodeIdentity> GetClusterIdentities()
         {
             return clusterConfiguration.GetClusterMembers().Select(m => new NodeIdentity {Value = m.Identity});
+        }
+
+        public ISocket CreateRendezvousBroadcastSocket()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ISocket CreateRendezvousUnicastSocket()
+        {
+            throw new NotImplementedException();
         }
     }
 }
