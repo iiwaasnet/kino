@@ -52,10 +52,15 @@ namespace rawf.Rendezvous
                     }
                 }
             }
-            catch (Exception err) when (!(err is OperationCanceledException))
+            catch (Exception err) when (!CancelledStoppingService(err))
             {
                 Console.WriteLine(err);
             }
+        }
+
+        private static bool CancelledStoppingService(Exception err)
+        {
+            return err is OperationCanceledException;
         }
 
         private ISocket CreateUnicastSocket()
