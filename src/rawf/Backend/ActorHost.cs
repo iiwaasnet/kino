@@ -120,25 +120,22 @@ namespace rawf.Backend
                     {
                         try
                         {
-                            var request = localSocket.ReceiveMessage(token);
-                            if (request != null)
+                            var message = localSocket.ReceiveMessage(token);
+                            if (message != null)
                             {
-                                var multipart = new MultipartMessage(request);
-
                                 try
                                 {
-                                    var messageIn = new Message(multipart);
-                                    var actorIdentifier = new MessageHandlerIdentifier(messageIn.Version, messageIn.Identity);
+                                    var actorIdentifier = new MessageHandlerIdentifier(message.Version, message.Identity);
                                     var handler = actorHandlersMap.Get(actorIdentifier);
 
-                                    var task = handler(messageIn);
+                                    var task = handler(message);
 
-                                    HandleTaskResult(token, task, messageIn, localSocket);
+                                    HandleTaskResult(token, task, message, localSocket);
                                 }
                                 catch (Exception err)
                                 {
                                     //TODO: Add more context to exception about which Actor failed
-                                    CallbackException(localSocket, err, multipart);
+                                    CallbackException(localSocket, err, message);
                                 }
                             }
                         }
@@ -173,13 +170,13 @@ namespace rawf.Backend
             }
         }
 
-        private void CallbackException(ISocket localSocket, Exception err, MultipartMessage inMessage)
+        private void CallbackException(ISocket localSocket, Exception err, IMessage messageIn)
         {
-            var message = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
-            message.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, inMessage.GetCallbackReceiverIdentity());
-            message.SetCorrelationId(inMessage.GetCorrelationId());
+            var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
+            messageOut.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, messageIn.CallbackReceiverIdentity);
+            messageOut.SetCorrelationId(messageIn.CorrelationId);
 
-            localSocket.SendMessage(message);
+            localSocket.SendMessage(messageOut);
         }
 
         private void EnqueueTaskForCompletion(CancellationToken token, Task<IMessage> task, IMessage messageIn)

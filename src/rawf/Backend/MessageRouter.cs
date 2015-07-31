@@ -71,8 +71,11 @@ namespace rawf.Backend
                         try
                         {
                             var message = (Message) scaleOutFrontend.ReceiveMessage(token);
-                            message.SetSocketIdentity(localSocketIdentity);
-                            scaleOutFrontend.SendMessage(message);
+                            if (message != null)
+                            {
+                                message.SetSocketIdentity(localSocketIdentity);
+                                scaleOutFrontend.SendMessage(message);
+                            }
                         }
                         catch (Exception err)
                         {
@@ -105,26 +108,28 @@ namespace rawf.Backend
                             try
                             {
                                 var message = (Message) localSocket.ReceiveMessage(token);
-
-                                var messageHandled = TryHandleServiceMessage(message);
-
-                                if(!messageHandled)
+                                if (message != null)
                                 {
-                                    var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
+                                    var messageHandled = TryHandleServiceMessage(message);
 
-                                    var handler = internalRoutingTable.Pop(messageHandlerIdentifier);
-                                    if (handler != null)
+                                    if (!messageHandled)
                                     {
-                                        message.SetSocketIdentity(handler.SocketId);
-                                        localSocket.SendMessage(message);
-                                    }
-                                    else
-                                    {
-                                        handler = externalRoutingTable.Pop(messageHandlerIdentifier);
+                                        var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
+
+                                        var handler = internalRoutingTable.Pop(messageHandlerIdentifier);
                                         if (handler != null)
                                         {
                                             message.SetSocketIdentity(handler.SocketId);
-                                            scaleOutBackend.SendMessage(message);
+                                            localSocket.SendMessage(message);
+                                        }
+                                        else
+                                        {
+                                            handler = externalRoutingTable.Pop(messageHandlerIdentifier);
+                                            if (handler != null)
+                                            {
+                                                message.SetSocketIdentity(handler.SocketId);
+                                                scaleOutBackend.SendMessage(message);
+                                            }
                                         }
                                     }
                                 }

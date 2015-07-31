@@ -44,7 +44,10 @@ namespace rawf.Rendezvous
                         while (!token.IsCancellationRequested)
                         {
                             var message = unicastSocket.ReceiveMessage(token);
-                            broadcastSocket.SendMessage(message);
+                            if (message != null)
+                            {
+                                broadcastSocket.SendMessage(message);
+                            }
                         }
                     }
                 }

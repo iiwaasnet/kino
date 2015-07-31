@@ -109,14 +109,17 @@ namespace rawf.Frontend
                     {
                         try
                         {
-                            var messageIn = socket.ReceiveMessage(token);
-                            var callback = (Promise) callbackHandlers.Pop(new CallbackHandlerKey
-                                                                          {
-                                                                              Version = messageIn.Version,
-                                                                              Identity = messageIn.Identity,
-                                                                              Correlation = messageIn.CorrelationId
-                                                                          });
-                            callback?.SetResult(messageIn);
+                            var message = socket.ReceiveMessage(token);
+                            if (message != null)
+                            {
+                                var callback = (Promise) callbackHandlers.Pop(new CallbackHandlerKey
+                                                                              {
+                                                                                  Version = message.Version,
+                                                                                  Identity = message.Identity,
+                                                                                  Correlation = message.CorrelationId
+                                                                              });
+                                callback?.SetResult(message);
+                            }
                         }
                         catch (Exception err)
                         {
