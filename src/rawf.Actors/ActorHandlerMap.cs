@@ -6,11 +6,11 @@ using rawf.Framework;
 
 namespace rawf.Actors
 {
-    public class ActorHandlersMap : IActorHandlersMap
+    public class ActorHandlerMap : IActorHandlerMap
     {
         private readonly ConcurrentDictionary<MessageHandlerIdentifier, MessageHandler> messageHandlers;
 
-        public ActorHandlersMap()
+        public ActorHandlerMap()
         {
             messageHandlers = new ConcurrentDictionary<MessageHandlerIdentifier, MessageHandler>();
         }

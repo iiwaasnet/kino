@@ -64,9 +64,7 @@
     <Compile Include="Connectivity\ExternalRoutingTable.cs" />
     <Compile Include="Connectivity\IExternalRoutingTable.cs" />
     <Compile Include="Connectivity\IInternalRoutingTable.cs" />
-    <Compile Include="Connectivity\MessagesCompletionQueue.cs" />
     <Compile Include="Connectivity\AsyncMessageContext.cs" />
-    <Compile Include="Connectivity\IMessagesCompletionQueue.cs" />
     <Compile Include="Connectivity\IMessageRouter.cs" />
     <Compile Include="Connectivity\IHostConfiguration.cs" />
     <Compile Include="Connectivity\RendezvousConfiguration.cs" />

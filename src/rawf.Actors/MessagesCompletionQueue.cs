@@ -1,8 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using rawf.Connectivity;
 
-namespace rawf.Connectivity
+namespace rawf.Actors
 {
     public class MessagesCompletionQueue : IMessagesCompletionQueue
     {

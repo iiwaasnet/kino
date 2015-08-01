@@ -33,6 +33,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
@@ -51,17 +55,27 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActorHandlersMap.cs" />
+    <Compile Include="ActorHandlerMap.cs" />
     <Compile Include="ActorHost.cs" />
+    <Compile Include="ApplicationConfiguration.cs" />
     <Compile Include="Diagnostics\ExceptionHandlerActor.cs" />
     <Compile Include="IActor.cs" />
-    <Compile Include="IActorHandlersMap.cs" />
+    <Compile Include="IActorHandlerMap.cs" />
     <Compile Include="IActorHost.cs" />
+    <Compile Include="IMessagesCompletionQueue.cs" />
+    <Compile Include="IRouterConfigurationProvider.cs" />
+    <Compile Include="MainModule.cs" />
+    <Compile Include="MessagesCompletionQueue.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RendezvousEndpoint.cs" />
+    <Compile Include="RouterConfigurationProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="config\Application.config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +84,7 @@
       <Name>rawf</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

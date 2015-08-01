@@ -11,7 +11,7 @@ namespace rawf.Actors
 {
     public class ActorHost : IActorHost
     {
-        private readonly IActorHandlersMap actorHandlersMap;
+        private readonly IActorHandlerMap actorHandlerMap;
         private Task syncProcessing;
         private Task asyncProcessing;
         private readonly CancellationTokenSource cancellationTokenSource;
@@ -20,11 +20,11 @@ namespace rawf.Actors
         private readonly IRouterConfiguration routerConfiguration;
 
         public ActorHost(ISocketFactory socketFactory,
-                         IActorHandlersMap actorHandlersMap,
+                         IActorHandlerMap actorHandlerMap,
                          IMessagesCompletionQueue messagesCompletionQueue,
                          IRouterConfiguration routerConfiguration)
         {
-            this.actorHandlersMap = actorHandlersMap;
+            this.actorHandlerMap = actorHandlerMap;
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
             this.messagesCompletionQueue = messagesCompletionQueue;
@@ -33,7 +33,7 @@ namespace rawf.Actors
 
         public void AssignActor(IActor actor)
         {
-            actorHandlersMap.Add(actor);
+            actorHandlerMap.Add(actor);
         }
 
         public void Start()
@@ -54,7 +54,7 @@ namespace rawf.Actors
 
         private void AssertActorIsAssigned()
         {
-            if (!actorHandlersMap.GetMessageHandlerIdentifiers().Any())
+            if (!actorHandlerMap.GetMessageHandlerIdentifiers().Any())
             {
                 throw new Exception("Actor is not assigned!");
             }
@@ -128,7 +128,7 @@ namespace rawf.Actors
                                 try
                                 {
                                     var actorIdentifier = new MessageHandlerIdentifier(message.Version, message.Identity);
-                                    var handler = actorHandlersMap.Get(actorIdentifier);
+                                    var handler = actorHandlerMap.Get(actorIdentifier);
 
                                     var task = handler(message);
 
@@ -239,7 +239,7 @@ namespace rawf.Actors
             var payload = new RegisterMessageHandlersMessage
                           {
                               SocketIdentity = socket.GetIdentity(),
-                              MessageHandlers = actorHandlersMap
+                              MessageHandlers = actorHandlerMap
                                   .GetMessageHandlerIdentifiers()
                                   .Select(mh => new MessageHandlerRegistration
                                                 {

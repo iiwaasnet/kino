@@ -3,7 +3,7 @@ using rawf.Connectivity;
 
 namespace rawf.Actors
 {
-    public interface IActorHandlersMap
+    public interface IActorHandlerMap
     {
         void Add(IActor actor);
         MessageHandler Get(MessageHandlerIdentifier identifier);
