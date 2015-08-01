@@ -2,6 +2,6 @@
     "dev": {
         "broadcastUri": "tcp://127.0.0.1:5000",
         "unicastUri": "tcp://127.0.0.1:5001",
-        "unicastSocketIdentity":  [127, 0, 0, 1, 5, 0, 0, 1]
+        "unicastSocketIdentity": [ 127, 0, 0, 1, 5, 0, 0, 1 ]
     }
 }

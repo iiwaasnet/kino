@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
+using rawf.Sockets;
 
 namespace rawf.Connectivity
 {
@@ -15,23 +16,26 @@ namespace rawf.Connectivity
         private Task scaleOutRouting;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly IExternalRoutingTable externalRoutingTable;
-        private readonly IConnectivityProvider connectivityProvider;
+        private readonly ISocketFactory socketFactory;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly IClusterConfigurationMonitor clusterConfigurationMonitor;
-        private readonly INodeConfiguration nodeConfiguration;
+        private readonly IClusterConfiguration clusterConfiguration;
+        private readonly IRouterConfiguration routerConfiguration;
 
-        public MessageRouter(IConnectivityProvider connectivityProvider,
+        public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
                              IExternalRoutingTable externalRoutingTable,
-                             INodeConfiguration nodeConfiguration = null,
-                             IClusterConfigurationMonitor clusterConfigurationMonitor = null)
+                             IClusterConfiguration clusterConfiguration,
+                             IRouterConfiguration routerConfiguration,
+                             IClusterConfigurationMonitor clusterConfigurationMonitor)
         {
-            this.connectivityProvider = connectivityProvider;
+            this.socketFactory = socketFactory;
+            this.clusterConfiguration = clusterConfiguration;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
             this.clusterConfigurationMonitor = clusterConfigurationMonitor;
-            this.nodeConfiguration = nodeConfiguration;
+            this.routerConfiguration = routerConfiguration;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -60,7 +64,7 @@ namespace rawf.Connectivity
         {
             try
             {
-                using (var scaleOutFrontend = connectivityProvider.CreateScaleOutFrontendSocket())
+                using (var scaleOutFrontend = CreateScaleOutFrontendSocket())
                 {
                     var localSocketIdentity = localSocketIdentityPromise.Task.Result;
                     gateway.SignalAndWait(token);
@@ -89,16 +93,27 @@ namespace rawf.Connectivity
             }
         }
 
+        private ISocket CreateScaleOutFrontendSocket()
+        {
+            var socket = socketFactory.CreateRouterSocket();
+            socket.SetIdentity(routerConfiguration.ScaleOutAddress.Identity);
+            socket.SetMandatoryRouting();
+            socket.Connect(routerConfiguration.RouterAddress.Uri);
+            socket.Bind(routerConfiguration.ScaleOutAddress.Uri);
+
+            return socket;
+        }
+
         private void RouteLocalMessages(CancellationToken token, Barrier gateway)
         {
             try
             {
-                using (var localSocket = connectivityProvider.CreateRouterSocket())
+                using (var localSocket = CreateRouterSocket())
                 {
                     localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
                     clusterConfigurationMonitor.RequestMessageHandlersRouting();
 
-                    using (var scaleOutBackend = connectivityProvider.CreateScaleOutBackendSocket())
+                    using (var scaleOutBackend = CreateScaleOutBackendSocket())
                     {
                         gateway.SignalAndWait(token);
 
@@ -145,6 +160,29 @@ namespace rawf.Connectivity
             {
                 Console.WriteLine(err);
             }
+        }
+
+        private ISocket CreateScaleOutBackendSocket()
+        {
+            var socket = socketFactory.CreateRouterSocket();
+            socket.SetIdentity(routerConfiguration.ScaleOutAddress.Identity);
+            socket.SetMandatoryRouting();
+            foreach (var peer in clusterConfiguration.GetClusterMembers())
+            {
+                socket.Connect(peer.Uri);
+            }
+
+            return socket;
+        }
+
+        private ISocket CreateRouterSocket()
+        {
+            var socket = socketFactory.CreateRouterSocket();
+            socket.SetMandatoryRouting();
+            socket.SetIdentity(routerConfiguration.RouterAddress.Identity);
+            socket.Bind(routerConfiguration.RouterAddress.Uri);
+
+            return socket;
         }
 
         private bool TryHandleServiceMessage(IMessage message)
@@ -203,7 +241,7 @@ namespace rawf.Connectivity
         }
 
         private bool NotSelfSentMessage(byte[] socketIdentity)
-            => !Unsafe.Equals(nodeConfiguration.ScaleOutAddress.Identity, socketIdentity);
+            => !Unsafe.Equals(routerConfiguration.ScaleOutAddress.Identity, socketIdentity);
 
         private static bool IsMessageHandlersRoutingRequest(IMessage message)
             => Unsafe.Equals(RequestMessageHandlersRoutingMessage.MessageIdentity, message.Identity);

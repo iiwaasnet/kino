@@ -5,6 +5,6 @@ namespace rawf.Connectivity
     public interface IClusterConfiguration
     {
         IEnumerable<ClusterMember> GetClusterMembers();
-        void TryAddClusterMember(ClusterMember node);
+        void AddClusterMember(ClusterMember node);
     }
 }

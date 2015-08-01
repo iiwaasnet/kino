@@ -1,16 +1,14 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace rawf.Connectivity
 {
     public class ClusterConfiguration : IClusterConfiguration
     {
-        private IEnumerable<ClusterMember> clusterMembers;
+        private readonly HashSet<ClusterMember> clusterMembers;
 
-        public ClusterConfiguration(ClusterMember thisNodeFrontEndSocket)
+        public ClusterConfiguration()
         {
-            clusterMembers = new[] {thisNodeFrontEndSocket};
+            clusterMembers = new HashSet<ClusterMember>();
         }
 
         public IEnumerable<ClusterMember> GetClusterMembers()
@@ -18,9 +16,9 @@ namespace rawf.Connectivity
             return clusterMembers;
         }
 
-        public void TryAddClusterMember(ClusterMember node)
+        public void AddClusterMember(ClusterMember node)
         {
-            throw new NotImplementedException();
+            clusterMembers.Add(node);
         }
     }
 }

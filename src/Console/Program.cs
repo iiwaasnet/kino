@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Console.Messages;
 using rawf.Connectivity;
-using rawf.Frontend;
 using rawf.Messaging;
 using rawf.Sockets;
 
@@ -59,7 +58,7 @@ namespace Console
 
         private static void StartProcessingNode()
         {
-            var routerConfig = new NodeConfiguration(LocalEndpointAddress2, PeerEndpointAddress2);
+            var routerConfig = new RouterConfiguration(LocalEndpointAddress2, PeerEndpointAddress2);
             var clusterConfig = new ClusterConfiguration(new ClusterMember {Uri = new Uri(PeerEndpointAddress1)});
             var connectivityProvider = new ConnectivityProvider(new SocketFactory(), routerConfig, clusterConfig);
 
@@ -77,7 +76,7 @@ namespace Console
 
         private static void StartSendingNode()
         {
-            var routerConfig = new NodeConfiguration(LocalEndpointAddress1, PeerEndpointAddress1);
+            var routerConfig = new RouterConfiguration(LocalEndpointAddress1, PeerEndpointAddress1);
             var clusterConfig = new ClusterConfiguration(new ClusterMember {Uri = new Uri(PeerEndpointAddress2)});
             var connectivityProvider = new ConnectivityProvider(new SocketFactory(), routerConfig, clusterConfig);
             var messageRouter = new MessageRouter(connectivityProvider, new InternalRoutingTable());

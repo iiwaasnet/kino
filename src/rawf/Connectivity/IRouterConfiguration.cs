@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace rawf.Connectivity
+﻿namespace rawf.Connectivity
 {
-    public interface INodeConfiguration
+    public interface IRouterConfiguration
     {
         ClusterMember RouterAddress { get; }
         ClusterMember ScaleOutAddress { get; }

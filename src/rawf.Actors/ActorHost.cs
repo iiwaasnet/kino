@@ -17,16 +17,16 @@ namespace rawf.Actors
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly IMessagesCompletionQueue messagesCompletionQueue;
         private readonly ISocketFactory socketFactory;
-        private readonly INodeConfiguration nodeConfiguration;
+        private readonly IRouterConfiguration routerConfiguration;
 
         public ActorHost(ISocketFactory socketFactory,
                          IActorHandlersMap actorHandlersMap,
                          IMessagesCompletionQueue messagesCompletionQueue,
-                         INodeConfiguration nodeConfiguration)
+                         IRouterConfiguration routerConfiguration)
         {
             this.actorHandlersMap = actorHandlersMap;
             this.socketFactory = socketFactory;
-            this.nodeConfiguration = nodeConfiguration;
+            this.routerConfiguration = routerConfiguration;
             this.messagesCompletionQueue = messagesCompletionQueue;
             cancellationTokenSource = new CancellationTokenSource();
         }
@@ -255,7 +255,7 @@ namespace rawf.Actors
         private ISocket CreateOneWaySocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(nodeConfiguration.RouterAddress.Uri);
+            socket.Connect(routerConfiguration.RouterAddress.Uri);
 
             return socket;
         }
@@ -264,7 +264,7 @@ namespace rawf.Actors
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(SocketIdentifier.CreateNew());
-            socket.Connect(nodeConfiguration.RouterAddress.Uri);
+            socket.Connect(routerConfiguration.RouterAddress.Uri);
 
             return socket;
         }

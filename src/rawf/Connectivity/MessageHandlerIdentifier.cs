@@ -37,8 +37,8 @@ namespace rawf.Connectivity
         {
             unchecked
             {
-                var hashCode = (Version?.Length ?? 0);
-                hashCode = (hashCode * 397) ^ (Identity?.Length ?? 0);
+                var hashCode = Version.Length;
+                hashCode = (hashCode * 397) ^ Identity.Length;
                 return hashCode;
             }
         }

@@ -6,6 +6,7 @@ using rawf.Connectivity;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
 using rawf.Sockets;
+using TypedConfigProvider;
 
 namespace rawf.Client
 {
@@ -19,14 +20,14 @@ namespace rawf.Client
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
-        private readonly INodeConfiguration nodeConfiguration;
+        private readonly ApplicationConfiguration config;
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
-                          INodeConfiguration nodeConfiguration)
+                          IConfigProvider configProvider)
         {
             this.socketFactory = socketFactory;
-            this.nodeConfiguration = nodeConfiguration;
+            config = configProvider.GetConfiguration<ApplicationConfiguration>();
             receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             hubRegistered = new ManualResetEventSlim();
             this.callbackHandlers = callbackHandlers;
@@ -102,7 +103,7 @@ namespace rawf.Client
         private ISocket CreateOneWaySocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(nodeConfiguration.RouterAddress.Uri);
+            socket.Connect(new Uri(config.RouterUri));
 
             return socket;
         }
@@ -149,7 +150,7 @@ namespace rawf.Client
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(SocketIdentifier.CreateNew());
-            socket.Connect(nodeConfiguration.RouterAddress.Uri);
+            socket.Connect(new Uri(config.RouterUri));
 
             return socket;
         }
