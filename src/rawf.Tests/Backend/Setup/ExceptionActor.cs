@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using rawf.Backend;
+using rawf.Connectivity;
 using rawf.Messaging;
 
 namespace rawf.Tests.Backend.Setup

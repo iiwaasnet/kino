@@ -13,22 +13,25 @@ namespace rawf.Connectivity
 {
     public class ClusterConfigurationMonitor : IClusterConfigurationMonitor
     {
-        private readonly IConnectivityProvider connectivityProvider;
+        private readonly ISocketFactory socketFactory;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly BlockingCollection<IMessage> outgoingMessages;
         private readonly IClusterConfiguration clusterConfiguration;
         private readonly INodeConfiguration nodeConfiguration;
+        private readonly RendezvousServerConfiguration currentRendezvousServer;
         private Task sendingMessages;
         private Task listenningMessages;
 
-        public ClusterConfigurationMonitor(IConnectivityProvider connectivityProvider,
+        public ClusterConfigurationMonitor(ISocketFactory socketFactory,
                                            INodeConfiguration nodeConfiguration,
-                                           IClusterConfiguration clusterConfiguration)
+                                           IClusterConfiguration clusterConfiguration,
+                                           IRendezvousConfiguration rendezvousConfiguration)
         {
-            this.connectivityProvider = connectivityProvider;
+            this.socketFactory = socketFactory;
             this.nodeConfiguration = nodeConfiguration;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             cancellationTokenSource = new CancellationTokenSource();
+            currentRendezvousServer = rendezvousConfiguration.GetRendezvousServers().First();
         }
 
         public void Start()
@@ -54,7 +57,7 @@ namespace rawf.Connectivity
         {
             try
             {
-                using (var sendingSocket = connectivityProvider.CreateClusterMonitorSendingSocket())
+                using (var sendingSocket = CreateClusterMonitorSendingSocket())
                 {
                     gateway.SignalAndWait(token);
 
@@ -73,13 +76,22 @@ namespace rawf.Connectivity
             }
         }
 
+        private ISocket CreateClusterMonitorSendingSocket()
+        {
+            var socket = socketFactory.CreateDealerSocket();
+            socket.SetIdentity(currentRendezvousServer.UnicastEndpoint.Identity);
+            socket.Connect(currentRendezvousServer.UnicastEndpoint.Uri);
+
+            return socket;
+        }
+
         private void ListenMessages(CancellationToken token, Barrier gateway)
         {
             try
             {
-                using (var subscriber = connectivityProvider.CreateClusterMonitorSubscriptionSocket())
+                using (var subscriber = CreateClusterMonitorSubscriptionSocket())
                 {
-                    using (var routerNotificationSocket = connectivityProvider.CreateOneWaySocket())
+                    using (var routerNotificationSocket = CreateOneWaySocket())
                     {
                         gateway.SignalAndWait(token);
 
@@ -95,6 +107,22 @@ namespace rawf.Connectivity
             {
                 Console.WriteLine(err);
             }
+        }
+
+        private ISocket CreateClusterMonitorSubscriptionSocket()
+        {
+            var socket = socketFactory.CreateSubscriberSocket();
+            socket.Connect(currentRendezvousServer.BroadcastEndpoint);
+
+            return socket;
+        }
+
+        private ISocket CreateOneWaySocket()
+        {
+            var socket = socketFactory.CreateDealerSocket();
+            socket.Connect(nodeConfiguration.RouterAddress.Uri);
+
+            return socket;
         }
 
         private void ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)

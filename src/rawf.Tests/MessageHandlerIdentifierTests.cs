@@ -1,5 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
+using rawf.Connectivity;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
 using rawf.Tests.Backend.Setup;

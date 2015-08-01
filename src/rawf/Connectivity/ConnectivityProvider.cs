@@ -63,7 +63,7 @@ namespace rawf.Connectivity
         public ISocket CreateRoutableSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
+            socket.SetIdentity(SocketIdentifier.CreateNew());
             socket.Connect(nodeConfiguration.RouterAddress.Uri);
 
             return socket;

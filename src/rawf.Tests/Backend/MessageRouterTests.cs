@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using Moq;
 using NUnit.Framework;
-using rawf.Backend;
 using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Frontend;
@@ -71,7 +70,7 @@ namespace rawf.Tests.Backend
 
             Assert.IsNotNull(identifier);
             Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
-            CollectionAssert.AreEqual(socketIdentity, identifier.SocketId);
+            CollectionAssert.AreEqual(socketIdentity, identifier.Identity);
         }
 
         [Test]
@@ -80,7 +79,7 @@ namespace rawf.Tests.Backend
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var routerSocket = new StubSocket();
             var callbackSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
-            var callbackIdentifier = new MessageHandlerIdentifier(Message.CurrentVersion, callbackSocketIdentity.SocketId);
+            var callbackIdentifier = new MessageHandlerIdentifier(Message.CurrentVersion, callbackSocketIdentity.Identity);
 
             connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(routerSocket);
             connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
@@ -186,7 +185,7 @@ namespace rawf.Tests.Backend
             var connectivityProvider = new Mock<IConnectivityProvider>();
             var clientSendingSocket = new StubSocket();
             var clientReceivingSocket = new StubSocket();
-            clientReceivingSocket.SetIdentity(callbackSocketIdentifier.SocketId);
+            clientReceivingSocket.SetIdentity(callbackSocketIdentifier.Identity);
             connectivityProvider.Setup(m => m.CreateMessageHubSendingSocket()).Returns(clientSendingSocket);
             connectivityProvider.Setup(m => m.CreateMessageHubReceivingSocket()).Returns(clientReceivingSocket);
 

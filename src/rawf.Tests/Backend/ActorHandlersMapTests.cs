@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using rawf.Backend;
+using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;

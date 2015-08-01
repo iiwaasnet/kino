@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using NUnit.Framework;
+using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Frontend;
 using rawf.Messaging;
