@@ -82,8 +82,7 @@ namespace rawf.Connectivity
         private ISocket CreateClusterMonitorSendingSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.SetIdentity(currentRendezvousServer.UnicastEndpoint.Identity);
-            socket.Connect(currentRendezvousServer.UnicastEndpoint.Uri);
+            socket.Connect(currentRendezvousServer.UnicastUri);
 
             return socket;
         }
@@ -115,7 +114,7 @@ namespace rawf.Connectivity
         private ISocket CreateClusterMonitorSubscriptionSocket()
         {
             var socket = socketFactory.CreateSubscriberSocket();
-            socket.Connect(currentRendezvousServer.BroadcastEndpoint);
+            socket.Connect(currentRendezvousServer.BroadcastUri);
 
             return socket;
         }

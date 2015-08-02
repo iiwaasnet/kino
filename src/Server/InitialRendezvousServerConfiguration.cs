@@ -4,7 +4,7 @@ using System.Linq;
 using rawf.Connectivity;
 using TypedConfigProvider;
 
-namespace Client
+namespace Server
 {
     public class InitialRendezvousServerConfiguration : IInitialRendezvousServerConfiguration
     {

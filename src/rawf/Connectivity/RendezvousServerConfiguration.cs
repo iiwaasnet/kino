@@ -4,7 +4,7 @@ namespace rawf.Connectivity
 {
     public class RendezvousServerConfiguration
     {
-        public Uri BroadcastEndpoint { get; set; }
-        public SocketEndpoint UnicastEndpoint { get; set; }
+        public Uri BroadcastUri { get; set; }
+        public Uri UnicastUri { get; set; }
     }
 }

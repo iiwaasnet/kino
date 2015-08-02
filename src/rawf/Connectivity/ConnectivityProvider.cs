@@ -80,8 +80,8 @@ namespace rawf.Connectivity
     //    public ISocket CreateClusterMonitorSendingSocket()
     //    {
     //        var socket = socketFactory.CreateDealerSocket();
-    //        socket.SetIdentity(currentRendezvousServer.UnicastEndpoint.Identity);
-    //        socket.Connect(currentRendezvousServer.UnicastEndpoint.Uri);
+    //        socket.SetIdentity(currentRendezvousServer.UnicastUri.Identity);
+    //        socket.Connect(currentRendezvousServer.UnicastUri.Uri);
 
     //        return socket;
     //    }
@@ -89,7 +89,7 @@ namespace rawf.Connectivity
     //    public ISocket CreateClusterMonitorSubscriptionSocket()
     //    {
     //        var socket = socketFactory.CreateSubscriberSocket();
-    //        socket.Connect(currentRendezvousServer.BroadcastEndpoint);
+    //        socket.Connect(currentRendezvousServer.BroadcastUri);
 
     //        return socket;
     //    }

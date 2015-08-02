@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Threading;
 using Autofac;
 using Client.Messages;
 using rawf.Client;
+using rawf.Connectivity;
 using rawf.Messaging;
 
 namespace Client
@@ -14,7 +16,14 @@ namespace Client
             builder.RegisterModule(new MainModule());
             var container = builder.Build();
 
+            var ccMon = container.Resolve<IClusterConfigurationMonitor>();
+            ccMon.Start();
+            var messageRouter = container.Resolve<IMessageRouter>();
+            messageRouter.Start();
             var messageHub = container.Resolve<IMessageHub>();
+            messageHub.Start();
+
+            Thread.Sleep(TimeSpan.FromSeconds(20));
             
             Console.WriteLine("Client is running...");
 
@@ -25,6 +34,9 @@ namespace Client
             Console.WriteLine(resp.Ehllo);
             
             Console.ReadLine();
+            messageHub.Stop();
+            messageRouter.Stop();
+            ccMon.Stop();
         }
     }
 }

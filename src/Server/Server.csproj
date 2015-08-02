@@ -61,6 +61,8 @@
   <ItemGroup>
     <Compile Include="Actor.cs" />
     <Compile Include="ApplicationConfiguration.cs" />
+    <Compile Include="IInitialRendezvousServerConfiguration.cs" />
+    <Compile Include="InitialRendezvousServerConfiguration.cs" />
     <Compile Include="IRouterConfigurationProvider.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="Messages\EhlloMessage.cs" />
