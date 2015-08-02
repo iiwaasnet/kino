@@ -2,7 +2,7 @@
 using rawf.Connectivity;
 using TypedConfigProvider;
 
-namespace rawf.Actors
+namespace Server
 {
     public class RouterConfigurationProvider : IRouterConfigurationProvider
     {

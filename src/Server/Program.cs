@@ -1,7 +1,8 @@
 ﻿using System;
 using Autofac;
+using rawf.Actors;
 
-namespace rawf.Actors
+namespace Server
 {
     internal class Program
     {

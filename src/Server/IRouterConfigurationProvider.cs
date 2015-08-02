@@ -1,6 +1,6 @@
 ﻿using rawf.Connectivity;
 
-namespace rawf.Actors
+namespace Server
 {
     public interface IRouterConfigurationProvider
     {

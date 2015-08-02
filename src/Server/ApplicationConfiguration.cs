@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using rawf.Actors;
 
-namespace rawf.Actors
+namespace Server
 {
     public class ApplicationConfiguration
     {

@@ -11,14 +11,6 @@ namespace rawf.Client
         {
             builder.RegisterModule(new rawf.MainModule());
 
-            builder.RegisterType<ConfigProvider>()
-                   .As<IConfigProvider>()
-                   .SingleInstance();
-
-            builder.RegisterType<AppConfigTargetProvider>()
-                   .As<IConfigTargetProvider>()
-                   .SingleInstance();
-
             builder.RegisterType<MessageHub>()
                    .As<IMessageHub>()
                    .SingleInstance();
