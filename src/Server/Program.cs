@@ -13,6 +13,7 @@ namespace Server
             var container = builder.Build();
 
             var actorHost = container.Resolve<IActorHost>();
+            actorHost.AssignActor(new Actor());
             actorHost.Start();
 
             Console.WriteLine("ActorHost started...");
