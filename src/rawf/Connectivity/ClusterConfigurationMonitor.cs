@@ -100,7 +100,10 @@ namespace rawf.Connectivity
                         while (!token.IsCancellationRequested)
                         {
                             var message = subscriber.ReceiveMessage(token);
-                            ProcessIncomingMessage(message, routerNotificationSocket);
+                            if (message != null)
+                            {
+                                ProcessIncomingMessage(message, routerNotificationSocket);
+                            }
                         }
                     }
                 }
@@ -115,6 +118,7 @@ namespace rawf.Connectivity
         {
             var socket = socketFactory.CreateSubscriberSocket();
             socket.Connect(currentRendezvousServer.BroadcastUri);
+            socket.Subscribe();
 
             return socket;
         }

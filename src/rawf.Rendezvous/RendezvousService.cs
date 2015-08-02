@@ -66,7 +66,6 @@ namespace rawf.Rendezvous
         private ISocket CreateUnicastSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
-            //socket.SetIdentity(config.UnicastSocketIdentity);
             socket.Bind(new Uri(config.UnicastUri));
 
             return socket;

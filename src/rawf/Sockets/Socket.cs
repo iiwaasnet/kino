@@ -53,6 +53,10 @@ namespace rawf.Sockets
             socket.Bind(address.ToSocketAddress());
         }
 
+        public void Subscribe(string topic = "")
+        {
+            socket.Subscribe(topic);
+        }
 
         public void Disconnect(Uri address)
         {
