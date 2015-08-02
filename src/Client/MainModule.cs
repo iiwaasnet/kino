@@ -20,6 +20,14 @@ namespace Client
                    .As<IConfigTargetProvider>()
                    .SingleInstance();
 
+            builder.RegisterType<MessageHubConfigurationProvider>()
+                   .As<IMessageHubConfigurationProvider>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IMessageHubConfigurationProvider>().GetConfiguration())
+                   .As<IMessageHubConfiguration>()
+                   .SingleInstance();
+
             builder.RegisterType<RouterConfigurationProvider>()
                    .As<IRouterConfigurationProvider>()
                    .SingleInstance();

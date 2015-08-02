@@ -2,7 +2,7 @@ using System;
 
 namespace rawf.Client
 {
-    public interface IMessagHubConfiguration
+    public interface IMessageHubConfiguration
     {
         Uri RouterUri { get; set; }
     }

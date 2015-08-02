@@ -20,6 +20,7 @@ namespace Client
 
             Console.WriteLine("Client is running...");
             Console.ReadLine();
+            Console.WriteLine("Client stopped.");
         }
     }
 }

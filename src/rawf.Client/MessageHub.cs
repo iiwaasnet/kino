@@ -19,11 +19,11 @@ namespace rawf.Client
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
-        private readonly IMessagHubConfiguration config;
+        private readonly IMessageHubConfiguration config;
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
-                          IMessagHubConfiguration config)
+                          IMessageHubConfiguration config)
         {
             this.socketFactory = socketFactory;
             this.config = config;
