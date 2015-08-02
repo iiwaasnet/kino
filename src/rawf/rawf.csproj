@@ -71,7 +71,7 @@
     <Compile Include="Connectivity\RendezvousServerConfiguration.cs" />
     <Compile Include="Connectivity\ClusterConfiguration.cs" />
     <Compile Include="Connectivity\ClusterConfigurationMonitor.cs" />
-    <Compile Include="Connectivity\ClusterMember.cs" />
+    <Compile Include="Connectivity\SocketEndpoint.cs" />
     <Compile Include="Connectivity\IRendezvousConfiguration.cs" />
     <Compile Include="Connectivity\IClusterConfiguration.cs" />
     <Compile Include="Connectivity\IClusterConfigurationMonitor.cs" />

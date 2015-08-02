@@ -4,7 +4,7 @@ namespace rawf.Connectivity
 {
     public interface IClusterConfiguration
     {
-        IEnumerable<ClusterMember> GetClusterMembers();
-        void AddClusterMember(ClusterMember node);
+        IEnumerable<SocketEndpoint> GetClusterMembers();
+        void AddClusterMember(SocketEndpoint node);
     }
 }

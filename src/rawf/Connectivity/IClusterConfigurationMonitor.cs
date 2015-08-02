@@ -8,6 +8,6 @@ namespace rawf.Connectivity
         void Stop();
         void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers);
         void RequestMessageHandlersRouting();
-        void UnregisterMember(ClusterMember member);
+        void UnregisterMember(SocketEndpoint member);
     }
 }

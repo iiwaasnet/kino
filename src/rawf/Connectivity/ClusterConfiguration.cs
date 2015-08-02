@@ -4,19 +4,19 @@ namespace rawf.Connectivity
 {
     public class ClusterConfiguration : IClusterConfiguration
     {
-        private readonly HashSet<ClusterMember> clusterMembers;
+        private readonly HashSet<SocketEndpoint> clusterMembers;
 
         public ClusterConfiguration()
         {
-            clusterMembers = new HashSet<ClusterMember>();
+            clusterMembers = new HashSet<SocketEndpoint>();
         }
 
-        public IEnumerable<ClusterMember> GetClusterMembers()
+        public IEnumerable<SocketEndpoint> GetClusterMembers()
         {
             return clusterMembers;
         }
 
-        public void AddClusterMember(ClusterMember node)
+        public void AddClusterMember(SocketEndpoint node)
         {
             clusterMembers.Add(node);
         }

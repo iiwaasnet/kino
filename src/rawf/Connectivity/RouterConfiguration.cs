@@ -4,7 +4,7 @@ namespace rawf.Connectivity
 {
     public class RouterConfiguration : IRouterConfiguration
     {
-        public ClusterMember RouterAddress { get; set; }
-        public ClusterMember ScaleOutAddress { get; set; }
+        public SocketEndpoint RouterAddress { get; set; }
+        public SocketEndpoint ScaleOutAddress { get; set; }
     }
 }

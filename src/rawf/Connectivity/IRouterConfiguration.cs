@@ -2,7 +2,7 @@
 {
     public interface IRouterConfiguration
     {
-        ClusterMember RouterAddress { get; }
-        ClusterMember ScaleOutAddress { get; }
+        SocketEndpoint RouterAddress { get; }
+        SocketEndpoint ScaleOutAddress { get; }
     }
 }

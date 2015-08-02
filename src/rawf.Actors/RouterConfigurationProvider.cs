@@ -14,8 +14,8 @@ namespace rawf.Actors
 
             config = new RouterConfiguration
                      {
-                         RouterAddress = new ClusterMember(new Uri(tmp.RouterUri), tmp.RouterSocketIdentity),
-                         ScaleOutAddress = new ClusterMember(new Uri(tmp.ScaleOutAddressUri), tmp.ScaleOutSocketIdentity)
+                         RouterAddress = new SocketEndpoint(new Uri(tmp.RouterUri), tmp.RouterSocketIdentity),
+                         ScaleOutAddress = new SocketEndpoint(new Uri(tmp.ScaleOutAddressUri), tmp.ScaleOutSocketIdentity)
                      };
         }
 

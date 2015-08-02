@@ -18,6 +18,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rawf.Client", "rawf.Client\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rawf.Actors", "rawf.Actors\rawf.Actors.csproj", "{3231A7B7-C50A-4062-B5ED-BA00FCE9A77B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{3231A7B7-C50A-4062-B5ED-BA00FCE9A77B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3231A7B7-C50A-4062-B5ED-BA00FCE9A77B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3231A7B7-C50A-4062-B5ED-BA00FCE9A77B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

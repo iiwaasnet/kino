@@ -1,4 +1,4 @@
-﻿namespace rawf.Client
+﻿namespace Client
 {
     public class RendezvousEndpoint
     {

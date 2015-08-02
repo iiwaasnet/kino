@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using rawf.Client;
 
-namespace rawf.Client
+namespace Client
 {
     public class ApplicationConfiguration
     {

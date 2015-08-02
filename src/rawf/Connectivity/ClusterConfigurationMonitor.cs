@@ -133,7 +133,7 @@ namespace rawf.Connectivity
             if (Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity))
             {
                 var registration = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
-                var clusterMember = new ClusterMember(new Uri(registration.Uri), registration.SocketIdentity);
+                var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
                 clusterConfiguration.AddClusterMember(clusterMember);
                 routerNotificationSocket.SendMessage(message);
             }
@@ -141,7 +141,7 @@ namespace rawf.Connectivity
 
         public void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers)
         {
-            var self = new ClusterMember(routerConfiguration.ScaleOutAddress.Uri,
+            var self = new SocketEndpoint(routerConfiguration.ScaleOutAddress.Uri,
                                          routerConfiguration.ScaleOutAddress.Identity);
 
             var message = Message.Create(new RegisterMessageHandlersRoutingMessage
@@ -169,7 +169,7 @@ namespace rawf.Connectivity
             outgoingMessages.Add(message);
         }
 
-        public void UnregisterMember(ClusterMember member)
+        public void UnregisterMember(SocketEndpoint member)
         {
             throw new NotImplementedException();
         }

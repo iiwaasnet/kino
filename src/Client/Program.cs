@@ -1,18 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Autofac;
+using rawf.Client;
 
-namespace rawf.Client
+namespace Client
 {
-    internal class Program
+    class Program
     {
-        private static void Main(string[] args)
+        static void Main(string[] args)
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule(new MainModule());
             var container = builder.Build();
 
             var messageHub = container.Resolve<IMessageHub>();
-            
+
             Console.WriteLine("Client is running...");
             Console.ReadLine();
         }

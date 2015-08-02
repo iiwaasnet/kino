@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using rawf.Connectivity;
 
-namespace rawf.Client
+namespace Client
 {
     public interface IInitialRendezvousServerConfiguration
     {

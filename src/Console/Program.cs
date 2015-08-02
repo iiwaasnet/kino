@@ -59,7 +59,7 @@ namespace Console
         private static void StartProcessingNode()
         {
             var routerConfig = new RouterConfiguration(LocalEndpointAddress2, PeerEndpointAddress2);
-            var clusterConfig = new ClusterConfiguration(new ClusterMember {Uri = new Uri(PeerEndpointAddress1)});
+            var clusterConfig = new ClusterConfiguration(new SocketEndpoint {Uri = new Uri(PeerEndpointAddress1)});
             var connectivityProvider = new ConnectivityProvider(new SocketFactory(), routerConfig, clusterConfig);
 
             var messageRouter = new MessageRouter(connectivityProvider, new InternalRoutingTable());
@@ -77,7 +77,7 @@ namespace Console
         private static void StartSendingNode()
         {
             var routerConfig = new RouterConfiguration(LocalEndpointAddress1, PeerEndpointAddress1);
-            var clusterConfig = new ClusterConfiguration(new ClusterMember {Uri = new Uri(PeerEndpointAddress2)});
+            var clusterConfig = new ClusterConfiguration(new SocketEndpoint {Uri = new Uri(PeerEndpointAddress2)});
             var connectivityProvider = new ConnectivityProvider(new SocketFactory(), routerConfig, clusterConfig);
             var messageRouter = new MessageRouter(connectivityProvider, new InternalRoutingTable());
             messageRouter.Start();

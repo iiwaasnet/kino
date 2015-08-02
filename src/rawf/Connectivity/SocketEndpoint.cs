@@ -3,11 +3,11 @@ using rawf.Framework;
 
 namespace rawf.Connectivity
 {
-    public class ClusterMember : IEquatable<ClusterMember>
+    public class SocketEndpoint : IEquatable<SocketEndpoint>
     {
         private readonly int hashCode;
 
-        public ClusterMember(Uri uri, byte[] identity)
+        public SocketEndpoint(Uri uri, byte[] identity)
         {
             Uri = uri;
             Identity = identity;
@@ -29,10 +29,10 @@ namespace rawf.Connectivity
             {
                 return false;
             }
-            return Equals((ClusterMember) obj);
+            return Equals((SocketEndpoint) obj);
         }
 
-        public bool Equals(ClusterMember other)
+        public bool Equals(SocketEndpoint other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -45,7 +45,7 @@ namespace rawf.Connectivity
             return StructuralCompare(other);
         }
 
-        private bool StructuralCompare(ClusterMember other)
+        private bool StructuralCompare(SocketEndpoint other)
         {
             return Unsafe.Equals(Identity, other.Identity)
                    && Uri.AbsoluteUri == other.Uri.AbsoluteUri;

@@ -4,7 +4,7 @@ using System.Linq;
 using rawf.Connectivity;
 using TypedConfigProvider;
 
-namespace rawf.Client
+namespace Client
 {
     public class InitialRendezvousServerConfiguration : IInitialRendezvousServerConfiguration
     {
@@ -16,7 +16,7 @@ namespace rawf.Client
             config = tmp.RendezvousServers.Select(rs => new RendezvousServerConfiguration
                                                         {
                                                             BroadcastEndpoint = new Uri(rs.BroadcastUri),
-                                                            UnicastEndpoint = new ClusterMember(new Uri(rs.UnicastUri), rs.UnicastSocketIdentity)
+                                                            UnicastEndpoint = new SocketEndpoint(new Uri(rs.UnicastUri), rs.UnicastSocketIdentity)
                                                         });
         }
 
