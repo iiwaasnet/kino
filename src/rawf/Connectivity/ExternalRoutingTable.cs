@@ -23,7 +23,7 @@ namespace rawf.Connectivity
 
             if (mapped)
             {
-                socketToUriMap.Add(socketIdentifier, uri);
+                socketToUriMap[socketIdentifier] = uri;
 
                 MapSocketToMessage(messageHandlerIdentifier, socketIdentifier);
             }

@@ -138,19 +138,16 @@ namespace rawf.Connectivity
                 var registration = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
                 var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
                 clusterConfiguration.AddClusterMember(clusterMember);
-                routerNotificationSocket.SendMessage(message);
             }
+            routerNotificationSocket.SendMessage(message);
         }
 
         public void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers)
         {
-            var self = new SocketEndpoint(routerConfiguration.ScaleOutAddress.Uri,
-                                         routerConfiguration.ScaleOutAddress.Identity);
-
             var message = Message.Create(new RegisterMessageHandlersRoutingMessage
                                          {
-                                             Uri = self.Uri.ToSocketAddress(),
-                                             SocketIdentity = self.Identity,
+                                             Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                             SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
                                              MessageHandlers = messageHandlers.Select(mh => new MessageHandlerRegistration
                                                                                             {
                                                                                                 Version = mh.Version,

@@ -124,7 +124,7 @@ namespace rawf.Connectivity
                                 var message = (Message) localSocket.ReceiveMessage(token);
                                 if (message != null)
                                 {
-                                    var messageHandled = TryHandleServiceMessage(message);
+                                    var messageHandled = TryHandleServiceMessage(message, scaleOutBackend);
 
                                     if (!messageHandled)
                                     {
@@ -185,10 +185,10 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        private bool TryHandleServiceMessage(IMessage message)
+        private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
         {
             return RegisterMessageHandler(message)
-                   || RegisterExternalRoute(message)
+                   || RegisterExternalRoute(message, scaleOutBackend)
                    || SendMessageHandlersRegistration(message);
         }
 
@@ -209,7 +209,7 @@ namespace rawf.Connectivity
             return shouldHandle;
         }
 
-        private bool RegisterExternalRoute(IMessage message)
+        private bool RegisterExternalRoute(IMessage message, ISocket scaleOutBackend)
         {
             var shouldHandle = IsExternalRouteRegistration(message);
 
@@ -228,6 +228,7 @@ namespace rawf.Connectivity
                         {
                             var messageHandlerIdentifier = new MessageHandlerIdentifier(registration.Version, registration.Identity);
                             externalRoutingTable.Push(messageHandlerIdentifier, handlerSocketIdentifier, uri);
+                            scaleOutBackend.Connect(uri);
                         }
                         catch (Exception err)
                         {
