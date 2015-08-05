@@ -33,7 +33,7 @@ namespace Client
             //var resp = promise.GetResponse().Result.GetPayload<EhlloMessage>();
             //Console.WriteLine(resp.Ehllo);
 
-            RunTest(messageHub, 100000);
+            RunTest(messageHub, 100);
 
             Console.ReadLine();
             messageHub.Stop();
