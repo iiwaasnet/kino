@@ -69,7 +69,26 @@ namespace rawf.Connectivity
 
         public void RemoveRoute(SocketIdentifier socketIdentifier)
         {
-            throw new NotImplementedException();
+            socketToUriMap.Remove(socketIdentifier);
+            
+            HashSet<MessageHandlerIdentifier> messageHandlers;
+            if (socketToMessageMap.TryGetValue(socketIdentifier, out messageHandlers))
+            {
+                foreach (var messageHandlerIdentifier in messageHandlers)
+                {
+                    HashSet<SocketIdentifier> socketIdentifiers;
+                    if (messageHandlersMap.TryGetValue(messageHandlerIdentifier, out socketIdentifiers))
+                    {
+                        socketIdentifiers.Remove(socketIdentifier);
+                        if(!socketIdentifiers.Any())
+                        {
+                            messageHandlersMap.Remove(messageHandlerIdentifier);
+                        }
+                    }
+                       
+                }
+                socketToMessageMap.Remove(socketIdentifier);
+            }
         }
     }
 }

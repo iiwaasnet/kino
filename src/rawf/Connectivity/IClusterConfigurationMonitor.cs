@@ -7,7 +7,6 @@ namespace rawf.Connectivity
         void Start();
         void Stop();
         void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers);
-        void RequestMessageHandlersRouting();
-        void UnregisterMember(SocketEndpoint member);
+        void RequestMessageHandlersRouting()
     }
 }

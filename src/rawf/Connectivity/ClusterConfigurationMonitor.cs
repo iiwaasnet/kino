@@ -63,14 +63,19 @@ namespace rawf.Connectivity
                 using (var sendingSocket = CreateClusterMonitorSendingSocket())
                 {
                     gateway.SignalAndWait(token);
-
-                    foreach (var messageOut in outgoingMessages.GetConsumingEnumerable(token))
+                    try
                     {
-                        sendingSocket.SendMessage(messageOut);
-                        // TODO: Block immediatelly for the response
-                        // Otherwise, consider the RS dead and switch to failover partner
-                        //sendingSocket.ReceiveMessage(token);
+                        foreach (var messageOut in outgoingMessages.GetConsumingEnumerable(token))
+                        {
+                            sendingSocket.SendMessage(messageOut);
+                            // TODO: Block immediatelly for the response
+                            // Otherwise, consider the RS dead and switch to failover partner
+                            //sendingSocket.ReceiveMessage(token);
+                        }
                     }
+                    catch(OperationCanceledException){}
+                    
+                    sendingSocket.SendMessage(CreateUnregisterRoutingMessage());
                 }
             }
             catch (Exception err)
@@ -169,9 +174,15 @@ namespace rawf.Connectivity
             outgoingMessages.Add(message);
         }
 
-        public void UnregisterMember(SocketEndpoint member)
+        private IMessage CreateUnregisterRoutingMessage()
         {
-            throw new NotImplementedException();
+            return Message.Create(new UnregisterMessageHandlersRoutingMessage
+                {
+                    Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                    SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
+                },
+                UnregisterMessageHandlersRoutingMessage.MessageIdentity);
+            outgoingMessages.Add(message);                
         }
     }
 }
