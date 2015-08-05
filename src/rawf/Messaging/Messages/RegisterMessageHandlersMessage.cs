@@ -6,7 +6,7 @@ namespace rawf.Messaging.Messages
     [ProtoContract]
     public class RegisterMessageHandlersMessage : Payload
     {
-        public static readonly byte[] MessageIdentity = "MSGHREG".GetBytes();
+        public static readonly byte[] MessageIdentity = "REGMSGH".GetBytes();
 
         [ProtoMember(1)]
         public MessageHandlerRegistration[] MessageHandlers { get; set; }

@@ -6,7 +6,7 @@ namespace rawf.Messaging.Messages
     [ProtoContract]
     public class RegisterMessageHandlersRoutingMessage : Payload
     {
-        public static readonly byte[] MessageIdentity = "ROUTEREG".GetBytes();
+        public static readonly byte[] MessageIdentity = "REGROUTE".GetBytes();
 
         [ProtoMember(1)]
         public string Uri { get; set; }
