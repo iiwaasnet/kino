@@ -14,8 +14,8 @@ namespace Client
 
             config = new RouterConfiguration
                      {
-                         RouterAddress = new SocketEndpoint(new Uri(tmp.RouterUri), tmp.RouterSocketIdentity),
-                         ScaleOutAddress = new SocketEndpoint(new Uri(tmp.ScaleOutAddressUri), tmp.ScaleOutSocketIdentity)
+                         RouterAddress = new SocketEndpoint(new Uri(tmp.RouterUri), SocketIdentifier.CreateNew()),
+                         ScaleOutAddress = new SocketEndpoint(new Uri(tmp.ScaleOutAddressUri), SocketIdentifier.CreateNew())
                      };
         }
 

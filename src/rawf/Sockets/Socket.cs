@@ -19,6 +19,7 @@ namespace rawf.Sockets
         public Socket(NetMQSocket socket)
         {
             this.socket = socket;
+            this.socket.Options.Linger = TimeSpan.Zero;
         }
 
         public void SendMessage(IMessage message)
@@ -51,8 +52,7 @@ namespace rawf.Sockets
         }
 
         public void Connect(Uri address)
-        {
-            socket.Options.Linger = TimeSpan.Zero;
+        {            
             socket.Connect(address.ToSocketAddress());
         }
 

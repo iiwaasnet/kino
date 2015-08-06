@@ -1,10 +1,7 @@
 ﻿{
     "dev": {
         "routerUri": "tcp://127.0.0.2:5200",
-        "routerSocketIdentity": [ 127, 0, 0, 2, 5, 2, 0, 0 ],
-
         "scaleOutAddressUri": "tcp://127.0.0.2:5201",
-        "scaleOutSocketIdentity": [ 127, 0, 0, 2, 5, 2, 0, 1 ],
 
         "rendezvousServers": [
             {

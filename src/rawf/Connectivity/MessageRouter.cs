@@ -86,7 +86,6 @@ namespace rawf.Connectivity
                             Console.WriteLine(err);
                         }
                     }
-                    scaleOutFrontend.Unbind(routerConfiguration.ScaleOutAddress.Uri);
                 }
             }
             catch (Exception err)
@@ -164,8 +163,6 @@ namespace rawf.Connectivity
         private ISocket CreateScaleOutBackendSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
-            //  socket.SetIdentity(routerConfiguration.ScaleOutAddress.Identity);
-            //  socket.SetMandatoryRouting();
             foreach (var peer in clusterConfiguration.GetClusterMembers())
             {
                 socket.Connect(peer.Uri);

@@ -35,7 +35,7 @@ namespace Client
             //var resp = promise.GetResponse().Result.GetPayload<EhlloMessage>();
             //Console.WriteLine(resp.Ehllo);
 
-            RunTest(messageHub, 1);
+            RunTest(messageHub, 1000);
 
             Console.ReadLine();
             messageHub.Stop();
@@ -62,9 +62,15 @@ namespace Client
                               {
                                   try
                                   {
-                                      r.Wait();
-                                      var msg = r.Result.GetPayload<EhlloMessage>();
-                                      //System.Console.WriteLine($"Received: {msg.Ehllo}");
+                                      if (r.Wait(TimeSpan.FromSeconds(1)))
+                                      {
+                                          var msg = r.Result.GetPayload<EhlloMessage>();
+                                          //System.Console.WriteLine($"Received: {msg.Ehllo}");
+                                      }
+                                      else
+                                      {
+                                          throw new TimeoutException();
+                                      }
                                   }
                                   catch (Exception err)
                                   {
