@@ -189,7 +189,7 @@ namespace rawf.Connectivity
         {
             var socket = socketFactory.CreateRouterSocket();
             socket.SetMandatoryRouting();
-            //  socket.SetIdentity(routerConfiguration.RouterAddress.Identity);
+            socket.SetIdentity(routerConfiguration.RouterAddress.Identity);
             socket.Bind(routerConfiguration.RouterAddress.Uri);
 
             return socket;
