@@ -25,12 +25,7 @@ namespace rawf.Sockets
         public void SendMessage(IMessage message)
         {
             var multipart = new MultipartMessage(message);
-
-            Console.WriteLine(string.Format($"BEFORE SND MSG: {multipart.GetMessageIdentity().GetString()}"));
-
             socket.SendMessage(new NetMQMessage(multipart.Frames));
-
-            Console.WriteLine(string.Format($"SND MSG: {multipart.GetMessageIdentity().GetString()}"));
         }
 
         public IMessage ReceiveMessage(CancellationToken cancellationToken)
@@ -41,9 +36,6 @@ namespace rawf.Sockets
                 if (message != null)
                 {
                     var multipart = new MultipartMessage(message);
-
-                    Console.WriteLine(string.Format($"RCV MSG: {multipart.GetMessageIdentity().GetString()}"));
-
                     return new Message(multipart);
                 }
             }

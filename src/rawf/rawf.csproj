@@ -86,6 +86,7 @@
     <Compile Include="Connectivity\IRouterConfiguration.cs" />
     <Compile Include="Connectivity\NodeIdentity.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />
+    <Compile Include="Framework\ExceptionExtensions.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />
     <Compile Include="Framework\Unsafe.cs" />

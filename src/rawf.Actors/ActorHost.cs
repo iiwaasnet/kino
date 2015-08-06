@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using rawf.Connectivity;
+using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
 using rawf.Sockets;
@@ -172,7 +173,7 @@ namespace rawf.Actors
             }
         }
 
-        private void CallbackException(ISocket localSocket, Exception err, IMessage messageIn)
+        private static void CallbackException(ISocket localSocket, Exception err, IMessage messageIn)
         {
             var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
             messageOut.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, messageIn.CallbackReceiverIdentity);
@@ -194,16 +195,13 @@ namespace rawf.Actors
                                           };
                 messagesCompletionQueue.Enqueue(asyncMessageContext, token);
             }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception err)
+            catch (Exception err) when (!err.OperationCanceled())
             {
                 Console.WriteLine(err);
             }
         }
 
-        private static byte[] GetTaskCallbackIdentity(Task<IMessage> task, IMessage messageIn)
+        private static byte[] GetTaskCallbackIdentity(Task task, IMessage messageIn)
         {
             return task.IsCanceled || task.IsFaulted
                        ? ExceptionMessage.MessageIdentity

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using rawf.Framework;
 using rawf.Sockets;
 using TypedConfigProvider;
 
@@ -52,15 +53,10 @@ namespace rawf.Rendezvous
                     }
                 }
             }
-            catch (Exception err) when (!CancelledStoppingService(err))
+            catch (Exception err) when (!err.OperationCanceled())
             {
                 Console.WriteLine(err);
             }
-        }
-
-        private static bool CancelledStoppingService(Exception err)
-        {
-            return err is OperationCanceledException;
         }
 
         private ISocket CreateUnicastSocket()

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using rawf.Connectivity;
+using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
 using rawf.Sockets;
@@ -85,7 +86,7 @@ namespace rawf.Client
 
                             socket.SendMessage(message);
                         }
-                        catch (Exception err)
+                        catch (Exception err) when (!err.OperationCanceled())
                         {
                             Console.WriteLine(err);
                         }
