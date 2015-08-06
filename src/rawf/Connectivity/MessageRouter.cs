@@ -92,18 +92,7 @@ namespace rawf.Connectivity
                 Console.WriteLine(err);
             }
         }
-
-        private ISocket CreateScaleOutFrontendSocket()
-        {
-            var socket = socketFactory.CreateRouterSocket();
-            socket.SetIdentity(routerConfiguration.ScaleOutAddress.Identity);
-            socket.SetMandatoryRouting();
-            socket.Connect(routerConfiguration.RouterAddress.Uri);
-            socket.Bind(routerConfiguration.ScaleOutAddress.Uri);
-
-            return socket;
-        }
-
+        
         private void RouteLocalMessages(CancellationToken token, Barrier gateway)
         {
             try
@@ -165,8 +154,8 @@ namespace rawf.Connectivity
         private ISocket CreateScaleOutBackendSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
-            socket.SetIdentity(routerConfiguration.ScaleOutAddress.Identity);
-            socket.SetMandatoryRouting();
+            //  socket.SetIdentity(routerConfiguration.ScaleOutAddress.Identity);
+            //  socket.SetMandatoryRouting();
             foreach (var peer in clusterConfiguration.GetClusterMembers())
             {
                 socket.Connect(peer.Uri);
@@ -175,11 +164,22 @@ namespace rawf.Connectivity
             return socket;
         }
 
+        private ISocket CreateScaleOutFrontendSocket()
+        {
+            var socket = socketFactory.CreateRouterSocket();
+            socket.SetIdentity(routerConfiguration.ScaleOutAddress.Identity);
+            socket.SetMandatoryRouting();
+            socket.Connect(routerConfiguration.RouterAddress.Uri);
+            socket.Bind(routerConfiguration.ScaleOutAddress.Uri);
+
+            return socket;
+        }
+        
         private ISocket CreateRouterSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
             socket.SetMandatoryRouting();
-            socket.SetIdentity(routerConfiguration.RouterAddress.Identity);
+            //  socket.SetIdentity(routerConfiguration.RouterAddress.Identity);
             socket.Bind(routerConfiguration.RouterAddress.Uri);
 
             return socket;
