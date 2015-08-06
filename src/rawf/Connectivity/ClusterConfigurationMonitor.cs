@@ -73,8 +73,10 @@ namespace rawf.Connectivity
                             //sendingSocket.ReceiveMessage(token);
                         }
                     }
-                    catch(OperationCanceledException){}
-                    
+                    catch (OperationCanceledException)
+                    {
+                    }
+
                     sendingSocket.SendMessage(CreateUnregisterRoutingMessage());
                 }
             }
@@ -177,12 +179,11 @@ namespace rawf.Connectivity
         private IMessage CreateUnregisterRoutingMessage()
         {
             return Message.Create(new UnregisterMessageHandlersRoutingMessage
-                {
-                    Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                    SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
-                },
-                UnregisterMessageHandlersRoutingMessage.MessageIdentity);
-            outgoingMessages.Add(message);                
+                                  {
+                                      Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                      SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
+                                  },
+                                  UnregisterMessageHandlersRoutingMessage.MessageIdentity);
         }
     }
 }

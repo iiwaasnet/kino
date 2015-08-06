@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Client.Messages;
@@ -25,6 +26,7 @@ namespace Client
             var messageHub = container.Resolve<IMessageHub>();
             messageHub.Start();
 
+            Thread.Sleep(TimeSpan.FromSeconds(2));
             Console.WriteLine("Client is running...");
 
             //var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello world!"}, HelloMessage.MessageIdentity);
@@ -33,12 +35,13 @@ namespace Client
             //var resp = promise.GetResponse().Result.GetPayload<EhlloMessage>();
             //Console.WriteLine(resp.Ehllo);
 
-            RunTest(messageHub, 100);
+            RunTest(messageHub, 1);
 
             Console.ReadLine();
             messageHub.Stop();
             messageRouter.Stop();
             ccMon.Stop();
+            container.Dispose();
         }
 
         private static void RunTest(IMessageHub messageHub, int runs)

@@ -24,7 +24,12 @@ namespace rawf.Sockets
         public void SendMessage(IMessage message)
         {
             var multipart = new MultipartMessage(message);
+
+            Console.WriteLine(string.Format($"BEFORE SND MSG: {multipart.GetMessageIdentity().GetString()}"));
+
             socket.SendMessage(new NetMQMessage(multipart.Frames));
+
+            Console.WriteLine(string.Format($"SND MSG: {multipart.GetMessageIdentity().GetString()}"));
         }
 
         public IMessage ReceiveMessage(CancellationToken cancellationToken)
@@ -36,6 +41,8 @@ namespace rawf.Sockets
                 {
                     var multipart = new MultipartMessage(message);
 
+                    Console.WriteLine(string.Format($"RCV MSG: {multipart.GetMessageIdentity().GetString()}"));
+
                     return new Message(multipart);
                 }
             }
@@ -45,17 +52,8 @@ namespace rawf.Sockets
 
         public void Connect(Uri address)
         {
+            socket.Options.Linger = TimeSpan.Zero;
             socket.Connect(address.ToSocketAddress());
-        }
-
-        public void Bind(Uri address)
-        {
-            socket.Bind(address.ToSocketAddress());
-        }
-
-        public void Subscribe(string topic = "")
-        {
-            socket.Subscribe(topic);
         }
 
         public void Disconnect(Uri address)
@@ -63,11 +61,25 @@ namespace rawf.Sockets
             socket.Disconnect(address.ToSocketAddress());
         }
 
+        public void Bind(Uri address)
+        {
+            socket.Bind(address.ToSocketAddress());
+        }
+
+        public void Unbind(Uri address)
+        {
+            socket.Unbind(address.ToSocketAddress());
+        }
+
+        public void Subscribe(string topic = "")
+        {
+            socket.Subscribe(topic);
+        }
+
         public void SetMandatoryRouting(bool mandatory = true)
         {
             socket.Options.RouterMandatory = mandatory;
         }
-
 
         public void SetIdentity(byte[] identity)
         {

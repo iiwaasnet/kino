@@ -82,7 +82,6 @@
     <Compile Include="Connectivity\InternalRoutingTable.cs" />
     <Compile Include="Connectivity\MessageMap.cs" />
     <Compile Include="Connectivity\MessageRouter.cs" />
-    <Compile Include="Connectivity\ConnectivityProvider.cs" />
     <Compile Include="Connectivity\SocketIdentifier.cs" />
     <Compile Include="Connectivity\IRouterConfiguration.cs" />
     <Compile Include="Connectivity\NodeIdentity.cs" />
@@ -104,6 +103,7 @@
     <Compile Include="Messaging\Messages\RegisterMessageHandlersMessage.cs" />
     <Compile Include="Messaging\Messages\RegisterMessageHandlersRoutingMessage.cs" />
     <Compile Include="Messaging\Messages\RequestMessageHandlersRoutingMessage.cs" />
+    <Compile Include="Messaging\Messages\UnregisterMessageHandlersRoutingMessage.cs" />
     <Compile Include="Messaging\MultipartMessage.cs" />
     <Compile Include="Messaging\MultipartMessage.Frames.cs" />
     <Compile Include="Messaging\NewtonJsonMessageSerializer.cs" />

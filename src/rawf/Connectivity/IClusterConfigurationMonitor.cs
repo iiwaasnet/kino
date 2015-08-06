@@ -7,6 +7,6 @@ namespace rawf.Connectivity
         void Start();
         void Stop();
         void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers);
-        void RequestMessageHandlersRouting()
+        void RequestMessageHandlersRouting();
     }
 }
