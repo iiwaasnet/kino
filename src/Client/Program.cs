@@ -26,7 +26,6 @@ namespace Client
             var messageHub = container.Resolve<IMessageHub>();
             messageHub.Start();
 
-            Thread.Sleep(TimeSpan.FromSeconds(2));
             Console.WriteLine("Client is running...");
 
             //var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello world!"}, HelloMessage.MessageIdentity);
@@ -35,7 +34,7 @@ namespace Client
             //var resp = promise.GetResponse().Result.GetPayload<EhlloMessage>();
             //Console.WriteLine(resp.Ehllo);
 
-            RunTest(messageHub, 1000);
+            RunTest(messageHub, 100);
 
             Console.ReadLine();
             messageHub.Stop();
@@ -62,15 +61,15 @@ namespace Client
                               {
                                   try
                                   {
-                                      if (r.Wait(TimeSpan.FromSeconds(1)))
-                                      {
+                                      //if (r.Wait(TimeSpan.FromSeconds(1)))
+                                      //{
                                           var msg = r.Result.GetPayload<EhlloMessage>();
                                           //System.Console.WriteLine($"Received: {msg.Ehllo}");
-                                      }
-                                      else
-                                      {
-                                          throw new TimeoutException();
-                                      }
+                                      //}
+                                      //else
+                                      //{
+                                      //    throw new TimeoutException();
+                                      //}
                                   }
                                   catch (Exception err)
                                   {

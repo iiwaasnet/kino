@@ -86,13 +86,16 @@ namespace rawf.Client
 
                             socket.SendMessage(message);
                         }
-                        catch (Exception err) when (!err.OperationCanceled())
+                        catch (Exception err)
                         {
                             Console.WriteLine(err);
                         }
                     }
                     registrationsQueue.Dispose();
                 }
+            }
+            catch (OperationCanceledException)
+            {
             }
             catch (Exception err)
             {

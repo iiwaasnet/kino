@@ -53,7 +53,10 @@ namespace rawf.Rendezvous
                     }
                 }
             }
-            catch (Exception err) when (!err.OperationCanceled())
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception err)
             {
                 Console.WriteLine(err);
             }
