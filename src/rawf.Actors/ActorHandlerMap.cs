@@ -43,14 +43,12 @@ namespace rawf.Actors
         }
 
         private static IEnumerable<KeyValuePair<MessageHandlerIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
-        {
-            return actor
+            => actor
                 .GetInterfaceDefinition()
                 .Select(messageMap =>
                         new KeyValuePair<MessageHandlerIdentifier, MessageHandler>(
                             new MessageHandlerIdentifier(messageMap.Message.Version,
                                                          messageMap.Message.Identity),
                             messageMap.Handler));
-        }
     }
 }

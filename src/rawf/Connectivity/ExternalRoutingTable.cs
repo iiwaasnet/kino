@@ -61,11 +61,9 @@ namespace rawf.Connectivity
         }
 
         private static T Get<T>(ICollection<T> hashSet)
-        {
-            return hashSet.Any()
-                       ? hashSet.First()
-                       : default(T);
-        }
+            => hashSet.Any()
+                   ? hashSet.First()
+                   : default(T);
 
         public void RemoveRoute(SocketIdentifier socketIdentifier)
         {

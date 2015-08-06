@@ -11,7 +11,7 @@ namespace rawf.Messaging
         {
             Value = id;
         }
-        
+
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
@@ -34,11 +34,10 @@ namespace rawf.Messaging
             unchecked
             {
                 var hashCode = (Value?.Length ?? 0);
-                
+
                 return hashCode;
             }
         }
-
 
         public bool Equals(CorrelationId other)
         {
@@ -54,10 +53,8 @@ namespace rawf.Messaging
         }
 
         private bool StructuralCompare(CorrelationId other)
-        {
-            return Unsafe.Equals(Value, other.Value);
-        }
-        
-        public byte[] Value {get; private set;}               
+            => Unsafe.Equals(Value, other.Value);
+
+        public byte[] Value { get; }
     }
 }

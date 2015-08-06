@@ -15,9 +15,7 @@ namespace rawf.Client
         }
 
         public Task<IMessage> GetResponse()
-        {
-            return result.Task;
-        }
+            => result.Task;
 
         internal void SetResult(IMessage message)
         {

@@ -15,13 +15,9 @@ namespace rawf.Framework
         }
 
         public static T Second<T>(this IEnumerable<T> collection)
-        {
-            return collection.Skip(1).First();
-        }
+            => collection.Skip(1).First();
 
         public static T Third<T>(this IEnumerable<T> collection)
-        {
-            return collection.Skip(2).First();
-        }
+            => collection.Skip(2).First();
     }
 }

@@ -12,28 +12,18 @@ namespace rawf.Sockets
         }
 
         public ISocket CreateDealerSocket()
-        {
-            return new Socket(context.CreateDealerSocket());
-        }
+            => new Socket(context.CreateDealerSocket());
 
         public ISocket CreateRouterSocket()
-        {
-            return new Socket(context.CreateRouterSocket());
-        }
+            => new Socket(context.CreateRouterSocket());
 
         public ISocket CreateSubscriberSocket()
-        {
-            return new Socket(context.CreateSubscriberSocket());
-        }
+            => new Socket(context.CreateSubscriberSocket());
 
         public ISocket CreatePublisherSocket()
-        {
-            return new Socket(context.CreatePublisherSocket());
-        }
+            => new Socket(context.CreatePublisherSocket());
 
         public void Dispose()
-        {
-            context.Dispose();
-        }
+            => context.Dispose();
     }
 }

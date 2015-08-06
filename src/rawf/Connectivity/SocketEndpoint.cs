@@ -46,15 +46,11 @@ namespace rawf.Connectivity
         }
 
         private bool StructuralCompare(SocketEndpoint other)
-        {
-            return Unsafe.Equals(Identity, other.Identity)
-                   && Uri.AbsoluteUri == other.Uri.AbsoluteUri;
-        }
+            => Unsafe.Equals(Identity, other.Identity)
+               && Uri.AbsoluteUri == other.Uri.AbsoluteUri;
 
         public override int GetHashCode()
-        {
-            return hashCode;
-        }
+            => hashCode;
 
         private int CalculateHashCode()
         {

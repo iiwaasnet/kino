@@ -79,7 +79,6 @@ namespace rawf.Messaging
         private byte[] GetMessageIdentityFrame(IMessage message)
             => message.Identity;
 
-
         private static void AssertMessage(NetMQMessage message)
         {
             if (message.FrameCount < MinFramesCount)
@@ -89,9 +88,7 @@ namespace rawf.Messaging
         }
 
         internal void PushRouterIdentity(byte[] routerId)
-        {
-            frames.Insert(ReversedFrames.NextRouterInsertPosition, routerId);
-        }
+            => frames.Insert(ReversedFrames.NextRouterInsertPosition, routerId);
 
         internal byte[] GetMessageIdentity()
             => frames[frames.Count - ReversedFrames.Identity];

@@ -1,5 +1,3 @@
-using System;
-
 namespace rawf.Connectivity
 {
     public class RouterConfiguration : IRouterConfiguration

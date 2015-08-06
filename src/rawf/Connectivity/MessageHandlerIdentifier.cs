@@ -44,9 +44,7 @@ namespace rawf.Connectivity
         }
 
         public override int GetHashCode()
-        {
-            return hashCode;
-        }
+            => hashCode;
 
         public bool Equals(MessageHandlerIdentifier other)
         {
@@ -62,15 +60,11 @@ namespace rawf.Connectivity
         }
 
         private bool StructuralCompare(MessageHandlerIdentifier other)
-        {
-            return Unsafe.Equals(Identity, other.Identity)
-                   && Unsafe.Equals(Version, other.Version);
-        }
+            => Unsafe.Equals(Identity, other.Identity)
+               && Unsafe.Equals(Version, other.Version);
 
         public override string ToString()
-        {
-            return string.Format($"Identity[{Identity?.GetString()}]-Version[{Version?.GetString()}]");
-        }
+            => string.Format($"Identity[{Identity?.GetString()}]-Version[{Version?.GetString()}]");
 
         public byte[] Version { get; }
         public byte[] Identity { get; }

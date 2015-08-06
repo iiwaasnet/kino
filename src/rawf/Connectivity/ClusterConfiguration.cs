@@ -12,13 +12,9 @@ namespace rawf.Connectivity
         }
 
         public IEnumerable<SocketEndpoint> GetClusterMembers()
-        {
-            return clusterMembers;
-        }
+            => clusterMembers;
 
         public void AddClusterMember(SocketEndpoint node)
-        {
-            clusterMembers.Add(node);
-        }
+            => clusterMembers.Add(node);
     }
 }

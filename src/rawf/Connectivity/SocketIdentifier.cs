@@ -13,7 +13,6 @@ namespace rawf.Connectivity
         public static byte[] CreateNew()
             => Guid.NewGuid().ToString().GetBytes();
 
-
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
@@ -48,9 +47,7 @@ namespace rawf.Connectivity
         }
 
         private bool StructuralCompare(SocketIdentifier other)
-        {
-            return Unsafe.Equals(Identity, other.Identity);
-        }
+            => Unsafe.Equals(Identity, other.Identity);
 
         public byte[] Identity { get; }
     }

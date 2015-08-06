@@ -15,18 +15,12 @@ namespace rawf.Actors
         }
 
         public IEnumerable<AsyncMessageContext> GetMessages(CancellationToken cancellationToken)
-        {
-            return asyncResponses.GetConsumingEnumerable(cancellationToken);
-        }
+            => asyncResponses.GetConsumingEnumerable(cancellationToken);
 
         public void Enqueue(AsyncMessageContext messageCompletion, CancellationToken cancellationToken)
-        {
-            asyncResponses.Add(messageCompletion, cancellationToken);
-        }
+            => asyncResponses.Add(messageCompletion, cancellationToken);
 
         public void Dispose()
-        {
-            asyncResponses.Dispose();
-        }
+            => asyncResponses.Dispose();
     }
 }

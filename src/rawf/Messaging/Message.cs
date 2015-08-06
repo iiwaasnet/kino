@@ -19,20 +19,14 @@ namespace rawf.Messaging
         }
 
         public static IMessage CreateFlowStartMessage(IPayload payload, byte[] messageIdentity)
-        {
-            return new Message(payload, messageIdentity) {CorrelationId = GenerateCorrelationId()};
-        }
+            => new Message(payload, messageIdentity) {CorrelationId = GenerateCorrelationId()};
 
         public static IMessage Create(IPayload payload, byte[] messageIdentity)
-        {
-            return new Message(payload, messageIdentity);
-        }
+            => new Message(payload, messageIdentity);
 
         private static byte[] GenerateCorrelationId()
-        {
             //TODO: Better implementation
-            return Guid.NewGuid().ToByteArray();
-        }
+            => Guid.NewGuid().ToByteArray();
 
         internal Message(MultipartMessage multipartMessage)
         {
@@ -59,19 +53,13 @@ namespace rawf.Messaging
         }
 
         internal void SetCorrelationId(byte[] correlationId)
-        {
-            CorrelationId = correlationId;
-        }
+            => CorrelationId = correlationId;
 
         internal void SetSocketIdentity(byte[] socketIdentity)
-        {
-            SocketIdentity = socketIdentity;
-        }
+            => SocketIdentity = socketIdentity;
 
         internal string GetIdentityString()
-        {
-            return Identity.GetString();
-        }
+            => Identity.GetString();
 
         public T GetPayload<T>()
             where T : IPayload, new()

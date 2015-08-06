@@ -93,7 +93,7 @@ namespace rawf.Connectivity
                 Console.WriteLine(err);
             }
         }
-        
+
         private void RouteLocalMessages(CancellationToken token, Barrier gateway)
         {
             try
@@ -181,7 +181,7 @@ namespace rawf.Connectivity
 
             return socket;
         }
-        
+
         private ISocket CreateRouterSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
@@ -193,12 +193,10 @@ namespace rawf.Connectivity
         }
 
         private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
-        {
-            return RegisterMessageHandler(message)
-                   || RegisterExternalRoute(message, scaleOutBackend)
-                   || RequestMessageHandlersRegistration(message)
-                   || UnregisterMessageHandlersRouting(message, scaleOutBackend);
-        }
+            => RegisterMessageHandler(message)
+               || RegisterExternalRoute(message, scaleOutBackend)
+               || RequestMessageHandlersRegistration(message)
+               || UnregisterMessageHandlersRouting(message, scaleOutBackend);
 
         private bool UnregisterMessageHandlersRouting(IMessage message, ISocket scaleOutBackend)
         {
@@ -212,8 +210,6 @@ namespace rawf.Connectivity
 
             return shouldHandle;
         }
-
-       
 
         private bool RequestMessageHandlersRegistration(IMessage message)
         {

@@ -15,14 +15,10 @@ namespace rawf.Messaging
             messageSerializer = DefaultSerializer;
         }
 
-        virtual public T Deserialize<T>(byte[] content)
-        {
-            return messageSerializer.Deserialize<T>(content);
-        }
+        public virtual T Deserialize<T>(byte[] content)
+            => messageSerializer.Deserialize<T>(content);
 
-        virtual public byte[] Serialize()
-        {
-            return messageSerializer.Serialize(this);
-        }
+        public virtual byte[] Serialize()
+            => messageSerializer.Serialize(this);
     }
 }

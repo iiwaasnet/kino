@@ -12,8 +12,6 @@ namespace rawf.Connectivity
         }
 
         public IEnumerable<RendezvousServerConfiguration> GetRendezvousServers()
-        {
-            return initialConfiguration;
-        }
+            => initialConfiguration;
     }
 }

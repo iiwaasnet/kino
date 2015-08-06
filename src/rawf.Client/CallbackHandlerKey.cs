@@ -27,12 +27,11 @@ namespace rawf.Client
             unchecked
             {
                 var hashCode = (Version?.Length ?? 0);
-                hashCode = (hashCode*397) ^ (Correlation?.Length ?? 0);
-                hashCode = (hashCode*397) ^ (Identity?.Length ?? 0);
+                hashCode = (hashCode * 397) ^ (Correlation?.Length ?? 0);
+                hashCode = (hashCode * 397) ^ (Identity?.Length ?? 0);
                 return hashCode;
             }
         }
-
 
         public bool Equals(CallbackHandlerKey other)
         {
@@ -48,11 +47,9 @@ namespace rawf.Client
         }
 
         private bool StructuralCompare(CallbackHandlerKey other)
-        {
-            return Unsafe.Equals(Correlation, other.Correlation)
-                   && Unsafe.Equals(Identity, other.Identity)
-                   && Unsafe.Equals(Version, other.Version);
-        }
+            => Unsafe.Equals(Correlation, other.Correlation)
+               && Unsafe.Equals(Identity, other.Identity)
+               && Unsafe.Equals(Version, other.Version);
 
         public byte[] Version { get; set; }
         public byte[] Identity { get; set; }

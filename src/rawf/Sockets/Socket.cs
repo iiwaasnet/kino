@@ -44,48 +44,30 @@ namespace rawf.Sockets
         }
 
         public void Connect(Uri address)
-        {            
-            socket.Connect(address.ToSocketAddress());
-        }
+            => socket.Connect(address.ToSocketAddress());
 
         public void Disconnect(Uri address)
-        {
-            socket.Disconnect(address.ToSocketAddress());
-        }
+            => socket.Disconnect(address.ToSocketAddress());
 
         public void Bind(Uri address)
-        {
-            socket.Bind(address.ToSocketAddress());
-        }
+            => socket.Bind(address.ToSocketAddress());
 
         public void Unbind(Uri address)
-        {
-            socket.Unbind(address.ToSocketAddress());
-        }
+            => socket.Unbind(address.ToSocketAddress());
 
         public void Subscribe(string topic = "")
-        {
-            socket.Subscribe(topic);
-        }
+            => socket.Subscribe(topic);
 
         public void SetMandatoryRouting(bool mandatory = true)
-        {
-            socket.Options.RouterMandatory = mandatory;
-        }
+            => socket.Options.RouterMandatory = mandatory;
 
         public void SetIdentity(byte[] identity)
-        {
-            socket.Options.Identity = identity;
-        }
+            => socket.Options.Identity = identity;
 
         public byte[] GetIdentity()
-        {
-            return socket.Options.Identity;
-        }
+            => socket.Options.Identity;
 
         public void Dispose()
-        {
-            socket.Dispose();
-        }
+            => socket.Dispose();
     }
 }

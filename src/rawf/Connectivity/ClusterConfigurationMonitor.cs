@@ -177,13 +177,11 @@ namespace rawf.Connectivity
         }
 
         private IMessage CreateUnregisterRoutingMessage()
-        {
-            return Message.Create(new UnregisterMessageHandlersRoutingMessage
-                                  {
-                                      Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                      SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
-                                  },
-                                  UnregisterMessageHandlersRoutingMessage.MessageIdentity);
-        }
+            => Message.Create(new UnregisterMessageHandlersRoutingMessage
+                              {
+                                  Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                  SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
+                              },
+                              UnregisterMessageHandlersRoutingMessage.MessageIdentity);
     }
 }
