@@ -198,11 +198,16 @@ namespace rawf.Connectivity
                               },
                               UnregisterMessageHandlersRoutingMessage.MessageIdentity);
                               
-        private bool IsRegisterExternalRoute(IMessage message) 
-            => Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity)                              
+        private bool IsRegisterExternalRoute(IMessage message)
+        { 
+            => Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity)
+        }                              
         
         private bool IsPing(IMessage message) 
             => Unsafe.Equals(PingMessage.MessageIdentity, message.Identity)
+            
+        private bool SelfSentMessage(byte[] socketIdentity)
+            => Unsafe.Equals(routerConfiguration.ScaleOutAddress.Identity, socketIdentity);            
             
         private bool IsPongNotFromSelf(IMessage message)
         { 
