@@ -138,26 +138,56 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        private void ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)
+        private bool ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)
+            => RegisterExternalRoute(message, routerNotificationSocket)
+               || Ping(message)
+               || Pong(message)
+               || RequestMessageHandlersRouting(message, routerNotificationSocket);
+
+        private bool RegisterExternalRoute(IMessage message, ISocket routerNotificationSocket)
         {
-            //TODO: Refactor message handling and forwarding
-            if (IsRegisterExternalRoute(message))
+            var shouldHandler = IsRegisterExternalRoute(message);
+            if (shouldHandler)
             {
                 AddClusterMember(message);
                 routerNotificationSocket.SendMessage(message);
             }
-            else if (IsPing(message))
+
+            return shouldHandler;
+        }
+
+        private bool Ping(IMessage message)
+        {
+            var shouldHandle = IsPing(message);
+            if (shouldHandle)
             {
                 SendPong();
             }
-            else if (IsPong(message))
+
+            return shouldHandle;
+        }
+
+        private bool Pong(IMessage message)
+        {
+            var shouldHandle = IsPong(message);
+            if (shouldHandle)
             {
                 ProcessPongMessage(message);
             }
-            else if (IsRequestAllMessageHandlersRouting(message) || IsRequestNodeMessageHandlersRouting(message))
+
+            return shouldHandle;
+        }
+
+        private bool RequestMessageHandlersRouting(IMessage message, ISocket routerNotificationSocket)
+        {
+            var shouldHandle = IsRequestAllMessageHandlersRouting(message)
+                               || IsRequestNodeMessageHandlersRouting(message);
+            if (shouldHandle)
             {
                 routerNotificationSocket.SendMessage(message);
             }
+
+            return shouldHandle;
         }
 
         public void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers)
