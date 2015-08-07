@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace rawf.Connectivity
 {
@@ -17,8 +18,8 @@ namespace rawf.Connectivity
             => clusterMembers.Keys;
 
         public void AddClusterMember(SocketEndpoint node)
-            => clusterMembers.TryAdd(node, new ClusterMemberMeta { LastKnownPong = DateTime.UtcNow });
-            
+            => clusterMembers.TryAdd(node, new ClusterMemberMeta {LastKnownPong = DateTime.UtcNow});
+
         public bool KeepAlive(SocketEndpoint node)
         {
             ClusterMemberMeta meta;
@@ -27,8 +28,23 @@ namespace rawf.Connectivity
             {
                 meta.LastKnownPong = DateTime.UtcNow;
             }
-            
+
             return updated;
+        }
+
+        public IEnumerable<SocketEndpoint> GetDeadMembers()
+        {
+            var now = DateTime.UtcNow;
+            return clusterMembers
+                .Where(mem => now - mem.Value.LastKnownPong > PongSilenceBeforeRouteDeletion)
+                .Select(mem => mem.Key)
+                .ToList();
+        }
+
+        public void DeleteClusterMember(SocketEndpoint node)
+        {
+            ClusterMemberMeta meta;
+            clusterMembers.TryRemove(node, out meta);
         }
 
         public TimeSpan PingSilenceBeforeRendezvousFailover { get; set; }

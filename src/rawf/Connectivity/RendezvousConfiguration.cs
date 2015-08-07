@@ -4,14 +4,27 @@ namespace rawf.Connectivity
 {
     public class RendezvousConfiguration : IRendezvousConfiguration
     {
-        private readonly IEnumerable<RendezvousServerConfiguration> initialConfiguration;
+        private readonly IList<RendezvousServerConfiguration> config;
+        private int currentServerIndex;
 
         public RendezvousConfiguration(IEnumerable<RendezvousServerConfiguration> initialConfiguration)
         {
-            this.initialConfiguration = initialConfiguration;
+            currentServerIndex = 0;
+            config = new List<RendezvousServerConfiguration>(initialConfiguration);
         }
 
-        public IEnumerable<RendezvousServerConfiguration> GetRendezvousServers()
-            => initialConfiguration;
+        public RendezvousServerConfiguration GetCurrentRendezvousServers()
+            => config[currentServerIndex];
+
+        public RendezvousServerConfiguration GetNextRendezvousServers()
+            => config[RotateServerIndex()];
+
+        private int RotateServerIndex()
+        {
+            currentServerIndex = (config.Count >= currentServerIndex + 1)
+                                     ? 0
+                                     : currentServerIndex + 1;
+            return currentServerIndex;
+        }
     }
 }

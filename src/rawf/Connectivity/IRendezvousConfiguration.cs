@@ -4,6 +4,7 @@ namespace rawf.Connectivity
 {
     public interface IRendezvousConfiguration
     {
-        IEnumerable<RendezvousServerConfiguration> GetRendezvousServers();
+        RendezvousServerConfiguration GetCurrentRendezvousServers();
+        RendezvousServerConfiguration GetNextRendezvousServers();
     }
 }

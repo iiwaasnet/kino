@@ -18,21 +18,25 @@ namespace rawf.Connectivity
         private readonly BlockingCollection<IMessage> outgoingMessages;
         private readonly IClusterConfiguration clusterConfiguration;
         private readonly IRouterConfiguration routerConfiguration;
-        private readonly RendezvousServerConfiguration currentRendezvousServer;
+        //private readonly RendezvousServerConfiguration currentRendezvousServer;
         private Task sendingMessages;
         private Task listenningMessages;
+        private readonly ManualResetEventSlim pingReceived;
+        private readonly IRendezvousConfiguration rendezvousConfiguration;
 
         public ClusterConfigurationMonitor(ISocketFactory socketFactory,
                                            IRouterConfiguration routerConfiguration,
                                            IClusterConfiguration clusterConfiguration,
                                            IRendezvousConfiguration rendezvousConfiguration)
         {
+            pingReceived = new ManualResetEventSlim(false);
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
             this.clusterConfiguration = clusterConfiguration;
+            this.rendezvousConfiguration = rendezvousConfiguration;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             cancellationTokenSource = new CancellationTokenSource();
-            currentRendezvousServer = rendezvousConfiguration.GetRendezvousServers().First();
+            //currentRendezvousServer = rendezvousConfiguration.GetRendezvousServers().First();
         }
 
         public void Start()
@@ -54,6 +58,28 @@ namespace rawf.Connectivity
             cancellationTokenSource.Cancel(true);
             sendingMessages.Wait();
             listenningMessages.Wait();
+        }
+
+        private void RendezvousConnectionMonitor()
+        {
+            try
+            {
+                while (!cancellationTokenSource.IsCancellationRequested)
+                {
+                    if (!pingReceived.Wait(clusterConfiguration.PingSilenceBeforeRendezvousFailover, cancellationTokenSource.Token))
+                    {
+                        var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
+
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine(err);
+            }
         }
 
         private void SendMessages(CancellationToken token, Barrier gateway)
@@ -102,6 +128,7 @@ namespace rawf.Connectivity
                             if (message != null)
                             {
                                 ProcessIncomingMessage(message, routerNotificationSocket);
+                                UnregisterDeadNodes(routerNotificationSocket);
                             }
                         }
                     }
@@ -116,7 +143,8 @@ namespace rawf.Connectivity
         private ISocket CreateClusterMonitorSubscriptionSocket()
         {
             var socket = socketFactory.CreateSubscriberSocket();
-            socket.Connect(currentRendezvousServer.BroadcastUri);
+            var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
+            socket.Connect(rendezvousServer.BroadcastUri);
             socket.Subscribe();
 
             return socket;
@@ -125,7 +153,8 @@ namespace rawf.Connectivity
         private ISocket CreateClusterMonitorSendingSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(currentRendezvousServer.UnicastUri);
+            var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
+            socket.Connect(rendezvousServer.UnicastUri);
 
             return socket;
         }
@@ -142,7 +171,21 @@ namespace rawf.Connectivity
             => RegisterExternalRoute(message, routerNotificationSocket)
                || Ping(message)
                || Pong(message)
-               || RequestMessageHandlersRouting(message, routerNotificationSocket);
+               || RequestMessageHandlersRouting(message, routerNotificationSocket)
+               || UnregisterRoute(message, routerNotificationSocket);
+
+        private bool UnregisterRoute(IMessage message, ISocket routerNotificationSocket)
+        {
+            var shouldHandle = IsUnregisterMessageHandlersRouting(message);
+            if (shouldHandle)
+            {
+                var payload = message.GetPayload<UnregisterMessageHandlersRoutingMessage>();
+                clusterConfiguration.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
+                routerNotificationSocket.SendMessage(message);
+            }
+
+            return shouldHandle;
+        }
 
         private bool RegisterExternalRoute(IMessage message, ISocket routerNotificationSocket)
         {
@@ -255,6 +298,18 @@ namespace rawf.Connectivity
             return false;
         }
 
+        private bool IsUnregisterMessageHandlersRouting(IMessage message)
+        {
+            if (Unsafe.Equals(UnregisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity))
+            {
+                var payload = message.GetPayload<UnregisterMessageHandlersRoutingMessage>();
+
+                return !ThisNodeSocket(payload.SocketIdentity);
+            }
+
+            return false;
+        }
+
         private bool IsRequestAllMessageHandlersRouting(IMessage message)
         {
             if (Unsafe.Equals(RequestAllMessageHandlersRoutingMessage.MessageIdentity, message.Identity))
@@ -298,17 +353,36 @@ namespace rawf.Connectivity
         {
             var payload = message.GetPayload<PongMessage>();
 
-            var updated = clusterConfiguration.KeepAlive(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
-
-            if (!updated)
+            var nodeNotFound = clusterConfiguration.KeepAlive(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
+            if (!nodeNotFound)
             {
-                var request = Message.Create(new RequestNodeMessageHandlersRoutingMessage
+                RequestNodeMessageHandlersRouting(payload);
+            }
+        }
+
+        private void RequestNodeMessageHandlersRouting(PongMessage payload)
+        {
+            var request = Message.Create(new RequestNodeMessageHandlersRoutingMessage
+                                         {
+                                             TargetNodeIdentity = payload.SocketIdentity,
+                                             TargetNodeUri = payload.Uri
+                                         },
+                                         RequestNodeMessageHandlersRoutingMessage.MessageIdentity);
+            outgoingMessages.Add(request);
+        }
+
+        private void UnregisterDeadNodes(ISocket routerNotificationSocket)
+        {
+            foreach (var deadNode in clusterConfiguration.GetDeadMembers())
+            {
+                var message = Message.Create(new UnregisterMessageHandlersRoutingMessage
                                              {
-                                                 TargetNodeIdentity = payload.SocketIdentity,
-                                                 TargetNodeUri = payload.Uri
+                                                 Uri = deadNode.Uri.ToSocketAddress(),
+                                                 SocketIdentity = deadNode.Identity
                                              },
-                                             RequestNodeMessageHandlersRoutingMessage.MessageIdentity);
-                outgoingMessages.Add(request);
+                                             UnregisterMessageHandlersRoutingMessage.MessageIdentity);
+                clusterConfiguration.DeleteClusterMember(deadNode);
+                routerNotificationSocket.SendMessage(message);
             }
         }
     }
