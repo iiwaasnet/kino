@@ -10,6 +10,7 @@ namespace rawf.Sockets
     {
         private readonly NetMQSocket socket;
         private static readonly TimeSpan ReceiveWaitTimeout;
+        private readonly ConcurrentQueue<SocketStateChangeRequest> stateChangeRequests;
 
         static Socket()
         {
@@ -18,12 +19,15 @@ namespace rawf.Sockets
 
         public Socket(NetMQSocket socket)
         {
+            stateChangeRequests = new ConcurrentQueue<SocketStateChangeRequest>();
             this.socket = socket;
             this.socket.Options.Linger = TimeSpan.Zero;
         }
 
         public void SendMessage(IMessage message)
         {
+            ProcessPendingStatusChangeRequests();
+            
             var multipart = new MultipartMessage(message);
             socket.SendMessage(new NetMQMessage(multipart.Frames));
         }
@@ -32,7 +36,9 @@ namespace rawf.Sockets
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var message = socket.ReceiveMessage(ReceiveWaitTimeout);
+                ProcessPendingStatusChangeRequests();
+                
+                var message = socket.ReceiveMessage(ReceiveWaitTimeout);                                        
                 if (message != null)
                 {
                     var multipart = new MultipartMessage(message);
@@ -42,6 +48,38 @@ namespace rawf.Sockets
 
             return null;
         }
+
+        private void ProcessPendingStatusChangeRequests()
+        {
+            SocketStateChangeRequest request;
+            
+            while (stateChangeRequests.TryDequeue(out request))
+            {
+                switch(request.StateChange)
+                {
+                    case SocketStateChangeKind.Connect:
+                        Connect(request.Endpoint);
+                        return;
+                    case SockeetStateChangeKind.Disconnect:
+                        Disconnect(request.Endpoint);
+                        return;
+                }
+            }
+        }
+
+        public void EnqueueDisconnect(Uri address)
+            => stateChangeRequests.Enqueue(new SocketStateChangeRequest
+                {
+                    Endpoint = address,
+                    StateChange = SocketStateChangeKind.Disconnect
+                });
+
+        public void EnqueueConnect(Uri address)
+            => stateChangeRequests.Enqueue(new SocketStateChangeRequest
+                {
+                    Endpoint = address,
+                    StateChange = SocketStateChangeKind.Connect
+                });
 
         public void Connect(Uri address)
             => socket.Connect(address.ToSocketAddress());

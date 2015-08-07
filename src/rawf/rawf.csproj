@@ -85,6 +85,7 @@
     <Compile Include="Connectivity\SocketIdentifier.cs" />
     <Compile Include="Connectivity\IRouterConfiguration.cs" />
     <Compile Include="Connectivity\NodeIdentity.cs" />
+    <Compile Include="Connectivity\ClusterMemberMeta.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />
     <Compile Include="Framework\ExceptionExtensions.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
@@ -105,6 +106,8 @@
     <Compile Include="Messaging\Messages\RegisterMessageHandlersRoutingMessage.cs" />
     <Compile Include="Messaging\Messages\RequestMessageHandlersRoutingMessage.cs" />
     <Compile Include="Messaging\Messages\UnregisterMessageHandlersRoutingMessage.cs" />
+    <Compile Include="Messaging\Messages\PingMessage.cs" />
+    <Compile Include="Messaging\Messages\PongMessage.cs" />
     <Compile Include="Messaging\MultipartMessage.cs" />
     <Compile Include="Messaging\MultipartMessage.Frames.cs" />
     <Compile Include="Messaging\NewtonJsonMessageSerializer.cs" />
@@ -115,6 +118,7 @@
     <Compile Include="Sockets\ISocketFactory.cs" />
     <Compile Include="Sockets\Socket.cs" />
     <Compile Include="Sockets\SocketFactory.cs" />
+    <Compile Include="Sockets\SocketStateChangeRequest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

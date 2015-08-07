@@ -85,22 +85,14 @@ namespace rawf.Connectivity
                 Console.WriteLine(err);
             }
         }
-
-        private ISocket CreateClusterMonitorSendingSocket()
-        {
-            var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(currentRendezvousServer.UnicastUri);
-
-            return socket;
-        }
-
+        
         private void ListenMessages(CancellationToken token, Barrier gateway)
         {
             try
             {
                 using (var subscriber = CreateClusterMonitorSubscriptionSocket())
                 {
-                    using (var routerNotificationSocket = CreateOneWaySocket())
+                    using (var routerNotificationSocket = CreateRouterCommunicationSocket())
                     {
                         gateway.SignalAndWait(token);
 
@@ -130,7 +122,15 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        private ISocket CreateOneWaySocket()
+        private ISocket CreateClusterMonitorSendingSocket()
+        {
+            var socket = socketFactory.CreateDealerSocket();
+            socket.Connect(currentRendezvousServer.UnicastUri);
+
+            return socket;
+        }
+
+        private ISocket CreateRouterCommunicationSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.Connect(routerConfiguration.RouterAddress.Uri);
@@ -140,13 +140,27 @@ namespace rawf.Connectivity
 
         private void ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)
         {
-            if (Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity))
+            //TODO: Refactor message handlnig and forwarding
+            var forwardMessageToRouter = true;
+            
+            if (IsRegisterExternalRoute(message))
             {
-                var registration = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
-                var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
-                clusterConfiguration.AddClusterMember(clusterMember);
+                AddClusterMember(message);
             }
-            routerNotificationSocket.SendMessage(message);
+            else if (IsPing(message))
+            {
+                SendPong();
+                forwardMessageToRouter = false;                    
+            }
+            else if(IsPongNotFromSelf(message))
+            {
+                ProcessPongMessage(message);
+                forwardMessageToRouter = false;
+            }
+            if (forwardMessageToRouter)
+            {
+                routerNotificationSocket.SendMessage(message);    
+            }            
         }
 
         public void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers)
@@ -183,5 +197,50 @@ namespace rawf.Connectivity
                                   SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
                               },
                               UnregisterMessageHandlersRoutingMessage.MessageIdentity);
+                              
+        private bool IsRegisterExternalRoute(IMessage message) 
+            => Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity)                              
+        
+        private bool IsPing(IMessage message) 
+            => Unsafe.Equals(PingMessage.MessageIdentity, message.Identity)
+            
+        private bool IsPongNotFromSelf(IMessage message)
+        { 
+            if (Unsafe.Equals(PongMessage.MessageIdentity, message.Identity))
+            {
+                var payload = message.GetPayload<PongMessage>();
+                
+                return payload.Uri.ToSocketAddress() != routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()
+                        && !Unsafe.Equals(payload.SocektIdentity, routerConfiguration.ScaleOutAddress.Identity);
+            }
+            
+            return false;
+        } 
+            
+        private void SendPong()
+            => outgoingMessages.Add(Message.Create(new PongMessage
+                    {
+                        Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                        SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
+                    }, PongMessage.MessageIdentity));
+                    
+        private void AddClusterMember(IMessage message)
+        {
+            var registration = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
+            var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
+            clusterConfiguration.AddClusterMember(clusterMember);
+        }
+        
+        private void ProcessPongMessage(IMessage message)
+        {
+            var paylaod = message.GetPayload<PongMessage>();
+            
+            var updated = clusterConfiguration.KeepAlive(new SocketEndpoint(new Uri(payload.Uri, payload.SocketIdentity)));
+            
+            if (!updated)
+            {
+                
+            }                        
+        }                              
     }
 }

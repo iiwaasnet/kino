@@ -11,6 +11,8 @@ namespace rawf.Sockets
         void Connect(Uri address);
         void Bind(Uri address);
         void Disconnect(Uri address);
+        void EnqueueDisconnect(Uri address);
+        void EnqueueConnect(Uri address);
         void Unbind(Uri address);
         void SetIdentity(byte[] identity);
         void SetMandatoryRouting(bool mandatory = true);

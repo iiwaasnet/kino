@@ -6,5 +6,8 @@ namespace rawf.Connectivity
     {
         IEnumerable<SocketEndpoint> GetClusterMembers();
         void AddClusterMember(SocketEndpoint node);
+        bool KeepAlive(SocketEndpoint node);
+        TimeSpan PingSilenceBeforeRendezvousFailover { get; }
+        TimeSpan PongSilenceBeforeRouteDeletion { get; } 
     }
 }

@@ -4,17 +4,29 @@ namespace rawf.Connectivity
 {
     public class ClusterConfiguration : IClusterConfiguration
     {
-        private readonly HashSet<SocketEndpoint> clusterMembers;
+        private readonly ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta> clusterMembers;
 
         public ClusterConfiguration()
         {
-            clusterMembers = new HashSet<SocketEndpoint>();
+            clusterMembers = new ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta>();
         }
 
         public IEnumerable<SocketEndpoint> GetClusterMembers()
-            => clusterMembers;
+            => clusterMembers.Keys;
 
         public void AddClusterMember(SocketEndpoint node)
-            => clusterMembers.Add(node);
+            => clusterMembers.TryAdd(node, new ClusterMemberMeta { LastKnownPong = DateTime.UtcNow });
+            
+        public bool KeepAlive(SocketEndpoint node)
+        {
+            ClusterMemberMeta meta;
+            var updated = clusterMembers.TryGet(node, out meta);
+            if (updated)
+            {
+                meta.LastKnownPong = DateTime.UtcNow;
+            }
+            
+            return updated;
+        }
     }
 }
