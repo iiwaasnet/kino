@@ -216,7 +216,7 @@ namespace rawf.Connectivity
             var shouldHandle = IsMessageHandlersRoutingRequest(message);
             if (shouldHandle)
             {
-                var payload = message.GetPayload<RequestMessageHandlersRoutingMessage>();
+                var payload = message.GetPayload<RequestAllMessageHandlersRoutingMessage>();
 
                 if (NotSelfSentMessage(payload.RequestorSocketIdentity))
                 {
@@ -262,7 +262,7 @@ namespace rawf.Connectivity
             => !Unsafe.Equals(routerConfiguration.ScaleOutAddress.Identity, socketIdentity);
 
         private static bool IsMessageHandlersRoutingRequest(IMessage message)
-            => Unsafe.Equals(RequestMessageHandlersRoutingMessage.MessageIdentity, message.Identity);
+            => Unsafe.Equals(RequestAllMessageHandlersRoutingMessage.MessageIdentity, message.Identity);
 
         private static bool IsExternalRouteRegistration(IMessage message)
             => Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity);

@@ -104,7 +104,8 @@
     <Compile Include="Messaging\Messages\MessageHandlerRegistration.cs" />
     <Compile Include="Messaging\Messages\RegisterMessageHandlersMessage.cs" />
     <Compile Include="Messaging\Messages\RegisterMessageHandlersRoutingMessage.cs" />
-    <Compile Include="Messaging\Messages\RequestMessageHandlersRoutingMessage.cs" />
+    <Compile Include="Messaging\Messages\RequestAllMessageHandlersRoutingMessage.cs" />
+    <Compile Include="Messaging\Messages\RequestNodeMessageHandlersRoutingMessage.cs" />
     <Compile Include="Messaging\Messages\UnregisterMessageHandlersRoutingMessage.cs" />
     <Compile Include="Messaging\Messages\PingMessage.cs" />
     <Compile Include="Messaging\Messages\PongMessage.cs" />

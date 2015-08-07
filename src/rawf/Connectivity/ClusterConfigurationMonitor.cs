@@ -140,27 +140,25 @@ namespace rawf.Connectivity
 
         private void ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)
         {
-            //TODO: Refactor message handlnig and forwarding
-            var forwardMessageToRouter = true;
+            //TODO: Refactor message handling and forwarding
             
             if (IsRegisterExternalRoute(message))
             {
                 AddClusterMember(message);
+                routerNotificationSocket.SendMessage(message);
             }
             else if (IsPing(message))
             {
-                SendPong();
-                forwardMessageToRouter = false;                    
+                SendPong();                                    
             }
-            else if(IsPongNotFromSelf(message))
+            else if(IsPong(message))
             {
                 ProcessPongMessage(message);
-                forwardMessageToRouter = false;
             }
-            if (forwardMessageToRouter)
+            else if(IsRequestAllMessageHandlersRouting(message))
             {
-                routerNotificationSocket.SendMessage(message);    
-            }            
+                routerNotificationSocket.SendMessage(message);
+            }                        
         }
 
         public void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers)
@@ -181,12 +179,12 @@ namespace rawf.Connectivity
 
         public void RequestMessageHandlersRouting()
         {
-            var message = Message.Create(new RequestMessageHandlersRoutingMessage
+            var message = Message.Create(new RequestAllMessageHandlersRoutingMessage
                                          {
                                              RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
                                              RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()
                                          },
-                                         RequestMessageHandlersRoutingMessage.MessageIdentity);
+                                         RequestAllMessageHandlersRoutingMessage.MessageIdentity);
             outgoingMessages.Add(message);
         }
 
@@ -200,7 +198,14 @@ namespace rawf.Connectivity
                               
         private bool IsRegisterExternalRoute(IMessage message)
         { 
-            => Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity)
+            if (Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity))
+            {
+                var payload = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
+                
+                return !SelfSentMessage(payload.SocketIdentity); 
+            }
+            
+            return false;
         }                              
         
         private bool IsPing(IMessage message) 
@@ -209,18 +214,29 @@ namespace rawf.Connectivity
         private bool SelfSentMessage(byte[] socketIdentity)
             => Unsafe.Equals(routerConfiguration.ScaleOutAddress.Identity, socketIdentity);            
             
-        private bool IsPongNotFromSelf(IMessage message)
+        private bool IsPong(IMessage message)
         { 
             if (Unsafe.Equals(PongMessage.MessageIdentity, message.Identity))
             {
                 var payload = message.GetPayload<PongMessage>();
                 
-                return payload.Uri.ToSocketAddress() != routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()
-                        && !Unsafe.Equals(payload.SocektIdentity, routerConfiguration.ScaleOutAddress.Identity);
+                return !SelfSentMessage(payload.SocektIdentity);
             }
             
             return false;
         } 
+
+        private bool IsRequestAllMessageHandlersRouting(IMessage message)
+        {
+            if (Unsafe.Equals(RequestAllMessageHandlersRoutingMessage.MessageIdentity, message.Identity))
+            {
+                var payload = message.GetPayload<RequestAllMessageHandlersRoutingMessage>();
+                
+                return !SelfSentMessage(payload.RequestorSocketIdentity);
+            }
+            
+            return false;
+        }
             
         private void SendPong()
             => outgoingMessages.Add(Message.Create(new PongMessage
@@ -244,7 +260,13 @@ namespace rawf.Connectivity
             
             if (!updated)
             {
-                
+                var message = Message.Create(new RequestNodeMessageHandlersRoutingMessage
+                                     {
+                                         TargetNodeIdentity = payload.SocketIdentity,
+                                         TargetNodeUri = payload.Uri
+                                     },
+                                     RequestNodeMessageHandlersRoutingMessage.MessageIdentity);
+                outgoingMessages.Add(message);
             }                        
         }                              
     }
