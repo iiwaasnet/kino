@@ -60,9 +60,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationConfiguration.cs" />
+    <Compile Include="ClusterConfigurationProvider.cs" />
     <Compile Include="IInitialRendezvousServerConfiguration.cs" />
     <Compile Include="IMessageHubConfigurationProvider.cs" />
     <Compile Include="InitialRendezvousServerConfiguration.cs" />
+    <Compile Include="IClusterConfigurationProvider.cs" />
     <Compile Include="IRouterConfigurationProvider.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="MessageHubConfigurationProvider.cs" />

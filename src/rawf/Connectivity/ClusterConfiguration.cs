@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace rawf.Connectivity
@@ -20,7 +22,7 @@ namespace rawf.Connectivity
         public bool KeepAlive(SocketEndpoint node)
         {
             ClusterMemberMeta meta;
-            var updated = clusterMembers.TryGet(node, out meta);
+            var updated = clusterMembers.TryGetValue(node, out meta);
             if (updated)
             {
                 meta.LastKnownPong = DateTime.UtcNow;
@@ -28,5 +30,8 @@ namespace rawf.Connectivity
             
             return updated;
         }
+
+        public TimeSpan PingSilenceBeforeRendezvousFailover { get; set; }
+        public TimeSpan PongSilenceBeforeRouteDeletion { get; set; }
     }
 }

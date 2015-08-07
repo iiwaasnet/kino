@@ -1,7 +1,9 @@
-namespace rawf.Connectovity
+using System;
+
+namespace rawf.Connectivity
 {
 	public class ClusterMemberMeta
 	{
-		public DateTime LastKnowPong { get; set; }
+		public DateTime LastKnownPong { get; set; }
 	}
 }

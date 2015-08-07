@@ -216,12 +216,7 @@ namespace rawf.Connectivity
             var shouldHandle = IsMessageHandlersRoutingRequest(message);
             if (shouldHandle)
             {
-                var payload = message.GetPayload<RequestAllMessageHandlersRoutingMessage>();
-
-                if (NotSelfSentMessage(payload.RequestorSocketIdentity))
-                {
-                    clusterConfigurationMonitor.RegisterSelf(internalRoutingTable.GetMessageHandlerIdentifiers());
-                }
+                clusterConfigurationMonitor.RegisterSelf(internalRoutingTable.GetMessageHandlerIdentifiers());
             }
 
             return shouldHandle;
@@ -234,23 +229,20 @@ namespace rawf.Connectivity
             {
                 var payload = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
 
-                if (NotSelfSentMessage(payload.SocketIdentity))
-                {
-                    var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
-                    var uri = new Uri(payload.Uri);
+                var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+                var uri = new Uri(payload.Uri);
 
-                    foreach (var registration in payload.MessageHandlers)
+                foreach (var registration in payload.MessageHandlers)
+                {
+                    try
                     {
-                        try
-                        {
-                            var messageHandlerIdentifier = new MessageHandlerIdentifier(registration.Version, registration.Identity);
-                            externalRoutingTable.Push(messageHandlerIdentifier, handlerSocketIdentifier, uri);
-                            scaleOutBackend.Connect(uri);
-                        }
-                        catch (Exception err)
-                        {
-                            Console.WriteLine(err);
-                        }
+                        var messageHandlerIdentifier = new MessageHandlerIdentifier(registration.Version, registration.Identity);
+                        externalRoutingTable.Push(messageHandlerIdentifier, handlerSocketIdentifier, uri);
+                        scaleOutBackend.Connect(uri);
+                    }
+                    catch (Exception err)
+                    {
+                        Console.WriteLine(err);
                     }
                 }
             }
@@ -258,11 +250,9 @@ namespace rawf.Connectivity
             return shouldHandle;
         }
 
-        private bool NotSelfSentMessage(byte[] socketIdentity)
-            => !Unsafe.Equals(routerConfiguration.ScaleOutAddress.Identity, socketIdentity);
-
         private static bool IsMessageHandlersRoutingRequest(IMessage message)
-            => Unsafe.Equals(RequestAllMessageHandlersRoutingMessage.MessageIdentity, message.Identity);
+            => Unsafe.Equals(RequestAllMessageHandlersRoutingMessage.MessageIdentity, message.Identity)
+               || Unsafe.Equals(RequestNodeMessageHandlersRoutingMessage.MessageIdentity, message.Identity);
 
         private static bool IsExternalRouteRegistration(IMessage message)
             => Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity);

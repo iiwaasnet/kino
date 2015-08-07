@@ -85,7 +85,7 @@ namespace rawf.Connectivity
                 Console.WriteLine(err);
             }
         }
-        
+
         private void ListenMessages(CancellationToken token, Barrier gateway)
         {
             try
@@ -141,7 +141,6 @@ namespace rawf.Connectivity
         private void ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)
         {
             //TODO: Refactor message handling and forwarding
-            
             if (IsRegisterExternalRoute(message))
             {
                 AddClusterMember(message);
@@ -149,16 +148,16 @@ namespace rawf.Connectivity
             }
             else if (IsPing(message))
             {
-                SendPong();                                    
+                SendPong();
             }
-            else if(IsPong(message))
+            else if (IsPong(message))
             {
                 ProcessPongMessage(message);
             }
-            else if(IsRequestAllMessageHandlersRouting(message))
+            else if (IsRequestAllMessageHandlersRouting(message) || IsRequestNodeMessageHandlersRouting(message))
             {
                 routerNotificationSocket.SendMessage(message);
-            }                        
+            }
         }
 
         public void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers)
@@ -195,79 +194,92 @@ namespace rawf.Connectivity
                                   SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
                               },
                               UnregisterMessageHandlersRoutingMessage.MessageIdentity);
-                              
+
         private bool IsRegisterExternalRoute(IMessage message)
-        { 
+        {
             if (Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity))
             {
                 var payload = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
-                
-                return !SelfSentMessage(payload.SocketIdentity); 
+
+                return !ThisNodeSocket(payload.SocketIdentity);
             }
-            
+
             return false;
-        }                              
-        
-        private bool IsPing(IMessage message) 
-            => Unsafe.Equals(PingMessage.MessageIdentity, message.Identity)
-            
-        private bool SelfSentMessage(byte[] socketIdentity)
-            => Unsafe.Equals(routerConfiguration.ScaleOutAddress.Identity, socketIdentity);            
-            
+        }
+
+        private bool IsPing(IMessage message)
+            => Unsafe.Equals(PingMessage.MessageIdentity, message.Identity);
+
+        private bool ThisNodeSocket(byte[] socketIdentity)
+            => Unsafe.Equals(routerConfiguration.ScaleOutAddress.Identity, socketIdentity);
+
         private bool IsPong(IMessage message)
-        { 
+        {
             if (Unsafe.Equals(PongMessage.MessageIdentity, message.Identity))
             {
                 var payload = message.GetPayload<PongMessage>();
-                
-                return !SelfSentMessage(payload.SocektIdentity);
+
+                return !ThisNodeSocket(payload.SocketIdentity);
             }
-            
+
             return false;
-        } 
+        }
 
         private bool IsRequestAllMessageHandlersRouting(IMessage message)
         {
             if (Unsafe.Equals(RequestAllMessageHandlersRoutingMessage.MessageIdentity, message.Identity))
             {
                 var payload = message.GetPayload<RequestAllMessageHandlersRoutingMessage>();
-                
-                return !SelfSentMessage(payload.RequestorSocketIdentity);
+
+                return !ThisNodeSocket(payload.RequestorSocketIdentity);
             }
-            
+
             return false;
         }
-            
+
+        private bool IsRequestNodeMessageHandlersRouting(IMessage message)
+        {
+            if (Unsafe.Equals(RequestNodeMessageHandlersRoutingMessage.MessageIdentity, message.Identity))
+            {
+                var payload = message.GetPayload<RequestNodeMessageHandlersRoutingMessage>();
+
+                return ThisNodeSocket(payload.TargetNodeIdentity);
+            }
+
+            return false;
+        }
+
         private void SendPong()
             => outgoingMessages.Add(Message.Create(new PongMessage
-                    {
-                        Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                        SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
-                    }, PongMessage.MessageIdentity));
-                    
+                                                   {
+                                                       Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                                       SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
+                                                   },
+                                                   PongMessage.MessageIdentity));
+
         private void AddClusterMember(IMessage message)
         {
             var registration = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
             var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
             clusterConfiguration.AddClusterMember(clusterMember);
         }
-        
+
         private void ProcessPongMessage(IMessage message)
         {
-            var paylaod = message.GetPayload<PongMessage>();
-            
-            var updated = clusterConfiguration.KeepAlive(new SocketEndpoint(new Uri(payload.Uri, payload.SocketIdentity)));
-            
+            var payload = message.GetPayload<PongMessage>();
+
+            var updated = clusterConfiguration.KeepAlive(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
+
             if (!updated)
             {
-                var message = Message.Create(new RequestNodeMessageHandlersRoutingMessage
-                                     {
-                                         TargetNodeIdentity = payload.SocketIdentity,
-                                         TargetNodeUri = payload.Uri
-                                     },
-                                     RequestNodeMessageHandlersRoutingMessage.MessageIdentity);
-                outgoingMessages.Add(message);
-            }                        
-        }                              
+                var request = Message.Create(new RequestNodeMessageHandlersRoutingMessage
+                                             {
+                                                 TargetNodeIdentity = payload.SocketIdentity,
+                                                 TargetNodeUri = payload.Uri
+                                             },
+                                             RequestNodeMessageHandlersRoutingMessage.MessageIdentity);
+                outgoingMessages.Add(request);
+            }
+        }
     }
 }

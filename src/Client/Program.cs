@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Client.Messages;
@@ -63,8 +62,8 @@ namespace Client
                                   {
                                       //if (r.Wait(TimeSpan.FromSeconds(1)))
                                       //{
-                                          var msg = r.Result.GetPayload<EhlloMessage>();
-                                          //System.Console.WriteLine($"Received: {msg.Ehllo}");
+                                      var msg = r.Result.GetPayload<EhlloMessage>();
+                                      //System.Console.WriteLine($"Received: {msg.Ehllo}");
                                       //}
                                       //else
                                       //{

@@ -61,6 +61,8 @@
   <ItemGroup>
     <Compile Include="Actor.cs" />
     <Compile Include="ApplicationConfiguration.cs" />
+    <Compile Include="ClusterConfigurationProvider.cs" />
+    <Compile Include="IClusterConfigurationProvider.cs" />
     <Compile Include="IInitialRendezvousServerConfiguration.cs" />
     <Compile Include="InitialRendezvousServerConfiguration.cs" />
     <Compile Include="IRouterConfigurationProvider.cs" />

@@ -8,10 +8,9 @@ namespace Client
     {
         private readonly IMessageHubConfiguration config;
 
-        public MessageHubConfigurationProvider(IConfigProvider configProvider)
+        public MessageHubConfigurationProvider(ApplicationConfiguration appConfig)
         {
-            var tmp = configProvider.GetConfiguration<ApplicationConfiguration>();
-            config = new MessageHubConfiguration {RouterUri = new Uri(tmp.RouterUri)};
+            config = new MessageHubConfiguration {RouterUri = new Uri(appConfig.RouterUri)};
         }
 
         public IMessageHubConfiguration GetConfiguration()

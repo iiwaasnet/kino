@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Client
 {
@@ -7,5 +8,7 @@ namespace Client
         public string RouterUri { get; set; }
         public string ScaleOutAddressUri { get; set; }
         public IEnumerable<RendezvousEndpoint> RendezvousServers { get; set; }
+        public TimeSpan PingSilenceBeforeRendezvousFailover { get; set; }
+        public TimeSpan PongSilenceBeforeRouteDeletion { get; set; }
     }
 }

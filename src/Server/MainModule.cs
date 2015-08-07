@@ -19,16 +19,26 @@ namespace Server
                    .As<IConfigTargetProvider>()
                    .SingleInstance();
 
+            builder.Register(c => c.Resolve<IConfigProvider>().GetConfiguration<ApplicationConfiguration>())
+                   .As<ApplicationConfiguration>()
+                   .SingleInstance();
+
             builder.RegisterType<RouterConfigurationProvider>()
                    .As<IRouterConfigurationProvider>()
+                   .SingleInstance();
+            builder.Register(c => c.Resolve<IRouterConfigurationProvider>().GetConfiguration())
+                   .As<IRouterConfiguration>()
+                   .SingleInstance();
+
+            builder.RegisterType<ClusterConfigurationProvider>()
+                   .As<IClusterConfigurationProvider>()
+                   .SingleInstance();
+            builder.Register(c => c.Resolve<IClusterConfigurationProvider>().GetConfiguration())
+                   .As<IClusterConfiguration>()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IInitialRendezvousServerConfiguration>().GetConfiguration())
                    .As<IEnumerable<RendezvousServerConfiguration>>()
-                   .SingleInstance();
-
-            builder.Register(c => c.Resolve<IRouterConfigurationProvider>().GetConfiguration())
-                   .As<IRouterConfiguration>()
                    .SingleInstance();
 
             builder.RegisterType<InitialRendezvousServerConfiguration>()

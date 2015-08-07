@@ -8,14 +8,12 @@ namespace Client
     {
         private readonly IRouterConfiguration config;
 
-        public RouterConfigurationProvider(IConfigProvider configProvider)
+        public RouterConfigurationProvider(ApplicationConfiguration appConfig)
         {
-            var tmp = configProvider.GetConfiguration<ApplicationConfiguration>();
-
             config = new RouterConfiguration
                      {
-                         RouterAddress = new SocketEndpoint(new Uri(tmp.RouterUri), SocketIdentifier.CreateNew()),
-                         ScaleOutAddress = new SocketEndpoint(new Uri(tmp.ScaleOutAddressUri), SocketIdentifier.CreateNew())
+                         RouterAddress = new SocketEndpoint(new Uri(appConfig.RouterUri), SocketIdentifier.CreateNew()),
+                         ScaleOutAddress = new SocketEndpoint(new Uri(appConfig.ScaleOutAddressUri), SocketIdentifier.CreateNew())
                      };
         }
 

@@ -9,11 +9,9 @@ namespace Client
     public class InitialRendezvousServerConfiguration : IInitialRendezvousServerConfiguration
     {
         private readonly IEnumerable<RendezvousServerConfiguration> config;
-        public InitialRendezvousServerConfiguration(IConfigProvider configProvider)
+        public InitialRendezvousServerConfiguration(ApplicationConfiguration appConfig)
         {
-            var tmp = configProvider.GetConfiguration<ApplicationConfiguration>();
-
-            config = tmp.RendezvousServers.Select(rs => new RendezvousServerConfiguration
+            config = appConfig.RendezvousServers.Select(rs => new RendezvousServerConfiguration
                                                         {
                                                             BroadcastUri = new Uri(rs.BroadcastUri),
                                                             UnicastUri = new Uri(rs.UnicastUri)
