@@ -61,6 +61,8 @@ namespace rawf.Connectivity
             cancellationTokenSource.Cancel(true);
             sendingMessages.Wait();
             listenningMessages.Wait();
+            monitorRendezvous.Wait();
+            pingReceived.Dispose();
         }
 
         private void RendezvousConnectionMonitor(CancellationToken token, Barrier gateway)
@@ -75,6 +77,7 @@ namespace rawf.Connectivity
                     {
                         DisconnectFromCurrentRendezvousServer();
                         ConnectToNextRendezvousServer();
+                        pingReceived.Reset();
                     }
                 }
             }
@@ -230,6 +233,7 @@ namespace rawf.Connectivity
             var shouldHandle = IsPing(message);
             if (shouldHandle)
             {
+                pingReceived.Set();
                 SendPong();
             }
 
