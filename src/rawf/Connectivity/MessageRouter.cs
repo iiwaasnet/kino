@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NetMQ;
@@ -216,7 +217,11 @@ namespace rawf.Connectivity
             var shouldHandle = IsMessageHandlersRoutingRequest(message);
             if (shouldHandle)
             {
-                clusterConfigurationMonitor.RegisterSelf(internalRoutingTable.GetMessageHandlerIdentifiers());
+                var messageIdentifiers = internalRoutingTable.GetMessageHandlerIdentifiers();
+                if (messageIdentifiers.Any())
+                {
+                    clusterConfigurationMonitor.RegisterSelf(messageIdentifiers);
+                }
             }
 
             return shouldHandle;
