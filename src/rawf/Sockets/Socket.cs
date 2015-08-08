@@ -59,27 +59,47 @@ namespace rawf.Sockets
                 switch (request.StateChange)
                 {
                     case SocketStateChangeKind.Connect:
-                        Connect(request.Endpoint);
+                        Connect(((SocketConnectionStateChanged) request).Endpoint);
                         return;
                     case SocketStateChangeKind.Disconnect:
-                        Disconnect(request.Endpoint);
+                        Disconnect(((SocketConnectionStateChanged) request).Endpoint);
+                        return;
+                    case SocketStateChangeKind.Subscribe:
+                        Subscribe(((SocketSubscriptionStateChanged) request).Topic);
+                        return;
+                    case SocketStateChangeKind.Unsubscribe:
+                        Unsubscribe(((SocketSubscriptionStateChanged) request).Topic);
                         return;
                 }
             }
         }
 
         public void EnqueueDisconnect(Uri address)
-            => stateChangeRequests.Enqueue(new SocketStateChangeRequest
+            => stateChangeRequests.Enqueue(new SocketConnectionStateChanged
                                            {
                                                Endpoint = address,
                                                StateChange = SocketStateChangeKind.Disconnect
                                            });
 
         public void EnqueueConnect(Uri address)
-            => stateChangeRequests.Enqueue(new SocketStateChangeRequest
+            => stateChangeRequests.Enqueue(new SocketConnectionStateChanged
                                            {
                                                Endpoint = address,
                                                StateChange = SocketStateChangeKind.Connect
+                                           });
+
+        public void EnqueueSubscribe(string topic = "")
+            => stateChangeRequests.Enqueue(new SocketSubscriptionStateChanged
+                                           {
+                                               Topic = topic,
+                                               StateChange = SocketStateChangeKind.Subscribe
+                                           });
+
+        public void EnqueueUnsubscribe(string topic = "")
+            => stateChangeRequests.Enqueue(new SocketSubscriptionStateChanged
+                                           {
+                                               Topic = topic,
+                                               StateChange = SocketStateChangeKind.Unsubscribe
                                            });
 
         public void Connect(Uri address)
@@ -96,6 +116,9 @@ namespace rawf.Sockets
 
         public void Subscribe(string topic = "")
             => socket.Subscribe(topic);
+
+        public void Unsubscribe(string topic = "")
+            => socket.Unsubscribe(topic);
 
         public void SetMandatoryRouting(bool mandatory = true)
             => socket.Options.RouterMandatory = mandatory;

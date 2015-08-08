@@ -18,11 +18,13 @@ namespace rawf.Connectivity
         private readonly BlockingCollection<IMessage> outgoingMessages;
         private readonly IClusterConfiguration clusterConfiguration;
         private readonly IRouterConfiguration routerConfiguration;
-        //private readonly RendezvousServerConfiguration currentRendezvousServer;
         private Task sendingMessages;
         private Task listenningMessages;
+        private Task monitorRendezvous;
         private readonly ManualResetEventSlim pingReceived;
         private readonly IRendezvousConfiguration rendezvousConfiguration;
+        private ISocket clusterMonitorSubscriptionSocket;
+        private ISocket clusterMonitorSendingSocket;
 
         public ClusterConfigurationMonitor(ISocketFactory socketFactory,
                                            IRouterConfiguration routerConfiguration,
@@ -36,18 +38,19 @@ namespace rawf.Connectivity
             this.rendezvousConfiguration = rendezvousConfiguration;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             cancellationTokenSource = new CancellationTokenSource();
-            //currentRendezvousServer = rendezvousConfiguration.GetRendezvousServers().First();
         }
 
         public void Start()
         {
-            const int participantCount = 3;
+            const int participantCount = 4;
             using (var gateway = new Barrier(participantCount))
             {
                 sendingMessages = Task.Factory.StartNew(_ => SendMessages(cancellationTokenSource.Token, gateway),
                                                         TaskCreationOptions.LongRunning);
                 listenningMessages = Task.Factory.StartNew(_ => ListenMessages(cancellationTokenSource.Token, gateway),
                                                            TaskCreationOptions.LongRunning);
+                monitorRendezvous = Task.Factory.StartNew(_ => RendezvousConnectionMonitor(cancellationTokenSource.Token, gateway),
+                                                          TaskCreationOptions.LongRunning);
 
                 gateway.SignalAndWait(cancellationTokenSource.Token);
             }
@@ -60,16 +63,18 @@ namespace rawf.Connectivity
             listenningMessages.Wait();
         }
 
-        private void RendezvousConnectionMonitor()
+        private void RendezvousConnectionMonitor(CancellationToken token, Barrier gateway)
         {
             try
             {
-                while (!cancellationTokenSource.IsCancellationRequested)
-                {
-                    if (!pingReceived.Wait(clusterConfiguration.PingSilenceBeforeRendezvousFailover, cancellationTokenSource.Token))
-                    {
-                        var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
+                gateway.SignalAndWait(token);
 
+                while (!token.IsCancellationRequested)
+                {
+                    if (PingSilence())
+                    {
+                        DisconnectFromCurrentRendezvousServer();
+                        ConnectToNextRendezvousServer();
                     }
                 }
             }
@@ -82,18 +87,39 @@ namespace rawf.Connectivity
             }
         }
 
+        private void ConnectToNextRendezvousServer()
+        {
+            var rendezvousServer = rendezvousConfiguration.GetNextRendezvousServers();
+            clusterMonitorSendingSocket.EnqueueConnect(rendezvousServer.UnicastUri);
+            clusterMonitorSubscriptionSocket.EnqueueConnect(rendezvousServer.BroadcastUri);
+            clusterMonitorSubscriptionSocket.EnqueueSubscribe();
+        }
+
+        private void DisconnectFromCurrentRendezvousServer()
+        {
+            var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
+            clusterMonitorSendingSocket.EnqueueDisconnect(rendezvousServer.UnicastUri);
+            clusterMonitorSubscriptionSocket.EnqueueUnsubscribe();
+            clusterMonitorSubscriptionSocket.EnqueueDisconnect(rendezvousServer.BroadcastUri);
+        }
+
+        private bool PingSilence()
+        {
+            return !pingReceived.Wait(clusterConfiguration.PingSilenceBeforeRendezvousFailover, cancellationTokenSource.Token);
+        }
+
         private void SendMessages(CancellationToken token, Barrier gateway)
         {
             try
             {
-                using (var sendingSocket = CreateClusterMonitorSendingSocket())
+                using (clusterMonitorSendingSocket = CreateClusterMonitorSendingSocket())
                 {
                     gateway.SignalAndWait(token);
                     try
                     {
                         foreach (var messageOut in outgoingMessages.GetConsumingEnumerable(token))
                         {
-                            sendingSocket.SendMessage(messageOut);
+                            clusterMonitorSendingSocket.SendMessage(messageOut);
                             // TODO: Block immediatelly for the response
                             // Otherwise, consider the RS dead and switch to failover partner
                             //sendingSocket.ReceiveMessage(token);
@@ -103,7 +129,7 @@ namespace rawf.Connectivity
                     {
                     }
 
-                    sendingSocket.SendMessage(CreateUnregisterRoutingMessage());
+                    clusterMonitorSendingSocket.SendMessage(CreateUnregisterRoutingMessage());
                 }
             }
             catch (Exception err)
@@ -116,7 +142,7 @@ namespace rawf.Connectivity
         {
             try
             {
-                using (var subscriber = CreateClusterMonitorSubscriptionSocket())
+                using (clusterMonitorSubscriptionSocket = CreateClusterMonitorSubscriptionSocket())
                 {
                     using (var routerNotificationSocket = CreateRouterCommunicationSocket())
                     {
@@ -124,7 +150,7 @@ namespace rawf.Connectivity
 
                         while (!token.IsCancellationRequested)
                         {
-                            var message = subscriber.ReceiveMessage(token);
+                            var message = clusterMonitorSubscriptionSocket.ReceiveMessage(token);
                             if (message != null)
                             {
                                 ProcessIncomingMessage(message, routerNotificationSocket);
