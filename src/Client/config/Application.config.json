@@ -2,13 +2,17 @@
     "dev": {
         "routerUri": "tcp://127.0.0.2:5200",
         "scaleOutAddressUri": "tcp://127.0.0.2:5201",
-        "pingSilenceBeforeRendezvousFailover": "00:00:10",
+        "pingSilenceBeforeRendezvousFailover": "00:00:20",
         "pongSilenceBeforeRouteDeletion": "00:00:10",
 
         "rendezvousServers": [
             {
                 "broadcastUri": "tcp://127.0.0.3:5000",
                 "unicastUri": "tcp://127.0.0.3:5001"
+            },
+			{
+                "broadcastUri": "tcp://127.0.0.13:5000",
+                "unicastUri": "tcp://127.0.0.13:5001"
             }
         ]
     }

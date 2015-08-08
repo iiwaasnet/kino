@@ -33,7 +33,7 @@ namespace Client
             //var resp = promise.GetResponse().Result.GetPayload<EhlloMessage>();
             //Console.WriteLine(resp.Ehllo);
 
-            RunTest(messageHub, 100);
+            RunTest(messageHub, 1000000);
 
             Console.ReadLine();
             messageHub.Stop();
@@ -53,7 +53,17 @@ namespace Client
             for (var i = 0; i < runs; i++)
             {
                 var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
-                responses.Add(messageHub.EnqueueRequest(message, callbackPoint).GetResponse());
+                var promise = messageHub.EnqueueRequest(message, callbackPoint);
+                if (promise.GetResponse().Wait(TimeSpan.FromSeconds(1)))
+                {
+                    var msg = promise.GetResponse().Result.GetPayload<EhlloMessage>();
+                    Console.WriteLine($"Received: {msg.Ehllo}");
+                }
+                else
+                {
+                    Console.WriteLine("Timeout....");
+                }
+                //responses.Add(messageHub.EnqueueRequest(message, callbackPoint).GetResponse());
             }
 
             responses.ForEach(r =>
@@ -63,7 +73,7 @@ namespace Client
                                       //if (r.Wait(TimeSpan.FromSeconds(1)))
                                       //{
                                       var msg = r.Result.GetPayload<EhlloMessage>();
-                                      //System.Console.WriteLine($"Received: {msg.Ehllo}");
+                                      //Console.WriteLine($"Received: {msg.Ehllo}");
                                       //}
                                       //else
                                       //{

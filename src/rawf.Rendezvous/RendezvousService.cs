@@ -124,6 +124,7 @@ namespace rawf.Rendezvous
         {
             cancellationTokenSource.Cancel(true);
             messageProcessing.Wait();
+            pinging.Wait();
         }
     }
 }

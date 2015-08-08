@@ -21,7 +21,7 @@ namespace rawf.Connectivity
 
         private int RotateServerIndex()
         {
-            currentServerIndex = (config.Count >= currentServerIndex + 1)
+            currentServerIndex = (config.Count <= currentServerIndex + 1)
                                      ? 0
                                      : currentServerIndex + 1;
             return currentServerIndex;

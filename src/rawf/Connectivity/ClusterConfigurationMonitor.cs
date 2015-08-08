@@ -21,7 +21,7 @@ namespace rawf.Connectivity
         private Task sendingMessages;
         private Task listenningMessages;
         private Task monitorRendezvous;
-        private readonly ManualResetEventSlim pingReceived;
+        private readonly AutoResetEvent pingReceived;
         private readonly IRendezvousConfiguration rendezvousConfiguration;
         private ISocket clusterMonitorSubscriptionSocket;
         private ISocket clusterMonitorSendingSocket;
@@ -31,7 +31,7 @@ namespace rawf.Connectivity
                                            IClusterConfiguration clusterConfiguration,
                                            IRendezvousConfiguration rendezvousConfiguration)
         {
-            pingReceived = new ManualResetEventSlim(false);
+            pingReceived = new AutoResetEvent(false);
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
             this.clusterConfiguration = clusterConfiguration;
@@ -77,7 +77,6 @@ namespace rawf.Connectivity
                     {
                         DisconnectFromCurrentRendezvousServer();
                         ConnectToNextRendezvousServer();
-                        pingReceived.Reset();
                     }
                 }
             }
@@ -96,6 +95,8 @@ namespace rawf.Connectivity
             clusterMonitorSendingSocket.EnqueueConnect(rendezvousServer.UnicastUri);
             clusterMonitorSubscriptionSocket.EnqueueConnect(rendezvousServer.BroadcastUri);
             clusterMonitorSubscriptionSocket.EnqueueSubscribe();
+
+            Console.WriteLine($"Reconnected to {rendezvousServer.BroadcastUri.AbsoluteUri}");
         }
 
         private void DisconnectFromCurrentRendezvousServer()
@@ -108,7 +109,7 @@ namespace rawf.Connectivity
 
         private bool PingSilence()
         {
-            return !pingReceived.Wait(clusterConfiguration.PingSilenceBeforeRendezvousFailover, cancellationTokenSource.Token);
+            return !pingReceived.WaitOne(clusterConfiguration.PingSilenceBeforeRendezvousFailover);
         }
 
         private void SendMessages(CancellationToken token, Barrier gateway)
@@ -175,6 +176,8 @@ namespace rawf.Connectivity
             var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
             socket.Connect(rendezvousServer.BroadcastUri);
             socket.Subscribe();
+
+            Console.WriteLine($"Connected to {rendezvousServer.BroadcastUri.AbsoluteUri}");
 
             return socket;
         }
