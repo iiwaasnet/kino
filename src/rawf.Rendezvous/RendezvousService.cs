@@ -52,6 +52,8 @@ namespace rawf.Rendezvous
                             var message = Message.Create(new PingMessage(), PingMessage.MessageIdentity);
                             pingNotificationSocket.SendMessage(message);
 
+                            Console.WriteLine("Ping");
+
                             wait.Wait(config.PingInterval, token);
                         }
                     }

@@ -64,7 +64,7 @@ namespace Client
                 {
                     Console.WriteLine("Timeout....");
                 }
-                Thread.Sleep(TimeSpan.FromSeconds(1));
+                Thread.Sleep(TimeSpan.FromSeconds(3));
                 //responses.Add(messageHub.EnqueueRequest(message, callbackPoint).GetResponse());
             }
 

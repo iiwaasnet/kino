@@ -23,6 +23,7 @@ namespace rawf.Sockets
             stateChangeRequests = new ConcurrentQueue<SocketStateChangeRequest>();
             socket.Options.Linger = TimeSpan.Zero;
             socket.Options.ReconnectInterval = TimeSpan.FromMilliseconds(-1);
+            socket.Options.TcpKeepalive = false;
             this.socket = socket;
         }
 

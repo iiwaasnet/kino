@@ -186,6 +186,7 @@ namespace rawf.Connectivity
         {
             var socket = socketFactory.CreateDealerSocket();
             var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
+            //socket.SetIdentity(SocketIdentifier.CreateNew());
             socket.Connect(rendezvousServer.UnicastUri);
 
             return socket;
@@ -327,6 +328,8 @@ namespace rawf.Connectivity
             if (Unsafe.Equals(PongMessage.MessageIdentity, message.Identity))
             {
                 var payload = message.GetPayload<PongMessage>();
+
+                Console.WriteLine($"Pong from URI:{payload.Uri} SOCKID;{payload.SocketIdentity.GetString()}");
 
                 return !ThisNodeSocket(payload.SocketIdentity);
             }
