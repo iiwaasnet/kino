@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using rawf.Framework;
 
 namespace rawf.Connectivity
 {
@@ -26,6 +27,8 @@ namespace rawf.Connectivity
                 socketToUriMap[socketIdentifier] = uri;
 
                 MapSocketToMessage(messageHandlerIdentifier, socketIdentifier);
+
+                Console.WriteLine($"Route added URI:{uri.AbsoluteUri} SOCKID:{socketIdentifier.Identity.GetString()}");
             }
         }
 
@@ -84,7 +87,7 @@ namespace rawf.Connectivity
                         }
                     }
                 }
-                socketToMessageMap.Remove(socketIdentifier);
+                socketToMessageMap.Remove(socketIdentifier);                
             }
         }
     }

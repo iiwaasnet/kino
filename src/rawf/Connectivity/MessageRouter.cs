@@ -206,7 +206,9 @@ namespace rawf.Connectivity
             {
                 var payload = message.GetPayload<UnregisterMessageHandlersRoutingMessage>();
                 externalRoutingTable.RemoveRoute(new SocketIdentifier(payload.SocketIdentity));
-                scaleOutBackend.Disconnect(new Uri(payload.Uri));
+                //scaleOutBackend.Disconnect(new Uri(payload.Uri));
+
+                Console.WriteLine($"Route removed URI:{payload.Uri} SOCKID:{payload.SocketIdentity.GetString()}");
             }
 
             return shouldHandle;

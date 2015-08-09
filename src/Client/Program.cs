@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Client.Messages;
@@ -63,6 +64,7 @@ namespace Client
                 {
                     Console.WriteLine("Timeout....");
                 }
+                Thread.Sleep(TimeSpan.FromSeconds(1));
                 //responses.Add(messageHub.EnqueueRequest(message, callbackPoint).GetResponse());
             }
 

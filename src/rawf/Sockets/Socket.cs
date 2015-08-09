@@ -21,8 +21,9 @@ namespace rawf.Sockets
         public Socket(NetMQSocket socket)
         {
             stateChangeRequests = new ConcurrentQueue<SocketStateChangeRequest>();
+            socket.Options.Linger = TimeSpan.Zero;
+            socket.Options.ReconnectInterval = TimeSpan.FromMilliseconds(-1);
             this.socket = socket;
-            this.socket.Options.Linger = TimeSpan.Zero;
         }
 
         public void SendMessage(IMessage message)

@@ -238,6 +238,7 @@ namespace rawf.Connectivity
             {
                 pingReceived.Set();
                 SendPong();
+                Console.WriteLine("Ping");
             }
 
             return shouldHandle;
@@ -280,6 +281,8 @@ namespace rawf.Connectivity
                                          },
                                          RegisterMessageHandlersRoutingMessage.MessageIdentity);
             outgoingMessages.Add(message);
+
+            Console.WriteLine($"Self-registration URI: {routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()} SOCKID: {routerConfiguration.ScaleOutAddress.Identity.GetString()} sent");
         }
 
         public void RequestMessageHandlersRouting()
@@ -368,18 +371,22 @@ namespace rawf.Connectivity
         }
 
         private void SendPong()
-            => outgoingMessages.Add(Message.Create(new PongMessage
-                                                   {
-                                                       Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                                       SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
-                                                   },
-                                                   PongMessage.MessageIdentity));
+        {
+            var message = Message.Create(new PongMessage
+                                         {
+                                             Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                             SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
+                                         },
+                                         PongMessage.MessageIdentity);
+            outgoingMessages.Add(message);
+        }
 
         private void AddClusterMember(IMessage message)
         {
             var registration = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
             var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
             clusterConfiguration.AddClusterMember(clusterMember);
+            Console.WriteLine($"Route added URI:{clusterMember.Uri.AbsoluteUri} SOCKID:{clusterMember.Identity.GetString()}");
         }
 
         private void ProcessPongMessage(IMessage message)
@@ -390,6 +397,7 @@ namespace rawf.Connectivity
             if (!nodeNotFound)
             {
                 RequestNodeMessageHandlersRouting(payload);
+                Console.WriteLine($"Route nod found, requesting URI:{payload.Uri} SOCKID:{payload.SocketIdentity.GetString()}");
             }
         }
 
@@ -416,6 +424,8 @@ namespace rawf.Connectivity
                                              UnregisterMessageHandlersRoutingMessage.MessageIdentity);
                 clusterConfiguration.DeleteClusterMember(deadNode);
                 routerNotificationSocket.SendMessage(message);
+
+                Console.WriteLine($"Route removed URI:{deadNode.Uri.AbsoluteUri} SOCKID:{deadNode.Identity.GetString()}");
             }
         }
     }
