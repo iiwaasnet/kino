@@ -14,7 +14,7 @@ namespace rawf.Connectivity
     public class ClusterConfigurationMonitor : IClusterConfigurationMonitor
     {
         private readonly ISocketFactory socketFactory;
-        private readonly CancellationTokenSource cancellationTokenSource;
+        private CancellationTokenSource cancellationTokenSource;
         private readonly BlockingCollection<IMessage> outgoingMessages;
         private readonly IClusterConfiguration clusterConfiguration;
         private readonly IRouterConfiguration routerConfiguration;
@@ -37,11 +37,12 @@ namespace rawf.Connectivity
             this.clusterConfiguration = clusterConfiguration;
             this.rendezvousConfiguration = rendezvousConfiguration;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
-            cancellationTokenSource = new CancellationTokenSource();
+            
         }
 
         public void Start()
         {
+            cancellationTokenSource = new CancellationTokenSource();
             const int participantCount = 4;
             using (var gateway = new Barrier(participantCount))
             {
@@ -61,8 +62,9 @@ namespace rawf.Connectivity
             cancellationTokenSource.Cancel(true);
             sendingMessages.Wait();
             listenningMessages.Wait();
-            monitorRendezvous.Wait();
-            pingReceived.Dispose();
+            //monitorRendezvous.Wait();
+            //pingReceived.Dispose();
+            cancellationTokenSource.Dispose();
         }
 
         private void RendezvousConnectionMonitor(CancellationToken token, Barrier gateway)
@@ -75,8 +77,12 @@ namespace rawf.Connectivity
                 {
                     if (PingSilence())
                     {
-                        DisconnectFromCurrentRendezvousServer();
-                        ConnectToNextRendezvousServer();
+                        rendezvousConfiguration.GetNextRendezvousServers();
+                        Stop();
+                        Start();
+                        Console.WriteLine($"Reconnected to {rendezvousConfiguration.GetCurrentRendezvousServers().BroadcastUri.AbsoluteUri}");
+                        //DisconnectFromCurrentRendezvousServer();
+                        //ConnectToNextRendezvousServer();
                     }
                 }
             }
