@@ -14,14 +14,15 @@ namespace rawf.Connectivity
     public class ClusterConfigurationMonitor : IClusterConfigurationMonitor
     {
         private readonly ISocketFactory socketFactory;
-        private CancellationTokenSource cancellationTokenSource;
+        private CancellationTokenSource monitoringToken;
+        private CancellationTokenSource messageProcessingToken;
         private readonly BlockingCollection<IMessage> outgoingMessages;
         private readonly IClusterConfiguration clusterConfiguration;
         private readonly IRouterConfiguration routerConfiguration;
         private Task sendingMessages;
         private Task listenningMessages;
         private Task monitorRendezvous;
-        private readonly AutoResetEvent pingReceived;
+        private readonly ManualResetEventSlim pingReceived;
         private readonly IRendezvousConfiguration rendezvousConfiguration;
         private ISocket clusterMonitorSubscriptionSocket;
         private ISocket clusterMonitorSendingSocket;
@@ -31,7 +32,8 @@ namespace rawf.Connectivity
                                            IClusterConfiguration clusterConfiguration,
                                            IRendezvousConfiguration rendezvousConfiguration)
         {
-            pingReceived = new AutoResetEvent(false);
+            cancellationTokenSource = new CancellationTokenSource();
+            pingReceived = new ManualResetEventSlim(false);
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
             this.clusterConfiguration = clusterConfiguration;
@@ -42,47 +44,68 @@ namespace rawf.Connectivity
 
         public void Start()
         {
-            cancellationTokenSource = new CancellationTokenSource();
-            const int participantCount = 4;
+            StartProcessingClusterMessages();
+            StartRendezvousMonitoring();
+        }
+        
+        public void Stop()
+        {
+            StartRendezvousMonitoring();
+            StopProcessingClusterMessages();
+        }
+        
+        private void StartRendezvousMonitoring()
+        {
+            monitoringToken = new CancellationTokenSource();
+            monitorRendezvous = Task.Factory.StartNew(_ => RendezvousConnectionMonitor(monitoringToken.Token, gateway),
+                                                          TaskCreationOptions.LongRunning);
+        }
+        
+        private void StartProcessingClusterMessages()
+        {
+            messageProcessingToken = new CancellationTokenSource();
+            const int participantCount = 3;
             using (var gateway = new Barrier(participantCount))
             {
-                sendingMessages = Task.Factory.StartNew(_ => SendMessages(cancellationTokenSource.Token, gateway),
-                                                        TaskCreationOptions.LongRunning);
-                listenningMessages = Task.Factory.StartNew(_ => ListenMessages(cancellationTokenSource.Token, gateway),
+                sendingMessages = Task.Factory.StartNew(_ => SendMessages(messageProcessingToken.Token, gateway),
+                                                            TaskCreationOptions.LongRunning);
+                listenningMessages = Task.Factory.StartNew(_ => ListenMessages(messageProcessingToken.Token, gateway),
                                                            TaskCreationOptions.LongRunning);
-                monitorRendezvous = Task.Factory.StartNew(_ => RendezvousConnectionMonitor(cancellationTokenSource.Token, gateway),
-                                                          TaskCreationOptions.LongRunning);
-
-                gateway.SignalAndWait(cancellationTokenSource.Token);
+                gateway.SignalAndWait(messageProcessingToken.Token);
             }
         }
 
-        public void Stop()
+        private void StopProcessingClusterMessages()
         {
-            cancellationTokenSource.Cancel(true);
+            messageProcessingToken.Cancel(true);
             sendingMessages.Wait();
             listenningMessages.Wait();
-            //monitorRendezvous.Wait();
-            //pingReceived.Dispose();
-            cancellationTokenSource.Dispose();
+            messageProcessingToken.Dispose();
+        }
+        
+        private void StopRendezvousMonitoring()
+        {
+            monitoringToken.Cancel(true);
+            monitorRendezvous.Wait();
+            monitoringToken.Dispose();
+            pingReceived.Dispose();
         }
 
-        private void RendezvousConnectionMonitor(CancellationToken token, Barrier gateway)
+        private void RendezvousConnectionMonitor(CancellationToken token)
         {
             try
             {
-                gateway.SignalAndWait(token);
-
                 while (!token.IsCancellationRequested)
                 {
-                    if (PingSilence())
+                    if (PingSilence(token))
                     {
-                        rendezvousConfiguration.GetNextRendezvousServers();
-                        Stop();
-                        Start();
-                        Console.WriteLine($"Reconnected to {rendezvousConfiguration.GetCurrentRendezvousServers().BroadcastUri.AbsoluteUri}");
-                        //DisconnectFromCurrentRendezvousServer();
-                        //ConnectToNextRendezvousServer();
+                        rendezvousConfiguration.RotateRendezvousServers();
+                        
+                        StopProcessingClusterMessages();
+                        StartProcessingClusterMessages();
+                        
+                        var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
+                        Console.WriteLine($"Reconnected to {rendezvousServer.BroadcastUri.AbsoluteUri}");
                     }
                 }
             }
@@ -95,27 +118,15 @@ namespace rawf.Connectivity
             }
         }
 
-        private void ConnectToNextRendezvousServer()
+        private bool PingSilence(CancellationToken token)
         {
-            var rendezvousServer = rendezvousConfiguration.GetNextRendezvousServers();
-            clusterMonitorSendingSocket.EnqueueConnect(rendezvousServer.UnicastUri);
-            clusterMonitorSubscriptionSocket.EnqueueConnect(rendezvousServer.BroadcastUri);
-            clusterMonitorSubscriptionSocket.EnqueueSubscribe();
-
-            Console.WriteLine($"Reconnected to {rendezvousServer.BroadcastUri.AbsoluteUri}");
-        }
-
-        private void DisconnectFromCurrentRendezvousServer()
-        {
-            var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
-            clusterMonitorSendingSocket.EnqueueDisconnect(rendezvousServer.UnicastUri);
-            clusterMonitorSubscriptionSocket.EnqueueUnsubscribe();
-            clusterMonitorSubscriptionSocket.EnqueueDisconnect(rendezvousServer.BroadcastUri);
-        }
-
-        private bool PingSilence()
-        {
-            return !pingReceived.WaitOne(clusterConfiguration.PingSilenceBeforeRendezvousFailover);
+            if (pingReceived.WaitOne(clusterConfiguration.PingSilenceBeforeRendezvousFailover, token))
+            {
+                pingReceived.Reset();
+                return true
+            } 
+            
+            return false;
         }
 
         private void SendMessages(CancellationToken token, Barrier gateway)
@@ -178,8 +189,8 @@ namespace rawf.Connectivity
 
         private ISocket CreateClusterMonitorSubscriptionSocket()
         {
+            var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateSubscriberSocket();
-            var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
             socket.Connect(rendezvousServer.BroadcastUri);
             socket.Subscribe();
 
@@ -190,8 +201,8 @@ namespace rawf.Connectivity
 
         private ISocket CreateClusterMonitorSendingSocket()
         {
-            var socket = socketFactory.CreateDealerSocket();
-            var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
+            var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
+            var socket = socketFactory.CreateDealerSocket();            
             //socket.SetIdentity(SocketIdentifier.CreateNew());
             socket.Connect(rendezvousServer.UnicastUri);
 
