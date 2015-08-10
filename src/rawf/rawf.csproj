@@ -120,7 +120,6 @@
     <Compile Include="Sockets\ISocketFactory.cs" />
     <Compile Include="Sockets\Socket.cs" />
     <Compile Include="Sockets\SocketFactory.cs" />
-    <Compile Include="Sockets\SocketStateChangeRequest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

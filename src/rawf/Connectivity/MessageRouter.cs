@@ -104,8 +104,8 @@ namespace rawf.Connectivity
                     localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
                     clusterConfigurationMonitor.RequestMessageHandlersRouting();
 
-                    using (var scaleOutBackend = CreateScaleOutBackendSocket())
-                    {
+                    //  using (var scaleOutBackend = CreateScaleOutBackendSocket())
+                    //  {
                         gateway.SignalAndWait(token);
 
                         while (!token.IsCancellationRequested)
@@ -129,11 +129,11 @@ namespace rawf.Connectivity
                                         }
                                         else
                                         {
-                                            handler = externalRoutingTable.Pop(messageHandlerIdentifier);
-                                            if (handler != null)
+                                            var socket = externalRoutingTable.Pop(messageHandlerIdentifier);
+                                            if (socket != null)
                                             {
-                                                message.SetSocketIdentity(handler.Identity);
-                                                scaleOutBackend.SendMessage(message);
+                                                //  message.SetSocketIdentity(handler.Identity);
+                                                socket.SendMessage(message);
                                             }
                                             else
                                             {
@@ -152,7 +152,7 @@ namespace rawf.Connectivity
                                 Console.WriteLine(err);
                             }
                         }
-                    }
+                    //  }
                 }
             }
             catch (Exception err)
@@ -161,16 +161,16 @@ namespace rawf.Connectivity
             }
         }
 
-        private ISocket CreateScaleOutBackendSocket()
-        {
-            var socket = socketFactory.CreateRouterSocket();
-            foreach (var peer in clusterConfiguration.GetClusterMembers())
-            {
-                socket.Connect(peer.Uri);
-            }
-
-            return socket;
-        }
+//          private ISocket CreateScaleOutBackendSocket()
+//          {
+//              var socket = socketFactory.CreateRouterSocket();
+//              foreach (var peer in clusterConfiguration.GetClusterMembers())
+//              {
+//                  socket.Connect(peer.Uri);
+//              }
+//  
+//              return socket;
+//          }
 
         private ISocket CreateScaleOutFrontendSocket()
         {

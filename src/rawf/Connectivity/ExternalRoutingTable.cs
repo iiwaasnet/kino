@@ -7,6 +7,8 @@ namespace rawf.Connectivity
 {
     public class ExternalRoutingTable : IExternalRoutingTable
     {
+        //TODO: SocketId's might not be needed, only uri's, hence it's not possible to start bind to the same endpoint with differemt
+        // SocketId's        
         private readonly IDictionary<MessageHandlerIdentifier, IDictionary<SocketIdentifier, ISocket>> messageHandlersMap;
         private readonly IDictionary<SocketIdentifier, HashSet<MessageHandlerIdentifier>> socketToMessageMap;
         private readonly IDictionary<SocketIdentifier, Uri> socketToUriMap;
@@ -20,7 +22,7 @@ namespace rawf.Connectivity
             this.scoketFactory = socketFactory;
         }
 
-        public void Push(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier, Uri uri)
+        public void AddRoute(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier, Uri uri)
         {
             var mapped = MapMessageToSocket(messageHandlerIdentifier, socketIdentifier, Uri uri);
 
@@ -65,18 +67,18 @@ namespace rawf.Connectivity
             hashSet.Add(messageHandlerIdentifier);
         }
 
-        public SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier)
+        public ISocket GetRoute(MessageHandlerIdentifier messageHandlerIdentifier)
         {
             //TODO: Implement round robin
             IDictionary<SocketIdentifier, ISocket> sockets;
-            return messageHandlersMap.TryGetValue(messageHandlerIdentifier, out csocketsollection)
+            return messageHandlersMap.TryGetValue(messageHandlerIdentifier, out sockets)
                        ? Get(sockets)
                        : null;
         }
 
-        private static V Get<V>(IDictionary<K, V> collection)
+        private static V Get<V>(ICollection<KeyValuePair<K, V>> collection)
             => collection.Any()
-                   ? collection.Values.First()
+                   ? collection.First().Value;
                    : default(V);
 
         public void RemoveRoute(SocketIdentifier socketIdentifier)
