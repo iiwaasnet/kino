@@ -25,8 +25,6 @@ namespace rawf.Sockets
 
         public void SendMessage(IMessage message)
         {
-            ProcessPendingStatusChangeRequests();
-
             var multipart = new MultipartMessage(message);
             socket.SendMessage(new NetMQMessage(multipart.Frames));
         }

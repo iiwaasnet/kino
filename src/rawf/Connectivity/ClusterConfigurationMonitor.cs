@@ -32,7 +32,6 @@ namespace rawf.Connectivity
                                            IClusterConfiguration clusterConfiguration,
                                            IRendezvousConfiguration rendezvousConfiguration)
         {
-            cancellationTokenSource = new CancellationTokenSource();
             pingReceived = new ManualResetEventSlim(false);
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
@@ -57,7 +56,7 @@ namespace rawf.Connectivity
         private void StartRendezvousMonitoring()
         {
             monitoringToken = new CancellationTokenSource();
-            monitorRendezvous = Task.Factory.StartNew(_ => RendezvousConnectionMonitor(monitoringToken.Token, gateway),
+            monitorRendezvous = Task.Factory.StartNew(_ => RendezvousConnectionMonitor(monitoringToken.Token),
                                                           TaskCreationOptions.LongRunning);
         }
         
@@ -104,7 +103,7 @@ namespace rawf.Connectivity
                         StopProcessingClusterMessages();
                         StartProcessingClusterMessages();
                         
-                        var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServers();
+                        var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
                         Console.WriteLine($"Reconnected to {rendezvousServer.BroadcastUri.AbsoluteUri}");
                     }
                 }
@@ -120,10 +119,10 @@ namespace rawf.Connectivity
 
         private bool PingSilence(CancellationToken token)
         {
-            if (pingReceived.WaitOne(clusterConfiguration.PingSilenceBeforeRendezvousFailover, token))
+            if (pingReceived.Wait(clusterConfiguration.PingSilenceBeforeRendezvousFailover, token))
             {
                 pingReceived.Reset();
-                return true
+                return true;
             } 
             
             return false;

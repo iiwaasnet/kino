@@ -13,7 +13,7 @@ namespace rawf.Connectivity
             config = new List<RendezvousServerConfiguration>(initialConfiguration);
         }
 
-        public RendezvousServerConfiguration GetCurrentRendezvousServers()
+        public RendezvousServerConfiguration GetCurrentRendezvousServer()
             => config[currentServerIndex];
 
         public RendezvousServerConfiguration RotateRendezvousServers()

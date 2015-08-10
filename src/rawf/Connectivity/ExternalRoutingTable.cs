@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using rawf.Framework;
+using rawf.Sockets;
 
 namespace rawf.Connectivity
 {
@@ -19,12 +20,12 @@ namespace rawf.Connectivity
             messageHandlersMap = new Dictionary<MessageHandlerIdentifier, IDictionary<SocketIdentifier, ISocket>>();
             socketToMessageMap = new Dictionary<SocketIdentifier, HashSet<MessageHandlerIdentifier>>();
             socketToUriMap = new Dictionary<SocketIdentifier, Uri>();
-            this.scoketFactory = socketFactory;
+            this.socketFactory = socketFactory;
         }
 
         public void AddRoute(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier, Uri uri)
         {
-            var mapped = MapMessageToSocket(messageHandlerIdentifier, socketIdentifier, Uri uri);
+            var mapped = MapMessageToSocket(messageHandlerIdentifier, socketIdentifier, uri);
 
             if (mapped)
             {
@@ -76,10 +77,10 @@ namespace rawf.Connectivity
                        : null;
         }
 
-        private static V Get<V>(ICollection<KeyValuePair<K, V>> collection)
+        private static ISocket Get(IDictionary<SocketIdentifier, ISocket> collection)
             => collection.Any()
-                   ? collection.First().Value;
-                   : default(V);
+                   ? collection.Values.First()
+                   : default(ISocket);
 
         public void RemoveRoute(SocketIdentifier socketIdentifier)
         {
@@ -96,7 +97,7 @@ namespace rawf.Connectivity
                 foreach (var messageHandlerIdentifier in messageHandlers)
                 {
                     IDictionary<SocketIdentifier, ISocket> sockets;
-                    if (messageHandlersMap.TryGetValue(messageHandlerIdentifier, out socketIdentifiers))
+                    if (messageHandlersMap.TryGetValue(messageHandlerIdentifier, out sockets))
                     {
                         ISocket socket;
                         if (sockets.TryGetValue(socketIdentifier, out socket))
