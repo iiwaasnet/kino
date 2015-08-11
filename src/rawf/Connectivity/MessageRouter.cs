@@ -104,8 +104,8 @@ namespace rawf.Connectivity
                     localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
                     clusterConfigurationMonitor.RequestMessageHandlersRouting();
 
-                    //  using (var scaleOutBackend = CreateScaleOutBackendSocket())
-                    //  {
+                    using (var scaleOutBackend = CreateScaleOutBackendSocket())
+                    {
                         gateway.SignalAndWait(token);
 
                         while (!token.IsCancellationRequested)
@@ -115,7 +115,7 @@ namespace rawf.Connectivity
                                 var message = (Message) localSocket.ReceiveMessage(token);
                                 if (message != null)
                                 {
-                                    var messageHandled = TryHandleServiceMessage(message);
+                                    var messageHandled = TryHandleServiceMessage(message, scaleOutBackend);
 
                                     if (!messageHandled)
                                     {
@@ -129,11 +129,11 @@ namespace rawf.Connectivity
                                         }
                                         else
                                         {
-                                            var socket = externalRoutingTable.GetRoute(messageHandlerIdentifier);
-                                            if (socket != null)
+                                            handler = externalRoutingTable.Pop(messageHandlerIdentifier);
+                                            if (handler != null)
                                             {
-                                                //  message.SetSocketIdentity(handler.Identity);
-                                                socket.SendMessage(message);
+                                                message.SetSocketIdentity(handler.Identity);
+                                                scaleOutBackend.SendMessage(message);
                                             }
                                             else
                                             {
@@ -152,7 +152,7 @@ namespace rawf.Connectivity
                                 Console.WriteLine(err);
                             }
                         }
-                    //  }
+                    }
                 }
             }
             catch (Exception err)
@@ -161,16 +161,16 @@ namespace rawf.Connectivity
             }
         }
 
-//          private ISocket CreateScaleOutBackendSocket()
-//          {
-//              var socket = socketFactory.CreateRouterSocket();
-//              foreach (var peer in clusterConfiguration.GetClusterMembers())
-//              {
-//                  socket.Connect(peer.Uri);
-//              }
-//  
-//              return socket;
-//          }
+        private ISocket CreateScaleOutBackendSocket()
+        {
+            var socket = socketFactory.CreateRouterSocket();
+            foreach (var peer in clusterConfiguration.GetClusterMembers())
+            {
+                socket.Connect(peer.Uri);
+            }
+
+            return socket;
+        }
 
         private ISocket CreateScaleOutFrontendSocket()
         {
@@ -193,20 +193,20 @@ namespace rawf.Connectivity
             return socket;
         }
 
-        private bool TryHandleServiceMessage(IMessage message)
+        private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
             => RegisterMessageHandler(message)
-               || RegisterExternalRoute(message)
+               || RegisterExternalRoute(message, scaleOutBackend)
                || RequestMessageHandlersRegistration(message)
-               || UnregisterMessageHandlersRouting(message);
+               || UnregisterMessageHandlersRouting(message, scaleOutBackend);
 
-        private bool UnregisterMessageHandlersRouting(IMessage message)
+        private bool UnregisterMessageHandlersRouting(IMessage message, ISocket scaleOutBackend)
         {
             var shouldHandle = IsUnregisterMessageHandlersRouting(message);
             if (shouldHandle)
             {
                 var payload = message.GetPayload<UnregisterMessageHandlersRoutingMessage>();
                 externalRoutingTable.RemoveRoute(new SocketIdentifier(payload.SocketIdentity));
-                //scaleOutBackend.Disconnect(new Uri(payload.Uri));
+                scaleOutBackend.Disconnect(new Uri(payload.Uri));
 
                 Console.WriteLine($"Route removed URI:{payload.Uri} SOCKID:{payload.SocketIdentity.GetString()}");
             }
@@ -229,7 +229,7 @@ namespace rawf.Connectivity
             return shouldHandle;
         }
 
-        private bool RegisterExternalRoute(IMessage message)
+        private bool RegisterExternalRoute(IMessage message ,ISocket scaleOutBackend)
         {
             var shouldHandle = IsExternalRouteRegistration(message);
             if (shouldHandle)
@@ -244,7 +244,8 @@ namespace rawf.Connectivity
                     try
                     {
                         var messageHandlerIdentifier = new MessageHandlerIdentifier(registration.Version, registration.Identity);
-                        externalRoutingTable.AddRoute(messageHandlerIdentifier, handlerSocketIdentifier, uri);
+                        externalRoutingTable.Push(messageHandlerIdentifier, handlerSocketIdentifier, uri);
+                        scaleOutBackend.Connect(uri);
                     }
                     catch (Exception err)
                     {

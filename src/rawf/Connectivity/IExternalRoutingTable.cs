@@ -1,12 +1,11 @@
 ﻿using System;
-using rawf.Sockets;
 
 namespace rawf.Connectivity
 {
     public interface IExternalRoutingTable
     {
-        void AddRoute(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier, Uri uri);
-        ISocket GetRoute(MessageHandlerIdentifier messageHandlerIdentifier);
+        void Push(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier, Uri uri);
+        SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier);
         void RemoveRoute(SocketIdentifier socketIdentifier);
     }
 }
