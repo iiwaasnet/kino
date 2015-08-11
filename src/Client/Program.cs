@@ -34,7 +34,7 @@ namespace Client
             //var resp = promise.GetResponse().Result.GetPayload<EhlloMessage>();
             //Console.WriteLine(resp.Ehllo);
 
-            RunTest(messageHub, 1000000);
+            RunTest(messageHub, 100000);
 
             Console.ReadLine();
             messageHub.Stop();
@@ -53,19 +53,19 @@ namespace Client
             var responses = new List<Task<IMessage>>();
             for (var i = 0; i < runs; i++)
             {
-                var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
-                var promise = messageHub.EnqueueRequest(message, callbackPoint);
-                if (promise.GetResponse().Wait(TimeSpan.FromSeconds(1)))
-                {
-                    var msg = promise.GetResponse().Result.GetPayload<EhlloMessage>();
-                    Console.WriteLine($"Received: {msg.Ehllo}");
-                }
-                else
-                {
-                    Console.WriteLine("Timeout....");
-                }
-                Thread.Sleep(TimeSpan.FromSeconds(3));
-                //responses.Add(messageHub.EnqueueRequest(message, callbackPoint).GetResponse());
+                var message = Message.CreateFlowStartMessage(new HelloMessage { Greeting = "Hello" }, HelloMessage.MessageIdentity);
+                //var promise = messageHub.EnqueueRequest(message, callbackPoint);
+                //if (promise.GetResponse().Wait(TimeSpan.FromSeconds(1)))
+                //{
+                //    var msg = promise.GetResponse().Result.GetPayload<EhlloMessage>();
+                //    Console.WriteLine($"Received: {msg.Ehllo}");
+                //}
+                //else
+                //{
+                //    Console.WriteLine("Timeout....");
+                //}
+                //Thread.Sleep(TimeSpan.FromSeconds(3));
+                responses.Add(messageHub.EnqueueRequest(message, callbackPoint).GetResponse());
             }
 
             responses.ForEach(r =>
