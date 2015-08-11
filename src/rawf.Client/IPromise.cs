@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using rawf.Messaging;
 
 namespace rawf.Client
@@ -6,5 +7,6 @@ namespace rawf.Client
     public interface IPromise
     {
         Task<IMessage> GetResponse();
+        TimeSpan TimeToLive { get; set; }
     }
 }
