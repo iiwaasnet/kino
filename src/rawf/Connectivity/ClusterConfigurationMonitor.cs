@@ -122,10 +122,10 @@ namespace rawf.Connectivity
             if (pingReceived.Wait(clusterConfiguration.PingSilenceBeforeRendezvousFailover, token))
             {
                 pingReceived.Reset();
-                return true;
+                return false;
             } 
             
-            return false;
+            return true;
         }
 
         private void SendMessages(CancellationToken token, Barrier gateway)
@@ -255,7 +255,7 @@ namespace rawf.Connectivity
             {
                 pingReceived.Set();
                 SendPong();
-                Console.WriteLine("Ping");
+                //Console.WriteLine("Ping");
             }
 
             return shouldHandle;
@@ -345,7 +345,7 @@ namespace rawf.Connectivity
             {
                 var payload = message.GetPayload<PongMessage>();
 
-                Console.WriteLine($"Pong from URI:{payload.Uri} SOCKID;{payload.SocketIdentity.GetString()}");
+                //Console.WriteLine($"Pong from URI:{payload.Uri} SOCKID;{payload.SocketIdentity.GetString()}");
 
                 return !ThisNodeSocket(payload.SocketIdentity);
             }
