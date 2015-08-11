@@ -12,7 +12,7 @@ namespace ConsoleApplication1
 {
     class Program
     {
-        static void Main(string[] args)
+        static void M(string[] args)
         {
             var cancellationTokenSource = new CancellationTokenSource();
             var server = Task.Factory.StartNew(_ => RunServer(cancellationTokenSource.Token), cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
