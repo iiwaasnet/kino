@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using rawf.Connectivity;
@@ -11,10 +12,19 @@ namespace rawf.Client
     public class CallbackHandlerStack : ICallbackHandlerStack
     {
         private readonly ConcurrentDictionary<CorrelationId, IDictionary<MessageHandlerIdentifier, IPromise>> handlers;
-        
-        public CallbackHandlerStack()
+        private readonly IDelayedCollection<CorrelationId> expirationQueue;
+
+        public CallbackHandlerStack(IDelayedCollection<CorrelationId> expirationQueue)
         {
             handlers =  new ConcurrentDictionary<CorrelationId, IDictionary<MessageHandlerIdentifier, IPromise>>();
+            expirationQueue.SetExpirationHandler(RemoveExpiredCallback);
+            this.expirationQueue = expirationQueue;
+        }
+
+        private void RemoveExpiredCallback(CorrelationId correlationId)
+        {
+            IDictionary<MessageHandlerIdentifier, IPromise> value;
+            handlers.TryRemove(correlationId, out value);
         }
 
         public void Push(CorrelationId correlation, IPromise promise, IEnumerable<MessageHandlerIdentifier> messageHandlerIdentifiers)
@@ -24,6 +34,7 @@ namespace rawf.Client
             {
                 throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
             }
+            expirationQueue.Delay(correlation, promise.ExpireAfter);
             handlers[correlation] = messageHandlerIdentifiers.ToDictionary(mp => mp, mp => promise);
         }
 

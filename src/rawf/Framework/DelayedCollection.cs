@@ -6,42 +6,45 @@ using System.Threading.Tasks;
 
 namespace rawf.Framework
 {
-    public class DelayedCollection<T> : IDisposable
+    public partial class DelayedCollection<T> : IDelayedCollection<T>
     {
-        private readonly BlockingCollection<DelayedItem<T>> additionQueue;
-        private readonly List<DelayedItem<T>> delayedItems;
+        private readonly BlockingCollection<DelayedItem> additionQueue;
+        private readonly List<DelayedItem> delayedItems;
         private readonly Task delayItems;
         private readonly CancellationTokenSource tokenSource;
+        private readonly AutoResetEvent itemAdded;
+        private Action<T> handler;
 
         public DelayedCollection()
         {
-            delayedItems = new List<DelayedItem<T>>();
+            delayedItems = new List<DelayedItem>();
+            itemAdded = new AutoResetEvent(false);
             tokenSource = new CancellationTokenSource();
-            additionQueue = new BlockingCollection<DelayedItem<T>>(new ConcurrentQueue<DelayedItem<T>>());
+            additionQueue = new BlockingCollection<DelayedItem>(new ConcurrentQueue<DelayedItem>());
             delayItems = Task.Factory.StartNew(_ => EvaluateDelays(tokenSource.Token), tokenSource.Token, TaskCreationOptions.LongRunning);
+        }
+
+        public void SetExpirationHandler(Action<T> handler)
+        {
+            this.handler = handler;
         }
 
         public void Dispose()
         {
             tokenSource.Cancel(true);
             additionQueue.CompleteAdding();
+            delayItems.Wait();
+            delayItems.Dispose();
+            tokenSource.Dispose();
         }
 
         private void EvaluateDelays(CancellationToken token)
         {
             try
             {
-                //var itemAdded = new CancellationTokenSource(Timeout.InfiniteTimeSpan);
-
-                //foreach (var delayedItem in additionQueue.GetConsumingEnumerable(itemAdded.Token))
-                //{
-                //    delayedItems.Add(delayedItem);
-                //    delayedItems.Sort(Comparison);
-                //    itemAdded = new CancellationTokenSource(delayedItems[0].ExpireAfter);
-                //}
                 while (!token.IsCancellationRequested)
                 {
-                    DelayedItem<T> item;
+                    DelayedItem item;
                     while (additionQueue.TryTake(out item))
                     {
                         delayedItems.Add(item);
@@ -49,11 +52,17 @@ namespace rawf.Framework
                     var now = DateTime.UtcNow;
 
                     delayedItems.Sort(Comparison);
-                    while (delayedItems.Count > 0 && delayedItems[0].IsExpired())
+                    while (delayedItems.Count > 0 && delayedItems[0].IsExpired(now))
                     {
+                        if (handler != null)
+                        {
+                            SafeNotifySubscriber(delayedItems[0].Item);
+                        }
                         delayedItems.RemoveAt(0);
                     }
                     var sleep = (delayedItems.Count > 0) ? delayedItems[0].ExpireAfter : Timeout.Infinite;
+
+                    WaitHandle.WaitAny(new[] {itemAdded, token.WaitHandle}, sleep);
                 }
             }
             catch (OperationCanceledException)
@@ -69,52 +78,30 @@ namespace rawf.Framework
             }
         }
 
-        private int Comparison(DelayedItem<T> delayedItem, DelayedItem<T> item)
+        private void SafeNotifySubscriber(T item)
         {
-            return delayedItem.ExpireAfter.CompareTo(item.ExpireAfter);
+            try
+            {
+                handler(item);
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine(err);
+            }
         }
+
+        private int Comparison(DelayedItem delayedItem, DelayedItem item)
+            => delayedItem.ExpireAfter.CompareTo(item.ExpireAfter);
 
         public IDelayedItem Delay(T item, TimeSpan expireAfter)
         {
-            var delayedItem = new DelayedItem<T>(item, expireAfter, this);
+            var delayedItem = new DelayedItem(item, expireAfter, this);
             additionQueue.Add(delayedItem);
 
             return delayedItem;
         }
 
         private void TriggerDelayEvaluation()
-        {
-        }
-
-        private class DelayedItem<T> : IDelayedItem
-        {
-            private readonly DelayedCollection<T> storage;
-            private readonly DateTime timeAdded;
-
-            internal DelayedItem(T item, TimeSpan expireAfter, DelayedCollection<T> storage)
-            {
-                this.storage = storage;
-                Item = item;
-                timeAdded = DateTime.UtcNow;
-                ExpireAfter = expireAfter.Milliseconds;
-            }
-
-            internal T Item { get; }
-            internal int ExpireAfter { get; set; }
-
-            public void ExpireNow()
-            {
-                ExpireAfter = 0;
-                storage.TriggerDelayEvaluation();
-            }
-
-            internal bool IsExpired()
-                => DateTime.UtcNow > timeAdded.AddMilliseconds(ExpireAfter);
-        }
-    }
-
-    public interface IDelayedItem
-    {
-        void ExpireNow();
+            => itemAdded.Set();
     }
 }
