@@ -7,6 +7,6 @@ namespace rawf.Client
     public interface IPromise
     {
         Task<IMessage> GetResponse();
-        TimeSpan TimeToLive { get; set; }
+        TimeSpan ExpireAfter { get; set; }
     }
 }
