@@ -40,8 +40,6 @@ namespace Server
 
             //throw new Exception("Bla!");
 
-            Thread.Sleep(TimeSpan.FromSeconds(30));
-
             return Message.Create(new EhlloMessage
             {
                 Ehllo = new string(hello.Greeting.Reverse().ToArray())

@@ -4,16 +4,16 @@ namespace rawf.Framework
 {
     public partial class DelayedCollection<T>
     {
-        private class DelayedItem : IDelayedItem
+        private class ExpirableItem : IExpirableItem
         {
             private readonly DelayedCollection<T> storage;
-            private readonly DateTime timeAdded;
+            private readonly DateTime expirationTime;
 
-            internal DelayedItem(T item, TimeSpan expireAfter, DelayedCollection<T> storage)
+            internal ExpirableItem(T item, TimeSpan expireAfter, DelayedCollection<T> storage)
             {
                 this.storage = storage;
                 Item = item;
-                timeAdded = DateTime.UtcNow;
+                expirationTime = DateTime.UtcNow + expireAfter;
                 ExpireAfter = expireAfter.Milliseconds;
             }
 
@@ -27,7 +27,7 @@ namespace rawf.Framework
             }
 
             internal bool IsExpired(DateTime now)
-                => now >= timeAdded.AddMilliseconds(ExpireAfter);
+                => now >= expirationTime;
         }
     }
 }

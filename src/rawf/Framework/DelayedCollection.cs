@@ -8,8 +8,8 @@ namespace rawf.Framework
 {
     public partial class DelayedCollection<T> : IDelayedCollection<T>
     {
-        private readonly BlockingCollection<DelayedItem> additionQueue;
-        private readonly List<DelayedItem> delayedItems;
+        private readonly BlockingCollection<ExpirableItem> additionQueue;
+        private readonly List<ExpirableItem> delayedItems;
         private readonly Task delayItems;
         private readonly CancellationTokenSource tokenSource;
         private readonly AutoResetEvent itemAdded;
@@ -17,10 +17,10 @@ namespace rawf.Framework
 
         public DelayedCollection()
         {
-            delayedItems = new List<DelayedItem>();
+            delayedItems = new List<ExpirableItem>();
             itemAdded = new AutoResetEvent(false);
             tokenSource = new CancellationTokenSource();
-            additionQueue = new BlockingCollection<DelayedItem>(new ConcurrentQueue<DelayedItem>());
+            additionQueue = new BlockingCollection<ExpirableItem>(new ConcurrentQueue<ExpirableItem>());
             delayItems = Task.Factory.StartNew(_ => EvaluateDelays(tokenSource.Token), tokenSource.Token, TaskCreationOptions.LongRunning);
         }
 
@@ -44,14 +44,15 @@ namespace rawf.Framework
             {
                 while (!token.IsCancellationRequested)
                 {
-                    DelayedItem item;
+                    ExpirableItem item;
                     while (additionQueue.TryTake(out item))
                     {
                         delayedItems.Add(item);
                     }
-                    var now = DateTime.UtcNow;
 
                     delayedItems.Sort(Comparison);
+
+                    var now = DateTime.UtcNow;
                     while (delayedItems.Count > 0 && delayedItems[0].IsExpired(now))
                     {
                         if (handler != null)
@@ -90,12 +91,12 @@ namespace rawf.Framework
             }
         }
 
-        private int Comparison(DelayedItem delayedItem, DelayedItem item)
-            => delayedItem.ExpireAfter.CompareTo(item.ExpireAfter);
+        private int Comparison(ExpirableItem expirableItem, ExpirableItem item)
+            => expirableItem.ExpireAfter.CompareTo(item.ExpireAfter);
 
-        public IDelayedItem Delay(T item, TimeSpan expireAfter)
+        public IExpirableItem Delay(T item, TimeSpan expireAfter)
         {
-            var delayedItem = new DelayedItem(item, expireAfter, this);
+            var delayedItem = new ExpirableItem(item, expireAfter, this);
             additionQueue.Add(delayedItem);
             itemAdded.Set();
 

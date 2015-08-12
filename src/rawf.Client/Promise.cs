@@ -6,18 +6,19 @@ using rawf.Messaging.Messages;
 
 namespace rawf.Client
 {
-    public class Promise : IPromise
+    internal class Promise : IPromise
     {
         private readonly TaskCompletionSource<IMessage> result;
-        private static readonly TimeSpan DefaultPromiseExpiration = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan DefaultPromiseExpiration = TimeSpan.FromSeconds(20);
+        private IExpirableItem expirableItem;
 
-        public Promise(TimeSpan expiresAfter)
+        internal Promise(TimeSpan expiresAfter)
         {
             result = new TaskCompletionSource<IMessage>();
             ExpireAfter = expiresAfter;
         }
 
-        public Promise()
+        internal Promise()
             : this(DefaultPromiseExpiration)
         {
         }
@@ -27,6 +28,8 @@ namespace rawf.Client
 
         internal void SetResult(IMessage message)
         {
+            expirableItem?.ExpireNow();
+
             if (Unsafe.Equals(message.Identity, ExceptionMessage.MessageIdentity))
             {
                 var error = message.GetPayload<ExceptionMessage>().Exception;
@@ -37,6 +40,9 @@ namespace rawf.Client
                 result.SetResult(message);
             }
         }
+
+        internal void SetExpiration(IExpirableItem expirableItem)
+            => this.expirableItem = expirableItem;
 
         public TimeSpan ExpireAfter { get; }
     }

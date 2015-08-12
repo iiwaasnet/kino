@@ -91,7 +91,7 @@
     <Compile Include="Framework\DuplicatedKeyException.cs" />
     <Compile Include="Framework\ExceptionExtensions.cs" />
     <Compile Include="Framework\IDelayedCollection.cs" />
-    <Compile Include="Framework\IDelayedItem.cs" />
+    <Compile Include="Framework\IExpirableItem.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />
     <Compile Include="Framework\TimeSpanExtensions.cs" />

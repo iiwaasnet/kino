@@ -1,6 +1,6 @@
 ﻿namespace rawf.Framework
 {
-    public interface IDelayedItem
+    public interface IExpirableItem
     {
         void ExpireNow();
     }
