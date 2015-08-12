@@ -9,7 +9,7 @@ namespace rawf.Client
     public class Promise : IPromise
     {
         private readonly TaskCompletionSource<IMessage> result;
-        private static readonly TimeSpan DefaultPromiseExpiration = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan DefaultPromiseExpiration = TimeSpan.FromSeconds(2);
 
         public Promise(TimeSpan expiresAfter)
         {

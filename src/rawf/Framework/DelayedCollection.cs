@@ -97,6 +97,7 @@ namespace rawf.Framework
         {
             var delayedItem = new DelayedItem(item, expireAfter, this);
             additionQueue.Add(delayedItem);
+            itemAdded.Set();
 
             return delayedItem;
         }

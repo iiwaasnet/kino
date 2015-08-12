@@ -1,5 +1,7 @@
 ﻿using Autofac;
 using rawf.Connectivity;
+using rawf.Framework;
+using rawf.Messaging;
 using rawf.Sockets;
 
 namespace rawf
@@ -15,6 +17,9 @@ namespace rawf
             builder.RegisterType<InternalRoutingTable>()
                    .As<IInternalRoutingTable>()
                    .SingleInstance();
+
+            builder.RegisterType<DelayedCollection<CorrelationId>>()
+                   .As<IDelayedCollection<CorrelationId>>();
 
             builder.RegisterType<ExternalRoutingTable>()
                    .As<IExternalRoutingTable>()

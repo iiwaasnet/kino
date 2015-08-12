@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using rawf.Actors;
 using rawf.Connectivity;
@@ -37,6 +39,8 @@ namespace Server
             //                                                   .ConfigureAwait(false);
 
             //throw new Exception("Bla!");
+
+            Thread.Sleep(TimeSpan.FromSeconds(30));
 
             return Message.Create(new EhlloMessage
             {
