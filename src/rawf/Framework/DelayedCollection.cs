@@ -9,7 +9,7 @@ namespace rawf.Framework
     public partial class DelayedCollection<T> : IDelayedCollection<T>
     {
         private readonly BlockingCollection<ExpirableItem> additionQueue;
-        private readonly List<ExpirableItem> delayedItems;
+        private readonly SortedSet<ExpirableItem> delayedItems;
         private readonly Task delayItems;
         private readonly CancellationTokenSource tokenSource;
         private readonly AutoResetEvent itemAdded;
@@ -17,7 +17,7 @@ namespace rawf.Framework
 
         public DelayedCollection()
         {
-            delayedItems = new List<ExpirableItem>();
+            delayedItems = new SortedSet<ExpirableItem>(Comparer<ExpirableItem>.Create(Comparison));
             itemAdded = new AutoResetEvent(false);
             tokenSource = new CancellationTokenSource();
             additionQueue = new BlockingCollection<ExpirableItem>(new ConcurrentQueue<ExpirableItem>());
@@ -50,18 +50,18 @@ namespace rawf.Framework
                         delayedItems.Add(item);
                     }
 
-                    delayedItems.Sort(Comparison);
+                    //delayedItems.Sort(Comparison);
 
                     var now = DateTime.UtcNow;
-                    while (delayedItems.Count > 0 && delayedItems[0].IsExpired(now))
+                    while (delayedItems.Count > 0 && delayedItems.Min.IsExpired(now))
                     {
                         if (handler != null)
                         {
-                            SafeNotifySubscriber(delayedItems[0].Item);
+                            SafeNotifySubscriber(delayedItems.Min.Item);
                         }
-                        delayedItems.RemoveAt(0);
+                        delayedItems.Remove(delayedItems.Min);
                     }
-                    var sleep = (delayedItems.Count > 0) ? delayedItems[0].ExpireAfter : Timeout.Infinite;
+                    var sleep = (delayedItems.Count > 0) ? delayedItems.Min.ExpireAfter : Timeout.Infinite;
 
                     WaitHandle.WaitAny(new[] {itemAdded, token.WaitHandle}, sleep);
                 }
@@ -92,7 +92,10 @@ namespace rawf.Framework
         }
 
         private int Comparison(ExpirableItem expirableItem, ExpirableItem item)
-            => expirableItem.ExpireAfter.CompareTo(item.ExpireAfter);
+        {
+            var result = expirableItem.ExpireAfter.CompareTo(item.ExpireAfter);
+            return (result == 0) ? 1 : result;
+        }
 
         public IExpirableItem Delay(T item, TimeSpan expireAfter)
         {
