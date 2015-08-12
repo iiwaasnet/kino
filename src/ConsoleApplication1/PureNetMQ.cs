@@ -12,7 +12,7 @@ namespace ConsoleApplication1
     private static readonly byte[] ClientIdentity = {1, 2, 4};
     private static readonly string Address = "tcp://127.0.0.1:5000";
 
-    private static void Main(string[] args)
+    private static void M(string[] args)
     {
       var cancellationTokenSource = new CancellationTokenSource();
       Task.Factory.StartNew(_ => RunServer(cancellationTokenSource.Token), cancellationTokenSource.Token, TaskCreationOptions.LongRunning);

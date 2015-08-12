@@ -34,8 +34,10 @@ namespace rawf.Client
             {
                 throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
             }
-            //TODO: save delayedItem
+
             var delayedItem = expirationQueue.Delay(correlation, promise.ExpireAfter);
+            ((Promise)promise).SetExpiration(delayedItem);
+
             handlers[correlation] = messageHandlerIdentifiers.ToDictionary(mp => mp, mp => promise);
         }
 

@@ -35,7 +35,7 @@ namespace Client
             //var resp = promise.GetResponse().Result.GetPayload<EhlloMessage>();
             //Console.WriteLine(resp.Ehllo);
 
-            RunTest(messageHub, 100000);
+            RunTest(messageHub, 1000000);
 
             Console.ReadLine();
             messageHub.Stop();
@@ -66,14 +66,14 @@ namespace Client
                 //    Console.WriteLine("Timeout....");
                 //}
                 //Thread.Sleep(TimeSpan.FromSeconds(3));
-                responses.Add(messageHub.EnqueueRequest(message, callbackPoint, TimeSpan.FromSeconds(5)).GetResponse());
+                responses.Add(messageHub.EnqueueRequest(message, callbackPoint, TimeSpan.FromSeconds(1)).GetResponse());
             }
 
             responses.ForEach(r =>
                               {
                                   try
                                   {
-                                  if (r.Wait(TimeSpan.FromSeconds(10)))
+                                  if (r.Wait(TimeSpan.FromSeconds(1)))
                                   {
                                     var msg = r.Result.GetPayload<EhlloMessage>();
                                     //Console.WriteLine($"Received: {msg.Ehllo}");
