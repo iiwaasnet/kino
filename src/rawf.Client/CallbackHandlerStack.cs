@@ -8,13 +8,12 @@ using rawf.Messaging;
 
 namespace rawf.Client
 {
-    //TODO: Add TTL for registrations, so that never consumed handlers are not staying forever
     public class CallbackHandlerStack : ICallbackHandlerStack
     {
         private readonly ConcurrentDictionary<CorrelationId, IDictionary<MessageHandlerIdentifier, IPromise>> handlers;
-        private readonly IDelayedCollection<CorrelationId> expirationQueue;
+        private readonly IExpirableItemCollection<CorrelationId> expirationQueue;
 
-        public CallbackHandlerStack(IDelayedCollection<CorrelationId> expirationQueue)
+        public CallbackHandlerStack(IExpirableItemCollection<CorrelationId> expirationQueue)
         {
             handlers =  new ConcurrentDictionary<CorrelationId, IDictionary<MessageHandlerIdentifier, IPromise>>();
             expirationQueue.SetExpirationHandler(RemoveExpiredCallback);
@@ -24,7 +23,10 @@ namespace rawf.Client
         private void RemoveExpiredCallback(CorrelationId correlationId)
         {
             IDictionary<MessageHandlerIdentifier, IPromise> value;
-            handlers.TryRemove(correlationId, out value);
+            if (handlers.TryRemove(correlationId, out value))
+            {
+                ((Promise)value.Values.First()).SetExpired();
+            }
         }
 
         public void Push(CorrelationId correlation, IPromise promise, IEnumerable<MessageHandlerIdentifier> messageHandlerIdentifiers)

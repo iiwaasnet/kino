@@ -18,8 +18,8 @@ namespace rawf
                    .As<IInternalRoutingTable>()
                    .SingleInstance();
 
-            builder.RegisterType<DelayedCollection<CorrelationId>>()
-                   .As<IDelayedCollection<CorrelationId>>();
+            builder.Register(c => new ExpirableItemCollection<CorrelationId>(c.Resolve<IExpirableItemCollectionConfiguration>().EvaluationInterval))
+                   .As<IExpirableItemCollection<CorrelationId>>();
 
             builder.RegisterType<ExternalRoutingTable>()
                    .As<IExternalRoutingTable>()

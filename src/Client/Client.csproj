@@ -61,6 +61,9 @@
   <ItemGroup>
     <Compile Include="ApplicationConfiguration.cs" />
     <Compile Include="ClusterConfigurationProvider.cs" />
+    <Compile Include="ExpirableItemCollectionConfiguration.cs" />
+    <Compile Include="ExpirableItemCollectionConfigurationProvider.cs" />
+    <Compile Include="IExpirableItemCollectionConfigurationProvider.cs" />
     <Compile Include="IInitialRendezvousServerConfiguration.cs" />
     <Compile Include="IMessageHubConfigurationProvider.cs" />
     <Compile Include="InitialRendezvousServerConfiguration.cs" />

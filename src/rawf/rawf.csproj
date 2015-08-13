@@ -87,10 +87,11 @@
     <Compile Include="Connectivity\NodeIdentity.cs" />
     <Compile Include="Connectivity\ClusterMemberMeta.cs" />
     <Compile Include="Framework\DelayedCollection.DelayedItem.cs" />
-    <Compile Include="Framework\DelayedCollection.cs" />
+    <Compile Include="Framework\ExpirableItemCollection.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />
     <Compile Include="Framework\ExceptionExtensions.cs" />
-    <Compile Include="Framework\IDelayedCollection.cs" />
+    <Compile Include="Framework\IExpirableItemCollection.cs" />
+    <Compile Include="Framework\IExpirableItemCollectionConfiguration.cs" />
     <Compile Include="Framework\IExpirableItem.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />

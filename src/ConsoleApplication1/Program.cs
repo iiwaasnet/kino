@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using rawf.Framework;
 using rawf.Messaging;
 using rawf.Sockets;
 
 namespace ConsoleApplication1
 {
-    class Program
+    internal class Program
     {
-        static void M(string[] args)
+        private static void M(string[] args)
         {
             var cancellationTokenSource = new CancellationTokenSource();
             var server = Task.Factory.StartNew(_ => RunServer(cancellationTokenSource.Token), cancellationTokenSource.Token, TaskCreationOptions.LongRunning);
@@ -65,7 +61,7 @@ namespace ConsoleApplication1
         private static void RunClient()
         {
             var address = new Uri("tcp://127.0.0.1:5000");
-            var id = new byte[] { 1, 2, 3 };
+            var id = new byte[] {1, 2, 3};
 
             using (var socketFactory = new SocketFactory())
             {
@@ -74,7 +70,7 @@ namespace ConsoleApplication1
                 {
                     socket.Connect(address);
 
-                    var message = (Message)Message.Create(new HelloMessage { Greeting = Guid.NewGuid().ToString() }, HelloMessage.MessageIdentity);
+                    var message = (Message) Message.Create(new HelloMessage {Greeting = Guid.NewGuid().ToString()}, HelloMessage.MessageIdentity);
                     socket.SendMessage(message);
 
                     Thread.Sleep(TimeSpan.FromSeconds(2));
@@ -87,7 +83,7 @@ namespace ConsoleApplication1
                     socket.Connect(address);
                     Console.WriteLine("Reconnected");
 
-                    message = (Message)Message.Create(new HelloMessage { Greeting = Guid.NewGuid().ToString() }, HelloMessage.MessageIdentity);
+                    message = (Message) Message.Create(new HelloMessage {Greeting = Guid.NewGuid().ToString()}, HelloMessage.MessageIdentity);
                     socket.SendMessage(message);
                 }
             }
@@ -95,7 +91,7 @@ namespace ConsoleApplication1
 
         private static void RunServer(CancellationToken token)
         {
-            var id = new byte[] { 1, 2, 3 };
+            var id = new byte[] {1, 2, 3};
             using (var socketFactory = new SocketFactory())
             {
                 using (var socket = socketFactory.CreateRouterSocket())
@@ -107,8 +103,8 @@ namespace ConsoleApplication1
                     socket.Bind(new Uri("tcp://127.0.0.1:5000"));
                     while (!token.IsCancellationRequested)
                     {
-                        var message  = socket.ReceiveMessage(token);
-                        
+                        var message = socket.ReceiveMessage(token);
+
                         Console.WriteLine(message?.GetPayload<HelloMessage>()?.Greeting);
                     }
                 }

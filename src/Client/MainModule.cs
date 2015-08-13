@@ -2,6 +2,7 @@
 using Autofac;
 using rawf.Client;
 using rawf.Connectivity;
+using rawf.Framework;
 using TypedConfigProvider;
 
 namespace Client
@@ -44,6 +45,13 @@ namespace Client
                    .SingleInstance();
             builder.Register(c => c.Resolve<IClusterConfigurationProvider>().GetConfiguration())
                    .As<IClusterConfiguration>()
+                   .SingleInstance();
+
+            builder.RegisterType<ExpirableItemCollectionConfigurationProvider>()
+                   .As<IExpirableItemCollectionConfigurationProvider>()
+                   .SingleInstance();
+            builder.Register(c => c.Resolve<IExpirableItemCollectionConfigurationProvider>().GetConfiguration())
+                   .As<IExpirableItemCollectionConfiguration>()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IInitialRendezvousServerConfiguration>().GetConfiguration())

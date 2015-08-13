@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using C5;
 
 namespace ConsoleApplication1
 {
@@ -12,8 +13,44 @@ namespace ConsoleApplication1
 
             RunListTest(runs);
             RunSortedList(runs);
+            RunPriorityQueue(runs);
+            RunSortedArray(runs);
 
             Console.ReadLine();
+        }
+
+        private static void RunPriorityQueue(int runs)
+        {
+            var list = new IntervalHeap<string>(Comparer<string>.Create(Comparison));
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            for (var i = 0; i < runs; i++)
+            {
+                list.Add(Guid.NewGuid().ToString());
+            }
+
+            stopwatch.Stop();
+
+            Console.WriteLine($"PriorityQueue done {list.Count} in {stopwatch.ElapsedMilliseconds} msec");
+        }
+
+        private static void RunSortedArray(int runs)
+        {
+            var list = new SortedArray<string>(Comparer<string>.Create(Comparison));
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            for (var i = 0; i < runs; i++)
+            {
+                list.Add(Guid.NewGuid().ToString());
+            }
+
+            stopwatch.Stop();
+
+            Console.WriteLine($"SortedArray done {list.Count} in {stopwatch.ElapsedMilliseconds} msec");
         }
 
         private static void RunListTest(int runs)
@@ -26,9 +63,12 @@ namespace ConsoleApplication1
             for (var i = 0; i < runs; i++)
             {
                 list.Add(Guid.NewGuid().ToString());
-
-                list.Sort(Comparison);
+                if (i % 100 == 0)
+                {
+                    list.Sort(Comparison);
+                }
             }
+            list.Sort(Comparison);
 
             stopwatch.Stop();
 
@@ -37,7 +77,7 @@ namespace ConsoleApplication1
 
         private static void RunSortedList(int runs)
         {
-            var list = new SortedSet<string>();
+            var list = new SortedSet<string>(Comparer<string>.Create(Comparison));
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -54,7 +94,8 @@ namespace ConsoleApplication1
 
         private static int Comparison(string l, string l1)
         {
-            return l.CompareTo(l);
+            var res = l.CompareTo(l);
+            return res == 0 ? 1 : res;
         }
     }
 }

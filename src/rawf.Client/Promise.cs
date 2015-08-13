@@ -44,6 +44,9 @@ namespace rawf.Client
         internal void SetExpiration(IExpirableItem expirableItem)
             => this.expirableItem = expirableItem;
 
+        internal void SetExpired()
+            => result.SetException(new TimeoutException());
+
         public TimeSpan ExpireAfter { get; }
     }
 }
