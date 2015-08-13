@@ -29,6 +29,7 @@ namespace ConsoleApplication1
             for (var i = 0; i < runs; i++)
             {
                 list.Add(Guid.NewGuid().ToString());
+                list.FindMin();
             }
 
             stopwatch.Stop();
@@ -85,6 +86,7 @@ namespace ConsoleApplication1
             for (var i = 0; i < runs; i++)
             {
                 list.Add(Guid.NewGuid().ToString());
+                var el = list.Min;
             }
 
             stopwatch.Stop();

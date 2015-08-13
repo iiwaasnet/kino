@@ -35,6 +35,10 @@
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="C5, Version=2.3.5280.26713, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
+      <HintPath>..\packages\C5.2.3.0.1\lib\net40\C5.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="NetMQ, Version=3.3.0.11, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
       <HintPath>..\packages\NetMQ.3.3.0.11\lib\net40\NetMQ.dll</HintPath>
       <Private>True</Private>
@@ -86,8 +90,9 @@
     <Compile Include="Connectivity\IRouterConfiguration.cs" />
     <Compile Include="Connectivity\NodeIdentity.cs" />
     <Compile Include="Connectivity\ClusterMemberMeta.cs" />
-    <Compile Include="Framework\DelayedCollection.DelayedItem.cs" />
+    <Compile Include="Framework\ExpirableItem.cs" />
     <Compile Include="Framework\ExpirableItemCollection.cs" />
+    <Compile Include="Framework\ExpirableItemScheduledCollection.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />
     <Compile Include="Framework\ExceptionExtensions.cs" />
     <Compile Include="Framework\IExpirableItemCollection.cs" />

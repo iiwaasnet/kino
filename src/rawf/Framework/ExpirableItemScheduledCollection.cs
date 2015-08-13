@@ -3,27 +3,23 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using C5;
 
 namespace rawf.Framework
 {
-    public class ExpirableItemCollection<T> : IExpirableItemCollection<T>
+    public class ExpirableItemScheduledCollection<T> : IExpirableItemCollection<T>
     {
         private readonly BlockingCollection<ExpirableItem<T>> additionQueue;
-        private readonly IntervalHeap<ExpirableItem<T>> delayedItems;
+        private readonly List<ExpirableItem<T>> delayedItems;
         private readonly Task delayItems;
         private readonly CancellationTokenSource tokenSource;
-        private readonly AutoResetEvent itemAdded;
         private Action<T> handler;
-        private const int ItemAdded = 0;
 
-        public ExpirableItemCollection()
+        public ExpirableItemScheduledCollection(TimeSpan evaluationInterval)
         {
-            delayedItems = new IntervalHeap<ExpirableItem<T>>(Comparer<ExpirableItem<T>>.Create(Comparison));
+            delayedItems = new List<ExpirableItem<T>>();
             tokenSource = new CancellationTokenSource();
-            itemAdded = new AutoResetEvent(false);
             additionQueue = new BlockingCollection<ExpirableItem<T>>(new ConcurrentQueue<ExpirableItem<T>>());
-            delayItems = Task.Factory.StartNew(_ => EvaluateDelays(tokenSource.Token), tokenSource.Token, TaskCreationOptions.LongRunning);
+            delayItems = Task.Factory.StartNew(_ => EvaluateDelays(tokenSource.Token, evaluationInterval), tokenSource.Token, TaskCreationOptions.LongRunning);
         }
 
         public void SetExpirationHandler(Action<T> handler)
@@ -44,24 +40,21 @@ namespace rawf.Framework
         {
             var delayedItem = new ExpirableItem<T>(item, expireAfter);
             additionQueue.Add(delayedItem);
-            itemAdded.Set();
 
             return delayedItem;
         }
 
-        private void EvaluateDelays(CancellationToken token)
+        private void EvaluateDelays(CancellationToken token, TimeSpan evaluationInterval)
         {
             try
             {
                 while (!token.IsCancellationRequested)
                 {
-                    var smallestDelay = Timeout.InfiniteTimeSpan;
-                    var reason = WaitHandle.WaitAny(new[] {itemAdded, token.WaitHandle}, smallestDelay);
-                    if (reason == ItemAdded)
+                    if (ContinueRunning(token, evaluationInterval))
                     {
                         AddEnqueuedItems();
+                        DeleteExpiredItems();
                     }
-                    DeleteExpiredItems();
                 }
             }
             catch (OperationCanceledException)
@@ -77,24 +70,35 @@ namespace rawf.Framework
             }
         }
 
+        private bool ContinueRunning(CancellationToken token, TimeSpan evaluationInterval)
+            => WaitHandle.WaitAny(new[] {token.WaitHandle}, evaluationInterval) == WaitHandle.WaitTimeout;
+
         private void DeleteExpiredItems()
         {
             var now = DateTime.UtcNow;
-            while (delayedItems.Count > 0 && delayedItems.FindMin().IsExpired(now))
+            while (delayedItems.Count > 0 && delayedItems[0].IsExpired(now))
             {
                 if (handler != null)
                 {
-                    SafeNotifySubscriber(delayedItems.DeleteMin().Item);
+                    SafeNotifySubscriber(delayedItems[0].Item);
                 }
+                delayedItems.RemoveAt(0);
             }
         }
 
         private void AddEnqueuedItems()
         {
+            var itemsAdded = false;
             ExpirableItem<T> item;
             while (additionQueue.TryTake(out item))
             {
                 delayedItems.Add(item);
+                itemsAdded = true;
+            }
+
+            if (itemsAdded)
+            {
+                delayedItems.Sort(Comparison);
             }
         }
 
@@ -111,9 +115,6 @@ namespace rawf.Framework
         }
 
         private int Comparison(ExpirableItem<T> expirableItem, ExpirableItem<T> item)
-        {
-            var res = expirableItem.ExpireAfter.CompareTo(item.ExpireAfter);
-            return res == 0 ? 1 : res;
-        }
+            => expirableItem.ExpireAfter.CompareTo(item.ExpireAfter);
     }
 }
