@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
@@ -27,7 +28,7 @@ namespace Client
             messageHub.Start();
 
             Thread.Sleep(TimeSpan.FromSeconds(2));
-            Console.WriteLine("Client is running...");
+            Console.WriteLine($"Client is running... {DateTime.Now}");
 
             //var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello world!"}, HelloMessage.MessageIdentity);
             //var callback = new CallbackPoint(EhlloMessage.MessageIdentity);
@@ -47,6 +48,7 @@ namespace Client
         private static void RunTest(IMessageHub messageHub, int runs)
         {
             var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
+            var rnd = new Random((int)DateTime.UtcNow.Ticks & 0x0000ffff);
 
             var timer = new Stopwatch();
             timer.Start();
@@ -66,7 +68,7 @@ namespace Client
                 //    Console.WriteLine("Timeout....");
                 //}
                 //Thread.Sleep(TimeSpan.FromSeconds(3));
-                responses.Add(messageHub.EnqueueRequest(message, callbackPoint, TimeSpan.FromSeconds(1)).GetResponse());
+                responses.Add(messageHub.EnqueueRequest(message, callbackPoint, TimeSpan.FromMilliseconds(1000 + rnd.Next(0, 100))).GetResponse());
             }
 
             responses.ForEach(r =>
@@ -85,7 +87,7 @@ namespace Client
                                 }
                                   catch (Exception err)
                                   {
-                                      Console.WriteLine($"Error happened: {err.ToString()}");
+                                      Console.WriteLine($"Error happened: {err.ToString()} {DateTime.Now}");
                                   }
                               });
 

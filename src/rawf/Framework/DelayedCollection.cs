@@ -9,15 +9,15 @@ namespace rawf.Framework
     public partial class DelayedCollection<T> : IDelayedCollection<T>
     {
         private readonly BlockingCollection<ExpirableItem> additionQueue;
-        private readonly SortedSet<ExpirableItem> delayedItems;
+        private readonly List<ExpirableItem> delayedItems;
         private readonly Task delayItems;
-        private readonly CancellationTokenSource tokenSource;
         private readonly AutoResetEvent itemAdded;
+        private readonly CancellationTokenSource tokenSource;
         private Action<T> handler;
 
         public DelayedCollection()
         {
-            delayedItems = new SortedSet<ExpirableItem>(Comparer<ExpirableItem>.Create(Comparison));
+            delayedItems = new List<ExpirableItem>();
             itemAdded = new AutoResetEvent(false);
             tokenSource = new CancellationTokenSource();
             additionQueue = new BlockingCollection<ExpirableItem>(new ConcurrentQueue<ExpirableItem>());
@@ -38,32 +38,50 @@ namespace rawf.Framework
             tokenSource.Dispose();
         }
 
+        public IExpirableItem Delay(T item, TimeSpan expireAfter)
+        {
+            var delayedItem = new ExpirableItem(item, expireAfter, this);
+            additionQueue.Add(delayedItem);
+            //itemAdded.Set();
+
+            return delayedItem;
+        }
+
         private void EvaluateDelays(CancellationToken token)
         {
             try
             {
                 while (!token.IsCancellationRequested)
                 {
+                    //var sleep = (delayedItems.Count > 0) ? delayedItems[0].ExpireAfter : Timeout.Infinite;
+                    var sleep = (delayedItems.Count > 0) ? TimeSpan.FromSeconds(10) : Timeout.InfiniteTimeSpan;
+
+                    //var itemsAdded = (WaitHandle.WaitAny(new[] { itemAdded, token.WaitHandle }, sleep) == 0);
+                    WaitHandle.WaitAny(new[] {token.WaitHandle}, sleep);
+
+                    var itemsAdded = false;
+
                     ExpirableItem item;
                     while (additionQueue.TryTake(out item))
                     {
                         delayedItems.Add(item);
+                        itemsAdded = true;
                     }
 
-                    //delayedItems.Sort(Comparison);
+                    if (itemsAdded)
+                    {
+                        delayedItems.Sort(Comparison);
+                    }
 
                     var now = DateTime.UtcNow;
-                    while (delayedItems.Count > 0 && delayedItems.Min.IsExpired(now))
+                    while (delayedItems.Count > 0 && delayedItems[0].IsExpired(now))
                     {
                         if (handler != null)
                         {
-                            SafeNotifySubscriber(delayedItems.Min.Item);
+                            SafeNotifySubscriber(delayedItems[0].Item);
                         }
-                        delayedItems.Remove(delayedItems.Min);
+                        delayedItems.RemoveAt(0);
                     }
-                    var sleep = (delayedItems.Count > 0) ? delayedItems.Min.ExpireAfter : Timeout.Infinite;
-
-                    WaitHandle.WaitAny(new[] {itemAdded, token.WaitHandle}, sleep);
                 }
             }
             catch (OperationCanceledException)
@@ -92,19 +110,7 @@ namespace rawf.Framework
         }
 
         private int Comparison(ExpirableItem expirableItem, ExpirableItem item)
-        {
-            var result = expirableItem.ExpireAfter.CompareTo(item.ExpireAfter);
-            return (result == 0) ? 1 : result;
-        }
-
-        public IExpirableItem Delay(T item, TimeSpan expireAfter)
-        {
-            var delayedItem = new ExpirableItem(item, expireAfter, this);
-            additionQueue.Add(delayedItem);
-            itemAdded.Set();
-
-            return delayedItem;
-        }
+            => expirableItem.ExpireAfter.CompareTo(item.ExpireAfter);
 
         private void TriggerDelayEvaluation()
             => itemAdded.Set();
