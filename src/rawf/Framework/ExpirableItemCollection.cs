@@ -22,7 +22,7 @@ namespace rawf.Framework
 
     public ExpirableItemCollection()
     {
-      expirableItems = new IntervalHeap<ExpirableItem<T>>(Comparer<ExpirableItem<T>>.Create(Comparison));
+      expirableItems = new IntervalHeap<ExpirableItem<T>>();
       tokenSource = new CancellationTokenSource();
       itemAdded = new AutoResetEvent(false);
       additionQueue = new BlockingCollection<ExpirableItem<T>>(new ConcurrentQueue<ExpirableItem<T>>());
@@ -117,12 +117,6 @@ namespace rawf.Framework
       {
         Console.WriteLine(err);
       }
-    }
-
-    private int Comparison(ExpirableItem<T> expirableItem, ExpirableItem<T> item)
-    {
-      var res = expirableItem.ExpireAfter.CompareTo(item.ExpireAfter);
-      return res == 0 ? 1 : res;
-    }
+    } 
   }
 }
