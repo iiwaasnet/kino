@@ -2,7 +2,7 @@
 
 namespace rawf.Framework
 {
-    internal class ExpirableItem<T> : IExpirableItem
+    internal class ExpirableItem<T> : IExpirableItem, IComparable<ExpirableItem<T>>
     {
         private readonly DateTime expirationTime;
 
@@ -19,6 +19,11 @@ namespace rawf.Framework
         public void ExpireNow()
         {
             ExpireAfter = 0;
+        }
+
+        public int CompareTo(ExpirableItem<T> other)
+        {
+            return ExpireAfter.CompareTo(other.ExpireAfter);
         }
 
         internal bool IsExpired(DateTime now)

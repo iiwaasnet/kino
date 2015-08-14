@@ -95,7 +95,6 @@ namespace rawf.Framework
           SafeNotifySubscriber(expirableItems.DeleteMin().Item);
         }
       }
-      Console.WriteLine($"Promise left:{expirableItems.Count}");
     }
 
     private void AddEnqueuedItems()
