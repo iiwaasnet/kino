@@ -68,7 +68,7 @@ namespace rawf.Framework
             {
               AddEnqueuedItems();
             }
-            DeleteExpiredItems();
+            DeleteExpiredItems();            
           }
         }
       }
@@ -88,13 +88,14 @@ namespace rawf.Framework
     private void DeleteExpiredItems()
     {
       var now = DateTime.UtcNow;
-      while (expirableItems.Count > 0 && expirableItems.FindMin().IsExpired(now))
+      while (expirableItems.Any() && expirableItems.FindMin().IsExpired(now))
       {
         if (handler != null)
         {
           SafeNotifySubscriber(expirableItems.DeleteMin().Item);
         }
       }
+      Console.WriteLine($"Promise left:{expirableItems.Count}");
     }
 
     private void AddEnqueuedItems()

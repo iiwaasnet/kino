@@ -29,7 +29,7 @@ namespace Client
             Thread.Sleep(TimeSpan.FromSeconds(2));
             Console.WriteLine($"Client is running... {DateTime.Now}");
 
-            RunTest(messageHub, 1);
+            RunTest(messageHub, 1000000);
 
             Console.ReadLine();
             messageHub.Stop();
@@ -46,6 +46,7 @@ namespace Client
             var timer = new Stopwatch();
             timer.Start();
 
+            var responseWaitTimeout = TimeSpan.FromMilliseconds(60000 + rnd.Next(0, 100));
             var responses = new List<Task<IMessage>>();
             for (var i = 0; i < runs; i++)
             {
@@ -61,14 +62,16 @@ namespace Client
                 //    Console.WriteLine("Timeout....");
                 //}
                 //Thread.Sleep(TimeSpan.FromSeconds(3));
-                responses.Add(messageHub.EnqueueRequest(message, callbackPoint, TimeSpan.FromMilliseconds(1000 + rnd.Next(0, 100))).GetResponse());
+              var basicResponseTimeout = 60000;
+              
+              responses.Add(messageHub.EnqueueRequest(message, callbackPoint, responseWaitTimeout).GetResponse());
             }
 
             responses.ForEach(r =>
                               {
                                   try
                                   {
-                                      if (r.Wait(TimeSpan.FromSeconds(10)))
+                                      if (r.Wait(responseWaitTimeout))
                                       {
                                           var msg = r.Result.GetPayload<EhlloMessage>();
                                           //Console.WriteLine($"Received: {msg.Ehllo}");

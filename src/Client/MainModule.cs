@@ -3,6 +3,7 @@ using Autofac;
 using rawf.Client;
 using rawf.Connectivity;
 using rawf.Framework;
+using rawf.Messaging;
 using TypedConfigProvider;
 
 namespace Client
@@ -24,6 +25,9 @@ namespace Client
             builder.Register(c => c.Resolve<IConfigProvider>().GetConfiguration<ApplicationConfiguration>())
                    .As<ApplicationConfiguration>()
                    .SingleInstance();
+
+          builder.RegisterType<ExpirableItemCollection<CorrelationId>>()
+            .As<IExpirableItemCollection<CorrelationId>>();
 
             builder.RegisterType<MessageHubConfigurationProvider>()
                    .As<IMessageHubConfigurationProvider>()

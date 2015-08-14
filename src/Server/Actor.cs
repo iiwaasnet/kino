@@ -40,7 +40,7 @@ namespace Server
 
             //throw new Exception("Bla!");
 
-            Thread.Sleep(50000);
+            //Thread.Sleep(50000);
 
             return Message.Create(new EhlloMessage
             {
