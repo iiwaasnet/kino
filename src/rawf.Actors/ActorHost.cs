@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using rawf.Connectivity;
@@ -50,13 +49,13 @@ namespace rawf.Actors
             const int participantCount = 4;
             using (var gateway = new Barrier(participantCount))
             {
-                registrationsProcessing = Task.Factory.StartNew(_ => RegisterActors(cancellationTokenSource.Token, gateway),
+                registrationsProcessing = Task.Factory.StartNew(_ => SafeExecute(() => RegisterActors(cancellationTokenSource.Token, gateway)),
                                                                 cancellationTokenSource.Token,
                                                                 TaskCreationOptions.LongRunning);
-                syncProcessing = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token, gateway),
+                syncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessRequests(cancellationTokenSource.Token, gateway)),
                                                        cancellationTokenSource.Token,
                                                        TaskCreationOptions.LongRunning);
-                asyncProcessing = Task.Factory.StartNew(_ => ProcessAsyncResponses(cancellationTokenSource.Token, gateway),
+                asyncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessAsyncResponses(cancellationTokenSource.Token, gateway)),
                                                         cancellationTokenSource.Token,
                                                         TaskCreationOptions.LongRunning);
 
@@ -70,11 +69,6 @@ namespace rawf.Actors
             registrationsProcessing.Wait();
             syncProcessing.Wait();
             asyncProcessing.Wait();
-        }
-
-        private void SafeExecute(LambdaExpression wrappedMethod)
-        {
-            var method = wrappedMethod.Compile().DynamicInvoke();
         }
 
         private void RegisterActors(CancellationToken token, Barrier gateway)
@@ -99,13 +93,6 @@ namespace rawf.Actors
                         }
                     }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine(err);
             }
             finally
             {
@@ -158,13 +145,6 @@ namespace rawf.Actors
                     }
                 }
             }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine(err);
-            }
             finally
             {
                 asyncQueue.Dispose();
@@ -173,47 +153,39 @@ namespace rawf.Actors
 
         private void ProcessRequests(CancellationToken token, Barrier gateway)
         {
-            try
+            using (var localSocket = CreateRoutableSocket())
             {
-                using (var localSocket = CreateRoutableSocket())
+                localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
+                gateway.SignalAndWait(token);
+
+                while (!token.IsCancellationRequested)
                 {
-                    localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
-                    gateway.SignalAndWait(token);
-
-                    while (!token.IsCancellationRequested)
+                    try
                     {
-                        try
+                        var message = localSocket.ReceiveMessage(token);
+                        if (message != null)
                         {
-                            var message = localSocket.ReceiveMessage(token);
-                            if (message != null)
+                            try
                             {
-                                try
-                                {
-                                    var actorIdentifier = new MessageHandlerIdentifier(message.Version, message.Identity);
-                                    var handler = actorHandlerMap.Get(actorIdentifier);
+                                var actorIdentifier = new MessageHandlerIdentifier(message.Version, message.Identity);
+                                var handler = actorHandlerMap.Get(actorIdentifier);
 
-                                    var task = handler(message);
+                                var task = handler(message);
 
-                                    HandleTaskResult(token, task, message, localSocket);
-                                }
-                                catch (Exception err)
-                                {
-                                    //TODO: Add more context to exception about which Actor failed
-                                    CallbackException(localSocket, err, message);
-                                }
+                                HandleTaskResult(token, task, message, localSocket);
+                            }
+                            catch (Exception err)
+                            {
+                                //TODO: Add more context to exception about which Actor failed
+                                CallbackException(localSocket, err, message);
                             }
                         }
-                        catch (Exception err)
-                        {
-                            //TODO: Replace with proper logging
-                            Console.WriteLine(err);
-                        }
+                    }
+                    catch (Exception err)
+                    {
+                        Console.WriteLine(err);
                     }
                 }
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine(err);
             }
         }
 
@@ -229,7 +201,7 @@ namespace rawf.Actors
             }
             else
             {
-                task.ContinueWith(completed => EnqueueTaskForCompletion(token, completed, messageIn), token)
+                task.ContinueWith(completed => SafeExecute(() => EnqueueTaskForCompletion(token, completed, messageIn)), token)
                     .ConfigureAwait(false);
             }
         }
@@ -245,24 +217,14 @@ namespace rawf.Actors
 
         private void EnqueueTaskForCompletion(CancellationToken token, Task<IMessage> task, IMessage messageIn)
         {
-            try
-            {
-                var asyncMessageContext = new AsyncMessageContext
-                                          {
-                                              OutMessage = CreateTaskResultMessage(task),
-                                              CallbackIdentity = GetTaskCallbackIdentity(task, messageIn),
-                                              CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
-                                              CorrelationId = messageIn.CorrelationId
-                                          };
-                asyncQueue.Enqueue(asyncMessageContext, token);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception err)
-            {
-                Console.WriteLine(err);
-            }
+            var asyncMessageContext = new AsyncMessageContext
+                                      {
+                                          OutMessage = CreateTaskResultMessage(task),
+                                          CallbackIdentity = GetTaskCallbackIdentity(task, messageIn),
+                                          CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
+                                          CorrelationId = messageIn.CorrelationId
+                                      };
+            asyncQueue.Enqueue(asyncMessageContext, token);
         }
 
         private static byte[] GetTaskCallbackIdentity(Task task, IMessage messageIn)
@@ -311,6 +273,21 @@ namespace rawf.Actors
             socket.Connect(routerConfiguration.RouterAddress.Uri);
 
             return socket;
+        }
+
+        private void SafeExecute(Action wrappedMethod)
+        {
+            try
+            {
+                wrappedMethod();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine(err);
+            }
         }
     }
 }
