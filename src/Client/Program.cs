@@ -29,7 +29,7 @@ namespace Client
             Thread.Sleep(TimeSpan.FromSeconds(2));
             Console.WriteLine($"Client is running... {DateTime.Now}");
 
-            RunTest(messageHub, 1000000);
+            RunTest(messageHub, 10000);
 
             Console.ReadLine();
             messageHub.Stop();
@@ -46,46 +46,44 @@ namespace Client
             var timer = new Stopwatch();
             timer.Start();
 
-            var responseWaitTimeout = TimeSpan.FromMilliseconds(60000 + rnd.Next(0, 100));
+            var responseWaitTimeout = TimeSpan.FromMilliseconds(100 + rnd.Next(0, 100));
             var responses = new List<Task<IMessage>>();
             for (var i = 0; i < runs; i++)
             {
                 var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
-                //var promise = messageHub.EnqueueRequest(message, callbackPoint);
-                //if (promise.GetResponse().Wait(TimeSpan.FromSeconds(1)))
-                //{
-                //    var msg = promise.GetResponse().Result.GetPayload<EhlloMessage>();
-                //    Console.WriteLine($"Received: {msg.Ehllo}");
-                //}
-                //else
-                //{
-                //    Console.WriteLine("Timeout....");
-                //}
+                var promise = messageHub.EnqueueRequest(message, callbackPoint);
+                if (promise.GetResponse().Wait(responseWaitTimeout))
+                {
+                    var msg = promise.GetResponse().Result.GetPayload<EhlloMessage>();
+                    //Console.WriteLine($"Received: {msg.Ehllo}");
+                }
+                else
+                {
+                    Console.WriteLine("Timeout....");
+                }
                 //Thread.Sleep(TimeSpan.FromSeconds(3));
-              var basicResponseTimeout = 60000;
-              
-              responses.Add(messageHub.EnqueueRequest(message, callbackPoint, responseWaitTimeout).GetResponse());
+                //responses.Add(messageHub.EnqueueRequest(message, callbackPoint, responseWaitTimeout).GetResponse());
             }
 
-            responses.ForEach(r =>
-                              {
-                                  try
-                                  {
-                                      if (r.Wait(responseWaitTimeout))
-                                      {
-                                          var msg = r.Result.GetPayload<EhlloMessage>();
-                                          //Console.WriteLine($"Received: {msg.Ehllo}");
-                                      }
-                                      else
-                                      {
-                                          throw new TimeoutException();
-                                      }
-                                  }
-                                  catch (Exception err)
-                                  {
-                                      Console.WriteLine($"Error happened: {err.ToString()} {DateTime.Now}");
-                                  }
-                              });
+            //responses.ForEach(r =>
+            //                  {
+            //                      try
+            //                      {
+            //                          if (r.Wait(responseWaitTimeout))
+            //                          {
+            //                              var msg = r.Result.GetPayload<EhlloMessage>();
+            //                              //Console.WriteLine($"Received: {msg.Ehllo}");
+            //                          }
+            //                          else
+            //                          {
+            //                              throw new TimeoutException();
+            //                          }
+            //                      }
+            //                      catch (Exception err)
+            //                      {
+            //                          Console.WriteLine($"Error happened: {err.ToString()} {DateTime.Now}");
+            //                      }
+            //                  });
 
             timer.Stop();
 
