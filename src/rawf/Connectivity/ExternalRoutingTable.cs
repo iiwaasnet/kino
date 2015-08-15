@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using C5;
 using rawf.Framework;
 
 namespace rawf.Connectivity
 {
     public class ExternalRoutingTable : IExternalRoutingTable
     {
-        private readonly IDictionary<MessageHandlerIdentifier, HashSet<SocketIdentifier>> messageHandlersMap;
-        private readonly IDictionary<SocketIdentifier, HashSet<MessageHandlerIdentifier>> socketToMessageMap;
-        private readonly IDictionary<SocketIdentifier, Uri> socketToUriMap;
+        private readonly System.Collections.Generic.IDictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>> messageHandlersMap;
+        private readonly System.Collections.Generic.IDictionary<SocketIdentifier, System.Collections.Generic.HashSet<MessageHandlerIdentifier>> socketToMessageMap;
+        private readonly System.Collections.Generic.IDictionary<SocketIdentifier, Uri> socketToUriMap;
 
         public ExternalRoutingTable()
         {
-            messageHandlersMap = new Dictionary<MessageHandlerIdentifier, HashSet<SocketIdentifier>>();
-            socketToMessageMap = new Dictionary<SocketIdentifier, HashSet<MessageHandlerIdentifier>>();
+            messageHandlersMap = new Dictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>>();
+            socketToMessageMap = new Dictionary<SocketIdentifier, System.Collections.Generic.HashSet<MessageHandlerIdentifier>>();
             socketToUriMap = new Dictionary<SocketIdentifier, Uri>();
         }
 
@@ -34,21 +35,27 @@ namespace rawf.Connectivity
 
         private bool MapMessageToSocket(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
         {
-            HashSet<SocketIdentifier> hashSet;
+            HashedLinkedList<SocketIdentifier> hashSet;
             if (!messageHandlersMap.TryGetValue(messageHandlerIdentifier, out hashSet))
             {
-                hashSet = new HashSet<SocketIdentifier>();
+                hashSet = new HashedLinkedList<SocketIdentifier>();
                 messageHandlersMap[messageHandlerIdentifier] = hashSet;
             }
-            return hashSet.Add(socketIdentifier);
+            if (!hashSet.Contains(socketIdentifier))
+            {
+                hashSet.InsertLast(socketIdentifier);
+                return true;
+            }
+
+            return false;
         }
 
         private void MapSocketToMessage(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
         {
-            HashSet<MessageHandlerIdentifier> hashSet;
+            System.Collections.Generic.HashSet<MessageHandlerIdentifier> hashSet;
             if (!socketToMessageMap.TryGetValue(socketIdentifier, out hashSet))
             {
-                hashSet = new HashSet<MessageHandlerIdentifier>();
+                hashSet = new System.Collections.Generic.HashSet<MessageHandlerIdentifier>();
                 socketToMessageMap[socketIdentifier] = hashSet;
             }
             hashSet.Add(messageHandlerIdentifier);
@@ -56,28 +63,34 @@ namespace rawf.Connectivity
 
         public SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier)
         {
-            //TODO: Implement round robin
-            HashSet<SocketIdentifier> collection;
+            HashedLinkedList<SocketIdentifier> collection;
             return messageHandlersMap.TryGetValue(messageHandlerIdentifier, out collection)
                        ? Get(collection)
                        : null;
         }
 
-        private static T Get<T>(ICollection<T> hashSet)
-            => hashSet.Any()
-                   ? hashSet.First()
-                   : default(T);
+        private static T Get<T>(HashedLinkedList<T> hashSet)
+        {
+            if (hashSet.Any())
+            {
+                var first = hashSet.RemoveFirst();
+                hashSet.InsertLast(first);
+                return first;
+            }
+            
+            return default(T);
+        }
 
         public void RemoveRoute(SocketIdentifier socketIdentifier)
         {
             socketToUriMap.Remove(socketIdentifier);
 
-            HashSet<MessageHandlerIdentifier> messageHandlers;
+            System.Collections.Generic.HashSet<MessageHandlerIdentifier> messageHandlers;
             if (socketToMessageMap.TryGetValue(socketIdentifier, out messageHandlers))
             {
                 foreach (var messageHandlerIdentifier in messageHandlers)
                 {
-                    HashSet<SocketIdentifier> socketIdentifiers;
+                    HashedLinkedList<SocketIdentifier> socketIdentifiers;
                     if (messageHandlersMap.TryGetValue(messageHandlerIdentifier, out socketIdentifiers))
                     {
                         socketIdentifiers.Remove(socketIdentifier);

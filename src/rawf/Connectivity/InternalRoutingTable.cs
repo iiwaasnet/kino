@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using C5;
 
 namespace rawf.Connectivity
 {
@@ -7,38 +8,45 @@ namespace rawf.Connectivity
 
     public class InternalRoutingTable : IInternalRoutingTable
     {
-        private readonly IDictionary<MessageHandlerIdentifier, HashSet<SocketIdentifier>> map;
+        private readonly System.Collections.Generic.IDictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>> map;
 
         public InternalRoutingTable()
         {
-            map = new Dictionary<MessageHandlerIdentifier, HashSet<SocketIdentifier>>();
+            map = new Dictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>>();
         }
 
         public void Push(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
         {
-            HashSet<SocketIdentifier> hashSet;
+            HashedLinkedList<SocketIdentifier> hashSet;
             if (!map.TryGetValue(messageHandlerIdentifier, out hashSet))
             {
-                hashSet = new HashSet<SocketIdentifier>();
+                hashSet = new HashedLinkedList<SocketIdentifier>();
                 map[messageHandlerIdentifier] = hashSet;
             }
-            hashSet.Add(socketIdentifier);
+            if (!hashSet.Contains(socketIdentifier))
+            {
+                hashSet.InsertLast(socketIdentifier);
+            }
         }
 
         public SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier)
         {
-            //TODO: Implement round robin
-            HashSet<SocketIdentifier> collection;
+            HashedLinkedList<SocketIdentifier> collection;
             return map.TryGetValue(messageHandlerIdentifier, out collection)
                        ? Get(collection)
                        : null;
         }
 
-        private static T Get<T>(ICollection<T> hashSet)
+        private static T Get<T>(HashedLinkedList<T> hashSet)
         {
-            return hashSet.Any()
-                       ? hashSet.First()
-                       : default(T);
+            if (hashSet.Any())
+            {
+                var first = hashSet.RemoveFirst();
+                hashSet.InsertLast(first);
+                return first;
+            }
+
+            return default(T);
         }
 
         public IEnumerable<MessageHandlerIdentifier> GetMessageHandlerIdentifiers()
