@@ -52,18 +52,26 @@ namespace Client
             var responses = new List<Task<IMessage>>();
             for (var i = 0; i < runs; i++)
             {
-                var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = "Hello"}, HelloMessage.MessageIdentity);
-                var promise = messageHub.EnqueueRequest(message, callbackPoint);
-                if (promise.GetResponse().Wait(responseWaitTimeout))
+                try
                 {
-                    var msg = promise.GetResponse().Result.GetPayload<EhlloMessage>();
-                    //Console.WriteLine($"Received: {msg.Ehllo}");
+                    var message = Message.CreateFlowStartMessage(new HelloMessage { Greeting = "Hello" }, HelloMessage.MessageIdentity);
+                    var promise = messageHub.EnqueueRequest(message, callbackPoint);
+                    if (promise.GetResponse().Wait(responseWaitTimeout))
+                    {
+                        var msg = promise.GetResponse().Result.GetPayload<EhlloMessage>();
+                        Console.WriteLine($"Received: {msg.Ehllo}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Timeout....");
+                    }
+                    //responses.Add(messageHub.EnqueueRequest(message, callbackPoint, responseWaitTimeout).GetResponse());
                 }
-                else
+                catch (Exception err)
                 {
-                    Console.WriteLine("Timeout....");
+                    Console.WriteLine(err);
                 }
-                //responses.Add(messageHub.EnqueueRequest(message, callbackPoint, responseWaitTimeout).GetResponse());
+                
             }
 
             //responses.ForEach(r =>
