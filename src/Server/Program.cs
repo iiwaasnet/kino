@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Autofac;
 using rawf.Actors;
 using rawf.Connectivity;
@@ -13,10 +14,12 @@ namespace Server
             builder.RegisterModule(new MainModule());
             var container = builder.Build();
 
-            var ccMon = container.Resolve<IClusterConfigurationMonitor>();
-            ccMon.Start();
             var messageRouter = container.Resolve<IMessageRouter>();
             messageRouter.Start();
+            Thread.Sleep(TimeSpan.FromMilliseconds(30));
+
+            var ccMon = container.Resolve<IClusterConfigurationMonitor>();
+            ccMon.Start();
             var actorHost = container.Resolve<IActorHost>();
             actorHost.AssignActor(new Actor());
             actorHost.Start();

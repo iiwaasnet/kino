@@ -19,17 +19,19 @@ namespace Client
             builder.RegisterModule(new MainModule());
             var container = builder.Build();
 
-            var ccMon = container.Resolve<IClusterConfigurationMonitor>();
-            ccMon.Start();
             var messageRouter = container.Resolve<IMessageRouter>();
             messageRouter.Start();
+            Thread.Sleep(TimeSpan.FromMilliseconds(30));
+
+            var ccMon = container.Resolve<IClusterConfigurationMonitor>();
+            ccMon.Start();
             var messageHub = container.Resolve<IMessageHub>();
             messageHub.Start();
 
             Thread.Sleep(TimeSpan.FromSeconds(2));
             Console.WriteLine($"Client is running... {DateTime.Now}");
 
-            RunTest(messageHub, 10000);
+            RunTest(messageHub, 1000);
 
             Console.ReadLine();
             messageHub.Stop();
@@ -46,7 +48,7 @@ namespace Client
             var timer = new Stopwatch();
             timer.Start();
 
-            var responseWaitTimeout = TimeSpan.FromMilliseconds(100 + rnd.Next(0, 100));
+            var responseWaitTimeout = TimeSpan.FromMilliseconds(60000 + rnd.Next(0, 100));
             var responses = new List<Task<IMessage>>();
             for (var i = 0; i < runs; i++)
             {
@@ -61,7 +63,6 @@ namespace Client
                 {
                     Console.WriteLine("Timeout....");
                 }
-                //Thread.Sleep(TimeSpan.FromSeconds(3));
                 //responses.Add(messageHub.EnqueueRequest(message, callbackPoint, responseWaitTimeout).GetResponse());
             }
 
