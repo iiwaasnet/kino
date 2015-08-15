@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using rawf.Connectivity;
@@ -15,57 +17,117 @@ namespace rawf.Actors
         private readonly IActorHandlerMap actorHandlerMap;
         private Task syncProcessing;
         private Task asyncProcessing;
+        private Task registrationsProcessing;
         private readonly CancellationTokenSource cancellationTokenSource;
-        private readonly IMessagesCompletionQueue messagesCompletionQueue;
+        private readonly IAsyncQueue<AsyncMessageContext> asyncQueue;
         private readonly ISocketFactory socketFactory;
         private readonly IRouterConfiguration routerConfiguration;
+        private readonly IAsyncQueue<IActor> actorRegistrationsQueue;
+        private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
 
         public ActorHost(ISocketFactory socketFactory,
                          IActorHandlerMap actorHandlerMap,
-                         IMessagesCompletionQueue messagesCompletionQueue,
+                         IAsyncQueue<AsyncMessageContext> asyncQueue,
+                         IAsyncQueue<IActor> actorRegistrationsQueue,
                          IRouterConfiguration routerConfiguration)
         {
             this.actorHandlerMap = actorHandlerMap;
+            localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
-            this.messagesCompletionQueue = messagesCompletionQueue;
+            this.asyncQueue = asyncQueue;
+            this.actorRegistrationsQueue = actorRegistrationsQueue;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void AssignActor(IActor actor)
         {
-            actorHandlerMap.Add(actor);
+            actorRegistrationsQueue.Enqueue(actor, cancellationTokenSource.Token);
         }
 
         public void Start()
         {
-            AssertActorIsAssigned();
-
-            const int participantCount = 3;
+            const int participantCount = 4;
             using (var gateway = new Barrier(participantCount))
             {
+                registrationsProcessing = Task.Factory.StartNew(_ => RegisterActors(cancellationTokenSource.Token, gateway),
+                                                                cancellationTokenSource.Token,
+                                                                TaskCreationOptions.LongRunning);
                 syncProcessing = Task.Factory.StartNew(_ => ProcessRequests(cancellationTokenSource.Token, gateway),
+                                                       cancellationTokenSource.Token,
                                                        TaskCreationOptions.LongRunning);
                 asyncProcessing = Task.Factory.StartNew(_ => ProcessAsyncResponses(cancellationTokenSource.Token, gateway),
+                                                        cancellationTokenSource.Token,
                                                         TaskCreationOptions.LongRunning);
 
                 gateway.SignalAndWait(cancellationTokenSource.Token);
             }
         }
 
-        private void AssertActorIsAssigned()
-        {
-            if (!actorHandlerMap.GetMessageHandlerIdentifiers().Any())
-            {
-                throw new Exception("Actor is not assigned!");
-            }
-        }
-
         public void Stop()
         {
             cancellationTokenSource.Cancel(true);
+            registrationsProcessing.Wait();
             syncProcessing.Wait();
             asyncProcessing.Wait();
+        }
+
+        private void SafeExecute(LambdaExpression wrappedMethod)
+        {
+            var method = wrappedMethod.Compile().DynamicInvoke();
+        }
+
+        private void RegisterActors(CancellationToken token, Barrier gateway)
+        {
+            try
+            {
+                using (var socket = CreateOneWaySocket())
+                {
+                    var localSocketIdentity = localSocketIdentityPromise.Task.Result;
+                    gateway.SignalAndWait(token);
+
+                    foreach (var actor in actorRegistrationsQueue.GetMessages(token))
+                    {
+                        try
+                        {
+                            var registrations = actorHandlerMap.Add(actor);
+                            SendActorRegistrationMessage(socket, localSocketIdentity, registrations);
+                        }
+                        catch (Exception err)
+                        {
+                            Console.WriteLine(err);
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception err)
+            {
+                Console.WriteLine(err);
+            }
+            finally
+            {
+                actorRegistrationsQueue.Dispose();
+            }
+        }
+
+        private static void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<MessageHandlerIdentifier> registrations)
+        {
+            var payload = new RegisterMessageHandlersMessage
+                          {
+                              SocketIdentity = identity,
+                              MessageHandlers = registrations
+                                  .Select(mh => new MessageHandlerRegistration
+                                                {
+                                                    Identity = mh.Identity,
+                                                    Version = mh.Version
+                                                })
+                                  .ToArray()
+                          };
+
+            socket.SendMessage(Message.Create(payload, RegisterMessageHandlersMessage.MessageIdentity));
         }
 
         private void ProcessAsyncResponses(CancellationToken token, Barrier gateway)
@@ -76,7 +138,7 @@ namespace rawf.Actors
                 {
                     gateway.SignalAndWait(token);
 
-                    foreach (var messageContext in messagesCompletionQueue.GetMessages(token))
+                    foreach (var messageContext in asyncQueue.GetMessages(token))
                     {
                         try
                         {
@@ -105,7 +167,7 @@ namespace rawf.Actors
             }
             finally
             {
-                messagesCompletionQueue.Dispose();
+                asyncQueue.Dispose();
             }
         }
 
@@ -115,8 +177,7 @@ namespace rawf.Actors
             {
                 using (var localSocket = CreateRoutableSocket())
                 {
-                    RegisterActor(localSocket);
-
+                    localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
                     gateway.SignalAndWait(token);
 
                     while (!token.IsCancellationRequested)
@@ -193,7 +254,7 @@ namespace rawf.Actors
                                               CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
                                               CorrelationId = messageIn.CorrelationId
                                           };
-                messagesCompletionQueue.Enqueue(asyncMessageContext, token);
+                asyncQueue.Enqueue(asyncMessageContext, token);
             }
             catch (OperationCanceledException)
             {
@@ -233,24 +294,6 @@ namespace rawf.Actors
             }
 
             return task.Result;
-        }
-
-        private void RegisterActor(ISocket socket)
-        {
-            var payload = new RegisterMessageHandlersMessage
-                          {
-                              SocketIdentity = socket.GetIdentity(),
-                              MessageHandlers = actorHandlerMap
-                                  .GetMessageHandlerIdentifiers()
-                                  .Select(mh => new MessageHandlerRegistration
-                                                {
-                                                    Identity = mh.Identity,
-                                                    Version = mh.Version
-                                                })
-                                  .ToArray()
-                          };
-
-            socket.SendMessage(Message.Create(payload, RegisterMessageHandlersMessage.MessageIdentity));
         }
 
         private ISocket CreateOneWaySocket()

@@ -29,9 +29,11 @@ namespace rawf.Rendezvous
             using (var gateway = new Barrier(participantCount))
             {
                 messageProcessing = Task.Factory.StartNew(_ => ProcessMessages(cancellationTokenSource.Token, gateway),
+                                                          cancellationTokenSource.Token,
                                                           TaskCreationOptions.LongRunning);
                 pinging = Task.Factory.StartNew(_ => PingClusterMembers(cancellationTokenSource.Token, gateway),
-                                                          TaskCreationOptions.LongRunning);
+                                                cancellationTokenSource.Token,
+                                                TaskCreationOptions.LongRunning);
 
                 gateway.SignalAndWait(cancellationTokenSource.Token);
             }
@@ -67,8 +69,6 @@ namespace rawf.Rendezvous
                 Console.WriteLine(err);
             }
         }
-
-        
 
         private void ProcessMessages(CancellationToken token, Barrier gateway)
         {
@@ -123,6 +123,7 @@ namespace rawf.Rendezvous
 
             return socket;
         }
+
         public void Stop()
         {
             cancellationTokenSource.Cancel(true);

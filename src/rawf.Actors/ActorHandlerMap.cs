@@ -15,11 +15,15 @@ namespace rawf.Actors
             messageHandlers = new ConcurrentDictionary<MessageHandlerIdentifier, MessageHandler>();
         }
 
-        public void Add(IActor actor)
+        public IEnumerable<MessageHandlerIdentifier> Add(IActor actor)
         {
             foreach (var reg in GetActorRegistrations(actor))
             {
-                if (!messageHandlers.TryAdd(reg.Key, reg.Value))
+                if (messageHandlers.TryAdd(reg.Key, reg.Value))
+                {
+                    yield return reg.Key;
+                }
+                else
                 {
                     throw new DuplicatedKeyException(reg.Key.ToString());
                 }

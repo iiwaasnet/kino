@@ -40,8 +40,10 @@ namespace rawf.Client
             using (var gateway = new Barrier(participantCount))
             {
                 receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token, gateway),
+                                                  cancellationTokenSource.Token,
                                                   TaskCreationOptions.LongRunning);
                 sending = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token, gateway),
+                                                cancellationTokenSource.Token,
                                                 TaskCreationOptions.LongRunning);
 
                 gateway.SignalAndWait(cancellationTokenSource.Token);

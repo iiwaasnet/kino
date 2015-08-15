@@ -1,4 +1,6 @@
 ﻿using Autofac;
+using rawf.Connectivity;
+using rawf.Framework;
 
 namespace rawf.Actors
 {
@@ -16,8 +18,12 @@ namespace rawf.Actors
                    .As<IActorHandlerMap>()
                    .SingleInstance();
 
-            builder.RegisterType<MessagesCompletionQueue>()
-                   .As<IMessagesCompletionQueue>()
+            builder.RegisterType<AsyncQueue<AsyncMessageContext>>()
+                   .As<IAsyncQueue<AsyncMessageContext>>()
+                   .SingleInstance();
+
+            builder.RegisterType<AsyncQueue<IActor>>()
+                   .As<IAsyncQueue<IActor>>()
                    .SingleInstance();
         }
     }

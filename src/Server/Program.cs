@@ -20,9 +20,10 @@ namespace Server
 
             var ccMon = container.Resolve<IClusterConfigurationMonitor>();
             ccMon.Start();
+
             var actorHost = container.Resolve<IActorHost>();
-            actorHost.AssignActor(new Actor());
             actorHost.Start();
+            actorHost.AssignActor(new Actor());
 
             Console.WriteLine("ActorHost started...");
             Console.ReadLine();
