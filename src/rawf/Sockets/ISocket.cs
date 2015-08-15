@@ -16,6 +16,7 @@ namespace rawf.Sockets
         void SetMandatoryRouting(bool mandatory = true);
         byte[] GetIdentity();
         void Subscribe(string topic = "");
+        void Subscribe(byte[] topic);
         void Unsubscribe(string topic = "");
     }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Threading;
 using NetMQ;
 using rawf.Framework;
@@ -57,6 +56,9 @@ namespace rawf.Sockets
             => socket.Unbind(address.ToSocketAddress());
 
         public void Subscribe(string topic = "")
+            => socket.Subscribe(topic);
+
+        public void Subscribe(byte[] topic)
             => socket.Subscribe(topic);
 
         public void Unsubscribe(string topic = "")
