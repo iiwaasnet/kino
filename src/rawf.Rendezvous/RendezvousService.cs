@@ -5,7 +5,6 @@ using rawf.Consensus;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
-using rawf.Rendezvous.Messages;
 using rawf.Sockets;
 using TypedConfigProvider;
 

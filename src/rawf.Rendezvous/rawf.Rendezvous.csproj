@@ -64,7 +64,6 @@
     <Compile Include="IRendezvousService.cs" />
     <Compile Include="LeaseConfigurationProvider.cs" />
     <Compile Include="MainModule.cs" />
-    <Compile Include="Messages\RendezvousNotLeaderMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RendezvousService.cs" />

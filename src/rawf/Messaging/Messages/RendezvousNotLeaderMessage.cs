@@ -1,8 +1,7 @@
 ﻿using ProtoBuf;
 using rawf.Framework;
-using rawf.Messaging;
 
-namespace rawf.Rendezvous.Messages
+namespace rawf.Messaging.Messages
 {
     [ProtoContract]
     public class RendezvousNotLeaderMessage : Payload

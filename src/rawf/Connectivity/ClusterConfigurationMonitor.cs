@@ -38,7 +38,6 @@ namespace rawf.Connectivity
             this.clusterConfiguration = clusterConfiguration;
             this.rendezvousConfiguration = rendezvousConfiguration;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
-            
         }
 
         public void Start()
@@ -46,20 +45,20 @@ namespace rawf.Connectivity
             StartProcessingClusterMessages();
             StartRendezvousMonitoring();
         }
-        
+
         public void Stop()
         {
-            StartRendezvousMonitoring();
+            StopRendezvousMonitoring();
             StopProcessingClusterMessages();
         }
-        
+
         private void StartRendezvousMonitoring()
         {
             monitoringToken = new CancellationTokenSource();
             monitorRendezvous = Task.Factory.StartNew(_ => RendezvousConnectionMonitor(monitoringToken.Token),
-                                                          TaskCreationOptions.LongRunning);
+                                                      TaskCreationOptions.LongRunning);
         }
-        
+
         private void StartProcessingClusterMessages()
         {
             messageProcessingToken = new CancellationTokenSource();
@@ -67,7 +66,7 @@ namespace rawf.Connectivity
             using (var gateway = new Barrier(participantCount))
             {
                 sendingMessages = Task.Factory.StartNew(_ => SendMessages(messageProcessingToken.Token, gateway),
-                                                            TaskCreationOptions.LongRunning);
+                                                        TaskCreationOptions.LongRunning);
                 listenningMessages = Task.Factory.StartNew(_ => ListenMessages(messageProcessingToken.Token, gateway),
                                                            TaskCreationOptions.LongRunning);
                 gateway.SignalAndWait(messageProcessingToken.Token);
@@ -81,7 +80,7 @@ namespace rawf.Connectivity
             listenningMessages.Wait();
             messageProcessingToken.Dispose();
         }
-        
+
         private void StopRendezvousMonitoring()
         {
             monitoringToken.Cancel(true);
@@ -99,10 +98,10 @@ namespace rawf.Connectivity
                     if (PingSilence(token))
                     {
                         rendezvousConfiguration.RotateRendezvousServers();
-                        
+
                         StopProcessingClusterMessages();
                         StartProcessingClusterMessages();
-                        
+
                         var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
                         Console.WriteLine($"Reconnected to {rendezvousServer.BroadcastUri.AbsoluteUri}");
                     }
@@ -123,8 +122,8 @@ namespace rawf.Connectivity
             {
                 pingReceived.Reset();
                 return false;
-            } 
-            
+            }
+
             return true;
         }
 
@@ -201,7 +200,7 @@ namespace rawf.Connectivity
         private ISocket CreateClusterMonitorSendingSocket()
         {
             var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
-            var socket = socketFactory.CreateDealerSocket();            
+            var socket = socketFactory.CreateDealerSocket();
             //socket.SetIdentity(SocketIdentifier.CreateNew());
             socket.Connect(rendezvousServer.UnicastUri);
 
@@ -221,7 +220,19 @@ namespace rawf.Connectivity
                || Ping(message)
                || Pong(message)
                || RequestMessageHandlersRouting(message, routerNotificationSocket)
-               || UnregisterRoute(message, routerNotificationSocket);
+               || UnregisterRoute(message, routerNotificationSocket)
+               || RendezvousNotLeader(message);
+
+        private bool RendezvousNotLeader(IMessage message)
+        {
+            var shouldHandle = IsRendezvousNotLeader(message);
+            if (shouldHandle)
+            {
+                var payload = message.GetPayload<RendezvousNotLeaderMessage>();
+            }
+
+            return shouldHandle;
+        }
 
         private bool UnregisterRoute(IMessage message, ISocket routerNotificationSocket)
         {
@@ -364,6 +375,9 @@ namespace rawf.Connectivity
 
             return false;
         }
+
+        private bool IsRendezvousNotLeader(IMessage message)
+            => Unsafe.Equals(RendezvousNotLeaderMessage.MessageIdentity, message.Identity);
 
         private bool IsRequestAllMessageHandlersRouting(IMessage message)
         {
