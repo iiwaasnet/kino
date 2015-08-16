@@ -228,6 +228,8 @@ namespace rawf.Connectivity
             var shouldHandle = IsRendezvousNotLeader(message);
             if (shouldHandle)
             {
+                //TODO: Trigger re-connect to leader
+                // Message should be sent to point ot a proper URIs
                 var payload = message.GetPayload<RendezvousNotLeaderMessage>();
             }
 

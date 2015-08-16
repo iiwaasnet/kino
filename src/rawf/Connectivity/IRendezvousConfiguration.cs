@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace rawf.Connectivity
+﻿namespace rawf.Connectivity
 {
     public interface IRendezvousConfiguration
     {
