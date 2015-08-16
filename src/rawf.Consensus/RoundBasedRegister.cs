@@ -76,7 +76,7 @@ namespace rawf.Consensus
                 LogAckWrite(ballot);
 
                 writeBallot = ballot;
-                lease = new Lease(payload.Lease.Identity, new DateTime(payload.Lease.ExpiresAt, DateTimeKind.Utc));
+                lease = new Lease(new Uri(payload.Lease.Uri), payload.Lease.Identity, new DateTime(payload.Lease.ExpiresAt, DateTimeKind.Utc));
 
                 response = Message.Create(new LeaseAckWriteMessage
                                           {
@@ -162,7 +162,7 @@ namespace rawf.Consensus
         {
             return new LastWrittenLease(new Ballot(p.KnownWriteBallot.Timestamp, p.KnownWriteBallot.MessageNumber, p.KnownWriteBallot.Identity),
                                         (p.Lease != null)
-                                            ? new Lease(p.Lease.Identity, p.Lease.ExpiresAt)
+                                            ? new Lease(new Uri(p.Lease.Uri), p.Lease.Identity, p.Lease.ExpiresAt)
                                             : null);
         }
 
@@ -227,7 +227,8 @@ namespace rawf.Consensus
                                       Lease = new Messages.Lease
                                               {
                                                   Identity = lease.OwnerIdentity,
-                                                  ExpiresAt = lease.ExpiresAt.Ticks
+                                                  ExpiresAt = lease.ExpiresAt.Ticks,
+                                                  Uri = lease.OwnerUri.ToSocketAddress()
                                               }
                                   },
                                   LeaseWriteMessage.MessageIdentity);
@@ -262,7 +263,8 @@ namespace rawf.Consensus
                                                   ? new Messages.Lease
                                                     {
                                                         Identity = lease.OwnerIdentity,
-                                                        ExpiresAt = lease.ExpiresAt.Ticks
+                                                        ExpiresAt = lease.ExpiresAt.Ticks,
+                                                        Uri = lease.OwnerUri.ToSocketAddress()
                                                     }
                                                   : null,
                                       Uri = synodConfig.LocalNode.Uri.ToSocketAddress()

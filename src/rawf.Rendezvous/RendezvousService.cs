@@ -5,6 +5,7 @@ using rawf.Consensus;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
+using rawf.Rendezvous.Messages;
 using rawf.Sockets;
 using TypedConfigProvider;
 
@@ -65,7 +66,7 @@ namespace rawf.Rendezvous
                                 var message = Message.Create(new PingMessage(), PingMessage.MessageIdentity);
                                 pingNotificationSocket.SendMessage(message);
 
-                                Console.WriteLine("Ping");
+                                Console.WriteLine($"Ping {DateTime.Now}");
                             }
                             wait.Wait(config.PingInterval, token);
                         }
@@ -101,14 +102,9 @@ namespace rawf.Rendezvous
                             var message = unicastSocket.ReceiveMessage(token);
                             if (message != null)
                             {
-                                if (NodeIsLeader())
-                                {
-                                    broadcastSocket.SendMessage(message);
-                                }
-                                //else
-                                //{
-                                //    unicastSocket.SendMessage();
-                                //}
+                                broadcastSocket.SendMessage(NodeIsLeader()
+                                                                ? message
+                                                                : CreateNotLeaderMessage());
                             }
                         }
                     }
@@ -121,6 +117,15 @@ namespace rawf.Rendezvous
             {
                 Console.WriteLine(err);
             }
+        }
+
+        private IMessage CreateNotLeaderMessage()
+        {
+            return Message.Create(new RendezvousNotLeaderMessage
+                                  {
+                                      LeaderUri = leaseProvider.GetLease()?.OwnerUri.ToSocketAddress()
+                                  },
+                                  RendezvousNotLeaderMessage.MessageIdentity);
         }
 
         private ISocket CreateUnicastSocket()

@@ -181,7 +181,7 @@ namespace rawf.Consensus
                 if (LeaseNullOrExpired(lease, now) || IsLeaseOwner(lease))
                 {
                     LogLeaseProlonged(lease);
-                    lease = new Lease(localNode.SocketIdentity, now + config.MaxLeaseTimeSpan);
+                    lease = new Lease(localNode.Uri, localNode.SocketIdentity, now + config.MaxLeaseTimeSpan);
                 }
 
                 logger.InfoFormat("Write lease: OwnerIdentity {0}", lease.OwnerIdentity);
