@@ -35,6 +35,7 @@ namespace rawf.Consensus
             this.synodConfig = synodConfig;
             this.leaseConfig = leaseConfig;
             this.intercomMessageHub = intercomMessageHub;
+            intercomMessageHub.Start();
             readBallot = (Ballot) ballotGenerator.Null();
             writeBallot = (Ballot) ballotGenerator.Null();
 
@@ -204,6 +205,7 @@ namespace rawf.Consensus
 
         public void Dispose()
         {
+            intercomMessageHub.Stop();
             listener.Dispose();
         }
 
