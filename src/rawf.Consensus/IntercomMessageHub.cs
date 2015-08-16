@@ -66,7 +66,7 @@ namespace rawf.Consensus
                 {
                     gateway.SignalAndWait(token);
 
-                    foreach (var intercomMessage in outMessageQueue)
+                    foreach (var intercomMessage in outMessageQueue.GetConsumingEnumerable(token))
                     {
                         var message = (Message) intercomMessage.Message;
                         message.SetSocketIdentity(intercomMessage.Receiver);
