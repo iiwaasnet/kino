@@ -146,10 +146,7 @@ namespace rawf.Consensus
                     var lease = awaitableAckFilter
                         .MessageStream
                         .Select(m => m.GetPayload<LeaseAckReadMessage>())
-                        .Max(
-                             p =>
-                             new LastWrittenLease(new Ballot(p.KnownWriteBallot.Timestamp, p.KnownWriteBallot.MessageNumber, p.KnownWriteBallot.Identity),
-                                                  new Lease(p.Lease.Identity, p.Lease.ExpiresAt)))
+                        .Max(p => CreateLastWrittenLease(p))
                         .Lease;
 
                     return new LeaseTxResult
@@ -159,6 +156,14 @@ namespace rawf.Consensus
                            };
                 }
             }
+        }
+
+        private static LastWrittenLease CreateLastWrittenLease(LeaseAckReadMessage p)
+        {
+            return new LastWrittenLease(new Ballot(p.KnownWriteBallot.Timestamp, p.KnownWriteBallot.MessageNumber, p.KnownWriteBallot.Identity),
+                                        (p.Lease != null)
+                                            ? new Lease(p.Lease.Identity, p.Lease.ExpiresAt)
+                                            : null);
         }
 
         public ILeaseTxResult Write(IBallot ballot, ILease lease)
