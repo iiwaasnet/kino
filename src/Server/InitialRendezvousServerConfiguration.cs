@@ -13,7 +13,7 @@ namespace Server
         {
             config = appConfig.RendezvousServers.Select(rs => new RendezvousServerConfiguration
                                                         {
-                                                            BroadcastUri = new Uri(rs.BroadcastUri),
+                                                            MulticastUri = new Uri(rs.BroadcastUri),
                                                             UnicastUri = new Uri(rs.UnicastUri)
                                                         });
         }

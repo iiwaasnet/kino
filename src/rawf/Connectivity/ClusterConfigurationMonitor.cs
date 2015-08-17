@@ -104,7 +104,7 @@ namespace rawf.Connectivity
                         StartProcessingClusterMessages();
 
                         var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
-                        Console.WriteLine($"Reconnected to {rendezvousServer.BroadcastUri.AbsoluteUri}");
+                        Console.WriteLine($"Reconnected to {rendezvousServer.MulticastUri.AbsoluteUri}");
                     }
                 }
             }
@@ -199,10 +199,10 @@ namespace rawf.Connectivity
         {
             var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateSubscriberSocket();
-            socket.Connect(rendezvousServer.BroadcastUri);
+            socket.Connect(rendezvousServer.MulticastUri);
             socket.Subscribe();
 
-            Console.WriteLine($"Connected to {rendezvousServer.BroadcastUri.AbsoluteUri}");
+            Console.WriteLine($"Connected to {rendezvousServer.MulticastUri.AbsoluteUri}");
 
             return socket;
         }
@@ -241,7 +241,8 @@ namespace rawf.Connectivity
                 var payload = message.GetPayload<RendezvousNotLeaderMessage>();
                 var newLeader = new RendezvousServerConfiguration
                                 {
-                                    BroadcastUri = new Uri(payload.LeaderMulticastUri)
+                                    MulticastUri = new Uri(payload.LeaderMulticastUri),
+                                    UnicastUri = new Uri(payload.LeaderUnicastUri)
                                 };
                 rendezvousConfiguration.SetCurrentRendezvousServer(newLeader);
 

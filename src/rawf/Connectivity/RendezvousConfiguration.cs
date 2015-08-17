@@ -36,7 +36,7 @@ namespace rawf.Connectivity
             for (var i = 0; i < config.Count; i++)
             {
                 var server = config[i];
-                if (server.BroadcastUri.Equals(currentRendezvousServer.BroadcastUri)
+                if (server.MulticastUri.Equals(currentRendezvousServer.MulticastUri)
                     && server.UnicastUri.Equals(currentRendezvousServer.UnicastUri))
                 {
                     config.Remove(server);
@@ -49,14 +49,14 @@ namespace rawf.Connectivity
         {
             public bool Equals(RendezvousServerConfiguration x, RendezvousServerConfiguration y)
             {
-                return x.BroadcastUri.Equals(y.BroadcastUri) && x.UnicastUri.Equals(y.UnicastUri);
+                return x.MulticastUri.Equals(y.MulticastUri) && x.UnicastUri.Equals(y.UnicastUri);
             }
 
             public int GetHashCode(RendezvousServerConfiguration obj)
             {
                 unchecked
                 {
-                    return obj.BroadcastUri.GetHashCode() ^ obj.UnicastUri.GetHashCode();
+                    return obj.MulticastUri.GetHashCode() ^ obj.UnicastUri.GetHashCode();
                 }
             }
         }
