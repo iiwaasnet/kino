@@ -1,4 +1,4 @@
-﻿using rawf.Consensus;
+﻿using rawf.Rendezvous.Consensus;
 
 namespace rawf.Rendezvous
 {

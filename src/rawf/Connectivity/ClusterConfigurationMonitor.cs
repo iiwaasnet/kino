@@ -23,6 +23,7 @@ namespace rawf.Connectivity
         private Task listenningMessages;
         private Task monitorRendezvous;
         private readonly ManualResetEventSlim pingReceived;
+        private readonly ManualResetEventSlim newRendezvousLeaderSelected;
         private readonly IRendezvousConfiguration rendezvousConfiguration;
         private ISocket clusterMonitorSubscriptionSocket;
         private ISocket clusterMonitorSendingSocket;
@@ -33,6 +34,7 @@ namespace rawf.Connectivity
                                            IRendezvousConfiguration rendezvousConfiguration)
         {
             pingReceived = new ManualResetEventSlim(false);
+            newRendezvousLeaderSelected = new ManualResetEventSlim(false);
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
             this.clusterConfiguration = clusterConfiguration;
@@ -87,6 +89,7 @@ namespace rawf.Connectivity
             monitorRendezvous.Wait();
             monitoringToken.Dispose();
             pingReceived.Dispose();
+            newRendezvousLeaderSelected.Dispose();
         }
 
         private void RendezvousConnectionMonitor(CancellationToken token)
@@ -95,10 +98,8 @@ namespace rawf.Connectivity
             {
                 while (!token.IsCancellationRequested)
                 {
-                    if (PingSilence(token))
+                    if (PingSilence())
                     {
-                        rendezvousConfiguration.RotateRendezvousServers();
-
                         StopProcessingClusterMessages();
                         StartProcessingClusterMessages();
 
@@ -116,15 +117,24 @@ namespace rawf.Connectivity
             }
         }
 
-        private bool PingSilence(CancellationToken token)
+        private bool PingSilence()
         {
-            if (pingReceived.Wait(clusterConfiguration.PingSilenceBeforeRendezvousFailover, token))
+            const int NewLeaderElected = 1;
+            var result = WaitHandle.WaitAny(new[] {pingReceived.WaitHandle, newRendezvousLeaderSelected.WaitHandle},
+                                            clusterConfiguration.PingSilenceBeforeRendezvousFailover);
+            if (result == WaitHandle.WaitTimeout)
             {
-                pingReceived.Reset();
-                return false;
+                rendezvousConfiguration.RotateRendezvousServers();
+                return true;
+            }
+            if (result == NewLeaderElected)
+            {
+                newRendezvousLeaderSelected.Reset();
+                return true;
             }
 
-            return true;
+            pingReceived.Reset();
+            return false;
         }
 
         private void SendMessages(CancellationToken token, Barrier gateway)
@@ -228,9 +238,14 @@ namespace rawf.Connectivity
             var shouldHandle = IsRendezvousNotLeader(message);
             if (shouldHandle)
             {
-                //TODO: Trigger re-connect to leader
-                // Message should be sent to point ot a proper URIs
                 var payload = message.GetPayload<RendezvousNotLeaderMessage>();
+                var newLeader = new RendezvousServerConfiguration
+                                {
+                                    BroadcastUri = new Uri(payload.LeaderMulticastUri)
+                                };
+                rendezvousConfiguration.SetCurrentRendezvousServer(newLeader);
+
+                newRendezvousLeaderSelected.Set();
             }
 
             return shouldHandle;
@@ -268,7 +283,6 @@ namespace rawf.Connectivity
             {
                 pingReceived.Set();
                 SendPong();
-                //Console.WriteLine("Ping");
             }
 
             return shouldHandle;

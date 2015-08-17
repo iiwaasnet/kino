@@ -36,4 +36,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: InternalsVisibleTo("rawf.Client", AllInternalsVisible = true)]
 [assembly: InternalsVisibleTo("rawf.Actors", AllInternalsVisible = true)]
-[assembly: InternalsVisibleTo("rawf.Consensus", AllInternalsVisible = true)]
+[assembly: InternalsVisibleTo("rawf.Rendezvous", AllInternalsVisible = true)]

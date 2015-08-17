@@ -35,9 +35,9 @@ namespace rawf.Consensus
                 {
                     if (!awaitable.IsSet)
                     {
-                        if (!messages.ContainsKey(messagePayload.Uri))
+                        if (!messages.ContainsKey(messagePayload.SenderUri))
                         {
-                            messages[messagePayload.Uri] = value;
+                            messages[messagePayload.SenderUri] = value;
                             currentCount++;
                         }
                     }

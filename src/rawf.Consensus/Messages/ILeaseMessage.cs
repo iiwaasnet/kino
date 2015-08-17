@@ -3,6 +3,6 @@
     public interface ILeaseMessage
     {
         Ballot Ballot { get; }
-        string Uri { get; }
+        string SenderUri { get; }
     }
 }

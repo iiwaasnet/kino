@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using rawf.Consensus;
+using rawf.Rendezvous.Consensus;
 using rawf.Sockets;
 using TypedConfigProvider;
 
@@ -41,6 +41,13 @@ namespace rawf.Rendezvous
                    .SingleInstance();
             builder.Register(c => c.Resolve<ILeaseConfigurationProvider>().GetConfiguration())
                    .As<ILeaseConfiguration>()
+                   .SingleInstance();
+
+            builder.RegisterType<RendezvousConfigurationProvider>()
+                   .As<IRendezvousConfigurationProvider>()
+                   .SingleInstance();
+            builder.Register(c => c.Resolve<IRendezvousConfigurationProvider>().GetConfiguration())
+                   .As<IRendezvousConfiguration>()
                    .SingleInstance();
         }
     }

@@ -1,12 +1,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using rawf.Consensus;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
+using rawf.Rendezvous.Consensus;
 using rawf.Sockets;
-using TypedConfigProvider;
 
 namespace rawf.Rendezvous
 {
@@ -18,17 +17,17 @@ namespace rawf.Rendezvous
         private readonly INode localNode;
         private Task messageProcessing;
         private Task pinging;
-        private readonly ApplicationConfiguration config;
+        private readonly IRendezvousConfiguration config;
 
         public RendezvousService(ILeaseProvider leaseProvider,
                                  ISynodConfiguration synodConfig,
                                  ISocketFactory socketFactory,
-                                 IConfigProvider configProvider)
+                                 IRendezvousConfiguration config)
         {
             this.socketFactory = socketFactory;
             localNode = synodConfig.LocalNode;
             this.leaseProvider = leaseProvider;
-            config = configProvider.GetConfiguration<ApplicationConfiguration>();
+            this.config = config;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -60,13 +59,19 @@ namespace rawf.Rendezvous
 
                         while (!token.IsCancellationRequested)
                         {
+                            IMessage message;
                             if (NodeIsLeader())
                             {
-                                var message = Message.Create(new PingMessage(), PingMessage.MessageIdentity);
-                                pingNotificationSocket.SendMessage(message);
-
+                                message = Message.Create(new PingMessage(), PingMessage.MessageIdentity);
                                 Console.WriteLine($"Ping {DateTime.Now}");
                             }
+                            else
+                            {
+                                message = CreateNotLeaderMessage();
+                                Console.WriteLine($"Not a Leader {DateTime.Now}");
+                            }
+
+                            pingNotificationSocket.SendMessage(message);
                             wait.Wait(config.PingInterval, token);
                         }
                     }
@@ -122,7 +127,8 @@ namespace rawf.Rendezvous
         {
             return Message.Create(new RendezvousNotLeaderMessage
                                   {
-                                      LeaderUri = leaseProvider.GetLease()?.OwnerUri.ToSocketAddress()
+                                      LeaderMulticastUri = leaseProvider.GetLease()?.OwnerEndpoint.MulticastUri.ToSocketAddress(),
+                                      LeaderUnicastUri = leaseProvider.GetLease()?.OwnerEndpoint.UnicastUri.ToSocketAddress()
                                   },
                                   RendezvousNotLeaderMessage.MessageIdentity);
         }
@@ -131,7 +137,7 @@ namespace rawf.Rendezvous
         {
             var socket = socketFactory.CreateRouterSocket();
             socket.SetMandatoryRouting();
-            socket.Bind(new Uri(config.UnicastUri));
+            socket.Bind(config.UnicastUri);
 
             return socket;
         }
@@ -139,7 +145,7 @@ namespace rawf.Rendezvous
         private ISocket CreateBroadcastSocket()
         {
             var socket = socketFactory.CreatePublisherSocket();
-            socket.Bind(new Uri(config.BroadcastUri));
+            socket.Bind(config.MulticastUri);
 
             return socket;
         }
@@ -147,7 +153,7 @@ namespace rawf.Rendezvous
         private ISocket CreatePingNotificationSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(new Uri(config.UnicastUri));
+            socket.Connect(config.UnicastUri);
 
             return socket;
         }

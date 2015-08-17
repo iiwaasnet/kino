@@ -12,6 +12,6 @@ namespace rawf.Consensus.Messages
         [ProtoMember(1)]
         public Ballot Ballot { get; set; }
         [ProtoMember(2)]
-        public string Uri { get; set; }
+        public string SenderUri { get; set; }
     }
 }

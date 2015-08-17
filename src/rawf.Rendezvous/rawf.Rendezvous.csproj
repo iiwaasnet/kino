@@ -47,6 +47,18 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Linq.2.2.5\lib\net45\System.Reactive.Linq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -60,12 +72,68 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationConfiguration.cs" />
+    <Compile Include="Consensus\AwaitableMessageStreamFilter.cs" />
+    <Compile Include="Consensus\Ballot.cs" />
+    <Compile Include="Consensus\BallotGenerator.cs" />
+    <Compile Include="Consensus\BallotTimestamp.cs" />
+    <Compile Include="Consensus\IBallot.cs" />
+    <Compile Include="Consensus\IBallotGenerator.cs" />
+    <Compile Include="Consensus\IIntercomMessageHub.cs" />
+    <Compile Include="Consensus\ILease.cs" />
+    <Compile Include="Consensus\ILeaseConfiguration.cs" />
+    <Compile Include="Consensus\ILeaseProvider.cs" />
+    <Compile Include="Consensus\ILeaseReader.cs" />
+    <Compile Include="Consensus\ILeaseTxResult.cs" />
+    <Compile Include="Consensus\ILeaseWriter.cs" />
+    <Compile Include="Consensus\IListener.cs" />
+    <Compile Include="Consensus\INode.cs" />
+    <Compile Include="Consensus\INodeResolver.cs" />
+    <Compile Include="Consensus\IntercomMessage.cs" />
+    <Compile Include="Consensus\IntercomMessageHub.cs" />
+    <Compile Include="Consensus\IProcess.cs" />
+    <Compile Include="Consensus\IRoundBasedRegister.cs" />
+    <Compile Include="Consensus\ISynod.cs" />
+    <Compile Include="Consensus\ISynodConfiguration.cs" />
+    <Compile Include="Consensus\ISynodConfigurationProvider.cs" />
+    <Compile Include="Consensus\LastWrittenLease.cs" />
+    <Compile Include="Consensus\LeaderElectionMessageFilter.cs" />
+    <Compile Include="Consensus\Lease.cs" />
+    <Compile Include="Consensus\LeaseConfiguration.cs" />
+    <Compile Include="Consensus\LeaseProvider.cs" />
+    <Compile Include="Consensus\LeaseProvider.Logging.cs" />
+    <Compile Include="Consensus\LeaseTxResult.cs" />
+    <Compile Include="Consensus\Listener.cs" />
+    <Compile Include="Consensus\MainModule.cs" />
+    <Compile Include="Consensus\MessageStreamListener.cs" />
+    <Compile Include="Consensus\Messages\Ballot.cs" />
+    <Compile Include="Consensus\Messages\ILeaseMessage.cs" />
+    <Compile Include="Consensus\Messages\Lease.cs" />
+    <Compile Include="Consensus\Messages\LeaseAckReadMessage.cs" />
+    <Compile Include="Consensus\Messages\LeaseAckWriteMessage.cs" />
+    <Compile Include="Consensus\Messages\LeaseNackReadMessage.cs" />
+    <Compile Include="Consensus\Messages\LeaseNackWriteMessage.cs" />
+    <Compile Include="Consensus\Messages\LeaseReadMessage.cs" />
+    <Compile Include="Consensus\Messages\LeaseWriteMessage.cs" />
+    <Compile Include="Consensus\Messages\Node.cs" />
+    <Compile Include="Consensus\Messages\OwnerEndpoint.cs" />
+    <Compile Include="Consensus\Messages\ProcessAnnouncementMessage.cs" />
+    <Compile Include="Consensus\Node.cs" />
+    <Compile Include="Consensus\OwnerEndpoint.cs" />
+    <Compile Include="Consensus\RoundBasedRegister.cs" />
+    <Compile Include="Consensus\RoundBasedRegister.Logging.cs" />
+    <Compile Include="Consensus\Synod.cs" />
+    <Compile Include="Consensus\SynodConfiguration.cs" />
+    <Compile Include="Consensus\TxOutcome.cs" />
     <Compile Include="ILeaseConfigurationProvider.cs" />
+    <Compile Include="IRendezvousConfiguration.cs" />
+    <Compile Include="IRendezvousConfigurationProvider.cs" />
     <Compile Include="IRendezvousService.cs" />
     <Compile Include="LeaseConfigurationProvider.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RendezvousConfiguration.cs" />
+    <Compile Include="RendezvousConfigurationProvider.cs" />
     <Compile Include="RendezvousService.cs" />
     <Compile Include="SynodConfiguration.cs" />
     <Compile Include="SynodConfigurationProvider.cs" />
@@ -81,10 +149,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\rawf.Consensus\rawf.Consensus.csproj">
-      <Project>{cdf47411-a85b-4dee-8bc1-d293e0f81b4a}</Project>
-      <Name>rawf.Consensus</Name>
-    </ProjectReference>
     <ProjectReference Include="..\rawf\rawf.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
       <Name>rawf</Name>

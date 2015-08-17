@@ -67,7 +67,7 @@ namespace rawf.Consensus
                 response = Message.Create(new LeaseNackWriteMessage
                                           {
                                               Ballot = payload.Ballot,
-                                              Uri = synodConfig.LocalNode.Uri.ToSocketAddress()
+                                              SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
                                           },
                                           LeaseNackWriteMessage.MessageIdentity);
             }
@@ -81,7 +81,7 @@ namespace rawf.Consensus
                 response = Message.Create(new LeaseAckWriteMessage
                                           {
                                               Ballot = payload.Ballot,
-                                              Uri = synodConfig.LocalNode.Uri.ToSocketAddress()
+                                              SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
                                           },
                                           LeaseAckWriteMessage.MessageIdentity);
             }
@@ -104,7 +104,7 @@ namespace rawf.Consensus
                 response = Message.Create(new LeaseNackReadMessage
                                           {
                                               Ballot = payload.Ballot,
-                                              Uri = synodConfig.LocalNode.Uri.ToSocketAddress()
+                                              SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
                                           },
                                           LeaseNackReadMessage.MessageIdentity);
             }
@@ -267,7 +267,7 @@ namespace rawf.Consensus
                                                         Uri = lease.OwnerUri.ToSocketAddress()
                                                     }
                                                   : null,
-                                      Uri = synodConfig.LocalNode.Uri.ToSocketAddress()
+                                      SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
                                   },
                                   LeaseAckReadMessage.MessageIdentity);
         }

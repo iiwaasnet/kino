@@ -24,7 +24,7 @@ namespace rawf.Consensus
         {
             var messagePayload = payload(message);
 
-            return synodConfig.BelongsToSynod(new Uri(messagePayload.Uri))
+            return synodConfig.BelongsToSynod(new Uri(messagePayload.SenderUri))
                    && Unsafe.Equals(messagePayload.Ballot.Identity, ballot.Identity)
                    && messagePayload.Ballot.Timestamp == ballot.Timestamp.Ticks
                    && messagePayload.Ballot.MessageNumber == ballot.MessageNumber;

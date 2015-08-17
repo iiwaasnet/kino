@@ -16,6 +16,6 @@ namespace rawf.Consensus.Messages
         [ProtoMember(3)]
         public Lease Lease { get; set; }
         [ProtoMember(4)]
-        public string Uri { get; set; }
+        public string SenderUri { get; set; }
     }
 }
