@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using C5;
+using rawf.Diagnostics;
 using rawf.Framework;
 
 namespace rawf.Connectivity
@@ -11,9 +12,11 @@ namespace rawf.Connectivity
         private readonly System.Collections.Generic.IDictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>> messageHandlersMap;
         private readonly System.Collections.Generic.IDictionary<SocketIdentifier, System.Collections.Generic.HashSet<MessageHandlerIdentifier>> socketToMessageMap;
         private readonly System.Collections.Generic.IDictionary<SocketIdentifier, Uri> socketToUriMap;
+        private readonly ILogger logger;
 
-        public ExternalRoutingTable()
+        public ExternalRoutingTable(ILogger logger)
         {
+            this.logger = logger;
             messageHandlersMap = new Dictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>>();
             socketToMessageMap = new Dictionary<SocketIdentifier, System.Collections.Generic.HashSet<MessageHandlerIdentifier>>();
             socketToUriMap = new Dictionary<SocketIdentifier, Uri>();
@@ -29,7 +32,7 @@ namespace rawf.Connectivity
 
                 MapSocketToMessage(messageHandlerIdentifier, socketIdentifier);
 
-                Console.WriteLine($"Route added URI:{uri.AbsoluteUri} SOCKID:{socketIdentifier.Identity.GetString()}");
+                logger.Debug($"Route added URI:{uri.AbsoluteUri} SOCKID:{socketIdentifier.Identity.GetString()}");
             }
         }
 
@@ -77,7 +80,7 @@ namespace rawf.Connectivity
                 hashSet.InsertLast(first);
                 return first;
             }
-            
+
             return default(T);
         }
 

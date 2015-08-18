@@ -25,7 +25,8 @@ namespace rawf
                    .As<ILogger>()
                    .SingleInstance();
 
-            builder.Register(c => new ExpirableItemScheduledCollection<CorrelationId>(c.Resolve<IExpirableItemCollectionConfiguration>().EvaluationInterval))
+            builder.Register(c => new ExpirableItemScheduledCollection<CorrelationId>(c.Resolve<IExpirableItemCollectionConfiguration>().EvaluationInterval,
+                                                                                      c.Resolve<ILogger>()))
                    .As<IExpirableItemCollection<CorrelationId>>();
 
             builder.RegisterType<ExternalRoutingTable>()

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NetMQ;
+using rawf.Diagnostics;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
@@ -23,14 +24,17 @@ namespace rawf.Connectivity
         private readonly IClusterMonitor clusterMonitor;
         private readonly IClusterConfiguration clusterConfiguration;
         private readonly RouterConfiguration routerConfiguration;
+        private readonly ILogger logger;
 
         public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
                              IExternalRoutingTable externalRoutingTable,
                              IClusterConfiguration clusterConfiguration,
                              RouterConfiguration routerConfiguration,
-                             IClusterMonitor clusterMonitor)
+                             IClusterMonitor clusterMonitor,
+                             ILogger logger)
         {
+            this.logger = logger;
             this.socketFactory = socketFactory;
             this.clusterConfiguration = clusterConfiguration;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
@@ -84,14 +88,14 @@ namespace rawf.Connectivity
                         }
                         catch (Exception err)
                         {
-                            Console.WriteLine(err);
+                            logger.Error(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
 
@@ -137,7 +141,7 @@ namespace rawf.Connectivity
                                             }
                                             else
                                             {
-                                                Console.WriteLine(string.Format($"Handler not found! MSG: {messageHandlerIdentifier.Identity.GetString()}"));
+                                                logger.Debug($"Handler not found! MSG: {messageHandlerIdentifier.Identity.GetString()}");
                                             }
                                         }
                                     }
@@ -145,11 +149,11 @@ namespace rawf.Connectivity
                             }
                             catch (NetMQException err)
                             {
-                                Console.WriteLine(string.Format($"ERR: {err.ErrorCode} MSG: {err.Message} {err}"));
+                                logger.Debug(string.Format($"ERR: {err.ErrorCode} MSG: {err.Message} {err}"));
                             }
                             catch (Exception err)
                             {
-                                Console.WriteLine(err);
+                                logger.Error(err);
                             }
                         }
                     }
@@ -157,7 +161,7 @@ namespace rawf.Connectivity
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
 
@@ -208,7 +212,7 @@ namespace rawf.Connectivity
                 externalRoutingTable.RemoveRoute(new SocketIdentifier(payload.SocketIdentity));
                 scaleOutBackend.Disconnect(new Uri(payload.Uri));
 
-                Console.WriteLine($"Route removed URI:{payload.Uri} SOCKID:{payload.SocketIdentity.GetString()}");
+                logger.Debug($"Route removed URI:{payload.Uri} SOCKID:{payload.SocketIdentity.GetString()}");
             }
 
             return shouldHandle;
@@ -229,7 +233,7 @@ namespace rawf.Connectivity
             return shouldHandle;
         }
 
-        private bool RegisterExternalRoute(IMessage message ,ISocket scaleOutBackend)
+        private bool RegisterExternalRoute(IMessage message, ISocket scaleOutBackend)
         {
             var shouldHandle = IsExternalRouteRegistration(message);
             if (shouldHandle)
@@ -249,7 +253,7 @@ namespace rawf.Connectivity
                     }
                     catch (Exception err)
                     {
-                        Console.WriteLine(err);
+                        logger.Error(err);
                     }
                 }
             }
@@ -301,7 +305,7 @@ namespace rawf.Connectivity
                 }
                 catch (Exception err)
                 {
-                    Console.WriteLine(err);
+                    logger.Error(err);
                 }
             }
 

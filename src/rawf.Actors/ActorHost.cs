@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using rawf.Connectivity;
+using rawf.Diagnostics;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
@@ -23,13 +24,16 @@ namespace rawf.Actors
         private readonly RouterConfiguration routerConfiguration;
         private readonly IAsyncQueue<IActor> actorRegistrationsQueue;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
+        private readonly ILogger logger;
 
         public ActorHost(ISocketFactory socketFactory,
                          IActorHandlerMap actorHandlerMap,
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
                          IAsyncQueue<IActor> actorRegistrationsQueue,
-                         RouterConfiguration routerConfiguration)
+                         RouterConfiguration routerConfiguration,
+                         ILogger logger)
         {
+            this.logger = logger;
             this.actorHandlerMap = actorHandlerMap;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.socketFactory = socketFactory;
@@ -89,7 +93,7 @@ namespace rawf.Actors
                         }
                         catch (Exception err)
                         {
-                            Console.WriteLine(err);
+                            logger.Error(err);
                         }
                     }
                 }
@@ -140,7 +144,7 @@ namespace rawf.Actors
                         }
                         catch (Exception err)
                         {
-                            Console.WriteLine(err);
+                            logger.Error(err);
                         }
                     }
                 }
@@ -183,7 +187,7 @@ namespace rawf.Actors
                     }
                     catch (Exception err)
                     {
-                        Console.WriteLine(err);
+                        logger.Error(err);
                     }
                 }
             }
@@ -286,7 +290,7 @@ namespace rawf.Actors
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using rawf.Diagnostics;
 
 namespace rawf.Framework
 {
@@ -13,9 +14,11 @@ namespace rawf.Framework
         private readonly Task delayItems;
         private readonly CancellationTokenSource tokenSource;
         private Action<T> handler;
+        private readonly ILogger logger;
 
-        public ExpirableItemScheduledCollection(TimeSpan evaluationInterval)
+        public ExpirableItemScheduledCollection(TimeSpan evaluationInterval, ILogger logger)
         {
+            this.logger = logger;
             delayedItems = new List<ExpirableItem<T>>();
             tokenSource = new CancellationTokenSource();
             additionQueue = new BlockingCollection<ExpirableItem<T>>(new ConcurrentQueue<ExpirableItem<T>>());
@@ -62,7 +65,7 @@ namespace rawf.Framework
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
             finally
             {
@@ -110,7 +113,7 @@ namespace rawf.Framework
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
 

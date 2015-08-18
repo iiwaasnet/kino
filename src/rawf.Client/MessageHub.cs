@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using rawf.Connectivity;
+using rawf.Diagnostics;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
 using rawf.Sockets;
@@ -20,11 +21,14 @@ namespace rawf.Client
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
         private readonly IMessageHubConfiguration config;
+        private readonly ILogger logger;
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
-                          IMessageHubConfiguration config)
+                          IMessageHubConfiguration config,
+                          ILogger logger)
         {
+            this.logger = logger;
             this.socketFactory = socketFactory;
             this.config = config;
             receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
@@ -89,7 +93,7 @@ namespace rawf.Client
                         }
                         catch (Exception err)
                         {
-                            Console.WriteLine(err);
+                            logger.Error(err);
                         }
                     }
                     registrationsQueue.Dispose();
@@ -100,7 +104,7 @@ namespace rawf.Client
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
 
@@ -139,14 +143,14 @@ namespace rawf.Client
                         }
                         catch (Exception err)
                         {
-                            Console.WriteLine(err);
+                            logger.Error(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
 

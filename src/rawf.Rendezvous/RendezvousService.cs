@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using rawf.Diagnostics;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
@@ -18,13 +19,16 @@ namespace rawf.Rendezvous
         private Task messageProcessing;
         private Task pinging;
         private readonly RendezvousConfiguration config;
+        private readonly ILogger logger;
 
         public RendezvousService(ILeaseProvider leaseProvider,
                                  ISynodConfiguration synodConfig,
                                  ISocketFactory socketFactory,
-                                 RendezvousConfiguration config)
+                                 RendezvousConfiguration config,
+                                 ILogger logger)
         {
             this.socketFactory = socketFactory;
+            this.logger = logger;
             localNode = synodConfig.LocalNode;
             this.leaseProvider = leaseProvider;
             this.config = config;
@@ -63,12 +67,12 @@ namespace rawf.Rendezvous
                             if (NodeIsLeader())
                             {
                                 message = Message.Create(new PingMessage(), PingMessage.MessageIdentity);
-                                Console.WriteLine($"Ping {DateTime.Now}");
+                                logger.Debug($"Ping {DateTime.Now}");
                             }
                             else
                             {
                                 message = CreateNotLeaderMessage();
-                                Console.WriteLine($"Not a Leader {DateTime.Now}");
+                                logger.Debug($"Not a Leader {DateTime.Now}");
                             }
                             if (message != null)
                             {
@@ -84,7 +88,7 @@ namespace rawf.Rendezvous
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
 
@@ -122,7 +126,7 @@ namespace rawf.Rendezvous
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using rawf.Diagnostics;
 using rawf.Framework;
 using rawf.Messaging;
 using rawf.Messaging.Messages;
@@ -27,12 +28,15 @@ namespace rawf.Connectivity
         private readonly IRendezvousConfiguration rendezvousConfiguration;
         private ISocket clusterMonitorSubscriptionSocket;
         private ISocket clusterMonitorSendingSocket;
+        private readonly ILogger logger;
 
         public ClusterMonitor(ISocketFactory socketFactory,
                                            RouterConfiguration routerConfiguration,
                                            IClusterConfiguration clusterConfiguration,
-                                           IRendezvousConfiguration rendezvousConfiguration)
+                                           IRendezvousConfiguration rendezvousConfiguration,
+                                           ILogger logger)
         {
+            this.logger = logger;
             pingReceived = new ManualResetEventSlim(false);
             newRendezvousLeaderSelected = new ManualResetEventSlim(false);
             this.socketFactory = socketFactory;
@@ -104,7 +108,7 @@ namespace rawf.Connectivity
                         StartProcessingClusterMessages();
 
                         var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
-                        Console.WriteLine($"Reconnected to {rendezvousServer.MulticastUri.AbsoluteUri}");
+                        logger.Debug($"Reconnected to {rendezvousServer.MulticastUri.AbsoluteUri}");
                     }
                 }
             }
@@ -113,7 +117,7 @@ namespace rawf.Connectivity
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
 
@@ -163,7 +167,7 @@ namespace rawf.Connectivity
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
 
@@ -191,7 +195,7 @@ namespace rawf.Connectivity
             }
             catch (Exception err)
             {
-                Console.WriteLine(err);
+                logger.Error(err);
             }
         }
 
@@ -202,7 +206,7 @@ namespace rawf.Connectivity
             socket.Connect(rendezvousServer.MulticastUri);
             socket.Subscribe();
 
-            Console.WriteLine($"Connected to {rendezvousServer.MulticastUri.AbsoluteUri}");
+            logger.Debug($"Connected to {rendezvousServer.MulticastUri.AbsoluteUri}");
 
             return socket;
         }
@@ -329,7 +333,7 @@ namespace rawf.Connectivity
                                          RegisterMessageHandlersRoutingMessage.MessageIdentity);
             outgoingMessages.Add(message);
 
-            Console.WriteLine($"Self-registration URI: {routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()} SOCKID: {routerConfiguration.ScaleOutAddress.Identity.GetString()} sent");
+            logger.Debug($"Self-registration URI: {routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()} SOCKID: {routerConfiguration.ScaleOutAddress.Identity.GetString()} sent");
         }
 
         public void RequestMessageHandlersRouting()
@@ -374,8 +378,6 @@ namespace rawf.Connectivity
             if (Unsafe.Equals(PongMessage.MessageIdentity, message.Identity))
             {
                 var payload = message.GetPayload<PongMessage>();
-
-                //Console.WriteLine($"Pong from URI:{payload.Uri} SOCKID;{payload.SocketIdentity.GetString()}");
 
                 return !ThisNodeSocket(payload.SocketIdentity);
             }
@@ -438,7 +440,7 @@ namespace rawf.Connectivity
             var registration = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
             var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
             clusterConfiguration.AddClusterMember(clusterMember);
-            Console.WriteLine($"Route added URI:{clusterMember.Uri.AbsoluteUri} SOCKID:{clusterMember.Identity.GetString()}");
+            logger.Debug($"Route added URI:{clusterMember.Uri.AbsoluteUri} SOCKID:{clusterMember.Identity.GetString()}");
         }
 
         private void ProcessPongMessage(IMessage message)
@@ -449,7 +451,7 @@ namespace rawf.Connectivity
             if (!nodeNotFound)
             {
                 RequestNodeMessageHandlersRouting(payload);
-                Console.WriteLine($"Route nod found, requesting URI:{payload.Uri} SOCKID:{payload.SocketIdentity.GetString()}");
+                logger.Debug($"Route nod found, requesting URI:{payload.Uri} SOCKID:{payload.SocketIdentity.GetString()}");
             }
         }
 
@@ -477,7 +479,7 @@ namespace rawf.Connectivity
                 clusterConfiguration.DeleteClusterMember(deadNode);
                 routerNotificationSocket.SendMessage(message);
 
-                Console.WriteLine($"Route removed URI:{deadNode.Uri.AbsoluteUri} SOCKID:{deadNode.Identity.GetString()}");
+                logger.Debug($"Route removed URI:{deadNode.Uri.AbsoluteUri} SOCKID:{deadNode.Identity.GetString()}");
             }
         }
     }
