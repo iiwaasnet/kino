@@ -244,9 +244,11 @@ namespace rawf.Connectivity
                                     MulticastUri = new Uri(payload.LeaderMulticastUri),
                                     UnicastUri = new Uri(payload.LeaderUnicastUri)
                                 };
+              if (!rendezvousConfiguration.GetCurrentRendezvousServer().Equals(newLeader))
+              {
                 rendezvousConfiguration.SetCurrentRendezvousServer(newLeader);
-
                 newRendezvousLeaderSelected.Set();
+              }
             }
 
             return shouldHandle;

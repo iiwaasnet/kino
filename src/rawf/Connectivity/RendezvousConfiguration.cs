@@ -8,10 +8,11 @@ namespace rawf.Connectivity
     public class RendezvousConfiguration : IRendezvousConfiguration
     {
         private readonly HashedLinkedList<RendezvousServerConfiguration> config;
+        private readonly object @lock = new object();
 
         public RendezvousConfiguration(IEnumerable<RendezvousServerConfiguration> initialConfiguration)
         {
-            config = new HashedLinkedList<RendezvousServerConfiguration>(new ConfigurationEqualityComparer());
+            config = new HashedLinkedList<RendezvousServerConfiguration>();
             config.AddAll(initialConfiguration);
 
             AssertInitialConfigContainsDistinctEndpoints(config, initialConfiguration);
@@ -26,39 +27,51 @@ namespace rawf.Connectivity
         }
 
         public RendezvousServerConfiguration GetCurrentRendezvousServer()
-            => config.First;
+        {
+            lock (@lock)
+            {
+                return config.First;
+            }
+        }
 
         public void RotateRendezvousServers()
-            => config.InsertLast(config.RemoveFirst());
+        {
+            lock (@lock)
+            {
+                config.InsertLast(config.RemoveFirst());
+            }
+        }
 
         public void SetCurrentRendezvousServer(RendezvousServerConfiguration currentRendezvousServer)
         {
-            for (var i = 0; i < config.Count; i++)
+            lock (@lock)
             {
-                var server = config[i];
-                if (server.MulticastUri.Equals(currentRendezvousServer.MulticastUri)
-                    && server.UnicastUri.Equals(currentRendezvousServer.UnicastUri))
+                for (var i = 0; i < config.Count; i++)
                 {
-                    config.Remove(server);
-                    config.InsertFirst(server);
+                    var server = config[i];
+                    if (server.Equals(currentRendezvousServer))
+                    {
+                        config.Remove(server);
+                        config.InsertFirst(server);
+                    }
                 }
             }
         }
 
-        private class ConfigurationEqualityComparer : IEqualityComparer<RendezvousServerConfiguration>
-        {
-            public bool Equals(RendezvousServerConfiguration x, RendezvousServerConfiguration y)
-            {
-                return x.MulticastUri.Equals(y.MulticastUri) && x.UnicastUri.Equals(y.UnicastUri);
-            }
+        //private class ConfigurationEqualityComparer : IEqualityComparer<RendezvousServerConfiguration>
+        //{
+        //    public bool Equals(RendezvousServerConfiguration x, RendezvousServerConfiguration y)
+        //    {
+        //        return x.MulticastUri.Equals(y.MulticastUri) && x.UnicastUri.Equals(y.UnicastUri);
+        //    }
 
-            public int GetHashCode(RendezvousServerConfiguration obj)
-            {
-                unchecked
-                {
-                    return obj.MulticastUri.GetHashCode() ^ obj.UnicastUri.GetHashCode();
-                }
-            }
-        }
+        //    public int GetHashCode(RendezvousServerConfiguration obj)
+        //    {
+        //        unchecked
+        //        {
+        //            return obj.MulticastUri.GetHashCode() ^ obj.UnicastUri.GetHashCode();
+        //        }
+        //    }
+        //}
     }
 }
