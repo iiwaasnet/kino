@@ -4,7 +4,7 @@ namespace rawf.Rendezvous
 {
     public class RendezvousConfigurationProvider : IRendezvousConfigurationProvider
     {
-        private readonly IRendezvousConfiguration config;
+        private readonly RendezvousConfiguration config;
 
         public RendezvousConfigurationProvider(ApplicationConfiguration appConfig)
         {
@@ -16,7 +16,7 @@ namespace rawf.Rendezvous
                      };
         }
 
-        public IRendezvousConfiguration GetConfiguration()
+        public RendezvousConfiguration GetConfiguration()
             => config;
     }
 }

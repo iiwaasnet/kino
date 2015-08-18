@@ -3,7 +3,7 @@ using rawf.Framework;
 
 namespace rawf.Rendezvous.Consensus
 {
-    public class Node : INode, IEquatable<Node>
+    public class Node : IEquatable<Node>
     {
         private readonly int hashCode;
 
@@ -45,7 +45,7 @@ namespace rawf.Rendezvous.Consensus
             return StructuralCompare(other);
         }
 
-        private bool StructuralCompare(INode other)
+        private bool StructuralCompare(Node other)
             => Unsafe.Equals(SocketIdentity, other.SocketIdentity)
                && Uri.AbsoluteUri == other.Uri.AbsoluteUri;
 

@@ -6,19 +6,19 @@ using TypedConfigProvider;
 
 namespace Client
 {
-    public class InitialRendezvousServerConfiguration : IInitialRendezvousServerConfiguration
+    public class RendezvousEndpointsProvider : IRendezvousEndpointsProvider
     {
-        private readonly IEnumerable<RendezvousServerConfiguration> config;
-        public InitialRendezvousServerConfiguration(ApplicationConfiguration appConfig)
+        private readonly IEnumerable<RendezvousEndpoints> config;
+        public RendezvousEndpointsProvider(ApplicationConfiguration appConfig)
         {
-            config = appConfig.RendezvousServers.Select(rs => new RendezvousServerConfiguration
+            config = appConfig.RendezvousServers.Select(rs => new RendezvousEndpoints
                                                         {
                                                             MulticastUri = new Uri(rs.BroadcastUri),
                                                             UnicastUri = new Uri(rs.UnicastUri)
                                                         });
         }
 
-        public IEnumerable<RendezvousServerConfiguration> GetConfiguration()
+        public IEnumerable<RendezvousEndpoints> GetConfiguration()
         {
             return config;
         }

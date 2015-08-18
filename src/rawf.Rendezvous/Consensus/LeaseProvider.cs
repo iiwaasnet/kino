@@ -9,20 +9,20 @@ namespace rawf.Rendezvous.Consensus
     public partial class LeaseProvider : ILeaseProvider
     {
         private readonly IBallotGenerator ballotGenerator;
-        private readonly ILeaseConfiguration config;
-        private readonly IRendezvousConfiguration rendezvousConfig;
+        private readonly LeaseConfiguration config;
+        private readonly RendezvousConfiguration rendezvousConfig;
         private readonly Timer leaseTimer;
         private readonly ILogger logger;
-        private readonly INode localNode;
+        private readonly Node localNode;
         private readonly IRoundBasedRegister register;
         private readonly SemaphoreSlim renewGateway;
-        private volatile ILease lastKnownLease;
+        private volatile Lease lastKnownLease;
 
         public LeaseProvider(IRoundBasedRegister register,
                              IBallotGenerator ballotGenerator,
-                             ILeaseConfiguration config,
+                             LeaseConfiguration config,
                              ISynodConfiguration synodConfig,
-                             IRendezvousConfiguration rendezvousConfig,
+                             RendezvousConfiguration rendezvousConfig,
                              ILogger logger)
         {
             ValidateConfiguration(config);
@@ -45,7 +45,7 @@ namespace rawf.Rendezvous.Consensus
             Interlocked.Exchange(ref lastKnownLease, null);
         }
 
-        public ILease GetLease()
+        public Lease GetLease()
         {
             var timer = new Stopwatch();
             timer.Start();
@@ -69,7 +69,7 @@ namespace rawf.Rendezvous.Consensus
             renewGateway.Dispose();
         }
 
-        private void ValidateConfiguration(ILeaseConfiguration config)
+        private void ValidateConfiguration(LeaseConfiguration config)
         {
             if (config.NodeResponseTimeout.TotalMilliseconds * 2 > config.MessageRoundtrip.TotalMilliseconds)
             {
@@ -124,13 +124,13 @@ namespace rawf.Rendezvous.Consensus
             lastKnownLease = lease;
         }
 
-        private bool ProcessLostLeadership(ILease nextLease, ILease previousLease)
+        private bool ProcessLostLeadership(Lease nextLease, Lease previousLease)
         {
             return (previousLease != null && previousLease.OwnerIdentity.Equals(localNode)
                     && nextLease != null && !nextLease.OwnerIdentity.Equals(localNode));
         }
 
-        private bool ProcessBecameLeader(ILease nextLease, ILease previousLease)
+        private bool ProcessBecameLeader(Lease nextLease, Lease previousLease)
         {
             return ((previousLease == null || !previousLease.OwnerIdentity.Equals(localNode))
                     && nextLease != null && nextLease.OwnerIdentity.Equals(localNode));
@@ -145,7 +145,7 @@ namespace rawf.Rendezvous.Consensus
                        : config.MaxLeaseTimeSpan;
         }
 
-        private ILease GetLastKnownLease()
+        private Lease GetLastKnownLease()
         {
             var now = DateTime.UtcNow;
 
@@ -165,7 +165,7 @@ namespace rawf.Rendezvous.Consensus
             }
         }
 
-        private ILease AсquireOrLearnLease(IBallot ballot, DateTime now)
+        private Lease AсquireOrLearnLease(Ballot ballot, DateTime now)
         {
             var read = register.Read(ballot);
             if (read.TxOutcome == TxOutcome.Commit)
@@ -199,24 +199,24 @@ namespace rawf.Rendezvous.Consensus
             return null;
         }
 
-        private bool IsLeaseOwner(ILease lease)
+        private bool IsLeaseOwner(Lease lease)
         {
             return lease != null && lease.OwnerIdentity.Equals(localNode);
         }
 
-        private static bool LeaseNullOrExpired(ILease lease, DateTime now)
+        private static bool LeaseNullOrExpired(Lease lease, DateTime now)
         {
             return lease == null || lease.ExpiresAt < now;
         }
 
-        private bool LeaseIsNotSafelyExpired(ILease lease, DateTime now)
+        private bool LeaseIsNotSafelyExpired(Lease lease, DateTime now)
         {
             return lease != null
                    && lease.ExpiresAt < now
                    && lease.ExpiresAt + config.ClockDrift > now;
         }
 
-        private void WaitBeforeNextLeaseIssued(ILeaseConfiguration config)
+        private void WaitBeforeNextLeaseIssued(LeaseConfiguration config)
         {
             Sleep(config.MaxLeaseTimeSpan);
         }

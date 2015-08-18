@@ -2,6 +2,6 @@
 {
 	public interface ILeaseReader
 	{
-		ILeaseTxResult Read(IBallot ballot);
+		LeaseTxResult Read(Ballot ballot);
 	}
 }

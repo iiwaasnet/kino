@@ -5,18 +5,18 @@ namespace rawf.Rendezvous.Consensus
     public class BallotGenerator : IBallotGenerator
     {
         private readonly BallotTimestamp lastBallotTimestamp;
-        private readonly ILeaseConfiguration config;
+        private readonly LeaseConfiguration config;
         private static readonly byte[] Empty = new byte[0];
         private readonly Ballot NullBallot;
 
-        public BallotGenerator(ILeaseConfiguration config)
+        public BallotGenerator(LeaseConfiguration config)
         {
             this.config = config;
             lastBallotTimestamp = new BallotTimestamp {MessageNumber = 0, Timestamp = DateTime.UtcNow};
             NullBallot = new Ballot(DateTime.MinValue, 0, Empty);
         }
 
-        public IBallot New(byte[] identity)
+        public Ballot New(byte[] identity)
         {
             var now = DateTime.UtcNow;
 
@@ -35,7 +35,7 @@ namespace rawf.Rendezvous.Consensus
             return new Ballot(lastBallotTimestamp.Timestamp, lastBallotTimestamp.MessageNumber, identity);
         }
 
-        public IBallot Null()
+        public Ballot Null()
             => NullBallot;
     }
 }

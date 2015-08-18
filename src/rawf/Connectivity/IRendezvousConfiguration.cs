@@ -2,8 +2,8 @@
 {
     public interface IRendezvousConfiguration
     {
-        RendezvousServerConfiguration GetCurrentRendezvousServer();
-        void SetCurrentRendezvousServer(RendezvousServerConfiguration currentRendezvousServer);
+        RendezvousEndpoints GetCurrentRendezvousServer();
+        void SetCurrentRendezvousServer(RendezvousEndpoints currentRendezvousServer);
         void RotateRendezvousServers();
     }
 }

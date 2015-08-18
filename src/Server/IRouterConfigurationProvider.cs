@@ -4,6 +4,6 @@ namespace Server
 {
     public interface IRouterConfigurationProvider
     {
-        IRouterConfiguration GetConfiguration();
+        RouterConfiguration GetConfiguration();
     }
 }

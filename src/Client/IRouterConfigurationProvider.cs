@@ -4,6 +4,6 @@ namespace Client
 {
     public interface IRouterConfigurationProvider
     {
-        IRouterConfiguration GetConfiguration();
+        RouterConfiguration GetConfiguration();
     }
 }

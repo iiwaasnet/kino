@@ -7,18 +7,18 @@ namespace rawf.Connectivity
 {
     public class RendezvousConfiguration : IRendezvousConfiguration
     {
-        private readonly HashedLinkedList<RendezvousServerConfiguration> config;
+        private readonly HashedLinkedList<RendezvousEndpoints> config;
         private readonly object @lock = new object();
 
-        public RendezvousConfiguration(IEnumerable<RendezvousServerConfiguration> initialConfiguration)
+        public RendezvousConfiguration(IEnumerable<RendezvousEndpoints> initialConfiguration)
         {
-            config = new HashedLinkedList<RendezvousServerConfiguration>();
+            config = new HashedLinkedList<RendezvousEndpoints>();
             config.AddAll(initialConfiguration);
 
             AssertInitialConfigContainsDistinctEndpoints(config, initialConfiguration);
         }
 
-        private void AssertInitialConfigContainsDistinctEndpoints(HashedLinkedList<RendezvousServerConfiguration> config, IEnumerable<RendezvousServerConfiguration> initialConfiguration)
+        private void AssertInitialConfigContainsDistinctEndpoints(HashedLinkedList<RendezvousEndpoints> config, IEnumerable<RendezvousEndpoints> initialConfiguration)
         {
             if (config.Count < initialConfiguration.Count())
             {
@@ -26,7 +26,7 @@ namespace rawf.Connectivity
             }
         }
 
-        public RendezvousServerConfiguration GetCurrentRendezvousServer()
+        public RendezvousEndpoints GetCurrentRendezvousServer()
         {
             lock (@lock)
             {
@@ -42,7 +42,7 @@ namespace rawf.Connectivity
             }
         }
 
-        public void SetCurrentRendezvousServer(RendezvousServerConfiguration currentRendezvousServer)
+        public void SetCurrentRendezvousServer(RendezvousEndpoints currentRendezvousServer)
         {
             lock (@lock)
             {
@@ -57,21 +57,5 @@ namespace rawf.Connectivity
                 }
             }
         }
-
-        //private class ConfigurationEqualityComparer : IEqualityComparer<RendezvousServerConfiguration>
-        //{
-        //    public bool Equals(RendezvousServerConfiguration x, RendezvousServerConfiguration y)
-        //    {
-        //        return x.MulticastUri.Equals(y.MulticastUri) && x.UnicastUri.Equals(y.UnicastUri);
-        //    }
-
-        //    public int GetHashCode(RendezvousServerConfiguration obj)
-        //    {
-        //        unchecked
-        //        {
-        //            return obj.MulticastUri.GetHashCode() ^ obj.UnicastUri.GetHashCode();
-        //        }
-        //    }
-        //}
     }
 }

@@ -18,7 +18,7 @@ namespace Server
             messageRouter.Start();
             Thread.Sleep(TimeSpan.FromMilliseconds(30));
 
-            var ccMon = container.Resolve<IClusterConfigurationMonitor>();
+            var ccMon = container.Resolve<IClusterMonitor>();
             ccMon.Start();
 
             var actorHost = container.Resolve<IActorHost>();

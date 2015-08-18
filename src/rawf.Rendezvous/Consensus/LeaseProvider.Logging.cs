@@ -15,7 +15,7 @@ namespace rawf.Rendezvous.Consensus
             logger.DebugFormat("SLEEP === process {0} Sleep from {1}", localNode.SocketIdentity.GetString(), DateTime.UtcNow.ToString("HH:mm:ss fff"));
         }
 
-        private void LogLeaseProlonged(ILease lastReadLease)
+        private void LogLeaseProlonged(Lease lastReadLease)
         {
             if (lastReadLease != null)
             {

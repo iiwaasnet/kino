@@ -14,7 +14,7 @@ namespace rawf.Rendezvous.Consensus
             synod = new HashSet<Uri>(configProvider.Synod); 
         }
 
-        public INode LocalNode { get; }
+        public Node LocalNode { get; }
 
         public IEnumerable<Uri> Synod => synod;
 

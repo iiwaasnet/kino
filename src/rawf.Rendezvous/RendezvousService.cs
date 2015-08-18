@@ -14,15 +14,15 @@ namespace rawf.Rendezvous
         private readonly ISocketFactory socketFactory;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ILeaseProvider leaseProvider;
-        private readonly INode localNode;
+        private readonly Node localNode;
         private Task messageProcessing;
         private Task pinging;
-        private readonly IRendezvousConfiguration config;
+        private readonly RendezvousConfiguration config;
 
         public RendezvousService(ILeaseProvider leaseProvider,
                                  ISynodConfiguration synodConfig,
                                  ISocketFactory socketFactory,
-                                 IRendezvousConfiguration config)
+                                 RendezvousConfiguration config)
         {
             this.socketFactory = socketFactory;
             localNode = synodConfig.LocalNode;

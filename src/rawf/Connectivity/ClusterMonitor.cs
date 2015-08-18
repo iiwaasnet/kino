@@ -11,14 +11,14 @@ using rawf.Sockets;
 
 namespace rawf.Connectivity
 {
-    public class ClusterConfigurationMonitor : IClusterConfigurationMonitor
+    public class ClusterMonitor : IClusterMonitor
     {
         private readonly ISocketFactory socketFactory;
         private CancellationTokenSource monitoringToken;
         private CancellationTokenSource messageProcessingToken;
         private readonly BlockingCollection<IMessage> outgoingMessages;
         private readonly IClusterConfiguration clusterConfiguration;
-        private readonly IRouterConfiguration routerConfiguration;
+        private readonly RouterConfiguration routerConfiguration;
         private Task sendingMessages;
         private Task listenningMessages;
         private Task monitorRendezvous;
@@ -28,8 +28,8 @@ namespace rawf.Connectivity
         private ISocket clusterMonitorSubscriptionSocket;
         private ISocket clusterMonitorSendingSocket;
 
-        public ClusterConfigurationMonitor(ISocketFactory socketFactory,
-                                           IRouterConfiguration routerConfiguration,
+        public ClusterMonitor(ISocketFactory socketFactory,
+                                           RouterConfiguration routerConfiguration,
                                            IClusterConfiguration clusterConfiguration,
                                            IRendezvousConfiguration rendezvousConfiguration)
         {
@@ -239,7 +239,7 @@ namespace rawf.Connectivity
             if (shouldHandle)
             {
                 var payload = message.GetPayload<RendezvousNotLeaderMessage>();
-                var newLeader = new RendezvousServerConfiguration
+                var newLeader = new RendezvousEndpoints
                                 {
                                     MulticastUri = new Uri(payload.LeaderMulticastUri),
                                     UnicastUri = new Uri(payload.LeaderUnicastUri)

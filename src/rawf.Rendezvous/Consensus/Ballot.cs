@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace rawf.Rendezvous.Consensus
 {
-    public class Ballot : IBallot
+    public class Ballot : IComparable
     {
         public Ballot(DateTime timestamp, int messageNumber, byte[] identity)
         {

@@ -4,7 +4,7 @@ namespace rawf.Rendezvous.Consensus
 {
 	public interface ILeaseProvider : IDisposable
 	{
-		ILease GetLease();
+		Lease GetLease();
 	    void ResetLease();
 	}
 }

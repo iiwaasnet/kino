@@ -14,10 +14,10 @@ namespace rawf.Rendezvous.Consensus
         private readonly IIntercomMessageHub intercomMessageHub;
         private Ballot readBallot;
         private Ballot writeBallot;
-        private ILease lease;
+        private Lease lease;
         private readonly IListener listener;
         private readonly ISynodConfiguration synodConfig;
-        private readonly ILeaseConfiguration leaseConfig;
+        private readonly LeaseConfiguration leaseConfig;
         private readonly ILogger logger;
 
         private readonly IObservable<IMessage> ackReadStream;
@@ -28,7 +28,7 @@ namespace rawf.Rendezvous.Consensus
         public RoundBasedRegister(IIntercomMessageHub intercomMessageHub,
                                   IBallotGenerator ballotGenerator,
                                   ISynodConfiguration synodConfig,
-                                  ILeaseConfiguration leaseConfig,
+                                  LeaseConfiguration leaseConfig,
                                   ILogger logger)
         {
             this.logger = logger;
@@ -36,8 +36,8 @@ namespace rawf.Rendezvous.Consensus
             this.leaseConfig = leaseConfig;
             this.intercomMessageHub = intercomMessageHub;
             intercomMessageHub.Start();
-            readBallot = (Ballot) ballotGenerator.Null();
-            writeBallot = (Ballot) ballotGenerator.Null();
+            readBallot = ballotGenerator.Null();
+            writeBallot = ballotGenerator.Null();
 
             listener = intercomMessageHub.Subscribe();
 
@@ -125,7 +125,7 @@ namespace rawf.Rendezvous.Consensus
             intercomMessageHub.Send(response, payload.SenderIdentity);
         }
 
-        public ILeaseTxResult Read(IBallot ballot)
+        public LeaseTxResult Read(Ballot ballot)
         {
             var ackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseAckReadMessage>(), synodConfig);
             var nackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseNackReadMessage>(), synodConfig);
@@ -177,7 +177,7 @@ namespace rawf.Rendezvous.Consensus
                                             : null);
         }
 
-        public ILeaseTxResult Write(IBallot ballot, ILease lease)
+        public LeaseTxResult Write(Ballot ballot, Lease lease)
         {
             var ackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseAckWriteMessage>(), synodConfig);
             var nackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseNackWriteMessage>(), synodConfig);
@@ -225,7 +225,7 @@ namespace rawf.Rendezvous.Consensus
             listener.Dispose();
         }
 
-        private IMessage CreateWriteMessage(IBallot ballot, ILease lease)
+        private IMessage CreateWriteMessage(Ballot ballot, Lease lease)
         {
             return Message.Create(new LeaseWriteMessage
                                   {
@@ -249,7 +249,7 @@ namespace rawf.Rendezvous.Consensus
                                   LeaseWriteMessage.MessageIdentity);
         }
 
-        private IMessage CreateReadMessage(IBallot ballot)
+        private IMessage CreateReadMessage(Ballot ballot)
         {
             return Message.Create(new LeaseReadMessage
                                   {

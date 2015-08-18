@@ -20,23 +20,23 @@ namespace rawf.Connectivity
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ISocketFactory socketFactory;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
-        private readonly IClusterConfigurationMonitor clusterConfigurationMonitor;
+        private readonly IClusterMonitor clusterMonitor;
         private readonly IClusterConfiguration clusterConfiguration;
-        private readonly IRouterConfiguration routerConfiguration;
+        private readonly RouterConfiguration routerConfiguration;
 
         public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
                              IExternalRoutingTable externalRoutingTable,
                              IClusterConfiguration clusterConfiguration,
-                             IRouterConfiguration routerConfiguration,
-                             IClusterConfigurationMonitor clusterConfigurationMonitor)
+                             RouterConfiguration routerConfiguration,
+                             IClusterMonitor clusterMonitor)
         {
             this.socketFactory = socketFactory;
             this.clusterConfiguration = clusterConfiguration;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
-            this.clusterConfigurationMonitor = clusterConfigurationMonitor;
+            this.clusterMonitor = clusterMonitor;
             this.routerConfiguration = routerConfiguration;
             cancellationTokenSource = new CancellationTokenSource();
         }
@@ -102,7 +102,7 @@ namespace rawf.Connectivity
                 using (var localSocket = CreateRouterSocket())
                 {
                     localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
-                    clusterConfigurationMonitor.RequestMessageHandlersRouting();
+                    clusterMonitor.RequestMessageHandlersRouting();
 
                     using (var scaleOutBackend = CreateScaleOutBackendSocket())
                     {
@@ -222,7 +222,7 @@ namespace rawf.Connectivity
                 var messageIdentifiers = internalRoutingTable.GetMessageHandlerIdentifiers();
                 if (messageIdentifiers.Any())
                 {
-                    clusterConfigurationMonitor.RegisterSelf(messageIdentifiers);
+                    clusterMonitor.RegisterSelf(messageIdentifiers);
                 }
             }
 
@@ -280,7 +280,7 @@ namespace rawf.Connectivity
 
                 var handlers = UpdateLocalRoutingTable(payload, handlerSocketIdentifier);
 
-                clusterConfigurationMonitor.RegisterSelf(handlers);
+                clusterMonitor.RegisterSelf(handlers);
             }
 
             return shouldHandle;

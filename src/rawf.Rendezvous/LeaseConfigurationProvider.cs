@@ -4,7 +4,7 @@ namespace rawf.Rendezvous
 {
     public class LeaseConfigurationProvider : ILeaseConfigurationProvider
     {
-        private readonly ILeaseConfiguration config;
+        private readonly LeaseConfiguration config;
 
         public LeaseConfigurationProvider(ApplicationConfiguration appConfig)
         {
@@ -17,7 +17,7 @@ namespace rawf.Rendezvous
                      };
         }
 
-        public ILeaseConfiguration GetConfiguration()
+        public LeaseConfiguration GetConfiguration()
             => config;
     }
 }

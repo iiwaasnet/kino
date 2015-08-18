@@ -1,12 +1,11 @@
 ﻿using System;
 using rawf.Connectivity;
-using TypedConfigProvider;
 
 namespace Server
 {
     public class RouterConfigurationProvider : IRouterConfigurationProvider
     {
-        private readonly IRouterConfiguration config;
+        private readonly RouterConfiguration config;
 
         public RouterConfigurationProvider(ApplicationConfiguration appConfig)
         {
@@ -18,7 +17,7 @@ namespace Server
                      };
         }
 
-        public IRouterConfiguration GetConfiguration()
+        public RouterConfiguration GetConfiguration()
             => config;
     }
 }

@@ -2,9 +2,9 @@
 
 namespace rawf.Connectivity
 {
-  public class RendezvousServerConfiguration : IEquatable<RendezvousServerConfiguration>
+  public class RendezvousEndpoints : IEquatable<RendezvousEndpoints>
   {
-    public bool Equals(RendezvousServerConfiguration other)
+    public bool Equals(RendezvousEndpoints other)
     {
       if (ReferenceEquals(null, other))
       {
@@ -33,7 +33,7 @@ namespace rawf.Connectivity
         return false;
       }
 
-      return Equals((RendezvousServerConfiguration) obj);
+      return Equals((RendezvousEndpoints) obj);
     }
 
     public override int GetHashCode()

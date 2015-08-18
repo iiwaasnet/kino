@@ -2,9 +2,9 @@
 
 namespace rawf.Rendezvous.Consensus
 {
-    public class Synod : ISynod
+    public class Synod
     {
         public string Id { get; set; }
-        public IEnumerable<INode> Members { get; set; }
+        public IEnumerable<Node> Members { get; set; }
     }
 }

@@ -2,8 +2,8 @@
 {
 	public interface IBallotGenerator
 	{
-		IBallot New(byte[] identity);
+		Ballot New(byte[] identity);
 
-		IBallot Null();
+		Ballot Null();
 	}
 }

@@ -2,7 +2,7 @@
 
 namespace rawf.Rendezvous.Consensus
 {
-    public class LeaseConfiguration : ILeaseConfiguration
+    public class LeaseConfiguration
     {
         public TimeSpan MaxLeaseTimeSpan { get; set; }
         public TimeSpan ClockDrift { get; set; }

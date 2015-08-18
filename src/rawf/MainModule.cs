@@ -36,8 +36,8 @@ namespace rawf
                    .As<IClusterConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterConfigurationMonitor>()
-                   .As<IClusterConfigurationMonitor>()
+            builder.RegisterType<ClusterMonitor>()
+                   .As<IClusterMonitor>()
                    .SingleInstance();
 
             builder.RegisterType<SocketFactory>()

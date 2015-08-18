@@ -38,10 +38,10 @@ namespace Client
                    .SingleInstance();
 
             builder.RegisterType<RouterConfigurationProvider>()
-                   .As<IRouterConfigurationProvider>()
+                   .AsSelf()
                    .SingleInstance();
             builder.Register(c => c.Resolve<IRouterConfigurationProvider>().GetConfiguration())
-                   .As<IRouterConfiguration>()
+                   .As<RouterConfiguration>()
                    .SingleInstance();
 
             builder.RegisterType<ClusterConfigurationProvider>()
@@ -58,12 +58,12 @@ namespace Client
                    .As<IExpirableItemCollectionConfiguration>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IInitialRendezvousServerConfiguration>().GetConfiguration())
-                   .As<IEnumerable<RendezvousServerConfiguration>>()
+            builder.Register(c => c.Resolve<IRendezvousEndpointsProvider>().GetConfiguration())
+                   .As<IEnumerable<RendezvousEndpoints>>()
                    .SingleInstance();
 
-            builder.RegisterType<InitialRendezvousServerConfiguration>()
-                   .As<IInitialRendezvousServerConfiguration>()
+            builder.RegisterType<RendezvousEndpointsProvider>()
+                   .As<IRendezvousEndpointsProvider>()
                    .SingleInstance();
         }
     }

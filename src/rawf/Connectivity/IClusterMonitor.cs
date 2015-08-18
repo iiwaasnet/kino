@@ -2,7 +2,7 @@
 
 namespace rawf.Connectivity
 {
-    public interface IClusterConfigurationMonitor
+    public interface IClusterMonitor
     {
         void Start();
         void Stop();

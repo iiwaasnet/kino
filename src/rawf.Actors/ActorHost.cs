@@ -20,7 +20,7 @@ namespace rawf.Actors
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly IAsyncQueue<AsyncMessageContext> asyncQueue;
         private readonly ISocketFactory socketFactory;
-        private readonly IRouterConfiguration routerConfiguration;
+        private readonly RouterConfiguration routerConfiguration;
         private readonly IAsyncQueue<IActor> actorRegistrationsQueue;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
 
@@ -28,7 +28,7 @@ namespace rawf.Actors
                          IActorHandlerMap actorHandlerMap,
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
                          IAsyncQueue<IActor> actorRegistrationsQueue,
-                         IRouterConfiguration routerConfiguration)
+                         RouterConfiguration routerConfiguration)
         {
             this.actorHandlerMap = actorHandlerMap;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();

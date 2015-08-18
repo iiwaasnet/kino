@@ -2,6 +2,6 @@
 {
     public interface IRendezvousConfigurationProvider
     {
-        IRendezvousConfiguration GetConfiguration();
+        RendezvousConfiguration GetConfiguration();
     }
 }

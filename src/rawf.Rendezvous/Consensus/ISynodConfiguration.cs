@@ -5,7 +5,7 @@ namespace rawf.Rendezvous.Consensus
 {
     public interface ISynodConfiguration
     {
-        INode LocalNode { get; }
+        Node LocalNode { get; }
         IEnumerable<Uri> Synod { get; }
 
         bool BelongsToSynod(Uri node);

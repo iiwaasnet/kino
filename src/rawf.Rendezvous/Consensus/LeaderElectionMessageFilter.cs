@@ -7,11 +7,11 @@ namespace rawf.Rendezvous.Consensus
 {
     public class LeaderElectionMessageFilter
     {
-        private readonly IBallot ballot;
+        private readonly Ballot ballot;
         private readonly Func<IMessage, ILeaseMessage> payload;
         private readonly ISynodConfiguration synodConfig;
 
-        public LeaderElectionMessageFilter(IBallot ballot,
+        public LeaderElectionMessageFilter(Ballot ballot,
                                            Func<IMessage, ILeaseMessage> payload,
                                            ISynodConfiguration synodConfig)
         {

@@ -2,6 +2,6 @@
 {
 	public interface ILeaseWriter
 	{
-		ILeaseTxResult Write(IBallot ballot, ILease lease);
+		LeaseTxResult Write(Ballot ballot, Lease lease);
 	}
 }

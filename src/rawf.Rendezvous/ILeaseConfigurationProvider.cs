@@ -4,6 +4,6 @@ namespace rawf.Rendezvous
 {
     public interface ILeaseConfigurationProvider
     {
-        ILeaseConfiguration GetConfiguration();
+        LeaseConfiguration GetConfiguration();
     }
 }

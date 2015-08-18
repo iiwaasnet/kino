@@ -40,14 +40,14 @@ namespace rawf.Rendezvous
                    .As<ILeaseConfigurationProvider>()
                    .SingleInstance();
             builder.Register(c => c.Resolve<ILeaseConfigurationProvider>().GetConfiguration())
-                   .As<ILeaseConfiguration>()
+                   .As<LeaseConfiguration>()
                    .SingleInstance();
 
             builder.RegisterType<RendezvousConfigurationProvider>()
                    .As<IRendezvousConfigurationProvider>()
                    .SingleInstance();
             builder.Register(c => c.Resolve<IRendezvousConfigurationProvider>().GetConfiguration())
-                   .As<IRendezvousConfiguration>()
+                   .As<RendezvousConfiguration>()
                    .SingleInstance();
         }
     }

@@ -2,7 +2,7 @@
 
 namespace rawf.Rendezvous.Consensus
 {
-    public class Lease : ILease
+    public class Lease
     {
         public Lease(byte[] ownerIdentity, OwnerEndpoint ownerEndpoint, DateTime expiresAt)
         {
