@@ -21,14 +21,15 @@ namespace ConsoleApplication1
 
         private static void RunPriorityQueue(int runs)
         {
-            var list = new IntervalHeap<string>(Comparer<string>.Create(Comparison));
+            var list = new IntervalHeap<string>();
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
+          var str = Guid.NewGuid().ToString();
             for (var i = 0; i < runs; i++)
             {
-                list.Add(Guid.NewGuid().ToString());
+                list.Add(str);
                 list.FindMin();
             }
 
