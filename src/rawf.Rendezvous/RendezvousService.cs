@@ -70,8 +70,10 @@ namespace rawf.Rendezvous
                                 message = CreateNotLeaderMessage();
                                 Console.WriteLine($"Not a Leader {DateTime.Now}");
                             }
-
-                            pingNotificationSocket.SendMessage(message);
+                            if (message != null)
+                            {
+                                pingNotificationSocket.SendMessage(message);
+                            }
                             wait.Wait(config.PingInterval, token);
                         }
                     }
@@ -104,11 +106,12 @@ namespace rawf.Rendezvous
                         while (!token.IsCancellationRequested)
                         {
                             var message = unicastSocket.ReceiveMessage(token);
+
+                            message = (NodeIsLeader()) ? message : CreateNotLeaderMessage();
+
                             if (message != null)
                             {
-                                broadcastSocket.SendMessage(NodeIsLeader()
-                                                                ? message
-                                                                : CreateNotLeaderMessage());
+                                broadcastSocket.SendMessage(message);
                             }
                         }
                     }
@@ -125,12 +128,18 @@ namespace rawf.Rendezvous
 
         private IMessage CreateNotLeaderMessage()
         {
-            return Message.Create(new RendezvousNotLeaderMessage
-                                  {
-                                      LeaderMulticastUri = leaseProvider.GetLease()?.OwnerEndpoint.MulticastUri.ToSocketAddress(),
-                                      LeaderUnicastUri = leaseProvider.GetLease()?.OwnerEndpoint.UnicastUri.ToSocketAddress()
-                                  },
-                                  RendezvousNotLeaderMessage.MessageIdentity);
+            var lease = leaseProvider.GetLease();
+            if (lease != null)
+            {
+                return Message.Create(new RendezvousNotLeaderMessage
+                                      {
+                                          LeaderMulticastUri = lease.OwnerEndpoint.MulticastUri.ToSocketAddress(),
+                                          LeaderUnicastUri = lease.OwnerEndpoint.UnicastUri.ToSocketAddress()
+                                      },
+                                      RendezvousNotLeaderMessage.MessageIdentity);
+            }
+
+            return null;
         }
 
         private ISocket CreateUnicastSocket()
