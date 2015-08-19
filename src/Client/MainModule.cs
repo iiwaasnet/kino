@@ -26,8 +26,8 @@ namespace Client
                    .As<ApplicationConfiguration>()
                    .SingleInstance();
 
-          builder.RegisterType<ExpirableItemCollection<CorrelationId>>()
-            .As<IExpirableItemCollection<CorrelationId>>();
+            builder.RegisterType<ExpirableItemCollection<CorrelationId>>()
+                   .As<IExpirableItemCollection<CorrelationId>>();
 
             builder.RegisterType<MessageHubConfigurationProvider>()
                    .As<IMessageHubConfigurationProvider>()
@@ -38,7 +38,7 @@ namespace Client
                    .SingleInstance();
 
             builder.RegisterType<RouterConfigurationProvider>()
-                   .AsSelf()
+                   .As<IRouterConfigurationProvider>()
                    .SingleInstance();
             builder.Register(c => c.Resolve<IRouterConfigurationProvider>().GetConfiguration())
                    .As<RouterConfiguration>()

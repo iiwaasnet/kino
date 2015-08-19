@@ -3,7 +3,7 @@ using rawf.Connectivity;
 
 namespace Client
 {
-    public class RouterConfigurationProvider
+    public class RouterConfigurationProvider : IRouterConfigurationProvider
     {
         private readonly RouterConfiguration config;
 
