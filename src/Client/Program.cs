@@ -32,7 +32,7 @@ namespace Client
             Thread.Sleep(TimeSpan.FromSeconds(2));
             WriteLine($"Client is running... {DateTime.Now}");
 
-            RunTest(messageHub, 1000);
+            RunTest(messageHub, 100);
 
             ReadLine();
             messageHub.Stop();
@@ -55,7 +55,7 @@ namespace Client
             {
                 try
                 {
-                    var message = Message.CreateFlowStartMessage(new HelloMessage { Greeting = "Hello" }, HelloMessage.MessageIdentity);
+                    var message = Message.CreateFlowStartMessage(new HelloMessage { Greeting = Guid.NewGuid().ToString() }, HelloMessage.MessageIdentity);
                     var promise = messageHub.EnqueueRequest(message, callbackPoint);
                     if (promise.GetResponse().Wait(responseWaitTimeout))
                     {
