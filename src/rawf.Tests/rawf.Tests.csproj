@@ -64,6 +64,7 @@
     <Compile Include="Frontend\CallbackHandlerKeyTests.cs" />
     <Compile Include="Frontend\CallbackHandlerStackTests.cs" />
     <Compile Include="Frontend\MessagHubTests.cs" />
+    <Compile Include="Helpers\BlockingCollectionExtensions.cs" />
     <Compile Include="MessageHandlerIdentifierTests.cs" />
     <Compile Include="Messaging\MessageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

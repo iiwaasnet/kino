@@ -11,6 +11,7 @@ using rawf.Messaging;
 using rawf.Messaging.Messages;
 using rawf.Sockets;
 using rawf.Tests.Backend.Setup;
+using rawf.Tests.Helpers;
 
 namespace rawf.Tests.Backend
 {
@@ -18,7 +19,7 @@ namespace rawf.Tests.Backend
     public class ActorHostTests
     {
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
         //private readonly INodeConfiguration emptyNodeConfiguration;
         private readonly IClusterConfiguration emptyClusterConfiguration;
         private readonly RouterConfiguration routerConfiguration;
@@ -60,7 +61,6 @@ namespace rawf.Tests.Backend
         {
             var actorHandlersMap = new ActorHandlerMap();
             var socketFactory = new Mock<ISocketFactory>();
-            var actorRegistrationsQueue = new AsyncQueue<IActor>();
             var logger = new Mock<ILogger>();
             var socket = new StubSocket();
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
@@ -68,7 +68,7 @@ namespace rawf.Tests.Backend
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          actorRegistrationsQueue,
+                                          new AsyncQueue<IActor>(),
                                           routerConfiguration,
                                           logger.Object);
             actorHost.AssignActor(new EchoActor());
@@ -92,70 +92,81 @@ namespace rawf.Tests.Backend
             CollectionAssert.AreEqual(registration.Body, regMessage.Body);
         }
 
-        //[Test]
-        //[ExpectedException]
-        //public void TestStartingActorHostWithoutActorAssigned_ThrowsException()
-        //{
-        //  var actorHandlersMap = new ActorHandlersMap();
+        [Test]
+        public void TestStartingActorHostWithoutActorAssigned_DoesntThrowException()
+        {
+            var actorHandlersMap = new ActorHandlerMap();
+            var socketFactory = new Mock<ISocketFactory>();
+            var logger = new Mock<ILogger>();
+            var socket = new StubSocket();
+            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
 
-        //  var actorHost = new ActorHost(actorHandlersMap,
-        //                                new MessagesCompletionQueue(),
-        //                                new ConnectivityProvider(new SocketFactory(),
-        //                                                         emptyNodeConfiguration,
-        //                                                         emptyClusterConfiguration));
-        //  actorHost.Start();
-        //}
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IActor>(),
+                                          routerConfiguration,
+                                          logger.Object);
+            actorHost.Start();
 
-        //[Test]
-        //public void TestSyncActorResponse_SendImmediately()
-        //{
-        //  var actorHandlersMap = new ActorHandlersMap();
-        //  var connectivityProvider = new Mock<IConnectivityProvider>();
-        //  var socket = new StubSocket();
-        //  connectivityProvider.Setup(m => m.CreateRoutableSocket()).Returns(socket);
-        //  connectivityProvider.Setup(m => m.CreateOneWaySocket()).Returns(new StubSocket());
+            logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
+            logger.Verify(m => m.ErrorFormat(It.IsAny<string>(), It.IsAny<object[]>()), Times.Never);
+        }
 
-        //  var actorHost = new ActorHost(actorHandlersMap,
-        //                                new MessagesCompletionQueue(),
-        //                                connectivityProvider.Object);
-        //  actorHost.AssignActor(new EchoActor());
-        //  actorHost.Start();
+        [Test]
+        public void TestSyncActorResponse_SendImmediately()
+        {
+            var actorHandlersMap = new ActorHandlerMap();
+            var socketFactory = new Mock<ISocketFactory>();
+            var logger = new Mock<ILogger>();
+            var socket = new StubSocket();
+            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
 
-        //  var messageIn = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-        //  socket.DeliverMessage(messageIn);
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IActor>(),
+                                          routerConfiguration,
+                                          logger.Object);
+            actorHost.AssignActor(new EchoActor());
+            actorHost.Start();
 
-        //  Thread.Sleep(AsyncOpCompletionDelay);
+            var messageIn = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+            socket.DeliverMessage(messageIn);
 
-        //  var messageOut = socket.GetSentMessages().Last();
+            var messageOut = socket.GetSentMessages().BlockingFirst();
 
-        //  CollectionAssert.AreEqual(messageOut.Body, messageIn.Body);
-        //  CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
-        //}
+            CollectionAssert.AreEqual(messageOut.Body, messageIn.Body);
+            CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
+        }
 
-        //[Test]
-        //public void TestExceptionThrownFromActorHandler_DeliveredAsExceptionMessage()
-        //{
-        //  var actorHandlersMap = new ActorHandlersMap();
-        //  var connectivityProvider = new Mock<IConnectivityProvider>();
-        //  var socket = new StubSocket();
-        //  connectivityProvider.Setup(m => m.CreateRoutableSocket()).Returns(socket);
-        //  connectivityProvider.Setup(m => m.CreateOneWaySocket()).Returns(new StubSocket());
+        [Test]
+        public void TestExceptionThrownFromActorHandler_DeliveredAsExceptionMessage()
+        {
+            var errorMessage = Guid.NewGuid().ToString();
+            var actorHandlersMap = new ActorHandlerMap();
+            var socketFactory = new Mock<ISocketFactory>();
+            var logger = new Mock<ILogger>();
+            var socket = new StubSocket();
+            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
 
-        //  var errorMessage = Guid.NewGuid().ToString();
-        //  var actorHost = new ActorHost(actorHandlersMap, new MessagesCompletionQueue(), connectivityProvider.Object);
-        //  actorHost.AssignActor(new ExceptionActor());
-        //  actorHost.Start();
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IActor>(),
+                                          routerConfiguration,
+                                          logger.Object);
+            actorHost.AssignActor(new ExceptionActor());
+            actorHost.Start();
 
-        //  var messageIn = Message.CreateFlowStartMessage(new SimpleMessage {Message = errorMessage}, SimpleMessage.MessageIdentity);
-        //  socket.DeliverMessage(messageIn);
+            var messageIn = Message.CreateFlowStartMessage(new SimpleMessage {Message = errorMessage}, SimpleMessage.MessageIdentity);
+            socket.DeliverMessage(messageIn);
 
-        //  Thread.Sleep(AsyncOpCompletionDelay);
+            var messageOut = socket.GetSentMessages().BlockingLast(AsyncOp);
 
-        //  var messageOut = socket.GetSentMessages().Last();
-
-        //  Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
-        //  CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
-        //}
+            Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
+            CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
+        }
 
         //[Test]
         //public void TestAsyncActorResult_IsAddedToMessageCompletionQueue()

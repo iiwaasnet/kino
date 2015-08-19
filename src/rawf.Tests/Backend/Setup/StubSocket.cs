@@ -83,7 +83,7 @@ namespace rawf.Tests.Backend.Setup
         }
 
         internal IEnumerable<IMessage> GetSentMessages()
-            => sentMessages.GetConsumingEnumerable();
+            => sentMessages;
 
         internal void DeliverMessage(IMessage message)
             => receivedMessages.Add(message);
