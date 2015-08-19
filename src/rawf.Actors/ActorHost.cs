@@ -84,7 +84,7 @@ namespace rawf.Actors
                     var localSocketIdentity = localSocketIdentityPromise.Task.Result;
                     gateway.SignalAndWait(token);
 
-                    foreach (var actor in actorRegistrationsQueue.GetMessages(token))
+                    foreach (var actor in actorRegistrationsQueue.GetConsumingEnumerable(token))
                     {
                         try
                         {
@@ -129,7 +129,7 @@ namespace rawf.Actors
                 {
                     gateway.SignalAndWait(token);
 
-                    foreach (var messageContext in asyncQueue.GetMessages(token))
+                    foreach (var messageContext in asyncQueue.GetConsumingEnumerable(token))
                     {
                         try
                         {

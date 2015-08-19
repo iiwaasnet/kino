@@ -6,9 +6,7 @@ namespace rawf.Framework
 {
     public interface IAsyncQueue<T> : IDisposable
     {
-        //IEnumerable<AsyncMessageContext> GetMessages(CancellationToken cancellationToken);
-        //void Enqueue(AsyncMessageContext messageCompletion, CancellationToken cancellationToken);
-        IEnumerable<T> GetMessages(CancellationToken cancellationToken);
+        IEnumerable<T> GetConsumingEnumerable(CancellationToken cancellationToken);
         void Enqueue(T messageCompletion, CancellationToken cancellationToken);
     }
 }

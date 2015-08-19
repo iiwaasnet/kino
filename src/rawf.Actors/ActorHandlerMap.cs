@@ -17,17 +17,20 @@ namespace rawf.Actors
 
         public IEnumerable<MessageHandlerIdentifier> Add(IActor actor)
         {
+            var tmp = new List<MessageHandlerIdentifier>();
             foreach (var reg in GetActorRegistrations(actor))
             {
                 if (messageHandlers.TryAdd(reg.Key, reg.Value))
                 {
-                    yield return reg.Key;
+                    tmp.Add(reg.Key);
                 }
                 else
                 {
                     throw new DuplicatedKeyException(reg.Key.ToString());
                 }
             }
+
+            return tmp;
         }
 
         public MessageHandler Get(MessageHandlerIdentifier identifier)

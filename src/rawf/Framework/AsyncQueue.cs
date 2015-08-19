@@ -13,7 +13,7 @@ namespace rawf.Framework
             asyncResponses = new BlockingCollection<T>(new ConcurrentQueue<T>());
         }
 
-        public IEnumerable<T> GetMessages(CancellationToken cancellationToken)
+        public IEnumerable<T> GetConsumingEnumerable(CancellationToken cancellationToken)
             => asyncResponses.GetConsumingEnumerable(cancellationToken);
 
         public void Enqueue(T messageCompletion, CancellationToken cancellationToken)
