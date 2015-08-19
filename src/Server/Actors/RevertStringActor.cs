@@ -8,7 +8,7 @@ using Server.Messages;
 
 namespace Server.Actors
 {
-    public class RevertInputActor : IActor
+    public class RevertStringActor : IActor
     {
         public IEnumerable<MessageMap> GetInterfaceDefinition()
         {

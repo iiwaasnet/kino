@@ -8,6 +8,7 @@ using Client.Messages;
 using rawf.Client;
 using rawf.Connectivity;
 using rawf.Messaging;
+using static System.Console;
 
 namespace Client
 {
@@ -29,11 +30,11 @@ namespace Client
             messageHub.Start();
 
             Thread.Sleep(TimeSpan.FromSeconds(2));
-            Console.WriteLine($"Client is running... {DateTime.Now}");
+            WriteLine($"Client is running... {DateTime.Now}");
 
             RunTest(messageHub, 1000);
 
-            Console.ReadLine();
+            ReadLine();
             messageHub.Stop();
             messageRouter.Stop();
             ccMon.Stop();
@@ -42,7 +43,7 @@ namespace Client
 
         private static void RunTest(IMessageHub messageHub, int runs)
         {
-            var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
+            var callbackPoint = new CallbackPoint(GroupCharsResponseMessage.MessageIdentity);
             var rnd = new Random((int) DateTime.UtcNow.Ticks & 0x0000ffff);
 
             var timer = new Stopwatch();
@@ -58,18 +59,22 @@ namespace Client
                     var promise = messageHub.EnqueueRequest(message, callbackPoint);
                     if (promise.GetResponse().Wait(responseWaitTimeout))
                     {
-                        var msg = promise.GetResponse().Result.GetPayload<EhlloMessage>();
-                        Console.WriteLine($"Received: {msg.Ehllo}");
+                        var msg = promise.GetResponse().Result.GetPayload<GroupCharsResponseMessage>();
+                        WriteLine($"Text: {msg.Text}");
+                      foreach (var groupInfo in msg.Groups)
+                      {
+                        WriteLine($"Char: {groupInfo.Char} - {groupInfo.Count} times");
+                      }
                     }
                     else
                     {
-                        Console.WriteLine("Timeout....");
+                        WriteLine("Timeout....");
                     }
                     //responses.Add(messageHub.EnqueueRequest(message, callbackPoint, responseWaitTimeout).GetResponse());
                 }
                 catch (Exception err)
                 {
-                    Console.WriteLine(err);
+                    WriteLine(err);
                 }
                 
             }
@@ -90,13 +95,13 @@ namespace Client
             //                      }
             //                      catch (Exception err)
             //                      {
-            //                          Console.WriteLine($"Error happened: {err.ToString()} {DateTime.Now}");
+            //                          WriteLine($"Error happened: {err.ToString()} {DateTime.Now}");
             //                      }
             //                  });
 
             timer.Stop();
 
-            Console.WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} msec");
+            WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} msec");
         }
     }
 }

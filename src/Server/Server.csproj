@@ -59,11 +59,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Actors\RevertInputActor.cs" />
+    <Compile Include="Actors\GroupCharsActor.cs" />
+    <Compile Include="Actors\RevertStringActor.cs" />
     <Compile Include="ApplicationConfiguration.cs" />
     <Compile Include="ClusterConfigurationProvider.cs" />
     <Compile Include="IClusterConfigurationProvider.cs" />
     <Compile Include="IRendezvousEndpointsProvider.cs" />
+    <Compile Include="Messages\GroupCharsResponseMessage.cs" />
+    <Compile Include="Messages\GroupCharsRequestMessage.cs" />
     <Compile Include="RendezvousEndpointsProvider.cs" />
     <Compile Include="IRouterConfigurationProvider.cs" />
     <Compile Include="MainModule.cs" />

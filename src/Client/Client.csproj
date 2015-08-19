@@ -67,6 +67,7 @@
     <Compile Include="IRendezvousEndpointsProvider.cs" />
     <Compile Include="IMessageHubConfigurationProvider.cs" />
     <Compile Include="IRouterConfigurationProvider.cs" />
+    <Compile Include="Messages\GroupCharsResponseMessage.cs" />
     <Compile Include="RendezvousEndpointsProvider.cs" />
     <Compile Include="IClusterConfigurationProvider.cs" />
     <Compile Include="MainModule.cs" />
