@@ -9,7 +9,7 @@ namespace rawf
 {
     public class MainModule : Module
     {
-        public const string FileLogger = "fileLogger";
+        public const string DefaultLogger = "default";
 
         protected override void Load(ContainerBuilder builder)
         {
@@ -21,12 +21,11 @@ namespace rawf
                    .As<IInternalRoutingTable>()
                    .SingleInstance();
 
-            builder.Register(c => new Logger(FileLogger))
+            builder.Register(c => new Logger(DefaultLogger))
                    .As<ILogger>()
                    .SingleInstance();
 
-            builder.Register(c => new ExpirableItemScheduledCollection<CorrelationId>(c.Resolve<IExpirableItemCollectionConfiguration>().EvaluationInterval,
-                                                                                      c.Resolve<ILogger>()))
+            builder.RegisterType<ExpirableItemScheduledCollection<CorrelationId>>()
                    .As<IExpirableItemCollection<CorrelationId>>();
 
             builder.RegisterType<ExternalRoutingTable>()

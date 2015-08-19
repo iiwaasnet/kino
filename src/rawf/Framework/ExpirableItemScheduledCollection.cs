@@ -16,13 +16,13 @@ namespace rawf.Framework
         private Action<T> handler;
         private readonly ILogger logger;
 
-        public ExpirableItemScheduledCollection(TimeSpan evaluationInterval, ILogger logger)
+        public ExpirableItemScheduledCollection(IExpirableItemCollectionConfiguration config, ILogger logger)
         {
             this.logger = logger;
             delayedItems = new List<ExpirableItem<T>>();
             tokenSource = new CancellationTokenSource();
             additionQueue = new BlockingCollection<ExpirableItem<T>>(new ConcurrentQueue<ExpirableItem<T>>());
-            delayItems = Task.Factory.StartNew(_ => EvaluateDelays(tokenSource.Token, evaluationInterval), tokenSource.Token, TaskCreationOptions.LongRunning);
+            delayItems = Task.Factory.StartNew(_ => EvaluateDelays(tokenSource.Token, config.EvaluationInterval), tokenSource.Token, TaskCreationOptions.LongRunning);
         }
 
         public void SetExpirationHandler(Action<T> handler)
