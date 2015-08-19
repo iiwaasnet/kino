@@ -188,7 +188,7 @@ namespace rawf.Rendezvous.Consensus
                     lease = new Lease(localNode.SocketIdentity, ownerEndpoint, now + config.MaxLeaseTimeSpan);
                 }
 
-                logger.InfoFormat("Write lease: OwnerIdentity {0}", lease.OwnerIdentity);
+                logger.InfoFormat("Write lease: OwnerIdentity {0}", lease.OwnerIdentity.GetString());
                 var write = register.Write(ballot, lease);
                 if (write.TxOutcome == TxOutcome.Commit)
                 {
