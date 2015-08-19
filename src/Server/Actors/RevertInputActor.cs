@@ -1,16 +1,14 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using rawf.Actors;
 using rawf.Connectivity;
 using rawf.Messaging;
 using Server.Messages;
 
-namespace Server
+namespace Server.Actors
 {
-    public class Actor : IActor
+    public class RevertInputActor : IActor
     {
         public IEnumerable<MessageMap> GetInterfaceDefinition()
         {

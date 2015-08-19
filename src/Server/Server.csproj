@@ -59,7 +59,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Actor.cs" />
+    <Compile Include="Actors\RevertInputActor.cs" />
     <Compile Include="ApplicationConfiguration.cs" />
     <Compile Include="ClusterConfigurationProvider.cs" />
     <Compile Include="IClusterConfigurationProvider.cs" />

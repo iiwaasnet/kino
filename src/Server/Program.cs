@@ -3,6 +3,7 @@ using System.Threading;
 using Autofac;
 using rawf.Actors;
 using rawf.Connectivity;
+using Server.Actors;
 
 namespace Server
 {
@@ -23,7 +24,7 @@ namespace Server
 
             var actorHost = container.Resolve<IActorHost>();
             actorHost.Start();
-            actorHost.AssignActor(new Actor());
+            actorHost.AssignActor(new RevertInputActor());
 
             Console.WriteLine("ActorHost started...");
             Console.ReadLine();
