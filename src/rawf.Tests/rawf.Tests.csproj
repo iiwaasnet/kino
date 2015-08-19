@@ -73,6 +73,10 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <ProjectReference Include="..\rawf.Actors\rawf.Actors.csproj">
+      <Project>{3231A7B7-C50A-4062-B5ED-BA00FCE9A77B}</Project>
+      <Name>rawf.Actors</Name>
+    </ProjectReference>
     <ProjectReference Include="..\rawf\rawf.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
       <Name>rawf</Name>

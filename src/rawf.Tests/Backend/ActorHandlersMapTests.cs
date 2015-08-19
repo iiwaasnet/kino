@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using rawf.Actors;
 using rawf.Connectivity;
 using rawf.Framework;
 using rawf.Messaging;
@@ -15,7 +16,7 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestAddingActorsHandlingTheSameMessageTwice_ThowsDuplicatedKeyException()
         {
-            var actorHandlersMap = new ActorHandlersMap();
+            var actorHandlersMap = new ActorHandlerMap();
             var actor = new EchoActor();
 
             actorHandlersMap.Add(actor);
@@ -25,7 +26,7 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestGetRegisteredIdentifiers_ReturnsAllRegisteredMessageHandlers()
         {
-            var actorHandlersMap = new ActorHandlersMap();
+            var actorHandlersMap = new ActorHandlerMap();
             var actor = new EchoActor();
 
             actorHandlersMap.Add(actor);
@@ -41,7 +42,7 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestGettingHandlerForNonRegisteredMessageIdentifier_ThrowsKeyNotFoundException()
         {
-            var actorHandlersMap = new ActorHandlersMap();
+            var actorHandlersMap = new ActorHandlerMap();
             var actor = new EchoActor();
 
             actorHandlersMap.Add(actor);

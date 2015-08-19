@@ -11,18 +11,18 @@ namespace rawf.Tests.Backend.Setup
     public class StubSocket : ISocket
     {
         private byte[] identity;
-        private readonly Queue<IMessage> sentMessages;
+        private readonly BlockingCollection<IMessage> sentMessages;
         private readonly BlockingCollection<IMessage> receivedMessages;
 
         public StubSocket()
         {
-            sentMessages = new Queue<IMessage>();
+            sentMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             receivedMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
         }
 
         public void SendMessage(IMessage message)
         {
-            sentMessages.Enqueue(message);
+            sentMessages.Add(message);
         }
 
         public IMessage ReceiveMessage(CancellationToken cancellationToken)
@@ -37,6 +37,22 @@ namespace rawf.Tests.Backend.Setup
             {
                 return null;
             }
+        }
+
+        public void Unbind(Uri address)
+        {
+        }
+
+        public void Subscribe(string topic = "")
+        {
+        }
+
+        public void Subscribe(byte[] topic)
+        {
+        }
+
+        public void Unsubscribe(string topic = "")
+        {
         }
 
         public void Connect(Uri address)
@@ -67,7 +83,7 @@ namespace rawf.Tests.Backend.Setup
         }
 
         internal IEnumerable<IMessage> GetSentMessages()
-            => sentMessages;
+            => sentMessages.GetConsumingEnumerable();
 
         internal void DeliverMessage(IMessage message)
             => receivedMessages.Add(message);
