@@ -21,22 +21,25 @@ namespace rawf.Tests.Backend
     {
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(3);
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
-        //private readonly INodeConfiguration emptyNodeConfiguration;
-        private readonly IClusterConfiguration emptyClusterConfiguration;
         private readonly RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
         private Mock<ILogger> logger;
+        private ActorHandlerMap actorHandlersMap;
+        private Mock<ISocketFactory> socketFactory;
+        private StubSocket socket;
 
         [SetUp]
         public void Setup()
         {
             logger = new Mock<ILogger>();
+            actorHandlersMap = new ActorHandlerMap();
+            socket = new StubSocket();
+            socketFactory = new Mock<ISocketFactory>();
+            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
         }
 
         public ActorHostTests()
         {
-            //emptyNodeConfiguration = new NodeConfiguration(localhost, localhost);
-            emptyClusterConfiguration = new ClusterConfiguration();
             routerConfiguration = new RouterConfiguration
                                   {
                                       ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew()),
@@ -47,7 +50,6 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestAssignActor_RegistersActorHandlers()
         {
-            var actorHandlersMap = new ActorHandlerMap();
             var actorRegistrationsQueue = new AsyncQueue<IActor>();
 
             var actorHost = new ActorHost(new SocketFactory(),
@@ -66,11 +68,6 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestStartingActorHost_SendsActorRegistrationMessage()
         {
-            var actorHandlersMap = new ActorHandlerMap();
-            var socketFactory = new Mock<ISocketFactory>();
-            var socket = new StubSocket();
-            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
-
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
@@ -108,11 +105,6 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestStartingActorHostWithoutActorAssigned_DoesntThrowException()
         {
-            var actorHandlersMap = new ActorHandlerMap();
-            var socketFactory = new Mock<ISocketFactory>();
-            var socket = new StubSocket();
-            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
-
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
@@ -135,11 +127,6 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestSyncActorResponse_SendImmediately()
         {
-            var actorHandlersMap = new ActorHandlerMap();
-            var socketFactory = new Mock<ISocketFactory>();
-            var socket = new StubSocket();
-            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
-
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
@@ -169,11 +156,6 @@ namespace rawf.Tests.Backend
         public void TestExceptionThrownFromActorHandler_DeliveredAsExceptionMessage()
         {
             var errorMessage = Guid.NewGuid().ToString();
-            var actorHandlersMap = new ActorHandlerMap();
-            var socketFactory = new Mock<ISocketFactory>();
-
-            var socket = new StubSocket();
-            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
 
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
@@ -203,10 +185,6 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestAsyncActorResult_IsAddedToMessageCompletionQueue()
         {
-            var actorHandlersMap = new ActorHandlerMap();
-            var socketFactory = new Mock<ISocketFactory>();
-            var socket = new StubSocket();
-            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
             var messageCompletionQueue = new Mock<IAsyncQueue<AsyncMessageContext>>();
             messageCompletionQueue.Setup(m => m.GetConsumingEnumerable(It.IsAny<CancellationToken>()))
                                   .Returns(new BlockingCollection<AsyncMessageContext>().GetConsumingEnumerable());
@@ -243,11 +221,6 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestAsyncActorResult_IsSentAfterCompletion()
         {
-            var actorHandlersMap = new ActorHandlerMap();
-            var socketFactory = new Mock<ISocketFactory>();
-            var socket = new StubSocket();
-            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
-
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
@@ -281,11 +254,6 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestAsyncActorException_IsSentAfterCompletionAsExceptionMessage()
         {
-            var actorHandlersMap = new ActorHandlerMap();
-            var socketFactory = new Mock<ISocketFactory>();
-            var socket = new StubSocket();
-            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
-
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
@@ -316,7 +284,7 @@ namespace rawf.Tests.Backend
             {
                 actorHost.Stop();
             }
-        }        
+        }
 
         private static bool IsAsyncMessage(AsyncMessageContext amc)
         {
