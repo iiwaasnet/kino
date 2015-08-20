@@ -25,15 +25,15 @@ namespace rawf.Sockets
         public void SendMessage(IMessage message)
         {
             var multipart = new MultipartMessage(message);
-            socket.SendMessage(new NetMQMessage(multipart.Frames));
+            socket.SendMultipartMessage(new NetMQMessage(multipart.Frames));
         }
 
         public IMessage ReceiveMessage(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var message = socket.ReceiveMessage(ReceiveWaitTimeout);
-                if (message != null)
+                var message = new NetMQMessage();
+                if (socket.TryReceiveMultipartMessage(ReceiveWaitTimeout, ref message))
                 {
                     var multipart = new MultipartMessage(message);
                     return new Message(multipart);
