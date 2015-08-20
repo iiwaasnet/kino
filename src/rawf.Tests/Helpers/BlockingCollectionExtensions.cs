@@ -33,6 +33,31 @@ namespace rawf.Tests.Helpers
             return collection.Last();
         }
 
+        public static IEnumerable<T> BlockingAll<T>(this IEnumerable<T> collection, TimeSpan timeout)
+        {
+            var blockingCollection = collection as BlockingCollection<T>;
+            if (blockingCollection != null)
+            {
+                var tmp = new List<T>();
+                try
+                {
+                    using (var cancellationTokenSource = new CancellationTokenSource(timeout))
+                    {
+                        while (true)
+                        {
+                            tmp.Add(blockingCollection.Take(cancellationTokenSource.Token));
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                return tmp;
+            }
+
+            return collection;
+        }
+
         public static T BlockingFirst<T>(this IEnumerable<T> collection, TimeSpan timeout)
         {
             var blockingCollection = collection as BlockingCollection<T>;
