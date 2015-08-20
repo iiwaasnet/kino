@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using Moq;
@@ -18,8 +19,8 @@ namespace rawf.Tests.Backend
     [TestFixture]
     public class ActorHostTests
     {
-        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
         //private readonly INodeConfiguration emptyNodeConfiguration;
         private readonly IClusterConfiguration emptyClusterConfiguration;
         private readonly RouterConfiguration routerConfiguration;
@@ -72,24 +73,31 @@ namespace rawf.Tests.Backend
                                           routerConfiguration,
                                           logger.Object);
             actorHost.AssignActor(new EchoActor());
-            actorHost.Start();
+            try
+            {
+                actorHost.Start();
 
-            var registration = socket.GetSentMessages().First();
-            var payload = new RegisterMessageHandlersMessage
-                          {
-                              SocketIdentity = socket.GetIdentity(),
-                              MessageHandlers = actorHandlersMap
-                                  .GetMessageHandlerIdentifiers()
-                                  .Select(mh => new MessageHandlerRegistration
-                                                {
-                                                    Identity = mh.Identity,
-                                                    Version = mh.Version
-                                                })
-                                  .ToArray()
-                          };
-            var regMessage = Message.Create(payload, RegisterMessageHandlersMessage.MessageIdentity);
+                var registration = socket.GetSentMessages().First();
+                var payload = new RegisterMessageHandlersMessage
+                              {
+                                  SocketIdentity = socket.GetIdentity(),
+                                  MessageHandlers = actorHandlersMap
+                                      .GetMessageHandlerIdentifiers()
+                                      .Select(mh => new MessageHandlerRegistration
+                                                    {
+                                                        Identity = mh.Identity,
+                                                        Version = mh.Version
+                                                    })
+                                      .ToArray()
+                              };
+                var regMessage = Message.Create(payload, RegisterMessageHandlersMessage.MessageIdentity);
 
-            CollectionAssert.AreEqual(registration.Body, regMessage.Body);
+                CollectionAssert.AreEqual(registration.Body, regMessage.Body);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
         }
 
         [Test]
@@ -107,10 +115,17 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
                                           logger.Object);
-            actorHost.Start();
+            try
+            {
+                actorHost.Start();
 
-            logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
-            logger.Verify(m => m.ErrorFormat(It.IsAny<string>(), It.IsAny<object[]>()), Times.Never);
+                logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
+                logger.Verify(m => m.ErrorFormat(It.IsAny<string>(), It.IsAny<object[]>()), Times.Never);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
         }
 
         [Test]
@@ -129,15 +144,22 @@ namespace rawf.Tests.Backend
                                           routerConfiguration,
                                           logger.Object);
             actorHost.AssignActor(new EchoActor());
-            actorHost.Start();
+            try
+            {
+                actorHost.Start();
 
-            var messageIn = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-            socket.DeliverMessage(messageIn);
+                var messageIn = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                socket.DeliverMessage(messageIn);
 
-            var messageOut = socket.GetSentMessages().BlockingFirst();
+                var messageOut = socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
 
-            CollectionAssert.AreEqual(messageOut.Body, messageIn.Body);
-            CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
+                CollectionAssert.AreEqual(messageOut.Body, messageIn.Body);
+                CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
         }
 
         [Test]
@@ -157,48 +179,64 @@ namespace rawf.Tests.Backend
                                           routerConfiguration,
                                           logger.Object);
             actorHost.AssignActor(new ExceptionActor());
-            actorHost.Start();
+            try
+            {
+                actorHost.Start();
 
-            var messageIn = Message.CreateFlowStartMessage(new SimpleMessage {Message = errorMessage}, SimpleMessage.MessageIdentity);
-            socket.DeliverMessage(messageIn);
+                var messageIn = Message.CreateFlowStartMessage(new SimpleMessage {Message = errorMessage}, SimpleMessage.MessageIdentity);
+                socket.DeliverMessage(messageIn);
 
-            var messageOut = socket.GetSentMessages().BlockingLast(AsyncOp);
+                var messageOut = socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
-            Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
-            CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
+                Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
+                CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
         }
 
-        //[Test]
-        //public void TestAsyncActorResult_IsAddedToMessageCompletionQueue()
-        //{
-        //  var actorHandlersMap = new ActorHandlersMap();
-        //  var connectivityProvider = new Mock<IConnectivityProvider>();
-        //  var socket = new StubSocket();
-        //  connectivityProvider.Setup(m => m.CreateRoutableSocket()).Returns(socket);
-        //  connectivityProvider.Setup(m => m.CreateOneWaySocket()).Returns(new StubSocket());
+        [Test]
+        public void TestAsyncActorResult_IsAddedToMessageCompletionQueue()
+        {
+            var actorHandlersMap = new ActorHandlerMap();
+            var socketFactory = new Mock<ISocketFactory>();
+            var logger = new Mock<ILogger>();
+            var socket = new StubSocket();
+            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
+            var messageCompletionQueue = new Mock<IAsyncQueue<AsyncMessageContext>>();
+            messageCompletionQueue.Setup(m => m.GetConsumingEnumerable(It.IsAny<CancellationToken>()))
+                                  .Returns(new BlockingCollection<AsyncMessageContext>().GetConsumingEnumerable());
 
-        //  var messageCompletionQueue = new Mock<IMessagesCompletionQueue>();
-        //  messageCompletionQueue.Setup(m => m.GetConsumingEnumerable(It.IsAny<CancellationToken>()))
-        //                        .Returns(new BlockingCollection<AsyncMessageContext>().GetConsumingEnumerable());
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          messageCompletionQueue.Object, 
+                                          new AsyncQueue<IActor>(),
+                                          routerConfiguration,
+                                          logger.Object);
+            actorHost.AssignActor(new EchoActor());
+            try
+            {
+                actorHost.Start();
 
-        //  var actorHost = new ActorHost(actorHandlersMap,
-        //                                messageCompletionQueue.Object,
-        //                                connectivityProvider.Object);
-        //  actorHost.AssignActor(new EchoActor());
-        //  actorHost.Start();
+                var delay = AsyncOp;
+                var asyncMessage = new AsyncMessage { Delay = delay };
+                var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
+                socket.DeliverMessage(messageIn);
 
-        //  var delay = AsyncOp;
-        //  var asyncMessage = new AsyncMessage {Delay = delay};
-        //  var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
-        //  socket.DeliverMessage(messageIn);
+                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
 
-        //  Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
-
-        //  messageCompletionQueue.Verify(m => m.Enqueue(It.Is<AsyncMessageContext>(amc => IsAsyncMessage(amc)),
-        //                                               It.IsAny<CancellationToken>()),
-        //                                Times.Once);
-        //  messageCompletionQueue.Verify(m => m.GetConsumingEnumerable(It.IsAny<CancellationToken>()), Times.Once);
-        //}
+                messageCompletionQueue.Verify(m => m.Enqueue(It.Is<AsyncMessageContext>(amc => IsAsyncMessage(amc)),
+                                                             It.IsAny<CancellationToken>()),
+                                              Times.Once);
+                messageCompletionQueue.Verify(m => m.GetConsumingEnumerable(It.IsAny<CancellationToken>()), Times.Once);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
+        }
 
         //[Test]
         //public void TestAsyncActorResult_IsSentAfterCompletion()

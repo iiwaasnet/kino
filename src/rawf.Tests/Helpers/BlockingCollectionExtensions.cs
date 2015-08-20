@@ -33,9 +33,27 @@ namespace rawf.Tests.Helpers
             return collection.Last();
         }
 
-        public static T BlockingFirst<T>(this IEnumerable<T> collection)
+        public static T BlockingFirst<T>(this IEnumerable<T> collection, TimeSpan timeout)
         {
-            collection = (collection as BlockingCollection<T>)?.GetConsumingEnumerable();
+            var blockingCollection = collection as BlockingCollection<T>;
+            if (blockingCollection != null)
+            {
+                var res = default(T);
+                try
+                {
+                    using (var cancellationTokenSource = new CancellationTokenSource(timeout))
+                    {
+                        while (true)
+                        {
+                            res = blockingCollection.Take(cancellationTokenSource.Token);
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                return res;
+            }
 
             return collection.First();
         }
