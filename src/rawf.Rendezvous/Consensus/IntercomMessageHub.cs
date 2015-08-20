@@ -22,6 +22,7 @@ namespace rawf.Rendezvous.Consensus
         private readonly ILogger logger;
         private static readonly byte[] All = new byte[0];
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
+        private static TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public IntercomMessageHub(ISocketFactory socketFactory,
                                   ISynodConfiguration synodConfig,
@@ -56,6 +57,17 @@ namespace rawf.Rendezvous.Consensus
 
                 gateway.SignalAndWait(cancellationTokenSource.Token);
             }
+        }
+
+        public void Stop()
+        {
+            cancellationTokenSource.Cancel(false);
+            multicastReceiving.Wait(TerminationWaitTimeout);
+            unicastReceiving.Wait(TerminationWaitTimeout);
+            sending.Wait(TerminationWaitTimeout);
+            notifyListeners.Wait(TerminationWaitTimeout);
+            inMessageQueue.Dispose();
+            cancellationTokenSource.Dispose();
         }
 
         private void SendMessages(CancellationToken token, Barrier gateway)
@@ -141,18 +153,7 @@ namespace rawf.Rendezvous.Consensus
             socket.Bind(synodConfig.LocalNode.Uri);
 
             return socket;
-        }
-
-        public void Stop()
-        {
-            cancellationTokenSource.Cancel(false);
-            multicastReceiving.Wait();
-            unicastReceiving.Wait();
-            sending.Wait();
-            notifyListeners.Wait();
-            inMessageQueue.Dispose();
-            cancellationTokenSource.Dispose();
-        }
+        }        
 
         public IListener Subscribe()
         {

@@ -25,6 +25,7 @@ namespace rawf.Connectivity
         private readonly IClusterConfiguration clusterConfiguration;
         private readonly RouterConfiguration routerConfiguration;
         private readonly ILogger logger;
+        private static TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
@@ -62,8 +63,8 @@ namespace rawf.Connectivity
         public void Stop()
         {
             cancellationTokenSource.Cancel(true);
-            localRouting.Wait();
-            scaleOutRouting.Wait();
+            localRouting.Wait(TerminationWaitTimeout);
+            scaleOutRouting.Wait(TerminationWaitTimeout);
         }
 
         private void RoutePeerMessages(CancellationToken token, Barrier gateway)

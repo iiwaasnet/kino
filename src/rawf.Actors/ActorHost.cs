@@ -25,6 +25,7 @@ namespace rawf.Actors
         private readonly IAsyncQueue<IActor> actorRegistrationsQueue;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly ILogger logger;
+        private static TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public ActorHost(ISocketFactory socketFactory,
                          IActorHandlerMap actorHandlerMap,
@@ -70,9 +71,9 @@ namespace rawf.Actors
         public void Stop()
         {
             cancellationTokenSource.Cancel(true);
-            registrationsProcessing.Wait();
-            syncProcessing.Wait();
-            asyncProcessing.Wait();
+            registrationsProcessing.Wait(TerminationWaitTimeout);
+            syncProcessing.Wait(TerminationWaitTimeout);
+            asyncProcessing.Wait(TerminationWaitTimeout);
         }
 
         private void RegisterActors(CancellationToken token, Barrier gateway)
