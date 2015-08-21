@@ -21,7 +21,7 @@ namespace rawf.Tests.Backend
     {
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(3);
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
-        private readonly RouterConfiguration routerConfiguration;
+        private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
         private Mock<ILogger> logger;
         private ActorHandlerMap actorHandlersMap;
@@ -36,15 +36,11 @@ namespace rawf.Tests.Backend
             socket = new StubSocket();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
-        }
-
-        public ActorHostTests()
-        {
             routerConfiguration = new RouterConfiguration
-                                  {
-                                      ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew()),
-                                      RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew())
-                                  };
+            {
+                ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew()),
+                RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew())
+            };
         }
 
         [Test]
