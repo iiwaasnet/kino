@@ -33,7 +33,7 @@ namespace rawf.Tests.Backend.Setup
 
                 return message;
             }
-            catch (TaskCanceledException)
+            catch (OperationCanceledException)
             {
                 return null;
             }
@@ -79,7 +79,6 @@ namespace rawf.Tests.Backend.Setup
 
         public void Dispose()
         {
-            receivedMessages.Dispose();
         }
 
         internal IEnumerable<IMessage> GetSentMessages()

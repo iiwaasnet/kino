@@ -23,7 +23,8 @@ namespace rawf.Tests.Backend
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
         private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
-        private Mock<ILogger> logger;
+        private Mock<ILogger> loggerMock;
+        private ILogger logger;
         private ActorHandlerMap actorHandlersMap;
         private Mock<ISocketFactory> socketFactory;
         private StubSocket socket;
@@ -31,16 +32,17 @@ namespace rawf.Tests.Backend
         [SetUp]
         public void Setup()
         {
-            logger = new Mock<ILogger>();
+            loggerMock = new Mock<ILogger>();
+            logger = new Logger("default");
             actorHandlersMap = new ActorHandlerMap();
             socket = new StubSocket();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
             routerConfiguration = new RouterConfiguration
-            {
-                ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew()),
-                RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew())
-            };
+                                  {
+                                      ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew()),
+                                      RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew())
+                                  };
         }
 
         [Test]
@@ -53,7 +55,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           actorRegistrationsQueue,
                                           routerConfiguration,
-                                          logger.Object);
+                                          logger);
             actorHost.AssignActor(new EchoActor());
 
             var registration = actorRegistrationsQueue.GetConsumingEnumerable(CancellationToken.None).First();
@@ -69,7 +71,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          logger.Object);
+                                          logger);
             actorHost.AssignActor(new EchoActor());
             try
             {
@@ -101,6 +103,7 @@ namespace rawf.Tests.Backend
         [Test]
         public void TestStartingActorHostWithoutActorAssigned_DoesntThrowException()
         {
+            var logger = loggerMock;
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
@@ -128,7 +131,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          logger.Object);
+                                          logger);
             actorHost.AssignActor(new EchoActor());
             try
             {
@@ -139,6 +142,7 @@ namespace rawf.Tests.Backend
 
                 var messageOut = socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
 
+                CollectionAssert.AreEqual(messageIn.Identity.GetString(), messageOut.Identity.GetString());
                 CollectionAssert.AreEqual(messageIn.Body, messageOut.Body);
                 CollectionAssert.AreEqual(messageIn.CorrelationId, messageOut.CorrelationId);
             }
@@ -158,7 +162,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          logger.Object);
+                                          logger);
             actorHost.AssignActor(new ExceptionActor());
             try
             {
@@ -190,7 +194,7 @@ namespace rawf.Tests.Backend
                                           messageCompletionQueue.Object,
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          logger.Object);
+                                          logger);
             actorHost.AssignActor(new EchoActor());
             try
             {
@@ -215,39 +219,6 @@ namespace rawf.Tests.Backend
         }
 
         [Test]
-        public void TestAsyncActorResult_IsSentAfterCompletion()
-        {
-            var actorHost = new ActorHost(socketFactory.Object,
-                                          actorHandlersMap,
-                                          new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
-                                          routerConfiguration,
-                                          logger.Object);
-            actorHost.AssignActor(new EchoActor());
-            try
-            {
-                actorHost.Start();
-
-                var delay = AsyncOp;
-                var asyncMessage = new AsyncMessage {Delay = delay};
-                var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
-                socket.DeliverMessage(messageIn);
-
-                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
-
-                var messageOut = socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
-
-                CollectionAssert.AreEqual(AsyncMessage.MessageIdentity, messageOut.Identity);
-                Assert.AreEqual(delay, messageOut.GetPayload<AsyncMessage>().Delay);
-                CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
-            }
-            finally
-            {
-                actorHost.Stop();
-            }
-        }
-
-        [Test]
         public void TestAsyncActorException_IsSentAfterCompletionAsExceptionMessage()
         {
             var actorHost = new ActorHost(socketFactory.Object,
@@ -255,7 +226,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          logger.Object);
+                                          logger);
             actorHost.AssignActor(new ExceptionActor());
             try
             {
@@ -274,7 +245,7 @@ namespace rawf.Tests.Backend
 
                 var messageOut = socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
-                CollectionAssert.AreEqual(ExceptionMessage.MessageIdentity, messageOut.Identity);
+                CollectionAssert.AreEqual(ExceptionMessage.MessageIdentity.GetString(), messageOut.Identity.GetString());
             }
             finally
             {

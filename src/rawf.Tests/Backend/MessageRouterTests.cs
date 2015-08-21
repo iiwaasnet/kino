@@ -21,7 +21,8 @@ namespace rawf.Tests.Backend
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(3);
         private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
-        private Mock<ILogger> logger;
+        private Mock<ILogger> loggerMock;
+        private ILogger logger;
         private Mock<ISocketFactory> socketFactory;
         private StubSocket routerSocket;
         private Mock<IClusterMonitor> clusterMonitor;
@@ -33,7 +34,8 @@ namespace rawf.Tests.Backend
             socketFactory = new Mock<ISocketFactory>();
             routerSocket = new StubSocket();
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(routerSocket);
-            logger = new Mock<ILogger>();
+            loggerMock = new Mock<ILogger>();
+            logger = new Logger("default");
             routerConfiguration = new RouterConfiguration
                                   {
                                       ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew()),
@@ -46,11 +48,11 @@ namespace rawf.Tests.Backend
         {
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
-                                           new ExternalRoutingTable(logger.Object),
+                                           new ExternalRoutingTable(logger),
                                            new ClusterConfiguration(),
                                            routerConfiguration,
                                            clusterMonitor.Object,
-                                           logger.Object);
+                                           logger);
             try
             {
                 router.Start();
@@ -70,11 +72,11 @@ namespace rawf.Tests.Backend
 
             var router = new MessageRouter(socketFactory.Object,
                                            internalRoutingTable,
-                                           new ExternalRoutingTable(logger.Object),
+                                           new ExternalRoutingTable(logger),
                                            new ClusterConfiguration(),
                                            routerConfiguration,
                                            clusterMonitor.Object,
-                                           logger.Object);
+                                           logger);
             try
             {
                 router.Start();
@@ -83,9 +85,9 @@ namespace rawf.Tests.Backend
                 var version = Guid.NewGuid().ToByteArray();
                 var socketIdentity = Guid.NewGuid().ToByteArray();
                 var message = Message.Create(new RegisterMessageHandlersMessage
-                                             {
-                                                 SocketIdentity = socketIdentity,
-                                                 MessageHandlers = new[]
+                {
+                    SocketIdentity = socketIdentity,
+                    MessageHandlers = new[]
                                                                    {
                                                                        new MessageHandlerRegistration
                                                                        {
@@ -93,7 +95,7 @@ namespace rawf.Tests.Backend
                                                                            Version = version
                                                                        }
                                                                    }
-                                             },
+                },
                                              RegisterMessageHandlersMessage.MessageIdentity);
                 routerSocket.DeliverMessage(message);
 
@@ -118,11 +120,11 @@ namespace rawf.Tests.Backend
 
             var router = new MessageRouter(socketFactory.Object,
                                            internalRoutingTable.Object,
-                                           new ExternalRoutingTable(logger.Object),
+                                           new ExternalRoutingTable(logger),
                                            new ClusterConfiguration(),
                                            routerConfiguration,
                                            clusterMonitor.Object,
-                                           logger.Object);
+                                           logger);
             try
             {
                 router.Start();
@@ -157,11 +159,11 @@ namespace rawf.Tests.Backend
 
             var router = new MessageRouter(socketFactory.Object,
                                            messageHandlerStack.Object,
-                                           new ExternalRoutingTable(logger.Object),
+                                           new ExternalRoutingTable(logger),
                                            new ClusterConfiguration(),
                                            routerConfiguration,
                                            clusterMonitor.Object,
-                                           logger.Object);
+                                           logger);
             router.Start();
 
             var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
