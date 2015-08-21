@@ -61,7 +61,7 @@ namespace rawf.Rendezvous.Consensus
 
         public void Stop()
         {
-            cancellationTokenSource.Cancel(false);
+            cancellationTokenSource.Cancel();
             multicastReceiving.Wait(TerminationWaitTimeout);
             unicastReceiving.Wait(TerminationWaitTimeout);
             sending.Wait(TerminationWaitTimeout);

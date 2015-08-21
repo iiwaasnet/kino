@@ -173,7 +173,7 @@ namespace rawf.Rendezvous
 
         public void Stop()
         {
-            cancellationTokenSource.Cancel(true);
+            cancellationTokenSource.Cancel();
             messageProcessing.Wait();
             pinging.Wait();
             leaseProvider.Dispose();

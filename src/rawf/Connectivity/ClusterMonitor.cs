@@ -81,7 +81,7 @@ namespace rawf.Connectivity
 
         private void StopProcessingClusterMessages()
         {
-            messageProcessingToken.Cancel(true);
+            messageProcessingToken.Cancel();
             sendingMessages.Wait();
             listenningMessages.Wait();
             messageProcessingToken.Dispose();
@@ -89,7 +89,7 @@ namespace rawf.Connectivity
 
         private void StopRendezvousMonitoring()
         {
-            monitoringToken.Cancel(true);
+            monitoringToken.Cancel();
             monitorRendezvous.Wait();
             monitoringToken.Dispose();
             pingReceived.Dispose();

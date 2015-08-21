@@ -57,7 +57,7 @@ namespace rawf.Client
 
         public void Stop()
         {
-            cancellationTokenSource.Cancel(true);
+            cancellationTokenSource.Cancel();
             sending.Wait(TerminationWaitTimeout);
             receiving.Wait(TerminationWaitTimeout);
         }

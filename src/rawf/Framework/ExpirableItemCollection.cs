@@ -38,7 +38,7 @@ namespace rawf.Framework
 
         public void Dispose()
         {
-            tokenSource.Cancel(true);
+            tokenSource.Cancel();
             additionQueue.CompleteAdding();
             checkExpirableItems.Wait();
             checkExpirableItems.Dispose();

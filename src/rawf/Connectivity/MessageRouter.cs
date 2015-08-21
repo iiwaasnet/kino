@@ -62,9 +62,10 @@ namespace rawf.Connectivity
 
         public void Stop()
         {
-            cancellationTokenSource.Cancel(true);
+            cancellationTokenSource.Cancel();
             localRouting.Wait(TerminationWaitTimeout);
             scaleOutRouting.Wait(TerminationWaitTimeout);
+            cancellationTokenSource.Dispose();
         }
 
         private void RoutePeerMessages(CancellationToken token, Barrier gateway)

@@ -70,7 +70,7 @@ namespace rawf.Actors
 
         public void Stop()
         {
-            cancellationTokenSource.Cancel(true);
+            cancellationTokenSource.Cancel();
             registrationsProcessing.Wait(TerminationWaitTimeout);
             syncProcessing.Wait(TerminationWaitTimeout);
             asyncProcessing.Wait(TerminationWaitTimeout);
