@@ -55,6 +55,8 @@
     <Compile Include="Backend\ActorHandlersMapTests.cs" />
     <Compile Include="Backend\ActorHostTests.cs" />
     <Compile Include="Backend\MessageRouterTests.cs" />
+    <Compile Include="Helpers\ActorHostSocketFactory.cs" />
+    <Compile Include="Helpers\MessageRouterSocketFactory.cs" />
     <Compile Include="Backend\Setup\AsyncExceptionMessage.cs" />
     <Compile Include="Backend\Setup\AsyncMessage.cs" />
     <Compile Include="Backend\Setup\ExceptionActor.cs" />

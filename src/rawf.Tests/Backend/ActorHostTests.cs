@@ -19,15 +19,15 @@ namespace rawf.Tests.Backend
     [TestFixture]
     public class ActorHostTests
     {
-        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(3);
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
         private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
         private Mock<ILogger> loggerMock;
         private ILogger logger;
         private ActorHandlerMap actorHandlersMap;
         private Mock<ISocketFactory> socketFactory;
-        private StubSocket socket;
+        private ActorHostSocketFactory actorHostSocketFactory;
 
         [SetUp]
         public void Setup()
@@ -35,9 +35,9 @@ namespace rawf.Tests.Backend
             loggerMock = new Mock<ILogger>();
             logger = new Logger("default");
             actorHandlersMap = new ActorHandlerMap();
-            socket = new StubSocket();
+            actorHostSocketFactory = new ActorHostSocketFactory();
             socketFactory = new Mock<ISocketFactory>();
-            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
+            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(actorHostSocketFactory.CreateSocket);
             routerConfiguration = new RouterConfiguration
                                   {
                                       ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew()),
@@ -75,12 +75,18 @@ namespace rawf.Tests.Backend
             actorHost.AssignActor(new EchoActor());
             try
             {
-                actorHost.Start();
+                StartActorHost(actorHost);
 
-                var registration = socket.GetSentMessages().First();
+                var routableSocket = actorHostSocketFactory.GetRoutableSocket();
+                var registration = actorHostSocketFactory
+                    .GetRegistrationSocket()
+                    .GetSentMessages()
+                    .BlockingLast(AsyncOpCompletionDelay);
+
+                Assert.IsNotNull(registration);
                 var payload = new RegisterMessageHandlersMessage
                               {
-                                  SocketIdentity = socket.GetIdentity(),
+                                  SocketIdentity = routableSocket.GetIdentity(),
                                   MessageHandlers = actorHandlersMap
                                       .GetMessageHandlerIdentifiers()
                                       .Select(mh => new MessageHandlerRegistration
@@ -112,7 +118,7 @@ namespace rawf.Tests.Backend
                                           logger.Object);
             try
             {
-                actorHost.Start();
+                StartActorHost(actorHost);
 
                 logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
                 logger.Verify(m => m.ErrorFormat(It.IsAny<string>(), It.IsAny<object[]>()), Times.Never);
@@ -135,9 +141,10 @@ namespace rawf.Tests.Backend
             actorHost.AssignActor(new EchoActor());
             try
             {
-                actorHost.Start();
+                StartActorHost(actorHost);
 
                 var messageIn = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var socket = actorHostSocketFactory.GetRoutableSocket();
                 socket.DeliverMessage(messageIn);
 
                 var messageOut = socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
@@ -166,15 +173,85 @@ namespace rawf.Tests.Backend
             actorHost.AssignActor(new ExceptionActor());
             try
             {
-                actorHost.Start();
+                StartActorHost(actorHost);
 
                 var messageIn = Message.CreateFlowStartMessage(new SimpleMessage {Message = errorMessage}, SimpleMessage.MessageIdentity);
+                var socket = actorHostSocketFactory.GetRoutableSocket();
                 socket.DeliverMessage(messageIn);
 
                 var messageOut = socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
                 CollectionAssert.AreEqual(messageIn.CorrelationId, messageOut.CorrelationId);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
+        }
+
+        [Test]
+        public void TestAsyncActorResult_IsSentAfterCompletion()
+        {
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IActor>(),
+                                          routerConfiguration,
+                                          logger);
+            actorHost.AssignActor(new EchoActor());
+            try
+            {
+                StartActorHost(actorHost);
+
+                var delay = AsyncOp;
+                var asyncMessage = new AsyncMessage {Delay = delay};
+                var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
+                actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
+
+                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
+
+                var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+
+                CollectionAssert.AreEqual(AsyncMessage.MessageIdentity, messageOut.Identity);
+                Assert.AreEqual(delay, messageOut.GetPayload<AsyncMessage>().Delay);
+                CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
+        }
+
+        [Test]
+        public void TestAsyncActorException_IsSentAfterCompletionAsExceptionMessage()
+        {
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IActor>(),
+                                          routerConfiguration,
+                                          logger);
+            actorHost.AssignActor(new ExceptionActor());
+            try
+            {
+                StartActorHost(actorHost);
+
+                var error = Guid.NewGuid().ToString();
+                var asyncMessage = new AsyncExceptionMessage
+                                   {
+                                       Delay = AsyncOp,
+                                       ErrorMessage = error
+                                   };
+                var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncExceptionMessage.MessageIdentity);
+                actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
+
+                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
+
+                var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+
+                CollectionAssert.AreEqual(ExceptionMessage.MessageIdentity.GetString(), messageOut.Identity.GetString());
+                CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
             }
             finally
             {
@@ -198,12 +275,12 @@ namespace rawf.Tests.Backend
             actorHost.AssignActor(new EchoActor());
             try
             {
-                actorHost.Start();
+                StartActorHost(actorHost);
 
                 var delay = AsyncOp;
                 var asyncMessage = new AsyncMessage {Delay = delay};
                 var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncMessage.MessageIdentity);
-                socket.DeliverMessage(messageIn);
+                actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
 
                 Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
 
@@ -218,44 +295,15 @@ namespace rawf.Tests.Backend
             }
         }
 
-        [Test]
-        public void TestAsyncActorException_IsSentAfterCompletionAsExceptionMessage()
-        {
-            var actorHost = new ActorHost(socketFactory.Object,
-                                          actorHandlersMap,
-                                          new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
-                                          routerConfiguration,
-                                          logger);
-            actorHost.AssignActor(new ExceptionActor());
-            try
-            {
-                actorHost.Start();
-
-                var error = Guid.NewGuid().ToString();
-                var asyncMessage = new AsyncExceptionMessage
-                                   {
-                                       Delay = AsyncOp,
-                                       ErrorMessage = error
-                                   };
-                var messageIn = Message.CreateFlowStartMessage(asyncMessage, AsyncExceptionMessage.MessageIdentity);
-                socket.DeliverMessage(messageIn);
-
-                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
-
-                var messageOut = socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
-
-                CollectionAssert.AreEqual(ExceptionMessage.MessageIdentity.GetString(), messageOut.Identity.GetString());
-            }
-            finally
-            {
-                actorHost.Stop();
-            }
-        }
-
         private static bool IsAsyncMessage(AsyncMessageContext amc)
         {
             return Unsafe.Equals(amc.OutMessage.Identity, AsyncMessage.MessageIdentity);
+        }
+
+        private static void StartActorHost(IActorHost actorHost)
+        {
+            actorHost.Start();
+            Thread.Sleep(AsyncOpCompletionDelay);
         }
     }
 }

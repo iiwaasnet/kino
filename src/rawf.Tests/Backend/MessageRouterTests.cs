@@ -18,29 +18,29 @@ namespace rawf.Tests.Backend
     public class MessageRouterTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
-        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(3);
+        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(2);
         private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
         private Mock<ILogger> loggerMock;
         private ILogger logger;
         private Mock<ISocketFactory> socketFactory;
-        private StubSocket routerSocket;
         private Mock<IClusterMonitor> clusterMonitor;
+        private MessageRouterSocketFactory messageRouterSocketFactory;
 
         [SetUp]
         public void Setup()
         {
-            clusterMonitor = new Mock<IClusterMonitor>();
-            socketFactory = new Mock<ISocketFactory>();
-            routerSocket = new StubSocket();
-            socketFactory.Setup(m => m.CreateRouterSocket()).Returns(routerSocket);
-            loggerMock = new Mock<ILogger>();
-            logger = new Logger("default");
             routerConfiguration = new RouterConfiguration
                                   {
                                       ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew()),
                                       RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew())
                                   };
+            messageRouterSocketFactory = new MessageRouterSocketFactory(routerConfiguration);
+            clusterMonitor = new Mock<IClusterMonitor>();
+            socketFactory = new Mock<ISocketFactory>();
+            socketFactory.Setup(m => m.CreateRouterSocket()).Returns(messageRouterSocketFactory.CreateSocket);
+            loggerMock = new Mock<ILogger>();
+            logger = new Logger("default");
         }
 
         [Test]
@@ -85,9 +85,9 @@ namespace rawf.Tests.Backend
                 var version = Guid.NewGuid().ToByteArray();
                 var socketIdentity = Guid.NewGuid().ToByteArray();
                 var message = Message.Create(new RegisterMessageHandlersMessage
-                {
-                    SocketIdentity = socketIdentity,
-                    MessageHandlers = new[]
+                                             {
+                                                 SocketIdentity = socketIdentity,
+                                                 MessageHandlers = new[]
                                                                    {
                                                                        new MessageHandlerRegistration
                                                                        {
@@ -95,9 +95,9 @@ namespace rawf.Tests.Backend
                                                                            Version = version
                                                                        }
                                                                    }
-                },
+                                             },
                                              RegisterMessageHandlersMessage.MessageIdentity);
-                routerSocket.DeliverMessage(message);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
@@ -136,7 +136,7 @@ namespace rawf.Tests.Backend
                 internalRoutingTable.Setup(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(callbackIdentifier))))
                                     .Returns(new SocketIdentifier(callbackSocketIdentity));
 
-                routerSocket.DeliverMessage(message);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
 
@@ -167,7 +167,7 @@ namespace rawf.Tests.Backend
             router.Start();
 
             var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
-            routerSocket.DeliverMessage(message);
+            messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
             Thread.Sleep(AsyncOpCompletionDelay);
 

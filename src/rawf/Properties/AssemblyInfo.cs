@@ -37,3 +37,4 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("rawf.Client", AllInternalsVisible = true)]
 [assembly: InternalsVisibleTo("rawf.Actors", AllInternalsVisible = true)]
 [assembly: InternalsVisibleTo("rawf.Rendezvous", AllInternalsVisible = true)]
+[assembly: InternalsVisibleTo("rawf.Tests", AllInternalsVisible = true)]

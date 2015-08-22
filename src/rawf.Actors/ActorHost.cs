@@ -183,6 +183,7 @@ namespace rawf.Actors
                             {
                                 //TODO: Add more context to exception about which Actor failed
                                 CallbackException(localSocket, err, message);
+                                logger.Error(err);
                             }
                         }
                     }
