@@ -55,6 +55,9 @@
     <Compile Include="Backend\ActorHandlersMapTests.cs" />
     <Compile Include="Backend\ActorHostTests.cs" />
     <Compile Include="Backend\MessageRouterTests.cs" />
+    <Compile Include="Connectivity\ClusterConfigurationTests.cs" />
+    <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
+    <Compile Include="Connectivity\SocketEndpointTests.cs" />
     <Compile Include="Helpers\MessageHubSocketFactory.cs" />
     <Compile Include="Helpers\ActorHostSocketFactory.cs" />
     <Compile Include="Helpers\MessageRouterSocketFactory.cs" />

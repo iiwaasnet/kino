@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "rawf.Tests", "rawf.Tests\rawf.Tests.csproj", "{154F580E-B7AC-47E2-8F14-6481CCC99BD3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{1FF7D222-47DE-4C4C-BE6A-90A61C3E6E69}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,5 +61,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{154F580E-B7AC-47E2-8F14-6481CCC99BD3} = {1FF7D222-47DE-4C4C-BE6A-90A61C3E6E69}
 	EndGlobalSection
 EndGlobal
