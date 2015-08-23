@@ -18,7 +18,7 @@ namespace rawf.Tests.Backend
     public class MessageRouterTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
-        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(4);
         private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
         private Mock<ILogger> loggerMock;
@@ -55,7 +55,7 @@ namespace rawf.Tests.Backend
                                            logger);
             try
             {
-                router.Start();
+                StartMessageRouter(router);
 
                 socketFactory.Verify(m => m.CreateRouterSocket(), Times.Exactly(3));
             }
@@ -79,7 +79,7 @@ namespace rawf.Tests.Backend
                                            logger);
             try
             {
-                router.Start();
+                StartMessageRouter(router);
 
                 var messageIdentity = Guid.NewGuid().ToByteArray();
                 var version = Guid.NewGuid().ToByteArray();
@@ -127,7 +127,7 @@ namespace rawf.Tests.Backend
                                            logger);
             try
             {
-                router.Start();
+                StartMessageRouter(router);
 
                 var message = (Message) SendMessageOverMessageHub();
 
@@ -164,67 +164,80 @@ namespace rawf.Tests.Backend
                                            routerConfiguration,
                                            clusterMonitor.Object,
                                            logger);
-            router.Start();
+            try
+            {
+                StartMessageRouter(router);
 
-            var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
-            messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+                var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
-            Thread.Sleep(AsyncOpCompletionDelay);
+                Thread.Sleep(AsyncOpCompletionDelay);
 
-            messageHandlerStack.Verify(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Once());
+                messageHandlerStack.Verify(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Once());
+            }
+            finally
+            {
+                router.Stop();
+            }
         }
 
-        //[Test]
-        //public void TestIfLocalRoutingTableHasNoMessageHandlerRegistration_MessageRoutedToOtherNodes()
-        //{
-        //    var connectivityProvider = new Mock<IConnectivityProvider>();
-        //    var routerSocket = new StubSocket();
-        //    var scaleOutBackEndSocket = new StubSocket();
-        //    scaleOutBackEndSocket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-        //    connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(routerSocket);
-        //    connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(scaleOutBackEndSocket);
-        //    connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(new StubSocket());
+        [Test]
+        public void TestIfLocalRoutingTableHasNoMessageHandlerRegistration_MessageRoutedToOtherNodes()
+        {
+            var externalRoutingTable = new Mock<IExternalRoutingTable>();
+            externalRoutingTable.Setup(m => m.Pop(new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity)))
+                                .Returns(new SocketIdentifier(Guid.NewGuid().ToByteArray()));
 
-        //    var messageHandlerStack = new Mock<IInternalRoutingTable>();
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           externalRoutingTable.Object,
+                                           new ClusterConfiguration(),
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
 
-        //    var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack.Object);
-        //    router.Start();
+                var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
-        //    var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
-        //    routerSocket.DeliverMessage(message);
+                var messageOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
-        //    Thread.Sleep(AsyncOp);
+                Assert.AreEqual(message, messageOut);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
 
-        //    var messageOut = scaleOutBackEndSocket.GetSentMessages().Last();
+        [Test]
+        public void TestMessageReceivedFromOtherNode_ForwardedToLocalRouterSocket()
+        {
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           new ExternalRoutingTable(logger),
+                                           new ClusterConfiguration(),
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
 
-        //    Assert.AreEqual(message, messageOut);
-        //}
+                var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                messageRouterSocketFactory.GetScaleoutFrontendSocket().DeliverMessage(message);
 
-        //[Test]
-        //public void TestMessageReceivedFromOtherNode_ForwardedToLocalRouterSocket()
-        //{
-        //    var connectivityProvider = new Mock<IConnectivityProvider>();
-        //    var routerSocket = new StubSocket();
-        //    var scaleOutFrontEndSocket = new StubSocket();
-        //    scaleOutFrontEndSocket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-        //    connectivityProvider.Setup(m => m.CreateRouterSocket()).Returns(routerSocket);
-        //    connectivityProvider.Setup(m => m.CreateScaleOutBackendSocket()).Returns(new StubSocket());
-        //    connectivityProvider.Setup(m => m.CreateScaleOutFrontendSocket()).Returns(scaleOutFrontEndSocket);
+                var messageOut = messageRouterSocketFactory.GetScaleoutFrontendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
-        //    var messageHandlerStack = new Mock<IInternalRoutingTable>();
-
-        //    var router = new MessageRouter(connectivityProvider.Object, messageHandlerStack.Object);
-        //    router.Start();
-
-        //    var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
-        //    scaleOutFrontEndSocket.DeliverMessage(message);
-
-        //    Thread.Sleep(AsyncOp);
-
-        //    var messageOut = scaleOutFrontEndSocket.GetSentMessages().Last();
-
-        //    Assert.AreEqual(message, messageOut);
-        //}
+                Assert.AreEqual(message, messageOut);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
 
         private static IMessage SendMessageOverMessageHub()
         {
@@ -245,6 +258,12 @@ namespace rawf.Tests.Backend
             Thread.Sleep(AsyncOpCompletionDelay);
 
             return socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+        }
+
+        private static void StartMessageRouter(IMessageRouter messageRouter)
+        {
+            messageRouter.Start();
+            Thread.Sleep(AsyncOpCompletionDelay);
         }
     }
 }

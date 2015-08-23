@@ -1,178 +1,227 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using Moq;
 using NUnit.Framework;
+using rawf.Client;
+using rawf.Connectivity;
+using rawf.Diagnostics;
+using rawf.Framework;
+using rawf.Messaging;
+using rawf.Messaging.Messages;
+using rawf.Sockets;
+using rawf.Tests.Backend.Setup;
+using rawf.Tests.Helpers;
 
 namespace rawf.Tests.Frontend
 {
-  [TestFixture]
-  public class MessagHubTests
-  {
-    private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
+    [TestFixture]
+    public class MessagHubTests
+    {
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
+        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(2);
+        private MessageHubSocketFactory messageHubSocketFactory;
+        private readonly string localhost = "tcp://localhost:43";
+        private Mock<ISocketFactory> socketFactory;
+        private Mock<ILogger> loggerMock;
+        private IMessageHubConfiguration config;
+        private ILogger logger;
+        private Mock<ICallbackHandlerStack> callbackHandlerStack;
 
-    //[Test]
-    //public void TestOnMessageHubStart_RegisterationMessageIsSent()
-    //{
-    //    var sendingSocket = new StubSocket();
-    //    var receivingSocket = new StubSocket();
-    //    receivingSocket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-    //    var connectivityProvider = new Mock<IConnectivityProvider>();
-    //    connectivityProvider.Setup(m => m.CreateMessageHubSendingSocket()).Returns(sendingSocket);
-    //    connectivityProvider.Setup(m => m.CreateMessageHubReceivingSocket()).Returns(receivingSocket);
+        [SetUp]
+        public void Setup()
+        {
+            callbackHandlerStack = new Mock<ICallbackHandlerStack>();
+            loggerMock = new Mock<ILogger>();
+            logger = new Logger("default");
+            messageHubSocketFactory = new MessageHubSocketFactory();
+            socketFactory = new Mock<ISocketFactory>();
+            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(messageHubSocketFactory.CreateSocket);
+            config = new MessageHubConfiguration
+                     {
+                         RouterUri = new Uri(localhost)
+                     };
+        }
 
-    //    var messageHub = new MessageHub(connectivityProvider.Object, new CallbackHandlerStack());
-    //    messageHub.Start();
+        [Test]
+        public void TestOnMessageHubStart_RegisterationMessageIsSent()
+        {
+            var messageHub = new MessageHub(socketFactory.Object,
+                                            callbackHandlerStack.Object,
+                                            config,
+                                            logger);
+            try
+            {
+                messageHub.Start();
 
-    //    var message = sendingSocket.GetSentMessages().Last();
+                var sendingSocket = messageHubSocketFactory.GetSendingSocket();
+                var receivingSocket = messageHubSocketFactory.GetReceivingSocket();
+                var message = sendingSocket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
-    //    Assert.IsNotNull(message);
-    //    var registration = message.GetPayload<RegisterMessageHandlersMessage>();
-    //    CollectionAssert.AreEqual(receivingSocket.GetIdentity(), registration.SocketIdentity);
-    //    var handler = registration.MessageHandlers.First();
-    //    CollectionAssert.AreEqual(Message.CurrentVersion, handler.Version);
-    //    CollectionAssert.AreEqual(receivingSocket.GetIdentity(), handler.Identity);
-    //    Assert.AreEqual(IdentityType.Callback, handler.IdentityType);
-    //}
+                Assert.IsNotNull(message);
+                var registration = message.GetPayload<RegisterMessageHandlersMessage>();
+                CollectionAssert.AreEqual(receivingSocket.GetIdentity(), registration.SocketIdentity);
+                var handler = registration.MessageHandlers.First();
+                CollectionAssert.AreEqual(Message.CurrentVersion, handler.Version);
+                CollectionAssert.AreEqual(receivingSocket.GetIdentity(), handler.Identity);
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
 
-    //[Test]
-    //public void TestEnqueueRequest_RegistersMessageAndExceptionHandlers()
-    //{
-    //    var sendingSocket = new StubSocket();
-    //    var receivingSocket = new StubSocket();
-    //    receivingSocket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-    //    var connectivityProvider = new Mock<IConnectivityProvider>();
-    //    connectivityProvider.Setup(m => m.CreateMessageHubSendingSocket()).Returns(sendingSocket);
-    //    connectivityProvider.Setup(m => m.CreateMessageHubReceivingSocket()).Returns(receivingSocket);
-    //    var callbackHandlerStack = new Mock<ICallbackHandlerStack>();
+        [Test]
+        public void TestEnqueueRequest_RegistersMessageAndExceptionHandlers()
+        {
+            var messageHub = new MessageHub(socketFactory.Object,
+                                            callbackHandlerStack.Object,
+                                            config,
+                                            logger);
+            try
+            {
+                messageHub.Start();
 
-    //    var messageHub = new MessageHub(connectivityProvider.Object, callbackHandlerStack.Object);
-    //    messageHub.Start();
+                var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
 
-    //    var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-    //    var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+                messageHub.EnqueueRequest(message, callback);
 
-    //    messageHub.EnqueueRequest(message, callback);
+                Thread.Sleep(AsyncOp);
 
-    //    Thread.Sleep(AsyncOp);
+                callbackHandlerStack.Verify(m => m.Push(It.Is<CorrelationId>(c => Unsafe.Equals(c.Value, message.CorrelationId)),
+                                                        It.IsAny<IPromise>(),
+                                                        It.Is<IEnumerable<MessageHandlerIdentifier>>(en => ContainsMessageAndExceptionRegistrations(en))),
+                                            Times.Once);
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
 
-    //    callbackHandlerStack.Verify(m => m.Push(It.Is<CorrelationId>(c => Unsafe.Equals(c.Value, message.CorrelationId)),
-    //                                           It.IsAny<IPromise>(),
-    //                                           It.Is<IEnumerable<MessageHandlerIdentifier>>(en => ContainsMessageAndExceptionRegistrations(en))),
-    //                                           Times.Once);
+        [Test]
+        public void TestEnqueueRequest_SendsMessageWithCallbackReceiverIdentityEqualsToReceivingSocketIdentity()
+        {
+            var messageHub = new MessageHub(socketFactory.Object,
+                                            callbackHandlerStack.Object,
+                                            config,
+                                            logger);
+            try
+            {
+                messageHub.Start();
 
-    //}
+                var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
 
-    //[Test]
-    //public void TestEnqueueRequest_SendsMessageWithCallbackReceiverIdentityEqualsToReceivingSocketIdentity()
-    //{
-    //    var sendingSocket = new StubSocket();
-    //    var receivingSocket = new StubSocket();
-    //    receivingSocket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-    //    var connectivityProvider = new Mock<IConnectivityProvider>();
-    //    connectivityProvider.Setup(m => m.CreateMessageHubSendingSocket()).Returns(sendingSocket);
-    //    connectivityProvider.Setup(m => m.CreateMessageHubReceivingSocket()).Returns(receivingSocket);
-    //    var callbackHandlerStack = new Mock<ICallbackHandlerStack>();
+                messageHub.EnqueueRequest(message, callback);
 
-    //    var messageHub = new MessageHub(connectivityProvider.Object, callbackHandlerStack.Object);
-    //    messageHub.Start();
+                Thread.Sleep(AsyncOp);
 
-    //    var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-    //    var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+                var messageOut = messageHubSocketFactory.GetSendingSocket().GetSentMessages().Last();
+                var receivingSocket = messageHubSocketFactory.GetReceivingSocket();
 
-    //    messageHub.EnqueueRequest(message, callback);
+                Assert.IsNotNull(messageOut);
+                CollectionAssert.AreEqual(receivingSocket.GetIdentity(), messageOut.CallbackReceiverIdentity);
+                CollectionAssert.AreEqual(callback.MessageIdentity, messageOut.CallbackIdentity);
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
 
-    //    Thread.Sleep(AsyncOp);
+        [Test]
+        public void TestWhenMessageReceived_CorrespondingPromiseResultSet()
+        {
+            var messageHub = new MessageHub(socketFactory.Object,
+                                            callbackHandlerStack.Object,
+                                            config,
+                                            logger);
+            try
+            {
+                messageHub.Start();
 
-    //    var messageOut = sendingSocket.GetSentMessages().Last();
+                var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
 
-    //    Assert.IsNotNull(messageOut);
-    //    CollectionAssert.AreEqual(receivingSocket.GetIdentity(), messageOut.CallbackReceiverIdentity);
-    //    CollectionAssert.AreEqual(callback.MessageIdentity, messageOut.CallbackIdentity);
+                var promise = messageHub.EnqueueRequest(message, callback);
+                callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
+                messageHubSocketFactory.GetReceivingSocket().DeliverMessage(message);
 
-    //}
+                var response = promise.GetResponse().Result;
 
-    //[Test]
-    //public void TestWhenMessageReceived_CorrespondingPromiseResultSet()
-    //{
-    //    var sendingSocket = new StubSocket();
-    //    var receivingSocket = new StubSocket();
-    //    receivingSocket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-    //    var connectivityProvider = new Mock<IConnectivityProvider>();
-    //    connectivityProvider.Setup(m => m.CreateMessageHubSendingSocket()).Returns(sendingSocket);
-    //    connectivityProvider.Setup(m => m.CreateMessageHubReceivingSocket()).Returns(receivingSocket);
-    //    var callbackHandlerStack = new Mock<ICallbackHandlerStack>();
+                Assert.IsNotNull(response);
+                Assert.AreEqual(message, response);
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
 
-    //    var messageHub = new MessageHub(connectivityProvider.Object, callbackHandlerStack.Object);
-    //    messageHub.Start();
+        [Test]
+        public void TestWhenExceptionMessageReceived_PromiseThrowsException()
+        {
+            var messageHub = new MessageHub(socketFactory.Object,
+                                            callbackHandlerStack.Object,
+                                            config,
+                                            logger);
+            try
+            {
+                messageHub.Start();
 
-    //    var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-    //    var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+                var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
 
-    //    var promise = messageHub.EnqueueRequest(message, callback);
-    //    callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
-    //    receivingSocket.DeliverMessage(message);
+                var promise = messageHub.EnqueueRequest(message, callback);
+                callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
+                var errorMessage = Guid.NewGuid().ToString();
+                var exception = Message.Create(new ExceptionMessage {Exception = new Exception(errorMessage)}, ExceptionMessage.MessageIdentity);
+                messageHubSocketFactory.GetReceivingSocket().DeliverMessage(exception);
 
-    //    var response = promise.GetResponse().Result;
+                Assert.Throws<AggregateException>(() => { var response = promise.GetResponse().Result; }, errorMessage);
+                Assert.DoesNotThrow(() => { var response = promise.GetResponse(); });
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
 
-    //    Assert.IsNotNull(response);
-    //    Assert.AreEqual(message, response);
-    //}
+        [Test]
+        public void TestWhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
+        {
+            var messageHub = new MessageHub(socketFactory.Object,
+                                            callbackHandlerStack.Object,
+                                            config,
+                                            logger);
+            try
+            {
+                messageHub.Start();
 
-    //[Test]
-    //public void TestWhenExceptionMessageReceived_PromiseThrowsException()
-    //{
-    //    var sendingSocket = new StubSocket();
-    //    var receivingSocket = new StubSocket();
-    //    receivingSocket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-    //    var connectivityProvider = new Mock<IConnectivityProvider>();
-    //    connectivityProvider.Setup(m => m.CreateMessageHubSendingSocket()).Returns(sendingSocket);
-    //    connectivityProvider.Setup(m => m.CreateMessageHubReceivingSocket()).Returns(receivingSocket);
-    //    var callbackHandlerStack = new Mock<ICallbackHandlerStack>();
+                var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
 
-    //    var messageHub = new MessageHub(connectivityProvider.Object, callbackHandlerStack.Object);
-    //    messageHub.Start();
+                var promise = messageHub.EnqueueRequest(message, callback);
+                callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns((IPromise) null);
+                messageHubSocketFactory.GetReceivingSocket().DeliverMessage(message);
 
-    //    var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-    //    var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+                Thread.Sleep(AsyncOpCompletionDelay);
 
-    //    var promise = messageHub.EnqueueRequest(message, callback);
-    //    callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
-    //    var errorMessage = Guid.NewGuid().ToString();
-    //    var exception = Message.Create(new ExceptionMessage {Exception = new Exception(errorMessage)}, ExceptionMessage.MessageIdentity);
-    //    receivingSocket.DeliverMessage(exception);
+                Assert.IsFalse(promise.GetResponse().Wait(AsyncOpCompletionDelay));
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
 
-    //    Assert.Throws<AggregateException>(() => { var response = promise.GetResponse().Result; }, errorMessage);
-    //    Assert.DoesNotThrow(() => { var response = promise.GetResponse(); });
-    //}
-
-    //[Test]
-    //public void TestWhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
-    //{
-    //    var sendingSocket = new StubSocket();
-    //    var receivingSocket = new StubSocket();
-    //    receivingSocket.SetIdentity(Guid.NewGuid().ToString().GetBytes());
-    //    var connectivityProvider = new Mock<IConnectivityProvider>();
-    //    connectivityProvider.Setup(m => m.CreateMessageHubSendingSocket()).Returns(sendingSocket);
-    //    connectivityProvider.Setup(m => m.CreateMessageHubReceivingSocket()).Returns(receivingSocket);
-    //    var callbackHandlerStack = new Mock<ICallbackHandlerStack>();
-
-    //    var messageHub = new MessageHub(connectivityProvider.Object, callbackHandlerStack.Object);
-    //    messageHub.Start();
-
-    //    var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-    //    var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
-
-    //    var promise = messageHub.EnqueueRequest(message, callback);
-    //    callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns((IPromise)null);
-    //    receivingSocket.DeliverMessage(message);
-
-    //    Thread.Sleep(AsyncOp);
-
-    //    Assert.IsFalse(promise.GetResponse().Wait(AsyncOp));
-    //}
-
-    //private bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageHandlerIdentifier> registrations)
-    //{
-    //    return registrations.Any(h => Unsafe.Equals(h.Identity, SimpleMessage.MessageIdentity))
-    //           && registrations.Any(h => Unsafe.Equals(h.Identity, ExceptionMessage.MessageIdentity));
-    //}
-  }
+        private bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageHandlerIdentifier> registrations)
+        {
+            return registrations.Any(h => Unsafe.Equals(h.Identity, SimpleMessage.MessageIdentity))
+                   && registrations.Any(h => Unsafe.Equals(h.Identity, ExceptionMessage.MessageIdentity));
+        }
+    }
 }

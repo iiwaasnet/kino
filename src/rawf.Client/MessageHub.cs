@@ -22,7 +22,7 @@ namespace rawf.Client
         private readonly ManualResetEventSlim hubRegistered;
         private readonly IMessageHubConfiguration config;
         private readonly ILogger logger;
-        private static TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
+        private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
@@ -109,14 +109,6 @@ namespace rawf.Client
             }
         }
 
-        private ISocket CreateOneWaySocket()
-        {
-            var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(config.RouterUri);
-
-            return socket;
-        }
-
         private void ReadReplies(CancellationToken token, Barrier gateway)
         {
             try
@@ -153,6 +145,14 @@ namespace rawf.Client
             {
                 logger.Error(err);
             }
+        }
+
+        private ISocket CreateOneWaySocket()
+        {
+            var socket = socketFactory.CreateDealerSocket();
+            socket.Connect(config.RouterUri);
+
+            return socket;
         }
 
         private ISocket CreateRoutableSocket()

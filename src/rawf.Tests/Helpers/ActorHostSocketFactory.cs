@@ -13,7 +13,6 @@ namespace rawf.Tests.Helpers
         private readonly IList<SocketMeta> sockets;
         private readonly TimeSpan socketWaitTimeout;
         private readonly int socketWaitRetries = 3;
-        private const int NumberOfOneWaySockets = 2;
         private const string ActorRegistrationMethod = "RegisterActors";
 
         public ActorHostSocketFactory()

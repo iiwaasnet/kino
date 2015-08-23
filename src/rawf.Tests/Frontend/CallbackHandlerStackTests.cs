@@ -1,56 +1,67 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Linq;
+using Moq;
+using NUnit.Framework;
+using rawf.Client;
+using rawf.Connectivity;
+using rawf.Diagnostics;
+using rawf.Framework;
+using rawf.Messaging;
+using rawf.Messaging.Messages;
+using rawf.Tests.Backend.Setup;
 
 namespace rawf.Tests.Frontend
 {
-  [TestFixture]
-  public class CallbackHandlerStackTests
-  {
-    //[Test]
-    //public void TestAddingHandlersForExistingCorrelation_ThrowsDuplicatedKeyException()
-    //{
-    //    var callbackHandlerStack = new CallbackHandlerStack();
+    [TestFixture]
+    public class CallbackHandlerStackTests
+    {
+        [Test]
+        public void TestAddingHandlersForExistingCorrelation_ThrowsDuplicatedKeyException()
+        {
+            var logger = new Mock<ILogger>();
+            var callbackHandlerStack = new CallbackHandlerStack(new ExpirableItemCollection<CorrelationId>(logger.Object));
 
-    //    var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
-    //    var promise = new Promise();
-    //    callbackHandlerStack.Push(correlationId, promise, Enumerable.Empty<MessageHandlerIdentifier>());
+            var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
+            var promise = new Promise();
+            callbackHandlerStack.Push(correlationId, promise, Enumerable.Empty<MessageHandlerIdentifier>());
 
-    //    Assert.Throws<DuplicatedKeyException>(
-    //                                          () =>
-    //                                          {
-    //                                              callbackHandlerStack.Push(correlationId, promise, Enumerable.Empty<MessageHandlerIdentifier>());
-    //                                          });
-    //}
+            Assert.Throws<DuplicatedKeyException>(() =>
+                                                  {
+                                                      callbackHandlerStack.Push(correlationId, promise, Enumerable.Empty<MessageHandlerIdentifier>());
+                                                  });
+        }
 
-    //[Test]
-    //public void TestPopCallBackHandlerForSpecificMessage_RemovesAllOtherHandlersForThisCorrelationId()
-    //{
-    //    var callbackHandlerStack = new CallbackHandlerStack();
+        [Test]
+        public void TestPopCallBackHandlerForSpecificMessage_RemovesAllOtherHandlersForThisCorrelationId()
+        {
+            var logger = new Mock<ILogger>();
+            var callbackHandlerStack = new CallbackHandlerStack(new ExpirableItemCollection<CorrelationId>(logger.Object));
 
-    //    var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
-    //    var promise = new Promise();
-    //    var messageHandlerIdentifiers = new[]
-    //                                    {
-    //                                        new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
-    //                                        new MessageHandlerIdentifier(Message.CurrentVersion, ExceptionMessage.MessageIdentity)
-    //                                    };
-    //    callbackHandlerStack.Push(correlationId, promise, messageHandlerIdentifiers);
+            var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
+            var promise = new Promise();
+            var messageHandlerIdentifiers = new[]
+                                            {
+                                                new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
+                                                new MessageHandlerIdentifier(Message.CurrentVersion, ExceptionMessage.MessageIdentity)
+                                            };
+            callbackHandlerStack.Push(correlationId, promise, messageHandlerIdentifiers);
 
-    //    var handler = callbackHandlerStack.Pop(new CallbackHandlerKey
-    //                                           {
-    //                                               Identity = SimpleMessage.MessageIdentity,
-    //                                               Version = Message.CurrentVersion,
-    //                                               Correlation = correlationId.Value
-    //                                           });
+            var handler = callbackHandlerStack.Pop(new CallbackHandlerKey
+            {
+                Identity = SimpleMessage.MessageIdentity,
+                Version = Message.CurrentVersion,
+                Correlation = correlationId.Value
+            });
 
-    //    Assert.IsNotNull(handler);
+            Assert.IsNotNull(handler);
 
-    //    handler = callbackHandlerStack.Pop(new CallbackHandlerKey
-    //                                       {
-    //                                           Identity = ExceptionMessage.MessageIdentity,
-    //                                           Version = Message.CurrentVersion,
-    //                                           Correlation = correlationId.Value
-    //                                       });
-    //    Assert.IsNull(handler);
-    //}
-  }
+            handler = callbackHandlerStack.Pop(new CallbackHandlerKey
+            {
+                Identity = ExceptionMessage.MessageIdentity,
+                Version = Message.CurrentVersion,
+                Correlation = correlationId.Value
+            });
+            Assert.IsNull(handler);
+        }
+    }
 }
