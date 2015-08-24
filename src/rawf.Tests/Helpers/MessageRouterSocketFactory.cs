@@ -38,7 +38,7 @@ namespace rawf.Tests.Helpers
 
             while (retries-- > 0 && socket == null)
             {
-                socket = sockets.First(s => Unsafe.Equals(s.GetIdentity(), config.RouterAddress.Identity));
+                socket = sockets.FirstOrDefault(s => Unsafe.Equals(s.GetIdentity(), config.RouterAddress.Identity));
                 Wait(socket);
             }
             return socket;
@@ -51,7 +51,7 @@ namespace rawf.Tests.Helpers
 
             while (retries-- > 0 && socket == null)
             {
-                socket = sockets.First(s => Unsafe.Equals(s.GetIdentity(), config.ScaleOutAddress.Identity));
+                socket = sockets.FirstOrDefault(s => Unsafe.Equals(s.GetIdentity(), config.ScaleOutAddress.Identity));
                 Wait(socket);
             }
             return socket;
@@ -64,7 +64,7 @@ namespace rawf.Tests.Helpers
 
             while (retries-- > 0 && socket == null)
             {
-                socket = sockets.First(s => s.GetIdentity() == null);
+                socket = sockets.FirstOrDefault(s => s.GetIdentity() == null);
                 Wait(socket);
             }
             return socket;

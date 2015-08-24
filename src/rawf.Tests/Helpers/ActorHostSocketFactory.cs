@@ -49,7 +49,7 @@ namespace rawf.Tests.Helpers
 
             while (retries-- > 0 && socketIsMissing())
             {
-                socket = sockets.First(s => s.Socket.GetIdentity() != null).Socket;
+                socket = sockets.FirstOrDefault(s => s.Socket.GetIdentity() != null)?.Socket;
                 Wait(socketIsMissing);
             }
             return socket;
@@ -63,7 +63,7 @@ namespace rawf.Tests.Helpers
 
             while (retries-- > 0 && socketIsMissing())
             {
-                socket = sockets.First(s => s.IsRegistrationSocket).Socket;
+                socket = sockets.FirstOrDefault(s => s.IsRegistrationSocket)?.Socket;
                 Wait(socketIsMissing);
             }
             return socket;
@@ -77,7 +77,7 @@ namespace rawf.Tests.Helpers
 
             while (retries-- > 0 && socketIsMissing())
             {
-                socket = sockets.First(s => !s.IsRegistrationSocket && s.Socket.GetIdentity() == null).Socket;
+                socket = sockets.FirstOrDefault(s => !s.IsRegistrationSocket && s.Socket.GetIdentity() == null)?.Socket;
                 Wait(socketIsMissing);
             }
             return socket;

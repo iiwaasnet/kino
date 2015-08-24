@@ -35,7 +35,7 @@ namespace rawf.Tests.Helpers
 
             while (retries-- > 0 && socketIsMissing())
             {
-                socket = sockets.First(s => s.GetIdentity() != null);
+                socket = sockets.FirstOrDefault(s => s.GetIdentity() != null);
                 Wait(socketIsMissing);
             }
             return socket;
@@ -49,7 +49,7 @@ namespace rawf.Tests.Helpers
 
             while (retries-- > 0 && socketIsMissing())
             {
-                socket = sockets.First(s => s.GetIdentity() == null);
+                socket = sockets.FirstOrDefault(s => s.GetIdentity() == null);
                 Wait(socketIsMissing);
             }
             return socket;
