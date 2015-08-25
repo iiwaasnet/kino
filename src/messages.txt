@@ -3,21 +3,21 @@ Message format
 FRAME			OPT	CONTENT							DESCRIPTION
 (of n total)	
 ======================================================================
-..					Sender socket ID				ID of the sending socket
-					[0]
+..					Sender socket ID				  ID of the sending socket
+					  [0]
 ..
-n-12			*	Router ID						0-n ROUTER socket IDs added by every ROUTER, forwarding the message
+n-12			*	Router ID						      0-n ROUTER socket IDs added by every ROUTER, forwarding the message
 n-11				[0]
-n-10				Version							Message version
-n-9					Message ID						Message ID, which is used to find the Worker
-n-8					Receiver ID						ID of the receiver of the message. Empty frame, for the non-specific receiver
+n-10				Version							      Message version
+n-9					Message ID						    Message ID, which is used to find the Worker
+n-8					Receiver ID						    ID of the receiver of the message. Empty frame, for the non-specific receiver
 n-7					Distribution pattern			One of the following distribution patterns {Unicast, Broadcast}
-n-6					Correlation ID					Unique identifier, copied on to spawned all messages from the initial one
+n-6					Correlation ID					  Unique identifier, copied on to spawned all messages from the initial one
 n-5					EndOfFlow Message ID			Message ID, which designates and of the flow.
 n-4					EndOfFlow Receiver ID			Value from this field will be copied to Receiver ID when Message ID becomes equal to EndOfFlow Message ID
-n-3					TTL								Message Time-to-Live in (msec)
+n-3					TTL								        Message Time-to-Live in (msec)
 n-2					[0]
-n-1					Body							Message content
+n-1					Body							        Message content
 
 Actor Hosting component is responsible for:
 - setting of Receiver ID to the value of EndOfFlow Receiver ID, when for the current message Message ID == EndOfFlow Message ID

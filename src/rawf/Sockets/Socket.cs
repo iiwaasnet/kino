@@ -24,7 +24,7 @@ namespace rawf.Sockets
 
         public void SendMessage(IMessage message)
         {
-            var multipart = new MultipartMessage(message);
+            var multipart = new MultipartMessage((Message) message);
             socket.SendMultipartMessage(new NetMQMessage(multipart.Frames));
         }
 

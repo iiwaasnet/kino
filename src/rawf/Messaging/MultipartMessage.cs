@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NetMQ;
+using rawf.Connectivity;
 using rawf.Framework;
 
 namespace rawf.Messaging
@@ -12,7 +13,7 @@ namespace rawf.Messaging
         private readonly IList<byte[]> frames;
         private static readonly byte[] EmptyFrame = new byte[0];
 
-        internal MultipartMessage(IMessage message)
+        internal MultipartMessage(Message message)
         {
             frames = BuildMessageParts(message).ToList();
         }
@@ -27,11 +28,16 @@ namespace rawf.Messaging
         private IList<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message)
             => message.Select(m => m.Buffer).ToList();
 
-        private IEnumerable<byte[]> BuildMessageParts(IMessage message)
+        private IEnumerable<byte[]> BuildMessageParts(Message message)
         {
             yield return GetSocketIdentity(message);
             // START Routing delimiters
             yield return EmptyFrame;
+            foreach (var hop in message.GetMessageHops())
+            {
+                yield return hop.Uri.ToSocketAddress().GetBytes();
+                yield return hop.Identity;
+            }
             yield return EmptyFrame;
             // START Routing delimiters
 
@@ -87,9 +93,6 @@ namespace rawf.Messaging
             }
         }
 
-        internal void PushRouterIdentity(byte[] routerId)
-            => frames.Insert(ReversedFrames.NextRouterInsertPosition, routerId);
-
         internal byte[] GetMessageIdentity()
             => frames[frames.Count - ReversedFrames.Identity];
 
@@ -118,5 +121,31 @@ namespace rawf.Messaging
             => frames[frames.Count - ReversedFrames.ReceiverIdentity];
 
         internal IEnumerable<byte[]> Frames => frames;
+
+        internal IEnumerable<SocketEndpoint> GetMessageHops()
+        {
+            var hops = new List<SocketEndpoint>();
+            var firstHopEntry = GetFirstHopEntryIndex();
+            var lastHopEntry = frames.Count - ReversedFrames.NextRouterInsertPosition;
+
+            for (var i = firstHopEntry; i < lastHopEntry; i++)
+            {
+                hops.Add(new SocketEndpoint(new Uri(frames[i].GetString()),
+                                            frames[++i]));
+            }
+
+            return hops;
+        }
+
+        private int GetFirstHopEntryIndex()
+        {
+            var index = frames.Count - ReversedFrames.NextRouterInsertPosition - 1;
+            while (!Unsafe.Equals(frames[index], EmptyFrame) && 0 <= index)
+            {
+                index--;
+            }
+
+            return ++index;
+        }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using rawf.Connectivity;
 using rawf.Framework;
 
 namespace rawf.Messaging
@@ -8,9 +10,11 @@ namespace rawf.Messaging
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
 
         private object payload;
+        private readonly IList<SocketEndpoint> hops;
 
         private Message(IPayload payload, byte[] messageIdentity)
         {
+            hops = new List<SocketEndpoint>();
             Body = Serialize(payload);
             Version = CurrentVersion;
             Identity = messageIdentity;
@@ -30,6 +34,7 @@ namespace rawf.Messaging
 
         internal Message(MultipartMessage multipartMessage)
         {
+            hops = new List<SocketEndpoint>(multipartMessage.GetMessageHops());
             Body = multipartMessage.GetMessageBody();
             Identity = multipartMessage.GetMessageIdentity();
             Version = multipartMessage.GetMessageVersion();
@@ -51,6 +56,12 @@ namespace rawf.Messaging
                 ReceiverIdentity = CallbackReceiverIdentity;
             }
         }
+
+        internal void PushRouterAddress(SocketEndpoint scaleOutAddress)
+            => hops.Add(scaleOutAddress);
+
+        internal IEnumerable<SocketEndpoint> GetMessageHops()
+            => hops; 
 
         internal void SetCorrelationId(byte[] correlationId)
             => CorrelationId = correlationId;

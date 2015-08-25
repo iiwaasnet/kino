@@ -131,6 +131,7 @@ namespace rawf.Connectivity
                                         if (handler != null)
                                         {
                                             message.SetSocketIdentity(handler.Identity);
+                                            
                                             localSocket.SendMessage(message);
                                         }
                                         else
@@ -139,6 +140,7 @@ namespace rawf.Connectivity
                                             if (handler != null)
                                             {
                                                 message.SetSocketIdentity(handler.Identity);
+                                                message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
                                                 scaleOutBackend.SendMessage(message);
                                             }
                                             else
