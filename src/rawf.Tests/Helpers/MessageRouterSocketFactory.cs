@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using rawf.Connectivity;
@@ -41,6 +42,9 @@ namespace rawf.Tests.Helpers
                 socket = sockets.FirstOrDefault(s => s != null && Unsafe.Equals(s.GetIdentity(), config.RouterAddress.Identity));
                 Wait(socket);
             }
+
+            Debug.WriteLineIf(socket == null, $"Socket not found. Total router sockets:{sockets.Count}");
+
             return socket;
         }
 
@@ -54,6 +58,9 @@ namespace rawf.Tests.Helpers
                 socket = sockets.FirstOrDefault(s => s != null && Unsafe.Equals(s.GetIdentity(), config.ScaleOutAddress.Identity));
                 Wait(socket);
             }
+
+            Debug.WriteLineIf(socket == null, $"Socket not found. Total router sockets:{sockets.Count}");
+
             return socket;
         }
 
@@ -67,6 +74,9 @@ namespace rawf.Tests.Helpers
                 socket = sockets.FirstOrDefault(s => s.GetIdentity() == null);
                 Wait(socket);
             }
+
+            Debug.WriteLineIf(socket == null, $"Socket not found. Total router sockets:{sockets.Count}");
+            
             return socket;
         }
 
