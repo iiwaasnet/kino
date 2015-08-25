@@ -13,9 +13,6 @@ namespace rawf.Framework
             ExpireAfter = expireAfter.Milliseconds;
         }
 
-        internal T Item { get; }
-        internal int ExpireAfter { get; private set; }
-
         public void ExpireNow()
         {
             ExpireAfter = 0;
@@ -28,5 +25,8 @@ namespace rawf.Framework
 
         internal bool IsExpired(DateTime now)
             => now >= expirationTime;
+
+        internal T Item { get; }
+        internal int ExpireAfter { get; private set; }
     }
 }
