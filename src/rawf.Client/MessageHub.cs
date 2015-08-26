@@ -77,19 +77,21 @@ namespace rawf.Client
                         try
                         {
                             var message = (Message) callbackRegistration.Message;
-                            var promise = callbackRegistration.Promise;
-                            var callbackPoint = callbackRegistration.CallbackPoint;
+                            if (CallbackRequired(callbackRegistration))
+                            {
+                                var promise = callbackRegistration.Promise;
+                                var callbackPoint = callbackRegistration.CallbackPoint;
 
-                            message.RegisterCallbackPoint(callbackPoint.MessageIdentity, receivingSocketIdentity);
+                                message.RegisterCallbackPoint(callbackPoint.MessageIdentity, receivingSocketIdentity);
 
-                            callbackHandlers.Push(new CorrelationId(message.CorrelationId),
-                                                  promise,
-                                                  new[]
-                                                  {
-                                                      new MessageHandlerIdentifier(message.Version, callbackPoint.MessageIdentity),
-                                                      new MessageHandlerIdentifier(message.Version, ExceptionMessage.MessageIdentity)
-                                                  });
-
+                                callbackHandlers.Push(new CorrelationId(message.CorrelationId),
+                                                      promise,
+                                                      new[]
+                                                      {
+                                                          new MessageHandlerIdentifier(message.Version, callbackPoint.MessageIdentity),
+                                                          new MessageHandlerIdentifier(message.Version, ExceptionMessage.MessageIdentity)
+                                                      });
+                            }
                             socket.SendMessage(message);
                         }
                         catch (Exception err)
@@ -107,6 +109,11 @@ namespace rawf.Client
             {
                 logger.Error(err);
             }
+        }
+
+        private bool CallbackRequired(CallbackRegistration callbackRegistration)
+        {
+            return callbackRegistration.Promise != null && callbackRegistration.CallbackPoint != null;
         }
 
         private void ReadReplies(CancellationToken token, Barrier gateway)
@@ -192,6 +199,11 @@ namespace rawf.Client
         public IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint, TimeSpan expireAfter)
         {
             return InternalEnqueueRequest(message, callbackPoint, expireAfter);
+        }
+
+        public void SendOneWay(IMessage message)
+        {
+            registrationsQueue.Add(new CallbackRegistration {Message = message});
         }
 
         private IPromise InternalEnqueueRequest(IMessage message, ICallbackPoint callbackPoint, TimeSpan? expireAfter = null)
