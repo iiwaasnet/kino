@@ -32,7 +32,7 @@ namespace Client
             Thread.Sleep(TimeSpan.FromSeconds(2));
             WriteLine($"Client is running... {DateTime.Now}");
 
-            RunTest(messageHub, 100);
+            RunBroadcastTest(messageHub, 100);
 
             ReadLine();
             messageHub.Stop();
@@ -99,6 +99,29 @@ namespace Client
             //                      }
             //                  });
 
+            timer.Stop();
+
+            WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} msec");
+        }
+
+        private static void RunBroadcastTest(IMessageHub messageHub, int runs)
+        {
+            var timer = new Stopwatch();
+            timer.Start();
+
+            for (var i = 0; i < runs; i++)
+            {
+                try
+                {
+                    var message = Message.Create(new HelloMessage { Greeting = Guid.NewGuid().ToString() }, HelloMessage.MessageIdentity, DistributionPattern.Broadcast);
+                    messageHub.SendOneWay(message);
+                }
+                catch (Exception err)
+                {
+                    WriteLine(err);
+                }
+                
+            }
             timer.Stop();
 
             WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} msec");

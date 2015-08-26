@@ -5,6 +5,7 @@ using rawf.Actors;
 using rawf.Connectivity;
 using rawf.Messaging;
 using Server.Messages;
+using static System.Console;
 
 namespace Server.Actors
 {
@@ -40,10 +41,14 @@ namespace Server.Actors
 
             //Thread.Sleep(50000);
 
+            var reversedString = new string(hello.Greeting.Reverse().ToArray());
+
+            WriteLine(reversedString);
+
             return Message.Create(new EhlloMessage
-            {
-                Ehllo = new string(hello.Greeting.Reverse().ToArray())
-            },
+                                  {
+                                      Ehllo = reversedString
+                                  },
                                   EhlloMessage.MessageIdentity);
         }
     }
