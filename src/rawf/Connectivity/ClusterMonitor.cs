@@ -187,7 +187,6 @@ namespace rawf.Connectivity
                             if (message != null)
                             {
                                 ProcessIncomingMessage(message, routerNotificationSocket);
-                                UnregisterDeadNodes(routerNotificationSocket);
                             }
                         }
                     }
@@ -215,7 +214,6 @@ namespace rawf.Connectivity
         {
             var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateDealerSocket();
-            //socket.SetIdentity(SocketIdentifier.CreateNew());
             socket.Connect(rendezvousServer.UnicastUri);
 
             return socket;
@@ -231,7 +229,7 @@ namespace rawf.Connectivity
 
         private bool ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)
             => RegisterExternalRoute(message, routerNotificationSocket)
-               || Ping(message)
+               || Ping(message, routerNotificationSocket)
                || Pong(message)
                || RequestMessageHandlersRouting(message, routerNotificationSocket)
                || UnregisterRoute(message, routerNotificationSocket)
@@ -283,13 +281,15 @@ namespace rawf.Connectivity
             return shouldHandler;
         }
 
-        private bool Ping(IMessage message)
+        private bool Ping(IMessage message, ISocket routerNotificationSocket)
         {
             var shouldHandle = IsPing(message);
             if (shouldHandle)
             {
                 pingReceived.Set();
                 SendPong();
+
+                UnregisterDeadNodes(routerNotificationSocket);
             }
 
             return shouldHandle;
@@ -452,7 +452,7 @@ namespace rawf.Connectivity
             {
                 RequestNodeMessageHandlersRouting(payload);
                 logger.Debug($"Route nod found, requesting URI:{payload.Uri} SOCKID:{payload.SocketIdentity.GetString()}");
-            }
+            }            
         }
 
         private void RequestNodeMessageHandlersRouting(PongMessage payload)
