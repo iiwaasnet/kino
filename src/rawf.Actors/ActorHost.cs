@@ -139,6 +139,7 @@ namespace rawf.Actors
                             {
                                 messageOut.RegisterCallbackPoint(messageContext.CallbackIdentity, messageContext.CallbackReceiverIdentity);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
+                                messageOut.CopyMessageHops(messageContext.MessageHops);
 
                                 localSocket.SendMessage(messageOut);
                             }
@@ -167,7 +168,7 @@ namespace rawf.Actors
                 {
                     try
                     {
-                        var message = localSocket.ReceiveMessage(token);
+                        var message = (Message) localSocket.ReceiveMessage(token);
                         if (message != null)
                         {
                             try
@@ -195,13 +196,14 @@ namespace rawf.Actors
             }
         }
 
-        private void HandleTaskResult(CancellationToken token, Task<IMessage> task, IMessage messageIn, ISocket localSocket)
+        private void HandleTaskResult(CancellationToken token, Task<IMessage> task, Message messageIn, ISocket localSocket)
         {
             if (task.IsCompleted)
             {
                 var messageOut = (Message) CreateTaskResultMessage(task);
                 messageOut.RegisterCallbackPoint(GetTaskCallbackIdentity(task, messageIn), messageIn.CallbackReceiverIdentity);
                 messageOut.SetCorrelationId(messageIn.CorrelationId);
+                messageOut.CopyMessageHops(((Message)messageIn).GetMessageHops());
 
                 localSocket.SendMessage(messageOut);
             }
@@ -212,23 +214,25 @@ namespace rawf.Actors
             }
         }
 
-        private static void CallbackException(ISocket localSocket, Exception err, IMessage messageIn)
+        private static void CallbackException(ISocket localSocket, Exception err, Message messageIn)
         {
             var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
             messageOut.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, messageIn.CallbackReceiverIdentity);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
+            messageOut.CopyMessageHops(messageIn.GetMessageHops());
 
             localSocket.SendMessage(messageOut);
         }
 
-        private void EnqueueTaskForCompletion(CancellationToken token, Task<IMessage> task, IMessage messageIn)
+        private void EnqueueTaskForCompletion(CancellationToken token, Task<IMessage> task, Message messageIn)
         {
             var asyncMessageContext = new AsyncMessageContext
                                       {
                                           OutMessage = CreateTaskResultMessage(task),
                                           CallbackIdentity = GetTaskCallbackIdentity(task, messageIn),
                                           CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
-                                          CorrelationId = messageIn.CorrelationId
+                                          CorrelationId = messageIn.CorrelationId,
+                                          MessageHops = messageIn.GetMessageHops()
                                       };
             asyncQueue.Enqueue(asyncMessageContext, token);
         }

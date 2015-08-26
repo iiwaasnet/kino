@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using rawf.Messaging;
 
 namespace rawf.Connectivity
@@ -8,5 +9,6 @@ namespace rawf.Connectivity
         public byte[] CorrelationId { get; internal set; }
         public byte[] CallbackIdentity { get; internal set; }
         public byte[] CallbackReceiverIdentity { get; internal set; }
+        public IEnumerable<SocketEndpoint> MessageHops {get; internal set;}
     }
 }

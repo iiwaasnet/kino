@@ -10,7 +10,7 @@ namespace rawf.Messaging
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
 
         private object payload;
-        private readonly IList<SocketEndpoint> hops;
+        private readonly List<SocketEndpoint> hops;
 
         private Message(IPayload payload, byte[] messageIdentity)
         {
@@ -61,7 +61,13 @@ namespace rawf.Messaging
             => hops.Add(scaleOutAddress);
 
         internal IEnumerable<SocketEndpoint> GetMessageHops()
-            => hops; 
+            => hops;
+            
+        internal void CopyMessageHops(IEnumerable<SocketEndpoint> messageHops)
+        {
+            hops.Clear();
+            hops.AddRange(messageHops);
+        }        
 
         internal void SetCorrelationId(byte[] correlationId)
             => CorrelationId = correlationId;
