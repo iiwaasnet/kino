@@ -185,8 +185,11 @@ namespace rawf.Tests.Backend
         public void TestIfLocalRoutingTableHasNoMessageHandlerRegistration_MessageRoutedToOtherNodes()
         {
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
-            externalRoutingTable.Setup(m => m.Pop(new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity)))
+            externalRoutingTable.Setup(m => m.Pop(It.IsAny<MessageHandlerIdentifier>()))
                                 .Returns(new SocketIdentifier(Guid.NewGuid().ToByteArray()));
+
+            //externalRoutingTable.Setup(m => m.Pop(new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity)))
+            //                    .Returns(new SocketIdentifier(Guid.NewGuid().ToByteArray()));
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),

@@ -11,12 +11,12 @@ namespace rawf.Tests.Helpers
     {
         private readonly IList<StubSocket> sockets;
         private readonly TimeSpan socketWaitTimeout;
-        private readonly int socketWaitRetries = 3;
+        private readonly int socketWaitRetries = 5;
 
         public MessageHubSocketFactory()
         {
             sockets = new List<StubSocket>();
-            socketWaitTimeout = TimeSpan.FromSeconds(2);
+            socketWaitTimeout = TimeSpan.FromSeconds(5);
         }
 
         public ISocket CreateSocket()

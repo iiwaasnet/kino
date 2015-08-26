@@ -21,7 +21,7 @@ namespace rawf.Tests.Helpers
         {
             this.config = config;
             sockets = new List<StubSocket>();
-            socketWaitTimeout = TimeSpan.FromSeconds(2);
+            socketWaitTimeout = TimeSpan.FromSeconds(5);
         }
 
         public ISocket CreateSocket()
@@ -43,8 +43,6 @@ namespace rawf.Tests.Helpers
                 Wait(socket);
             }
 
-            Debug.WriteLineIf(socket == null, $"Socket not found. Total router sockets:{sockets.Count}");
-
             return socket;
         }
 
@@ -58,8 +56,6 @@ namespace rawf.Tests.Helpers
                 socket = sockets.FirstOrDefault(s => s != null && Unsafe.Equals(s.GetIdentity(), config.ScaleOutAddress.Identity));
                 Wait(socket);
             }
-
-            Debug.WriteLineIf(socket == null, $"Socket not found. Total router sockets:{sockets.Count}");
 
             return socket;
         }
@@ -75,8 +71,6 @@ namespace rawf.Tests.Helpers
                 Wait(socket);
             }
 
-            Debug.WriteLineIf(socket == null, $"Socket not found. Total router sockets:{sockets.Count}");
-            
             return socket;
         }
 

@@ -12,13 +12,13 @@ namespace rawf.Tests.Helpers
     {
         private readonly IList<SocketMeta> sockets;
         private readonly TimeSpan socketWaitTimeout;
-        private readonly int socketWaitRetries = 3;
+        private readonly int socketWaitRetries = 5;
         private const string ActorRegistrationMethod = "RegisterActors";
 
         public ActorHostSocketFactory()
         {
             sockets = new List<SocketMeta>();
-            socketWaitTimeout = TimeSpan.FromSeconds(2);
+            socketWaitTimeout = TimeSpan.FromSeconds(5);
         }
 
         public ISocket CreateSocket()
