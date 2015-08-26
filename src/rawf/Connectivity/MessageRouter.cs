@@ -25,7 +25,7 @@ namespace rawf.Connectivity
         private readonly IClusterConfiguration clusterConfiguration;
         private readonly RouterConfiguration routerConfiguration;
         private readonly ILogger logger;
-        private static TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
+        private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
@@ -127,25 +127,35 @@ namespace rawf.Connectivity
                                     {
                                         var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
 
-                                        var handler = internalRoutingTable.Pop(messageHandlerIdentifier);
-                                        if (handler != null)
+                                        messageHandled = HandleMessageLocally(messageHandlerIdentifier, message, localSocket);
+
+                                        //var handler = internalRoutingTable.Pop(messageHandlerIdentifier);
+                                        //if (handler != null)
+                                        //{
+                                        //    message.SetSocketIdentity(handler.Identity);
+
+                                        //    localSocket.SendMessage(message);
+                                        //}
+                                        if (!messageHandled)
                                         {
-                                            message.SetSocketIdentity(handler.Identity);
-                                            
-                                            localSocket.SendMessage(message);
-                                        }
-                                        else
-                                        {
-                                            handler = externalRoutingTable.Pop(messageHandlerIdentifier);
-                                            if (handler != null)
+                                            messageHandled = ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend);
+                                            //handler = externalRoutingTable.Pop(messageHandlerIdentifier);
+                                            //if (handler != null)
+                                            //{
+                                            //    message.SetSocketIdentity(handler.Identity);
+                                            //    message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
+                                            //    scaleOutBackend.SendMessage(message);
+                                            //}
+                                            if (!messageHandled)
                                             {
-                                                message.SetSocketIdentity(handler.Identity);
-                                                message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
-                                                scaleOutBackend.SendMessage(message);
-                                            }
-                                            else
-                                            {
-                                                logger.Debug($"Handler not found! MSG: {messageHandlerIdentifier.Identity.GetString()}");
+                                                if (message.Distribution == DistributionPattern.Unicast)
+                                                {
+                                                    logger.Debug($"Handler not found! MSG: {messageHandlerIdentifier.Identity.GetString()}");
+                                                }
+                                                else
+                                                {
+                                                    logger.Warn($"Broadcast message {message.Identity.GetString()} didn't find any local handler and was not forwarded.");
+                                                }
                                             }
                                         }
                                     }
@@ -167,6 +177,48 @@ namespace rawf.Connectivity
             {
                 logger.Error(err);
             }
+        }
+
+        private bool ForwardMessageAway(MessageHandlerIdentifier messageHandlerIdentifier, Message message, ISocket scaleOutBackend)
+        {
+            var handlers = ((message.Distribution == DistributionPattern.Unicast)
+                                ? new[] {externalRoutingTable.Pop(messageHandlerIdentifier)}
+                                : (MessageCameFromLocalActor(message)
+                                       ? externalRoutingTable.PopAll(messageHandlerIdentifier)
+                                       : Enumerable.Empty<SocketIdentifier>()))
+                .Where(h => h != null)
+                .ToList();
+
+            foreach (var handler in handlers)
+            {
+                message.SetSocketIdentity(handler.Identity);
+                message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
+                scaleOutBackend.SendMessage(message);
+            }
+
+            return handlers.Any();
+        }
+
+        private bool MessageCameFromLocalActor(Message message)
+        {
+            return !message.GetMessageHops().Any();
+        }
+
+        private bool HandleMessageLocally(MessageHandlerIdentifier messageHandlerIdentifier, Message message, ISocket localSocket)
+        {
+            var handlers = ((message.Distribution == DistributionPattern.Unicast)
+                                ? new[] {internalRoutingTable.Pop(messageHandlerIdentifier)}
+                                : internalRoutingTable.PopAll(messageHandlerIdentifier))
+                .Where(h => h != null)
+                .ToList();
+
+            foreach (var handler in handlers)
+            {
+                message.SetSocketIdentity(handler.Identity);
+                localSocket.SendMessage(message);
+            }
+
+            return handlers.Any();
         }
 
         private ISocket CreateScaleOutBackendSocket()

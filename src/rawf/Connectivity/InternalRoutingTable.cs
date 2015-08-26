@@ -37,6 +37,14 @@ namespace rawf.Connectivity
                        : null;
         }
 
+        public IEnumerable<SocketIdentifier> PopAll(MessageHandlerIdentifier messageHandlerIdentifier)
+        {
+            HashedLinkedList<SocketIdentifier> collection;
+            return map.TryGetValue(messageHandlerIdentifier, out collection)
+                       ? collection
+                       : Enumerable.Empty<SocketIdentifier>();
+        }
+
         private static T Get<T>(HashedLinkedList<T> hashSet)
         {
             if (hashSet.Any())

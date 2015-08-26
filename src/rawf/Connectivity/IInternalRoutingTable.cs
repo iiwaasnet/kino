@@ -6,6 +6,7 @@ namespace rawf.Connectivity
     {
         void Push(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier);
         SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier);
+        IEnumerable<SocketIdentifier> PopAll(MessageHandlerIdentifier messageHandlerIdentifier);
         IEnumerable<MessageHandlerIdentifier> GetMessageHandlerIdentifiers();
     }
 }

@@ -121,7 +121,7 @@ namespace rawf.Tests.Backend
                 StartActorHost(actorHost);
 
                 logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
-                logger.Verify(m => m.ErrorFormat(It.IsAny<string>(), It.IsAny<object[]>()), Times.Never);
+                logger.Verify(m => m.Error(It.IsAny<string>()), Times.Never);
             }
             finally
             {

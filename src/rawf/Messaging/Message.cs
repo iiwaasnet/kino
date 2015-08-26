@@ -12,21 +12,21 @@ namespace rawf.Messaging
         private object payload;
         private readonly List<SocketEndpoint> hops;
 
-        private Message(IPayload payload, byte[] messageIdentity)
+        private Message(IPayload payload, byte[] messageIdentity, DistributionPattern distributionPattern)
         {
             hops = new List<SocketEndpoint>();
             Body = Serialize(payload);
             Version = CurrentVersion;
             Identity = messageIdentity;
-            Distribution = DistributionPattern.Unicast;
+            Distribution = distributionPattern;
             TTL = TimeSpan.Zero;
         }
 
         public static IMessage CreateFlowStartMessage(IPayload payload, byte[] messageIdentity)
-            => new Message(payload, messageIdentity) {CorrelationId = GenerateCorrelationId()};
+            => new Message(payload, messageIdentity, DistributionPattern.Unicast) {CorrelationId = GenerateCorrelationId()};
 
-        public static IMessage Create(IPayload payload, byte[] messageIdentity)
-            => new Message(payload, messageIdentity);
+        public static IMessage Create(IPayload payload, byte[] messageIdentity, DistributionPattern distributionPattern = DistributionPattern.Unicast)
+            => new Message(payload, messageIdentity, distributionPattern);
 
         private static byte[] GenerateCorrelationId()
             //TODO: Better implementation
