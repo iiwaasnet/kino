@@ -29,6 +29,6 @@ if
 then
 	Version && Receiver ID
 else
-	Version && MEssage ID
+	Version && Message ID
 	
 	
