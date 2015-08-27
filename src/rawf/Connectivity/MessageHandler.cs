@@ -3,5 +3,5 @@ using rawf.Messaging;
 
 namespace rawf.Connectivity
 {
-    public delegate Task<IMessage> MessageHandler(IMessage inMessage);
+    public delegate Task<IActorResult> MessageHandler(IMessage inMessage);
 }

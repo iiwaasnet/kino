@@ -297,7 +297,7 @@ namespace rawf.Tests.Backend
 
         private static bool IsAsyncMessage(AsyncMessageContext amc)
         {
-            return Unsafe.Equals(amc.OutMessage.Identity, AsyncMessage.MessageIdentity);
+            return Unsafe.Equals(amc.OutMessages.First().Identity, AsyncMessage.MessageIdentity);
         }
 
         private static void StartActorHost(IActorHost actorHost)

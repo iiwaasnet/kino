@@ -9,10 +9,6 @@ namespace rawf.Tests.Backend.Setup
 {
     public class ExceptionActor : IActor
     {
-        public ExceptionActor()
-        {
-        }
-
         public IEnumerable<MessageMap> GetInterfaceDefinition()
         {
             yield return new MessageMap
@@ -35,14 +31,14 @@ namespace rawf.Tests.Backend.Setup
                          };
         }
 
-        private async Task<IMessage> Process(IMessage messageIn)
+        private async Task<IActorResult> Process(IMessage messageIn)
         {
             var message = messageIn.GetPayload<SimpleMessage>().Message;
 
             throw new Exception(message);
         }
 
-        private async Task<IMessage> AsyncProcess(IMessage messageIn)
+        private async Task<IActorResult> AsyncProcess(IMessage messageIn)
         {
             var error = messageIn.GetPayload<AsyncExceptionMessage>();
 

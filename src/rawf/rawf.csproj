@@ -73,7 +73,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Connectivity\ActorResult.cs" />
     <Compile Include="Connectivity\ExternalRoutingTable.cs" />
+    <Compile Include="Connectivity\IActorResult.cs" />
     <Compile Include="Connectivity\IExternalRoutingTable.cs" />
     <Compile Include="Connectivity\IInternalRoutingTable.cs" />
     <Compile Include="Connectivity\AsyncMessageContext.cs" />
@@ -117,6 +119,7 @@
     <Compile Include="Connectivity\MessageHandlerIdentifier.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="Messaging\CorrelationId.cs" />
+    <Compile Include="Messaging\DistributionPattern.cs" />
     <Compile Include="Messaging\IMessage.cs" />
     <Compile Include="Messaging\IMessageSerializer.cs" />
     <Compile Include="Messaging\IPayload.cs" />

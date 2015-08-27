@@ -8,32 +8,33 @@ using Server.Messages;
 
 namespace Server.Actors
 {
-  public class GroupCharsActor : IActor
-  {
-    public IEnumerable<MessageMap> GetInterfaceDefinition()
+    public class GroupCharsActor : IActor
     {
-      yield return new MessageMap
-      {
-        Handler = StartProcess,
-        Message = new MessageDefinition
+        public IEnumerable<MessageMap> GetInterfaceDefinition()
         {
-          Identity = EhlloMessage.MessageIdentity,
-          Version = Message.CurrentVersion
+            yield return new MessageMap
+                         {
+                             Handler = StartProcess,
+                             Message = new MessageDefinition
+                                       {
+                                           Identity = EhlloMessage.MessageIdentity,
+                                           Version = Message.CurrentVersion
+                                       }
+                         };
         }
-      };
+
+        private async Task<IActorResult> StartProcess(IMessage message)
+        {
+            var ehllo = message.GetPayload<EhlloMessage>();
+
+            var messageOut = Message.Create(new GroupCharsResponseMessage
+                                            {
+                                                Groups = ehllo.Ehllo.GroupBy(c => c).Select(g => new GroupInfo {Char = g.Key, Count = g.Count()}),
+                                                Text = ehllo.Ehllo
+                                            },
+                                            GroupCharsResponseMessage.MessageIdentity);
+
+            return new ActorResult(messageOut);
+        }
     }
-
-    private async Task<IMessage> StartProcess(IMessage message)
-    {
-      var ehllo = message.GetPayload<EhlloMessage>();
-
-
-      return Message.Create(new GroupCharsResponseMessage
-      {
-        Groups = ehllo.Ehllo.GroupBy(c => c).Select(g => new GroupInfo {Char = g.Key, Count = g.Count()}),
-        Text = ehllo.Ehllo
-      },
-        GroupCharsResponseMessage.MessageIdentity);
-    }
-  }
 }

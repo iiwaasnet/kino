@@ -30,16 +30,16 @@ namespace rawf.Tests.Backend.Setup
                          };
         }
 
-        private async Task<IMessage> Process(IMessage messageIn)
+        private async Task<IActorResult> Process(IMessage messageIn)
         {
-            return messageIn;
+            return new ActorResult(messageIn);
         }
 
-        private async Task<IMessage> AsyncProcess(IMessage messageIn)
+        private async Task<IActorResult> AsyncProcess(IMessage messageIn)
         {
             var delay = messageIn.GetPayload<AsyncMessage>().Delay;
 
-            return await Task.Delay(delay).ContinueWith(_=> messageIn).ConfigureAwait(false);
+            return new ActorResult(await Task.Delay(delay).ContinueWith(_=> messageIn).ConfigureAwait(false));
         }
     }
 }

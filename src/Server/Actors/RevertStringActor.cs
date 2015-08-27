@@ -24,7 +24,7 @@ namespace Server.Actors
                          };
         }
 
-        private async Task<IMessage> StartProcess(IMessage message)
+        private async Task<IActorResult> StartProcess(IMessage message)
         {
             var hello = message.GetPayload<HelloMessage>();
             //System.Console.WriteLine(hello.Greeting);
@@ -45,11 +45,11 @@ namespace Server.Actors
 
             WriteLine(reversedString);
 
-            return Message.Create(new EhlloMessage
+            return new ActorResult(Message.Create(new EhlloMessage
                                   {
                                       Ehllo = reversedString
                                   },
-                                  EhlloMessage.MessageIdentity);
+                                  EhlloMessage.MessageIdentity));
         }
     }
 }

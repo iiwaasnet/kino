@@ -25,7 +25,7 @@ namespace rawf.Actors
         private readonly IAsyncQueue<IActor> actorRegistrationsQueue;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly ILogger logger;
-        private static TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
+        private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public ActorHost(ISocketFactory socketFactory,
                          IActorHandlerMap actorHandlerMap,
@@ -134,8 +134,7 @@ namespace rawf.Actors
                     {
                         try
                         {
-                            var messageOut = (Message) messageContext.OutMessage;
-                            if (messageOut != null)
+                            foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
                             {
                                 messageOut.RegisterCallbackPoint(messageContext.CallbackIdentity, messageContext.CallbackReceiverIdentity);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
@@ -196,16 +195,18 @@ namespace rawf.Actors
             }
         }
 
-        private void HandleTaskResult(CancellationToken token, Task<IMessage> task, Message messageIn, ISocket localSocket)
+        private void HandleTaskResult(CancellationToken token, Task<IActorResult> task, Message messageIn, ISocket localSocket)
         {
             if (task.IsCompleted)
             {
-                var messageOut = (Message) CreateTaskResultMessage(task);
-                messageOut.RegisterCallbackPoint(GetTaskCallbackIdentity(task, messageIn), messageIn.CallbackReceiverIdentity);
-                messageOut.SetCorrelationId(messageIn.CorrelationId);
-                messageOut.CopyMessageHops(((Message)messageIn).GetMessageHops());
+                foreach (var messageOut in CreateTaskResultMessage(task).Messages.Cast<Message>())
+                {
+                    messageOut.RegisterCallbackPoint(GetTaskCallbackIdentity(task, messageIn), messageIn.CallbackReceiverIdentity);
+                    messageOut.SetCorrelationId(messageIn.CorrelationId);
+                    messageOut.CopyMessageHops(messageIn.GetMessageHops());
 
-                localSocket.SendMessage(messageOut);
+                    localSocket.SendMessage(messageOut);
+                }
             }
             else
             {
@@ -224,11 +225,11 @@ namespace rawf.Actors
             localSocket.SendMessage(messageOut);
         }
 
-        private void EnqueueTaskForCompletion(CancellationToken token, Task<IMessage> task, Message messageIn)
+        private void EnqueueTaskForCompletion(CancellationToken token, Task<IActorResult> task, Message messageIn)
         {
             var asyncMessageContext = new AsyncMessageContext
                                       {
-                                          OutMessage = CreateTaskResultMessage(task),
+                                          OutMessages = CreateTaskResultMessage(task).Messages,
                                           CallbackIdentity = GetTaskCallbackIdentity(task, messageIn),
                                           CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
                                           CorrelationId = messageIn.CorrelationId,
@@ -244,28 +245,28 @@ namespace rawf.Actors
                        : messageIn.CallbackIdentity;
         }
 
-        private static IMessage CreateTaskResultMessage(Task<IMessage> task)
+        private static IActorResult CreateTaskResultMessage(Task<IActorResult> task)
         {
             if (task.IsCanceled)
             {
-                return Message.Create(new ExceptionMessage
-                                      {
-                                          Exception = new OperationCanceledException()
-                                      },
-                                      ExceptionMessage.MessageIdentity);
+                return new ActorResult(Message.Create(new ExceptionMessage
+                                                      {
+                                                          Exception = new OperationCanceledException()
+                                                      },
+                                                      ExceptionMessage.MessageIdentity));
             }
             if (task.IsFaulted)
             {
                 var err = task.Exception?.InnerException ?? task.Exception;
 
-                return Message.Create(new ExceptionMessage
-                                      {
-                                          Exception = err
-                                      },
-                                      ExceptionMessage.MessageIdentity);
+                return new ActorResult(Message.Create(new ExceptionMessage
+                                                      {
+                                                          Exception = err
+                                                      },
+                                                      ExceptionMessage.MessageIdentity));
             }
 
-            return task.Result;
+            return task.Result ?? new ActorResult(Enumerable.Empty<IMessage>().ToArray());
         }
 
         private ISocket CreateOneWaySocket()

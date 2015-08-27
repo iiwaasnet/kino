@@ -9,15 +9,6 @@ namespace rawf.Actors.Diagnostics
 {
     public class ExceptionHandlerActor : IActor
     {
-        private Task<IMessage> HandleException(IMessage message)
-        {
-            var payload = message.GetPayload<ExceptionMessage>();
-
-            Console.WriteLine(payload.Exception.ToString());
-
-            return null;
-        }
-
         public IEnumerable<MessageMap> GetInterfaceDefinition()
         {
             yield return new MessageMap
@@ -29,6 +20,15 @@ namespace rawf.Actors.Diagnostics
                                        },
                              Handler = HandleException
                          };
+        }
+
+        private Task<IActorResult> HandleException(IMessage message)
+        {
+            var payload = message.GetPayload<ExceptionMessage>();
+
+            Console.WriteLine(payload.Exception.ToString());
+
+            return null;
         }
     }
 }
