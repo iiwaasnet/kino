@@ -121,29 +121,8 @@ namespace rawf.Connectivity
                                 var message = (Message) localSocket.ReceiveMessage(token);
                                 if (message != null)
                                 {
-                                    var messageHandled = TryHandleServiceMessage(message, scaleOutBackend);
-
-                                    if (!messageHandled)
-                                    {
-                                        var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
-
-                                        messageHandled = HandleMessageLocally(messageHandlerIdentifier, message, localSocket);
-                                        if (!messageHandled)
-                                        {
-                                            messageHandled = ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend);
-                                            if (!messageHandled)
-                                            {
-                                                if (!MessageCameFromLocalActor(message) && message.Distribution == DistributionPattern.Broadcast)
-                                                {
-                                                    logger.Warn($"Broadcast message {message.Identity.GetString()} didn't find any local handler and was not forwarded.");
-                                                }
-                                                else
-                                                {
-                                                    logger.Warn($"Handler not found! MSG: {messageHandlerIdentifier.Identity.GetString()}");
-                                                }
-                                            }
-                                        }
-                                    }
+                                    var handled = TryHandleServiceMessage(message, scaleOutBackend)
+                                                  || HandleOperationMessage(message, localSocket, scaleOutBackend);
                                 }
                             }
                             catch (NetMQException err)
@@ -162,6 +141,32 @@ namespace rawf.Connectivity
             {
                 logger.Error(err);
             }
+        }
+
+        private bool HandleOperationMessage(Message message, ISocket localSocket, ISocket scaleOutBackend)
+        {
+            var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
+
+            return HandleMessageLocally(messageHandlerIdentifier, message, localSocket)
+                   || ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend)
+                   || LogUnhandledMessage(message, messageHandlerIdentifier);
+        }
+
+        private bool HandleMessageLocally(MessageHandlerIdentifier messageHandlerIdentifier, Message message, ISocket localSocket)
+        {
+            var handlers = ((message.Distribution == DistributionPattern.Unicast)
+                                ? new[] {internalRoutingTable.Pop(messageHandlerIdentifier)}
+                                : internalRoutingTable.PopAll(messageHandlerIdentifier))
+                .Where(h => h != null)
+                .ToList();
+
+            foreach (var handler in handlers)
+            {
+                message.SetSocketIdentity(handler.Identity);
+                localSocket.SendMessage(message);
+            }
+
+            return handlers.Any();
         }
 
         private bool ForwardMessageAway(MessageHandlerIdentifier messageHandlerIdentifier, Message message, ISocket scaleOutBackend)
@@ -184,26 +189,23 @@ namespace rawf.Connectivity
             return handlers.Any();
         }
 
+        private bool LogUnhandledMessage(Message message, MessageHandlerIdentifier messageHandlerIdentifier)
+        {
+            if (!MessageCameFromLocalActor(message) && message.Distribution == DistributionPattern.Broadcast)
+            {
+                logger.Warn($"Broadcast message {message.Identity.GetString()} didn't find any local handler and was not forwarded.");
+            }
+            else
+            {
+                logger.Warn($"Handler not found! MSG: {messageHandlerIdentifier.Identity.GetString()}");
+            }
+
+            return true;
+        }
+
         private bool MessageCameFromLocalActor(Message message)
         {
             return !message.GetMessageHops().Any();
-        }
-
-        private bool HandleMessageLocally(MessageHandlerIdentifier messageHandlerIdentifier, Message message, ISocket localSocket)
-        {
-            var handlers = ((message.Distribution == DistributionPattern.Unicast)
-                                ? new[] {internalRoutingTable.Pop(messageHandlerIdentifier)}
-                                : internalRoutingTable.PopAll(messageHandlerIdentifier))
-                .Where(h => h != null)
-                .ToList();
-
-            foreach (var handler in handlers)
-            {
-                message.SetSocketIdentity(handler.Identity);
-                localSocket.SendMessage(message);
-            }
-
-            return handlers.Any();
         }
 
         private ISocket CreateScaleOutBackendSocket()
