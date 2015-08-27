@@ -128,33 +128,18 @@ namespace rawf.Connectivity
                                         var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
 
                                         messageHandled = HandleMessageLocally(messageHandlerIdentifier, message, localSocket);
-
-                                        //var handler = internalRoutingTable.Pop(messageHandlerIdentifier);
-                                        //if (handler != null)
-                                        //{
-                                        //    message.SetSocketIdentity(handler.Identity);
-
-                                        //    localSocket.SendMessage(message);
-                                        //}
                                         if (!messageHandled)
                                         {
                                             messageHandled = ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend);
-                                            //handler = externalRoutingTable.Pop(messageHandlerIdentifier);
-                                            //if (handler != null)
-                                            //{
-                                            //    message.SetSocketIdentity(handler.Identity);
-                                            //    message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
-                                            //    scaleOutBackend.SendMessage(message);
-                                            //}
                                             if (!messageHandled)
                                             {
-                                                if (message.Distribution == DistributionPattern.Unicast)
+                                                if (!MessageCameFromLocalActor(message) && message.Distribution == DistributionPattern.Broadcast)
                                                 {
-                                                    logger.Debug($"Handler not found! MSG: {messageHandlerIdentifier.Identity.GetString()}");
+                                                    logger.Warn($"Broadcast message {message.Identity.GetString()} didn't find any local handler and was not forwarded.");
                                                 }
                                                 else
                                                 {
-                                                    logger.Warn($"Broadcast message {message.Identity.GetString()} didn't find any local handler and was not forwarded.");
+                                                    logger.Warn($"Handler not found! MSG: {messageHandlerIdentifier.Identity.GetString()}");
                                                 }
                                             }
                                         }
