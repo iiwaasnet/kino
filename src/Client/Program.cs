@@ -32,7 +32,7 @@ namespace Client
             Thread.Sleep(TimeSpan.FromSeconds(2));
             WriteLine($"Client is running... {DateTime.Now}");
 
-            RunBroadcastTest(messageHub, 100);
+            RunTest(messageHub, 100000);
 
             ReadLine();
             messageHub.Stop();
@@ -55,16 +55,16 @@ namespace Client
             {
                 try
                 {
-                    var message = Message.CreateFlowStartMessage(new HelloMessage { Greeting = Guid.NewGuid().ToString() }, HelloMessage.MessageIdentity);
+                    var message = Message.CreateFlowStartMessage(new HelloMessage {Greeting = Guid.NewGuid().ToString()}, HelloMessage.MessageIdentity);
                     var promise = messageHub.EnqueueRequest(message, callbackPoint);
                     if (promise.GetResponse().Wait(responseWaitTimeout))
                     {
                         var msg = promise.GetResponse().Result.GetPayload<GroupCharsResponseMessage>();
-                        WriteLine($"Text: {msg.Text}");
-                      foreach (var groupInfo in msg.Groups)
-                      {
-                        WriteLine($"Char: {groupInfo.Char} - {groupInfo.Count} times");
-                      }
+                        //WriteLine($"Text: {msg.Text}");
+                        //foreach (var groupInfo in msg.Groups)
+                        //{
+                        //    WriteLine($"Char: {groupInfo.Char} - {groupInfo.Count} times");
+                        //}
                     }
                     else
                     {
@@ -76,7 +76,6 @@ namespace Client
                 {
                     WriteLine(err);
                 }
-                
             }
 
             //responses.ForEach(r =>
@@ -113,14 +112,13 @@ namespace Client
             {
                 try
                 {
-                    var message = Message.Create(new HelloMessage { Greeting = Guid.NewGuid().ToString() }, HelloMessage.MessageIdentity, DistributionPattern.Broadcast);
+                    var message = Message.Create(new HelloMessage {Greeting = Guid.NewGuid().ToString()}, HelloMessage.MessageIdentity, DistributionPattern.Broadcast);
                     messageHub.SendOneWay(message);
                 }
                 catch (Exception err)
                 {
                     WriteLine(err);
                 }
-                
             }
             timer.Stop();
 
