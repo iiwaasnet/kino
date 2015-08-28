@@ -20,6 +20,7 @@ namespace rawf.Messaging
             Identity = messageIdentity;
             Distribution = distributionPattern;
             TTL = TimeSpan.Zero;
+            Birthday = DateTime.UtcNow;
         }
 
         public static IMessage CreateFlowStartMessage(IPayload payload, byte[] messageIdentity)
@@ -44,6 +45,7 @@ namespace rawf.Messaging
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
             CorrelationId = multipartMessage.GetCorrelationId();
+            Birthday = multipartMessage.GetMessageBirthday().GetUtcDateTime();
         }
 
         internal void RegisterCallbackPoint(byte[] callbackIdentity, byte[] callbackReceiverIdentity)
@@ -99,5 +101,6 @@ namespace rawf.Messaging
         public byte[] CallbackIdentity { get; private set; }
         public byte[] CallbackReceiverIdentity { get; private set; }
         public byte[] SocketIdentity { get; private set; }
+        public DateTime Birthday { get; private set; }
     }
 }

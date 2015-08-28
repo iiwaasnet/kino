@@ -27,6 +27,9 @@ namespace rawf.Framework
         public static byte[] GetBytes(this TimeSpan val)
             => BitConverter.GetBytes(val.Ticks);
 
+        public static byte[] GetBytes(this DateTime utcDateTime)
+            => BitConverter.GetBytes(utcDateTime.Ticks);
+
         public static int GetInt(this byte[] array)
             => BitConverter.ToInt32(array, 0);
 
@@ -35,6 +38,9 @@ namespace rawf.Framework
 
         public static TimeSpan GetTimeSpan(this byte[] array)
             => new TimeSpan(BitConverter.ToInt64(array, 0));
+
+        public static DateTime GetUtcDateTime(this byte[] array)
+            => new DateTime(BitConverter.ToInt64(array, 0), DateTimeKind.Utc);
 
         public static T GetEnum<T>(this byte[] array)
             where T : struct

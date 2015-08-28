@@ -31,7 +31,7 @@ namespace rawf.Messaging
         private IEnumerable<byte[]> BuildMessageParts(Message message)
         {
             yield return GetSocketIdentity(message);
-            // START Routing delimiters
+            
             yield return EmptyFrame;
             foreach (var hop in message.GetMessageHops())
             {
@@ -39,8 +39,8 @@ namespace rawf.Messaging
                 yield return hop.Identity;
             }
             yield return EmptyFrame;
-            // START Routing delimiters
-
+           
+            yield return GetBirthday(message);
             yield return GetVersionFrame(message);
             yield return GetMessageIdentityFrame(message);
             yield return GetReceiverIdentityFrame(message);
@@ -54,6 +54,9 @@ namespace rawf.Messaging
 
             yield return GetMessageBodyFrame(message);
         }
+
+        private byte[] GetBirthday(Message message)
+            => message.Birthday.GetBytes();
 
         private byte[] GetSocketIdentity(IMessage message)
             => ((Message) message).SocketIdentity ?? EmptyFrame;
@@ -95,6 +98,9 @@ namespace rawf.Messaging
 
         internal byte[] GetMessageIdentity()
             => frames[frames.Count - ReversedFrames.Identity];
+
+        internal byte[] GetMessageBirthday()
+            => frames[frames.Count - ReversedFrames.Birthday];
 
         internal byte[] GetMessageVersion()
             => frames[frames.Count - ReversedFrames.Version];

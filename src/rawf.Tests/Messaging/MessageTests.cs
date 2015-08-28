@@ -171,5 +171,17 @@ namespace rawf.Tests.Messaging
 
             Assert.AreEqual(ttl, message.TTL);
         }
+
+        [Test]
+        public void TestMessageBirthday_IsConsistentlyTransferredViaMultipartMessage()
+        {
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+
+            var multipart = new MultipartMessage(message);
+            message = new Message(multipart);
+
+            Assert.GreaterOrEqual(DateTime.UtcNow, message.Birthday);
+            Assert.LessOrEqual(DateTime.UtcNow - TimeSpan.FromSeconds(20), message.Birthday);
+        }
     }
 }
