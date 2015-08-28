@@ -7,7 +7,8 @@ namespace rawf.Rendezvous.Consensus
     {
         private void LogAwake()
         {
-            logger.DebugFormat("SLEEP === process {0} Waked up at {1}", localNode.SocketIdentity.GetString(), DateTime.UtcNow.ToString("HH:mm:ss fff"));
+            logger.Debug($"SLEEP === process {localNode.SocketIdentity.GetString()} " +
+                         $"Waked up at {DateTime.UtcNow.ToString("HH:mm:ss fff")}");
         }
 
         private void LogStartSleep()
@@ -21,17 +22,19 @@ namespace rawf.Rendezvous.Consensus
             {
                 if (IsLeaseOwner(lastReadLease))
                 {
-                    logger.DebugFormat("[{0}] PROLONG === process {1} wants to prolong it's lease {2}",
-                                       DateTime.UtcNow.ToString("HH:mm:ss fff"),
-                                       localNode.SocketIdentity.GetString(),
-                                       lastReadLease.ExpiresAt.ToString("HH:mm:ss fff"));
+                    logger.Debug($"[{DateTime.UtcNow.ToString("HH:mm:ss fff")}] "
+                                 + "PROLONG === process "
+                                 + $"{localNode.SocketIdentity.GetString()} "
+                                 + "wants to prolong it's lease "
+                                 + $"{lastReadLease.ExpiresAt.ToString("HH:mm:ss fff")}");
                 }
                 else
                 {
-                    logger.DebugFormat("[{0}] RENEW === process {1} wants to renew lease {2}",
-                                       DateTime.UtcNow.ToString("HH:mm:ss fff"),
-                                       localNode.SocketIdentity.GetString(),
-                                       lastReadLease.ExpiresAt.ToString("HH:mm:ss fff"));
+                    logger.Debug($"[{DateTime.UtcNow.ToString("HH:mm:ss fff")}] "
+                                 + "RENEW === process "
+                                 + $"{localNode.SocketIdentity.GetString()} "
+                                 + "wants to renew lease "
+                                 + $"{lastReadLease.ExpiresAt.ToString("HH:mm:ss fff")}");
                 }
             }
         }

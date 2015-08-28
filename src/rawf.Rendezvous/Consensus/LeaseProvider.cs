@@ -73,18 +73,19 @@ namespace rawf.Rendezvous.Consensus
         {
             if (config.NodeResponseTimeout.TotalMilliseconds * 2 > config.MessageRoundtrip.TotalMilliseconds)
             {
-                throw new Exception(string.Format("NodeResponseTimeout[{0} msec] should be at least 2 times shorter than MessageRoundtrip[{1} msec]!",
-                                                  config.NodeResponseTimeout.TotalMilliseconds,
-                                                  config.MessageRoundtrip.TotalMilliseconds));
+                throw new Exception("NodeResponseTimeout"
+                                    + $"[{config.NodeResponseTimeout.TotalMilliseconds} msec]"
+                                    + " should be at least 2 times shorter than MessageRoundtrip"
+                                    + $"[{config.MessageRoundtrip.TotalMilliseconds} msec]!");
             }
             if (config.MaxLeaseTimeSpan
                 - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
                 - config.ClockDrift <= TimeSpan.FromMilliseconds(0))
             {
-                throw new Exception(string.Format("MaxLeaseTimeSpan[{0} msec] should be longer than (2 * MessageRoundtrip[{1} msec] + ClockDrift[{2} msec])",
-                                                  config.MaxLeaseTimeSpan.TotalMilliseconds,
-                                                  config.MessageRoundtrip.TotalMilliseconds,
-                                                  config.ClockDrift.TotalMilliseconds));
+                throw new Exception($"MaxLeaseTimeSpan[{config.MaxLeaseTimeSpan.TotalMilliseconds} msec] "
+                                    + "should be longer than "
+                                    + $"(2 * MessageRoundtrip[{config.MessageRoundtrip.TotalMilliseconds} msec] "
+                                    + $"+ ClockDrift[{config.ClockDrift.TotalMilliseconds} msec])");
             }
         }
 
@@ -188,7 +189,7 @@ namespace rawf.Rendezvous.Consensus
                     lease = new Lease(localNode.SocketIdentity, ownerEndpoint, now + config.MaxLeaseTimeSpan);
                 }
 
-                logger.InfoFormat("Write lease: OwnerIdentity {0}", lease.OwnerIdentity.GetString());
+                logger.Info($"Write lease: OwnerIdentity {lease.OwnerIdentity.GetString()}");
                 var write = register.Write(ballot, lease);
                 if (write.TxOutcome == TxOutcome.Commit)
                 {
