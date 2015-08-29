@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using rawf.Sockets;
@@ -9,13 +9,13 @@ namespace rawf.Tests.Helpers
 {
     public class MessageHubSocketFactory
     {
-        private readonly IList<StubSocket> sockets;
+        private readonly ConcurrentBag<StubSocket> sockets;
         private readonly TimeSpan socketWaitTimeout;
         private readonly int socketWaitRetries = 5;
 
         public MessageHubSocketFactory()
         {
-            sockets = new List<StubSocket>();
+            sockets = new ConcurrentBag<StubSocket>();
             socketWaitTimeout = TimeSpan.FromSeconds(5);
         }
 

@@ -1,6 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using rawf.Connectivity;
@@ -13,14 +12,14 @@ namespace rawf.Tests.Helpers
     public class MessageRouterSocketFactory
     {
         private readonly RouterConfiguration config;
-        private readonly IList<StubSocket> sockets;
+        private readonly ConcurrentBag<StubSocket> sockets;
         private readonly TimeSpan socketWaitTimeout;
         private readonly int socketWaitRetries = 5;
 
         public MessageRouterSocketFactory(RouterConfiguration config)
         {
             this.config = config;
-            sockets = new List<StubSocket>();
+            sockets = new ConcurrentBag<StubSocket>();
             socketWaitTimeout = TimeSpan.FromSeconds(5);
         }
 

@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -10,14 +10,14 @@ namespace rawf.Tests.Helpers
 {
     public class ActorHostSocketFactory
     {
-        private readonly IList<SocketMeta> sockets;
+        private readonly ConcurrentBag<SocketMeta> sockets;
         private readonly TimeSpan socketWaitTimeout;
         private readonly int socketWaitRetries = 5;
         private const string ActorRegistrationMethod = "RegisterActors";
 
         public ActorHostSocketFactory()
         {
-            sockets = new List<SocketMeta>();
+            sockets = new ConcurrentBag<SocketMeta>();
             socketWaitTimeout = TimeSpan.FromSeconds(5);
         }
 
