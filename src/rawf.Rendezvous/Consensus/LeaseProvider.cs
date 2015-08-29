@@ -53,9 +53,8 @@ namespace rawf.Rendezvous.Consensus
             var lease = GetLastKnownLease();
 
             timer.Stop();
-            logger.InfoFormat("Lease received {0} in {1} msec",
-                              lastKnownLease != null ? lastKnownLease.OwnerIdentity.GetString() : "null",
-                              timer.ElapsedMilliseconds);
+            logger.Debug($"Lease received {(lastKnownLease != null ? lastKnownLease.OwnerIdentity.GetString() : "null")} " +
+                         $"in {timer.ElapsedMilliseconds} msec");
 
             return lease;
         }
@@ -178,7 +177,7 @@ namespace rawf.Rendezvous.Consensus
                     Sleep(config.ClockDrift);
                     LogAwake();
 
-                    // TOOD: Add recursion exit condition
+                    // TODO: Add recursion exit condition
                     return AсquireOrLearnLease(ballotGenerator.New(localNode.SocketIdentity), DateTime.UtcNow);
                 }
 
@@ -189,7 +188,7 @@ namespace rawf.Rendezvous.Consensus
                     lease = new Lease(localNode.SocketIdentity, ownerEndpoint, now + config.MaxLeaseTimeSpan);
                 }
 
-                logger.Info($"Write lease: OwnerIdentity {lease.OwnerIdentity.GetString()}");
+                logger.Debug($"Write lease: OwnerIdentity {lease.OwnerIdentity.GetString()}");
                 var write = register.Write(ballot, lease);
                 if (write.TxOutcome == TxOutcome.Commit)
                 {

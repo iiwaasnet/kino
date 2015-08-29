@@ -127,7 +127,7 @@ namespace rawf.Connectivity
                             }
                             catch (NetMQException err)
                             {
-                                logger.Debug(string.Format($"ERR: {err.ErrorCode} MSG: {err.Message} {err}"));
+                                logger.Error(string.Format($"ERRCODE:{err.ErrorCode} MSG:{err.Message} Exception:{err}"));
                             }
                             catch (Exception err)
                             {
@@ -197,7 +197,7 @@ namespace rawf.Connectivity
             }
             else
             {
-                logger.Warn($"Handler not found! MSG: {messageHandlerIdentifier.Identity.GetString()}");
+                logger.Warn($"Handler not found! MSG:{messageHandlerIdentifier.Identity.GetString()}");
             }
 
             return true;
@@ -255,7 +255,7 @@ namespace rawf.Connectivity
                 externalRoutingTable.RemoveRoute(new SocketIdentifier(payload.SocketIdentity));
                 scaleOutBackend.Disconnect(new Uri(payload.Uri));
 
-                logger.Debug($"Route removed URI:{payload.Uri} SOCKID:{payload.SocketIdentity.GetString()}");
+                logger.Debug($"Route removed URI:{payload.Uri} SOCKETID:{payload.SocketIdentity.GetString()}");
             }
 
             return shouldHandle;

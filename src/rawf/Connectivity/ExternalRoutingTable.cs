@@ -32,7 +32,7 @@ namespace rawf.Connectivity
 
                 MapSocketToMessage(messageHandlerIdentifier, socketIdentifier);
 
-                logger.Debug($"Route added URI:{uri.AbsoluteUri} SOCKID:{socketIdentifier.Identity.GetString()}");
+                logger.Debug($"External route added URI:{uri.AbsoluteUri} SOCKID:{socketIdentifier.Identity.GetString()}");
             }
         }
 

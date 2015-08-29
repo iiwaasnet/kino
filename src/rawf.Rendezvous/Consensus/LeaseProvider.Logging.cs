@@ -7,13 +7,14 @@ namespace rawf.Rendezvous.Consensus
     {
         private void LogAwake()
         {
-            logger.Debug($"SLEEP === process {localNode.SocketIdentity.GetString()} " +
-                         $"Waked up at {DateTime.UtcNow.ToString("HH:mm:ss fff")}");
+            logger.Debug($"SLEEP === process {localNode.SocketIdentity.GetString()} " 
+                +$"Waked up at {DateTime.UtcNow.ToString("HH:mm:ss fff")}");
         }
 
         private void LogStartSleep()
         {
-            logger.DebugFormat("SLEEP === process {0} Sleep from {1}", localNode.SocketIdentity.GetString(), DateTime.UtcNow.ToString("HH:mm:ss fff"));
+            logger.Debug($"SLEEP === process {localNode.SocketIdentity.GetString()} " +
+                         $"Sleep from {DateTime.UtcNow.ToString("HH: mm:ss fff")}");
         }
 
         private void LogLeaseProlonged(Lease lastReadLease)

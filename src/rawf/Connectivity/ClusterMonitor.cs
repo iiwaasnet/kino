@@ -108,7 +108,7 @@ namespace rawf.Connectivity
                         StartProcessingClusterMessages();
 
                         var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
-                        logger.Debug($"Reconnected to {rendezvousServer.MulticastUri.AbsoluteUri}");
+                        logger.Info($"Reconnected to Rendezvous {rendezvousServer.MulticastUri.AbsoluteUri}");
                     }
                 }
             }
@@ -205,7 +205,7 @@ namespace rawf.Connectivity
             socket.Connect(rendezvousServer.MulticastUri);
             socket.Subscribe();
 
-            logger.Debug($"Connected to {rendezvousServer.MulticastUri.AbsoluteUri}");
+            logger.Info($"Connected to Rendezvous {rendezvousServer.MulticastUri.AbsoluteUri}");
 
             return socket;
         }
@@ -332,8 +332,6 @@ namespace rawf.Connectivity
                                          },
                                          RegisterMessageHandlersRoutingMessage.MessageIdentity);
             outgoingMessages.Add(message);
-
-            logger.Debug($"Self-registration URI: {routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()} SOCKID: {routerConfiguration.ScaleOutAddress.Identity.GetString()} sent");
         }
 
         public void RequestMessageHandlersRouting()
@@ -440,7 +438,6 @@ namespace rawf.Connectivity
             var registration = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
             var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
             clusterConfiguration.AddClusterMember(clusterMember);
-            logger.Debug($"Route added URI:{clusterMember.Uri.AbsoluteUri} SOCKID:{clusterMember.Identity.GetString()}");
         }
 
         private void ProcessPongMessage(IMessage message)
@@ -451,7 +448,7 @@ namespace rawf.Connectivity
             if (!nodeNotFound)
             {
                 RequestNodeMessageHandlersRouting(payload);
-                logger.Debug($"Route nod found, requesting URI:{payload.Uri} SOCKID:{payload.SocketIdentity.GetString()}");
+                logger.Debug($"Route nod found. Requesting registrations for URI:{payload.Uri} SOCKETID:{payload.SocketIdentity.GetString()}");
             }            
         }
 
@@ -479,7 +476,7 @@ namespace rawf.Connectivity
                 clusterConfiguration.DeleteClusterMember(deadNode);
                 routerNotificationSocket.SendMessage(message);
 
-                logger.Debug($"Route removed URI:{deadNode.Uri.AbsoluteUri} SOCKID:{deadNode.Identity.GetString()}");
+                logger.Debug($"Dead route removed URI:{deadNode.Uri.AbsoluteUri} SOCKETID:{deadNode.Identity.GetString()}");
             }
         }
     }
