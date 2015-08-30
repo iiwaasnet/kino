@@ -40,7 +40,6 @@ namespace rawf.Messaging
             }
             yield return EmptyFrame;
            
-            yield return GetBirthday(message);
             yield return GetVersionFrame(message);
             yield return GetMessageIdentityFrame(message);
             yield return GetReceiverIdentityFrame(message);
@@ -54,9 +53,6 @@ namespace rawf.Messaging
 
             yield return GetMessageBodyFrame(message);
         }
-
-        private byte[] GetBirthday(Message message)
-            => message.Birthday.GetBytes();
 
         private byte[] GetSocketIdentity(IMessage message)
             => ((Message) message).SocketIdentity ?? EmptyFrame;
@@ -98,9 +94,6 @@ namespace rawf.Messaging
 
         internal byte[] GetMessageIdentity()
             => frames[frames.Count - ReversedFrames.Identity];
-
-        internal byte[] GetMessageBirthday()
-            => frames[frames.Count - ReversedFrames.Birthday];
 
         internal byte[] GetMessageVersion()
             => frames[frames.Count - ReversedFrames.Version];

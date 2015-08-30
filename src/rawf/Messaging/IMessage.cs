@@ -14,7 +14,6 @@ namespace rawf.Messaging
         byte[] CallbackIdentity { get; }
         byte[] CallbackReceiverIdentity { get; }
         TimeSpan TTL { get; set; }
-        DateTime Birthday { get; }
         byte[] Body { get; }
     }
 }

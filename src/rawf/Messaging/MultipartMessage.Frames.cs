@@ -16,8 +16,7 @@ namespace rawf.Messaging
             internal const int ReceiverIdentity = 8;
             internal const int Identity = 9;
             internal const int Version = 10;
-            internal const int Birthday = 11;
-            internal const int NextRouterInsertPosition = 12;
+            internal const int NextRouterInsertPosition = 11;
         }
 
         private class ForwardFrames
