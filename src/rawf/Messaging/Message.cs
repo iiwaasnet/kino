@@ -31,7 +31,7 @@ namespace rawf.Messaging
 
         private static byte[] GenerateCorrelationId()
             //TODO: Better implementation
-            => Guid.NewGuid().ToByteArray();
+            => Guid.NewGuid().ToString().GetBytes();
 
         internal Message(MultipartMessage multipartMessage)
         {
