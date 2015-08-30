@@ -81,6 +81,8 @@
     <Compile Include="Connectivity\AsyncMessageContext.cs" />
     <Compile Include="Connectivity\IMessageRouter.cs" />
     <Compile Include="Connectivity\IHostConfiguration.cs" />
+    <Compile Include="Connectivity\IMessageTracer.cs" />
+    <Compile Include="Connectivity\MessageTracer.cs" />
     <Compile Include="Connectivity\RendezvousConfiguration.cs" />
     <Compile Include="Connectivity\RendezvousEndpoints.cs" />
     <Compile Include="Connectivity\ClusterConfiguration.cs" />
@@ -134,6 +136,7 @@
     <Compile Include="Messaging\Messages\UnregisterMessageHandlersRoutingMessage.cs" />
     <Compile Include="Messaging\Messages\PingMessage.cs" />
     <Compile Include="Messaging\Messages\PongMessage.cs" />
+    <Compile Include="Messaging\MessageTraceOptions.cs" />
     <Compile Include="Messaging\MultipartMessage.cs" />
     <Compile Include="Messaging\MultipartMessage.Frames.cs" />
     <Compile Include="Messaging\NewtonJsonMessageSerializer.cs" />

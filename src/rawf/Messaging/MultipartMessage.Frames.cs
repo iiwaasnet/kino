@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using rawf.Connectivity;
-
-namespace rawf.Messaging
+﻿namespace rawf.Messaging
 {
     internal partial class MultipartMessage
     {
@@ -16,12 +13,13 @@ namespace rawf.Messaging
             internal const int ReceiverIdentity = 8;
             internal const int Identity = 9;
             internal const int Version = 10;
-            internal const int NextRouterInsertPosition = 11;
+            internal const int TraceOptions = 11;
+            internal const int NextRouterInsertPosition = 12;
         }
 
         private class ForwardFrames
         {
             internal const int SocketIdentity = 0;
-        }        
+        }
     }
 }

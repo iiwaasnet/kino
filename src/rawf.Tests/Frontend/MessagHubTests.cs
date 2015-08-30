@@ -13,6 +13,7 @@ using rawf.Messaging.Messages;
 using rawf.Sockets;
 using rawf.Tests.Backend.Setup;
 using rawf.Tests.Helpers;
+using IMessageTracer = rawf.Client.IMessageTracer;
 
 namespace rawf.Tests.Frontend
 {
@@ -28,6 +29,7 @@ namespace rawf.Tests.Frontend
         private IMessageHubConfiguration config;
         private ILogger logger;
         private Mock<ICallbackHandlerStack> callbackHandlerStack;
+        private Mock<IMessageTracer> messageTracer;
 
         [SetUp]
         public void Setup()
@@ -42,6 +44,7 @@ namespace rawf.Tests.Frontend
                      {
                          RouterUri = new Uri(localhost)
                      };
+            messageTracer = new Mock<IMessageTracer>();
         }
 
         [Test]
@@ -50,6 +53,7 @@ namespace rawf.Tests.Frontend
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            messageTracer.Object,
                                             logger);
             try
             {
@@ -78,6 +82,7 @@ namespace rawf.Tests.Frontend
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            messageTracer.Object,
                                             logger);
             try
             {
@@ -107,6 +112,7 @@ namespace rawf.Tests.Frontend
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            messageTracer.Object,
                                             logger);
             try
             {
@@ -138,6 +144,7 @@ namespace rawf.Tests.Frontend
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            messageTracer.Object,
                                             logger);
             try
             {
@@ -167,6 +174,7 @@ namespace rawf.Tests.Frontend
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            messageTracer.Object,
                                             logger);
             try
             {
@@ -196,6 +204,7 @@ namespace rawf.Tests.Frontend
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            messageTracer.Object,
                                             logger);
             try
             {

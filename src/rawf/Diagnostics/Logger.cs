@@ -28,5 +28,10 @@
         {
             logger.Error(message);
         }
+
+        public void Trace(object message)
+        {
+            logger.Trace(message);
+        }
     }
 }

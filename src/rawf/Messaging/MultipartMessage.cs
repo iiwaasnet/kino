@@ -39,7 +39,8 @@ namespace rawf.Messaging
                 yield return hop.Identity;
             }
             yield return EmptyFrame;
-           
+
+            yield return GetTraceOptionsFrame(message);
             yield return GetVersionFrame(message);
             yield return GetMessageIdentityFrame(message);
             yield return GetReceiverIdentityFrame(message);
@@ -53,6 +54,9 @@ namespace rawf.Messaging
 
             yield return GetMessageBodyFrame(message);
         }
+
+        private byte[] GetTraceOptionsFrame(IMessage message)
+            => ((long) message.TraceOptions).GetBytes();
 
         private byte[] GetSocketIdentity(IMessage message)
             => ((Message) message).SocketIdentity ?? EmptyFrame;
@@ -106,6 +110,9 @@ namespace rawf.Messaging
 
         internal byte[] GetMessageDistributionPattern()
             => frames[frames.Count - ReversedFrames.DistributionPattern];
+
+        internal byte[] GetTraceOptions()
+            => frames[frames.Count - ReversedFrames.TraceOptions];
 
         internal byte[] GetCallbackReceiverIdentity()
             => frames[frames.Count - ReversedFrames.CallbackReceiverIdentity];

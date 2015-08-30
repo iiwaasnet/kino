@@ -25,6 +25,10 @@ namespace rawf.Actors
             builder.RegisterType<AsyncQueue<IActor>>()
                    .As<IAsyncQueue<IActor>>()
                    .SingleInstance();
+
+            builder.RegisterType<MessageTracer>()
+                   .As<IMessageTracer>()
+                   .SingleInstance();
         }
     }
 }

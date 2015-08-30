@@ -25,6 +25,7 @@ namespace rawf.Connectivity
         private readonly IClusterConfiguration clusterConfiguration;
         private readonly RouterConfiguration routerConfiguration;
         private readonly ILogger logger;
+        private readonly IMessageTracer messageTracer;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageRouter(ISocketFactory socketFactory,
@@ -33,9 +34,11 @@ namespace rawf.Connectivity
                              IClusterConfiguration clusterConfiguration,
                              RouterConfiguration routerConfiguration,
                              IClusterMonitor clusterMonitor,
+                             IMessageTracer messageTracer,
                              ILogger logger)
         {
             this.logger = logger;
+            this.messageTracer = messageTracer;
             this.socketFactory = socketFactory;
             this.clusterConfiguration = clusterConfiguration;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
@@ -86,6 +89,8 @@ namespace rawf.Connectivity
                             {
                                 message.SetSocketIdentity(localSocketIdentity);
                                 scaleOutFrontend.SendMessage(message);
+
+                                messageTracer.ReceivedFromOtherNode(message);
                             }
                         }
                         catch (Exception err)
@@ -121,13 +126,15 @@ namespace rawf.Connectivity
                                 var message = (Message) localSocket.ReceiveMessage(token);
                                 if (message != null)
                                 {
-                                    var handled = TryHandleServiceMessage(message, scaleOutBackend)
-                                                  || HandleOperationMessage(message, localSocket, scaleOutBackend);
+                                    var _ = TryHandleServiceMessage(message, scaleOutBackend)
+                                            || HandleOperationMessage(message, localSocket, scaleOutBackend);
                                 }
                             }
                             catch (NetMQException err)
                             {
-                                logger.Error(string.Format($"ERRCODE:{err.ErrorCode} MSG:{err.Message} Exception:{err}"));
+                                logger.Error(string.Format($"{nameof(err.ErrorCode)}:{err.ErrorCode} " +
+                                                           $"{nameof(err.Message)}:{err.Message} " +
+                                                           $"Exception:{err}"));
                             }
                             catch (Exception err)
                             {
@@ -164,6 +171,8 @@ namespace rawf.Connectivity
             {
                 message.SetSocketIdentity(handler.Identity);
                 localSocket.SendMessage(message);
+
+                messageTracer.RoutedToLocalActor(message);
             }
 
             return handlers.Any();
@@ -184,6 +193,8 @@ namespace rawf.Connectivity
                 message.SetSocketIdentity(handler.Identity);
                 message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
                 scaleOutBackend.SendMessage(message);
+
+                messageTracer.ForwardedToOtherNode(message);
             }
 
             return handlers.Any();
@@ -193,11 +204,16 @@ namespace rawf.Connectivity
         {
             if (!MessageCameFromLocalActor(message) && message.Distribution == DistributionPattern.Broadcast)
             {
-                logger.Warn($"Broadcast message {message.Identity.GetString()} didn't find any local handler and was not forwarded.");
+                logger.Warn("Broadcast message: " +
+                            $"{nameof(message.Version)}:{message.Version.GetString()} " +
+                            $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
+                            "didn't find any local handler and was not forwarded.");
             }
             else
             {
-                logger.Warn($"Handler not found! MSG:{messageHandlerIdentifier.Identity.GetString()}");
+                logger.Warn("Handler not found: " +
+                            $"{nameof(messageHandlerIdentifier.Version)}:{messageHandlerIdentifier.Version.GetString()} " +
+                            $"{nameof(messageHandlerIdentifier.Identity)}:{messageHandlerIdentifier.Identity.GetString()}");
             }
 
             return true;

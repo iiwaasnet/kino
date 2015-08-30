@@ -11,6 +11,7 @@ using rawf.Messaging.Messages;
 using rawf.Sockets;
 using rawf.Tests.Backend.Setup;
 using rawf.Tests.Helpers;
+using IMessageTracer = rawf.Connectivity.IMessageTracer;
 
 namespace rawf.Tests.Backend
 {
@@ -26,6 +27,7 @@ namespace rawf.Tests.Backend
         private Mock<ISocketFactory> socketFactory;
         private Mock<IClusterMonitor> clusterMonitor;
         private MessageRouterSocketFactory messageRouterSocketFactory;
+        private Mock<IMessageTracer> messageTracer;
 
         [SetUp]
         public void Setup()
@@ -40,6 +42,7 @@ namespace rawf.Tests.Backend
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(messageRouterSocketFactory.CreateSocket);
             loggerMock = new Mock<ILogger>();
+            messageTracer = new Mock<IMessageTracer>();
             logger = new Logger("default");
         }
 
@@ -52,6 +55,7 @@ namespace rawf.Tests.Backend
                                            new ClusterConfiguration(),
                                            routerConfiguration,
                                            clusterMonitor.Object,
+                                           messageTracer.Object,
                                            logger);
             try
             {
@@ -76,6 +80,7 @@ namespace rawf.Tests.Backend
                                            new ClusterConfiguration(),
                                            routerConfiguration,
                                            clusterMonitor.Object,
+                                           messageTracer.Object,
                                            logger);
             try
             {
@@ -124,6 +129,7 @@ namespace rawf.Tests.Backend
                                            new ClusterConfiguration(),
                                            routerConfiguration,
                                            clusterMonitor.Object,
+                                           messageTracer.Object,
                                            logger);
             try
             {
@@ -163,6 +169,7 @@ namespace rawf.Tests.Backend
                                            new ClusterConfiguration(),
                                            routerConfiguration,
                                            clusterMonitor.Object,
+                                           messageTracer.Object,
                                            logger);
             try
             {
@@ -197,6 +204,7 @@ namespace rawf.Tests.Backend
                                            new ClusterConfiguration(),
                                            routerConfiguration,
                                            clusterMonitor.Object,
+                                           messageTracer.Object,
                                            logger);
             try
             {
@@ -224,6 +232,7 @@ namespace rawf.Tests.Backend
                                            new ClusterConfiguration(),
                                            routerConfiguration,
                                            clusterMonitor.Object,
+                                           messageTracer.Object,
                                            logger);
             try
             {
@@ -244,6 +253,7 @@ namespace rawf.Tests.Backend
 
         private static IMessage SendMessageOverMessageHub()
         {
+            var messageTracer = new Mock<Client.IMessageTracer>();
             var logger = new Mock<ILogger>();
             var sockrtFactory = new Mock<ISocketFactory>();
             var socket = new StubSocket();
@@ -255,6 +265,7 @@ namespace rawf.Tests.Backend
             var messageHub = new MessageHub(sockrtFactory.Object,
                                             new CallbackHandlerStack(new ExpirableItemCollection<CorrelationId>(logger.Object)),
                                             new MessageHubConfiguration(),
+                                            messageTracer.Object,
                                             logger.Object);
             messageHub.Start();
             messageHub.EnqueueRequest(message, callback);

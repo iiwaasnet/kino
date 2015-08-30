@@ -25,6 +25,7 @@ namespace rawf.Actors
         private readonly IAsyncQueue<IActor> actorRegistrationsQueue;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly ILogger logger;
+        private readonly IMessageTracer messageTracer;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public ActorHost(ISocketFactory socketFactory,
@@ -32,9 +33,11 @@ namespace rawf.Actors
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
                          IAsyncQueue<IActor> actorRegistrationsQueue,
                          RouterConfiguration routerConfiguration,
+                         IMessageTracer messageTracer,
                          ILogger logger)
         {
             this.logger = logger;
+            this.messageTracer = messageTracer;
             this.actorHandlerMap = actorHandlerMap;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.socketFactory = socketFactory;
@@ -141,6 +144,8 @@ namespace rawf.Actors
                                 messageOut.CopyMessageHops(messageContext.MessageHops);
 
                                 localSocket.SendMessage(messageOut);
+
+                                messageTracer.ResponseSent(messageOut, false);
                             }
                         }
                         catch (Exception err)
@@ -174,10 +179,16 @@ namespace rawf.Actors
                             {
                                 var actorIdentifier = new MessageHandlerIdentifier(message.Version, message.Identity);
                                 var handler = actorHandlerMap.Get(actorIdentifier);
+                                if (handler != null)
+                                {
+                                    var task = handler(message);
 
-                                var task = handler(message);
-
-                                HandleTaskResult(token, task, message, localSocket);
+                                    HandleTaskResult(token, task, message, localSocket);
+                                }
+                                else
+                                {
+                                    messageTracer.HandlerNotFound(message);
+                                }
                             }
                             catch (Exception err)
                             {
@@ -199,13 +210,19 @@ namespace rawf.Actors
         {
             if (task.IsCompleted)
             {
-                foreach (var messageOut in CreateTaskResultMessage(task).Messages.Cast<Message>())
+                var response = CreateTaskResultMessage(task).Messages;
+
+                messageTracer.MessageProcessed(messageIn, response.Count());
+
+                foreach (var messageOut in response.Cast<Message>())
                 {
                     messageOut.RegisterCallbackPoint(GetTaskCallbackIdentity(task, messageIn), messageIn.CallbackReceiverIdentity);
                     messageOut.SetCorrelationId(messageIn.CorrelationId);
                     messageOut.CopyMessageHops(messageIn.GetMessageHops());
 
                     localSocket.SendMessage(messageOut);
+
+                    messageTracer.ResponseSent(messageOut, true);
                 }
             }
             else

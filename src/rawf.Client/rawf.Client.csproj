@@ -66,10 +66,12 @@
     <Compile Include="ICallbackPoint.cs" />
     <Compile Include="IMessageHub.cs" />
     <Compile Include="IMessageHubConfiguration.cs" />
+    <Compile Include="IMessageTracer.cs" />
     <Compile Include="IPromise.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="MessageHub.cs" />
     <Compile Include="MessageHubConfiguration.cs" />
+    <Compile Include="MessageTracer.cs" />
     <Compile Include="Promise.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

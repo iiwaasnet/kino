@@ -20,6 +20,7 @@ namespace rawf.Messaging
             Identity = messageIdentity;
             Distribution = distributionPattern;
             TTL = TimeSpan.Zero;
+            TraceOptions = MessageTraceOptions.None;
         }
 
         public static IMessage CreateFlowStartMessage(IPayload payload, byte[] messageIdentity)
@@ -39,11 +40,12 @@ namespace rawf.Messaging
             Identity = multipartMessage.GetMessageIdentity();
             Version = multipartMessage.GetMessageVersion();
             TTL = multipartMessage.GetMessageTTL().GetTimeSpan();
-            Distribution = multipartMessage.GetMessageDistributionPattern().GetEnum<DistributionPattern>();
+            Distribution = multipartMessage.GetMessageDistributionPattern().GetEnumFromInt<DistributionPattern>();
             CallbackIdentity = multipartMessage.GetCallbackIdentity();
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
             CorrelationId = multipartMessage.GetCorrelationId();
+            TraceOptions = multipartMessage.GetTraceOptions().GetEnumFromLong<MessageTraceOptions>();
         }
 
         internal void RegisterCallbackPoint(byte[] callbackIdentity, byte[] callbackReceiverIdentity)
@@ -99,5 +101,6 @@ namespace rawf.Messaging
         public byte[] CallbackIdentity { get; private set; }
         public byte[] CallbackReceiverIdentity { get; private set; }
         public byte[] SocketIdentity { get; private set; }
+        public MessageTraceOptions TraceOptions { get; set; }
     }
 }

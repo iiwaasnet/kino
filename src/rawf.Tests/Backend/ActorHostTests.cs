@@ -13,6 +13,7 @@ using rawf.Messaging.Messages;
 using rawf.Sockets;
 using rawf.Tests.Backend.Setup;
 using rawf.Tests.Helpers;
+using IMessageTracer = rawf.Actors.IMessageTracer;
 
 namespace rawf.Tests.Backend
 {
@@ -28,10 +29,12 @@ namespace rawf.Tests.Backend
         private ActorHandlerMap actorHandlersMap;
         private Mock<ISocketFactory> socketFactory;
         private ActorHostSocketFactory actorHostSocketFactory;
+        private Mock<IMessageTracer> messageTracer;
 
         [SetUp]
         public void Setup()
         {
+            messageTracer = new Mock<IMessageTracer>();
             loggerMock = new Mock<ILogger>();
             logger = new Logger("default");
             actorHandlersMap = new ActorHandlerMap();
@@ -55,6 +58,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           actorRegistrationsQueue,
                                           routerConfiguration,
+                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
 
@@ -71,6 +75,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
+                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
             try
@@ -115,6 +120,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
+                                          messageTracer.Object,
                                           logger.Object);
             try
             {
@@ -137,6 +143,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
+                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
             try
@@ -169,6 +176,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
+                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
             try
@@ -198,6 +206,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
+                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
             try
@@ -231,6 +240,7 @@ namespace rawf.Tests.Backend
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
+                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
             try
@@ -271,6 +281,7 @@ namespace rawf.Tests.Backend
                                           messageCompletionQueue.Object,
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
+                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
             try

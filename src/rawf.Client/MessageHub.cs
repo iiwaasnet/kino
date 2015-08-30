@@ -22,14 +22,17 @@ namespace rawf.Client
         private readonly ManualResetEventSlim hubRegistered;
         private readonly IMessageHubConfiguration config;
         private readonly ILogger logger;
+        private readonly IMessageTracer messageTracer;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
                           IMessageHubConfiguration config,
+                          IMessageTracer messageTracer,
                           ILogger logger)
         {
             this.logger = logger;
+            this.messageTracer = messageTracer;
             this.socketFactory = socketFactory;
             this.config = config;
             receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
@@ -91,8 +94,10 @@ namespace rawf.Client
                                                           new MessageHandlerIdentifier(message.Version, callbackPoint.MessageIdentity),
                                                           new MessageHandlerIdentifier(message.Version, ExceptionMessage.MessageIdentity)
                                                       });
+                                messageTracer.CallbackRegistered(message);
                             }
                             socket.SendMessage(message);
+                            messageTracer.SentToRouter(message);
                         }
                         catch (Exception err)
                         {
@@ -138,7 +143,15 @@ namespace rawf.Client
                                                                                   Identity = message.Identity,
                                                                                   Correlation = message.CorrelationId
                                                                               });
-                                callback?.SetResult(message);
+                                if (callback != null)
+                                {
+                                    callback.SetResult(message);
+                                    messageTracer.CallbackResultSet(message);
+                                }
+                                else
+                                {
+                                    messageTracer.CallbackNotFound(message);
+                                }
                             }
                         }
                         catch (Exception err)

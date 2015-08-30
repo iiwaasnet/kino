@@ -64,7 +64,9 @@
     <Compile Include="IActor.cs" />
     <Compile Include="IActorHandlerMap.cs" />
     <Compile Include="IActorHost.cs" />
+    <Compile Include="IMessageTracer.cs" />
     <Compile Include="MainModule.cs" />
+    <Compile Include="MessageTracer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RendezvousEndpoint.cs" />
   </ItemGroup>

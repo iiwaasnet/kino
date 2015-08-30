@@ -42,16 +42,28 @@ namespace rawf.Framework
         public static DateTime GetUtcDateTime(this byte[] array)
             => new DateTime(BitConverter.ToInt64(array, 0), DateTimeKind.Utc);
 
-        public static T GetEnum<T>(this byte[] array)
+        public static T GetEnumFromInt<T>(this byte[] array)
             where T : struct
         {
             var raw = array.GetInt();
-            if (Enum.IsDefined(typeof (T), raw))
+            return CastToEnum<T, int>(raw);
+        }
+
+        public static T GetEnumFromLong<T>(this byte[] array)
+            where T : struct
+        {
+            var raw = array.GetLong();
+            return CastToEnum<T, long>(raw);
+        }
+
+        private static TEnum CastToEnum<TEnum, TRaw>(TRaw raw) where TEnum : struct
+        {
+            if (Enum.IsDefined(typeof (TEnum), raw))
             {
-                return (T) Enum.ToObject(typeof (T), raw);
+                return (TEnum) Enum.ToObject(typeof (TEnum), raw);
             }
 
-            throw new InvalidCastException($"Unable to cast {raw} to enum {typeof (T)}");
+            throw new InvalidCastException($"Unable to cast {raw} to enum {typeof (TEnum)}");
         }
     }
 }

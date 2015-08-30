@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using Autofac;
-using rawf.Connectivity;
-using TypedConfigProvider;
+﻿using Autofac;
 
 namespace rawf.Client
 {
@@ -17,6 +14,10 @@ namespace rawf.Client
 
             builder.RegisterType<CallbackHandlerStack>()
                    .As<ICallbackHandlerStack>()
+                   .SingleInstance();
+
+            builder.RegisterType<MessageTracer>()
+                   .As<IMessageTracer>()
                    .SingleInstance();
         }
     }

@@ -47,6 +47,10 @@ namespace rawf
             builder.RegisterType<RendezvousConfiguration>()
                    .As<IRendezvousConfiguration>()
                    .SingleInstance();
+
+            builder.RegisterType<MessageTracer>()
+                   .As<IMessageTracer>()
+                   .SingleInstance();
         }
     }
 }
