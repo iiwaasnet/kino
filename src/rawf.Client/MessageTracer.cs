@@ -16,10 +16,10 @@ namespace rawf.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Callback registered for Message {message.Identity.GetString()}. " +
-                             $"Return at {nameof(message.CallbackIdentity)}:{message.CallbackIdentity.GetString()} " +
+                logger.Trace($"Callback registered for Message {message.Identity.GetString()}: " +
+                             $"{nameof(message.CallbackIdentity)}:{message.CallbackIdentity.GetString()} " +
                              $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"to {nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetString()} " +
+                             $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetString()} " +
                              $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
             }
         }
@@ -28,7 +28,7 @@ namespace rawf.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Message {message.Identity.GetString()} sent to Router");
+                logger.Trace($"Message {message.Identity.GetString()} sent to Router.");
             }
         }
 
