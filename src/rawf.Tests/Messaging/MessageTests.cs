@@ -159,6 +159,20 @@ namespace rawf.Tests.Messaging
         }
 
         [Test]
+        [TestCase(MessageTraceOptions.None)]
+        [TestCase(MessageTraceOptions.Routing)]
+        public void TestMessageTraceOptions_IsConsistentlyTransferredViaMultipartMessage(MessageTraceOptions routeOptions)
+        {
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
+            message.TraceOptions = routeOptions;
+
+            var multipart = new MultipartMessage(message);
+            message = new Message(multipart);
+
+            Assert.AreEqual(routeOptions, message.TraceOptions);
+        }
+
+        [Test]
         public void TestMessageTTL_IsConsistentlyTransferredViaMultipartMessage()
         {
             var random = new Random((int)(0x0000ffff & DateTime.UtcNow.Ticks));
