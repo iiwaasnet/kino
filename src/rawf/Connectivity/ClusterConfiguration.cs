@@ -23,10 +23,12 @@ namespace rawf.Connectivity
 
         public void AddClusterMember(SocketEndpoint node)
         {
-            clusterMembers.TryAdd(node, new ClusterMemberMeta {LastKnownPong = DateTime.UtcNow});
-
-            logger.Debug($"New node added {nameof(node.Uri)}:{node.Uri.AbsoluteUri} " +
-                  $"{nameof(node.Identity)}:{node.Identity.GetString()}");
+            if (clusterMembers.TryAdd(node, new ClusterMemberMeta {LastKnownPong = DateTime.UtcNow}))
+            {
+                logger.Debug($"New node added " +
+                             $"Uri:{node.Uri.AbsoluteUri} " +
+                             $"Socket:{node.Identity.GetString()}");
+            }
         }
 
         public bool KeepAlive(SocketEndpoint node)
@@ -55,8 +57,8 @@ namespace rawf.Connectivity
             ClusterMemberMeta meta;
             clusterMembers.TryRemove(node, out meta);
 
-            logger.Debug($"Dead route removed {nameof(node.Uri)}:{node.Uri.AbsoluteUri} " +
-                             $"{nameof(node.Identity)}:{node.Identity.GetString()}");
+            logger.Debug($"Dead route removed Uri:{node.Uri.AbsoluteUri} " +
+                             $"Socket:{node.Identity.GetString()}");
         }
 
         public TimeSpan PingSilenceBeforeRendezvousFailover { get; set; }

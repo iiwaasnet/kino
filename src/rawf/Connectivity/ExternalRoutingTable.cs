@@ -32,8 +32,11 @@ namespace rawf.Connectivity
 
                 MapSocketToMessage(messageHandlerIdentifier, socketIdentifier);
 
-                logger.Debug($"External route added {nameof(uri.AbsoluteUri)}:{uri.AbsoluteUri} " +
-                             $"{socketIdentifier.Identity}:{socketIdentifier.Identity.GetString()}");
+                logger.Debug("External route added " +
+                             $"Uri:{uri.AbsoluteUri} " +
+                             $"Socket:{socketIdentifier.Identity.GetString()} " +
+                             $"Version:{messageHandlerIdentifier.Version.GetString()} " +
+                             $"Message:{messageHandlerIdentifier.Identity.GetString()}");
             }
         }
 
@@ -117,7 +120,7 @@ namespace rawf.Connectivity
                 socketToMessageMap.Remove(socketIdentifier);
 
                 logger.Debug($"External route removed Uri:{uri.AbsolutePath} " +
-                             $"{nameof(socketIdentifier.Identity)}:{socketIdentifier.Identity.GetString()}");
+                             $"Socket:{socketIdentifier.Identity.GetString()}");
             }
         }
     }

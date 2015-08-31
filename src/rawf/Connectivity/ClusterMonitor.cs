@@ -31,10 +31,10 @@ namespace rawf.Connectivity
         private readonly ILogger logger;
 
         public ClusterMonitor(ISocketFactory socketFactory,
-                                           RouterConfiguration routerConfiguration,
-                                           IClusterConfiguration clusterConfiguration,
-                                           IRendezvousConfiguration rendezvousConfiguration,
-                                           ILogger logger)
+                              RouterConfiguration routerConfiguration,
+                              IClusterConfiguration clusterConfiguration,
+                              IRendezvousConfiguration rendezvousConfiguration,
+                              ILogger logger)
         {
             this.logger = logger;
             pingReceived = new ManualResetEventSlim(false);
@@ -246,11 +246,11 @@ namespace rawf.Connectivity
                                     MulticastUri = new Uri(payload.LeaderMulticastUri),
                                     UnicastUri = new Uri(payload.LeaderUnicastUri)
                                 };
-              if (!rendezvousConfiguration.GetCurrentRendezvousServer().Equals(newLeader))
-              {
-                rendezvousConfiguration.SetCurrentRendezvousServer(newLeader);
-                newRendezvousLeaderSelected.Set();
-              }
+                if (!rendezvousConfiguration.GetCurrentRendezvousServer().Equals(newLeader))
+                {
+                    rendezvousConfiguration.SetCurrentRendezvousServer(newLeader);
+                    newRendezvousLeaderSelected.Set();
+                }
             }
 
             return shouldHandle;
@@ -448,7 +448,7 @@ namespace rawf.Connectivity
             if (!nodeNotFound)
             {
                 RequestNodeMessageHandlersRouting(payload);
-            }            
+            }
         }
 
         private void RequestNodeMessageHandlersRouting(PongMessage payload)
@@ -461,8 +461,9 @@ namespace rawf.Connectivity
                                          RequestNodeMessageHandlersRoutingMessage.MessageIdentity);
             outgoingMessages.Add(request);
 
-            logger.Debug($"Route not found. Requesting registrations for {nameof(payload.Uri)}:{payload.Uri} " +
-                             $"{nameof(payload.SocketIdentity)}:{payload.SocketIdentity.GetString()}");
+            logger.Debug("Route not found. Requesting registrations for " +
+                         $"Uri:{payload.Uri} " +
+                         $"Socket:{payload.SocketIdentity.GetString()}");
         }
 
         private void UnregisterDeadNodes(ISocket routerNotificationSocket)
@@ -476,7 +477,7 @@ namespace rawf.Connectivity
                                              },
                                              UnregisterMessageHandlersRoutingMessage.MessageIdentity);
                 clusterConfiguration.DeleteClusterMember(deadNode);
-                routerNotificationSocket.SendMessage(message);                
+                routerNotificationSocket.SendMessage(message);
             }
         }
     }
