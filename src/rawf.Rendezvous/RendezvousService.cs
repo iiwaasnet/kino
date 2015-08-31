@@ -63,17 +63,9 @@ namespace rawf.Rendezvous
 
                         while (!token.IsCancellationRequested)
                         {
-                            IMessage message;
-                            if (NodeIsLeader())
-                            {
-                                message = Message.Create(new PingMessage(), PingMessage.MessageIdentity);
-                                logger.Debug($"Ping {DateTime.Now}");
-                            }
-                            else
-                            {
-                                message = CreateNotLeaderMessage();
-                                logger.Debug($"Not a Leader {DateTime.Now}");
-                            }
+                            var message = NodeIsLeader()
+                                              ? Message.Create(new PingMessage(), PingMessage.MessageIdentity)
+                                              : CreateNotLeaderMessage();
                             if (message != null)
                             {
                                 pingNotificationSocket.SendMessage(message);

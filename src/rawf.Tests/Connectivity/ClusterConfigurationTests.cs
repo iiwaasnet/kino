@@ -1,17 +1,27 @@
 ﻿using System;
 using System.Threading;
+using Moq;
 using NUnit.Framework;
 using rawf.Connectivity;
+using rawf.Diagnostics;
 
 namespace rawf.Tests.Connectivity
 {
     [TestFixture]
     public class ClusterConfigurationTests
     {
+        private ILogger logger;
+
+        [SetUp]
+        public void Setup()
+        {
+            logger = new Mock<ILogger>().Object;
+        }
+
         [Test]
         public void TestAddClusterMember()
         {
-            var config = new ClusterConfiguration();
+            var config = new ClusterConfiguration(logger);
             var localhost = "tcp://127.0.0.1:40";
             var ep1 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
             var ep2 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
@@ -25,7 +35,7 @@ namespace rawf.Tests.Connectivity
         [Test]
         public void TestDeleteClusterMember()
         {
-            var config = new ClusterConfiguration();
+            var config = new ClusterConfiguration(logger);
             var localhost = "tcp://127.0.0.1:40";
             var ep1 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
             var ep2 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
@@ -46,7 +56,7 @@ namespace rawf.Tests.Connectivity
         [Test]
         public void TestNodeConsideredDead_IfLastKnownPongWasLongerThanPongSilenceBeforeRouteDeletionAgo()
         {
-            var config = new ClusterConfiguration
+            var config = new ClusterConfiguration(logger)
                          {
                              PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(2)
                          };

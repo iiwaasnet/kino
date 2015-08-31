@@ -448,7 +448,6 @@ namespace rawf.Connectivity
             if (!nodeNotFound)
             {
                 RequestNodeMessageHandlersRouting(payload);
-                logger.Debug($"Route nod found. Requesting registrations for URI:{payload.Uri} SOCKETID:{payload.SocketIdentity.GetString()}");
             }            
         }
 
@@ -461,6 +460,9 @@ namespace rawf.Connectivity
                                          },
                                          RequestNodeMessageHandlersRoutingMessage.MessageIdentity);
             outgoingMessages.Add(request);
+
+            logger.Debug($"Route not found. Requesting registrations for {nameof(payload.Uri)}:{payload.Uri} " +
+                             $"{nameof(payload.SocketIdentity)}:{payload.SocketIdentity.GetString()}");
         }
 
         private void UnregisterDeadNodes(ISocket routerNotificationSocket)
@@ -474,9 +476,7 @@ namespace rawf.Connectivity
                                              },
                                              UnregisterMessageHandlersRoutingMessage.MessageIdentity);
                 clusterConfiguration.DeleteClusterMember(deadNode);
-                routerNotificationSocket.SendMessage(message);
-
-                logger.Debug($"Dead route removed URI:{deadNode.Uri.AbsoluteUri} SOCKETID:{deadNode.Identity.GetString()}");
+                routerNotificationSocket.SendMessage(message);                
             }
         }
     }

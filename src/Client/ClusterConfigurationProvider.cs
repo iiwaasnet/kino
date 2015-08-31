@@ -1,4 +1,5 @@
 using rawf.Connectivity;
+using rawf.Diagnostics;
 
 namespace Client
 {
@@ -6,9 +7,9 @@ namespace Client
     {
         private readonly IClusterConfiguration config;
 
-        public ClusterConfigurationProvider(ApplicationConfiguration appConfig)
+        public ClusterConfigurationProvider(ApplicationConfiguration appConfig, ILogger logger)
         {
-            config = new ClusterConfiguration
+            config = new ClusterConfiguration(logger)
                      {
                          PingSilenceBeforeRendezvousFailover = appConfig.PingSilenceBeforeRendezvousFailover,
                          PongSilenceBeforeRouteDeletion = appConfig.PongSilenceBeforeRouteDeletion

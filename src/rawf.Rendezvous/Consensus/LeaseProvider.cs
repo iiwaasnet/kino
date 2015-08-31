@@ -47,16 +47,7 @@ namespace rawf.Rendezvous.Consensus
 
         public Lease GetLease()
         {
-            var timer = new Stopwatch();
-            timer.Start();
-
-            var lease = GetLastKnownLease();
-
-            timer.Stop();
-            logger.Debug($"Lease received {(lastKnownLease != null ? lastKnownLease.OwnerIdentity.GetString() : "null")} " +
-                         $"in {timer.ElapsedMilliseconds} msec");
-
-            return lease;
+            return GetLastKnownLease();
         }
 
         public void Dispose()
@@ -188,7 +179,6 @@ namespace rawf.Rendezvous.Consensus
                     lease = new Lease(localNode.SocketIdentity, ownerEndpoint, now + config.MaxLeaseTimeSpan);
                 }
 
-                logger.Debug($"Write lease: OwnerIdentity {lease.OwnerIdentity.GetString()}");
                 var write = register.Write(ballot, lease);
                 if (write.TxOutcome == TxOutcome.Commit)
                 {

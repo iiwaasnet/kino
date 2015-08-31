@@ -2,15 +2,19 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using rawf.Diagnostics;
+using rawf.Framework;
 
 namespace rawf.Connectivity
 {
     public class ClusterConfiguration : IClusterConfiguration
     {
         private readonly ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta> clusterMembers;
+        private readonly ILogger logger;
 
-        public ClusterConfiguration()
+        public ClusterConfiguration(ILogger logger)
         {
+            this.logger = logger;
             clusterMembers = new ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta>();
         }
 
@@ -18,7 +22,12 @@ namespace rawf.Connectivity
             => clusterMembers.Keys;
 
         public void AddClusterMember(SocketEndpoint node)
-            => clusterMembers.TryAdd(node, new ClusterMemberMeta {LastKnownPong = DateTime.UtcNow});
+        {
+            clusterMembers.TryAdd(node, new ClusterMemberMeta {LastKnownPong = DateTime.UtcNow});
+
+            logger.Debug($"New node added {nameof(node.Uri)}:{node.Uri.AbsoluteUri} " +
+                  $"{nameof(node.Identity)}:{node.Identity.GetString()}");
+        }
 
         public bool KeepAlive(SocketEndpoint node)
         {
@@ -45,6 +54,9 @@ namespace rawf.Connectivity
         {
             ClusterMemberMeta meta;
             clusterMembers.TryRemove(node, out meta);
+
+            logger.Debug($"Dead route removed {nameof(node.Uri)}:{node.Uri.AbsoluteUri} " +
+                             $"{nameof(node.Identity)}:{node.Identity.GetString()}");
         }
 
         public TimeSpan PingSilenceBeforeRendezvousFailover { get; set; }

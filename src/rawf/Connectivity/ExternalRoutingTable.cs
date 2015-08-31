@@ -9,17 +9,17 @@ namespace rawf.Connectivity
 {
     public class ExternalRoutingTable : IExternalRoutingTable
     {
-        private readonly System.Collections.Generic.IDictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>> messageHandlersMap;
-        private readonly System.Collections.Generic.IDictionary<SocketIdentifier, System.Collections.Generic.HashSet<MessageHandlerIdentifier>> socketToMessageMap;
-        private readonly System.Collections.Generic.IDictionary<SocketIdentifier, Uri> socketToUriMap;
+        private readonly C5.IDictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>> messageHandlersMap;
+        private readonly C5.IDictionary<SocketIdentifier, C5.HashSet<MessageHandlerIdentifier>> socketToMessageMap;
+        private readonly C5.IDictionary<SocketIdentifier, Uri> socketToUriMap;
         private readonly ILogger logger;
 
         public ExternalRoutingTable(ILogger logger)
         {
             this.logger = logger;
-            messageHandlersMap = new Dictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>>();
-            socketToMessageMap = new Dictionary<SocketIdentifier, System.Collections.Generic.HashSet<MessageHandlerIdentifier>>();
-            socketToUriMap = new Dictionary<SocketIdentifier, Uri>();
+            messageHandlersMap = new HashDictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>>();
+            socketToMessageMap = new HashDictionary<SocketIdentifier, C5.HashSet<MessageHandlerIdentifier>>();
+            socketToUriMap = new HashDictionary<SocketIdentifier, Uri>();
         }
 
         public void Push(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier, Uri uri)
@@ -32,14 +32,15 @@ namespace rawf.Connectivity
 
                 MapSocketToMessage(messageHandlerIdentifier, socketIdentifier);
 
-                logger.Debug($"External route added URI:{uri.AbsoluteUri} SOCKID:{socketIdentifier.Identity.GetString()}");
+                logger.Debug($"External route added {nameof(uri.AbsoluteUri)}:{uri.AbsoluteUri} " +
+                             $"{socketIdentifier.Identity}:{socketIdentifier.Identity.GetString()}");
             }
         }
 
         private bool MapMessageToSocket(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
         {
             HashedLinkedList<SocketIdentifier> hashSet;
-            if (!messageHandlersMap.TryGetValue(messageHandlerIdentifier, out hashSet))
+            if (!messageHandlersMap.Find(ref messageHandlerIdentifier, out hashSet))
             {
                 hashSet = new HashedLinkedList<SocketIdentifier>();
                 messageHandlersMap[messageHandlerIdentifier] = hashSet;
@@ -55,10 +56,10 @@ namespace rawf.Connectivity
 
         private void MapSocketToMessage(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
         {
-            System.Collections.Generic.HashSet<MessageHandlerIdentifier> hashSet;
-            if (!socketToMessageMap.TryGetValue(socketIdentifier, out hashSet))
+            C5.HashSet<MessageHandlerIdentifier> hashSet;
+            if (!socketToMessageMap.Find(ref socketIdentifier, out hashSet))
             {
-                hashSet = new System.Collections.Generic.HashSet<MessageHandlerIdentifier>();
+                hashSet = new C5.HashSet<MessageHandlerIdentifier>();
                 socketToMessageMap[socketIdentifier] = hashSet;
             }
             hashSet.Add(messageHandlerIdentifier);
@@ -67,7 +68,7 @@ namespace rawf.Connectivity
         public SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
-            return messageHandlersMap.TryGetValue(messageHandlerIdentifier, out collection)
+            return messageHandlersMap.Find(ref messageHandlerIdentifier, out collection)
                        ? Get(collection)
                        : null;
         }
@@ -75,7 +76,7 @@ namespace rawf.Connectivity
         public IEnumerable<SocketIdentifier> PopAll(MessageHandlerIdentifier messageHandlerIdentifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
-            return messageHandlersMap.TryGetValue(messageHandlerIdentifier, out collection)
+            return messageHandlersMap.Find(ref messageHandlerIdentifier, out collection)
                        ? collection
                        : Enumerable.Empty<SocketIdentifier>();
         }
@@ -94,15 +95,17 @@ namespace rawf.Connectivity
 
         public void RemoveRoute(SocketIdentifier socketIdentifier)
         {
-            socketToUriMap.Remove(socketIdentifier);
+            Uri uri;
+            socketToUriMap.Remove(socketIdentifier, out uri);
 
-            System.Collections.Generic.HashSet<MessageHandlerIdentifier> messageHandlers;
-            if (socketToMessageMap.TryGetValue(socketIdentifier, out messageHandlers))
+            C5.HashSet<MessageHandlerIdentifier> messageHandlers;
+            if (socketToMessageMap.Find(ref socketIdentifier, out messageHandlers))
             {
                 foreach (var messageHandlerIdentifier in messageHandlers)
                 {
+                    var _ = messageHandlerIdentifier;
                     HashedLinkedList<SocketIdentifier> socketIdentifiers;
-                    if (messageHandlersMap.TryGetValue(messageHandlerIdentifier, out socketIdentifiers))
+                    if (messageHandlersMap.Find(ref _, out socketIdentifiers))
                     {
                         socketIdentifiers.Remove(socketIdentifier);
                         if (!socketIdentifiers.Any())
@@ -112,6 +115,9 @@ namespace rawf.Connectivity
                     }
                 }
                 socketToMessageMap.Remove(socketIdentifier);
+
+                logger.Debug($"External route removed Uri:{uri.AbsolutePath} " +
+                             $"{nameof(socketIdentifier.Identity)}:{socketIdentifier.Identity.GetString()}");
             }
         }
     }
