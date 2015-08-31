@@ -1,4 +1,4 @@
-﻿using rawf.Client;
+﻿using kino.Client;
 
 namespace Client
 {

@@ -5,9 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Client.Messages;
-using rawf.Client;
-using rawf.Connectivity;
-using rawf.Messaging;
+using kino.Client;
+using kino.Connectivity;
+using kino.Messaging;
 using static System.Console;
 
 namespace Client

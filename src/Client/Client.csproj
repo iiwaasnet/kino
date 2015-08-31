@@ -90,13 +90,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\rawf.Client\rawf.Client.csproj">
+    <ProjectReference Include="..\kino.Client\kino.Client.csproj">
       <Project>{2c69ba32-dadc-4e4e-8d91-055fb9d35bff}</Project>
-      <Name>rawf.Client</Name>
+      <Name>kino.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\rawf\rawf.csproj">
+    <ProjectReference Include="..\kino\kino.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
-      <Name>rawf</Name>
+      <Name>kino</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

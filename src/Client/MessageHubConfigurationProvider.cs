@@ -1,5 +1,5 @@
 ﻿using System;
-using rawf.Client;
+using kino.Client;
 using TypedConfigProvider;
 
 namespace Client

@@ -87,13 +87,13 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\rawf.Actors\rawf.Actors.csproj">
+    <ProjectReference Include="..\kino.Actors\kino.Actors.csproj">
       <Project>{3231a7b7-c50a-4062-b5ed-ba00fce9a77b}</Project>
-      <Name>rawf.Actors</Name>
+      <Name>kino.Actors</Name>
     </ProjectReference>
-    <ProjectReference Include="..\rawf\rawf.csproj">
+    <ProjectReference Include="..\kino\kino.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
-      <Name>rawf</Name>
+      <Name>kino</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

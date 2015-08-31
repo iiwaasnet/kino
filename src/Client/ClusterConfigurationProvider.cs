@@ -1,5 +1,5 @@
-using rawf.Connectivity;
-using rawf.Diagnostics;
+using kino.Connectivity;
+using kino.Diagnostics;
 
 namespace Client
 {

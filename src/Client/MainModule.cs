@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using Autofac;
-using rawf.Client;
-using rawf.Connectivity;
-using rawf.Framework;
-using rawf.Messaging;
+using kino.Client;
+using kino.Connectivity;
+using kino.Framework;
+using kino.Messaging;
 using TypedConfigProvider;
 
 namespace Client
@@ -12,7 +12,7 @@ namespace Client
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterModule(new rawf.Client.MainModule());
+            builder.RegisterModule(new kino.Client.MainModule());
 
             builder.RegisterType<ConfigProvider>()
                    .As<IConfigProvider>()

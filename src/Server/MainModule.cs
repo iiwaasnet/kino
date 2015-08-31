@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Autofac;
-using rawf.Actors;
-using rawf.Connectivity;
+using kino.Actors;
+using kino.Connectivity;
 using Server.Actors;
 using TypedConfigProvider;
 
@@ -11,7 +11,7 @@ namespace Server
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterModule(new rawf.Actors.MainModule());
+            builder.RegisterModule(new kino.Actors.MainModule());
 
           builder.RegisterType<RevertStringActor>()
             .As<IActor>()
