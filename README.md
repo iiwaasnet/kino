@@ -96,3 +96,20 @@ var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
 var promise = messageHub.EnqueueRequest(request, callbackPoint);
 var response = promise.GetResponse().Result.GetPayload<EhlloMessage>();
 ```
+
+## Starting Actors
+```csharp
+// ctor parameters are omitted for clarity
+var messageRouter = new MessageRouter(...);
+messageRouter.Start();
+
+var clusterMonitor = new ClusterMonitor(...);
+clusterMonitor.Start();
+
+var actorHost = new ActorHost(...);
+actorHost.Start();
+foreach (IActor actor in GetAvailableActors())
+{
+    actorHost.AssignActor(actor);
+}
+```
