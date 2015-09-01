@@ -1,6 +1,6 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/khn5imataa5uw4oj?svg=true)](https://ci.appveyor.com/project/iiwaasnet/kino)
 # Kino - framework for building Actors networks
-
+*(Project is in development)*
 ## In a nutshell
 
 A kino **Actor** exposes some piece of functionality accessible over the network by declaring the incoming message type it is able to process. 
@@ -26,3 +26,8 @@ Rendezvous server broadcasts:
   * Pong response from all the registered nodes to all registered nodes.
 
 Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build a fault-tolorent cluster.
+
+## Some details
+All communication between Actors happens by message passing. Messages are distinguished by **Identity**, i.e. string representation of message type. There are two distribution patterns for a message: unicast and broadcast. Messages of the latest type are sent to **all** registered Actors, which can handle this type of message.
+
+[NetMQ](https://github.com/zeromq/netmq) is selected as a transport.
