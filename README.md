@@ -27,6 +27,10 @@ Rendezvous server broadcasts:
 
 Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build a fault-tolorent cluster.
 
+
+**MessageHub** is one of the ways to send messages into Actors network. It a *starting point of the flow*. First message sent from MessageHub gets CorrelationId assigned, which is then copied to any other messages, created during the message flow. It is possible to create a *callback point*, which allows to route back to the caller the message, on which the callback is defined. Thus, clients may emulate a synchronous call, waiting for the callback to be resolved with the resulting message or exception.
+
+
 ## Some details
 All communication between Actors happens by message passing. Messages are distinguished by **Identity**, i.e. string representation of message type. There are two distribution patterns for a message: unicast and broadcast. Messages of the latest type are sent to **all** registered Actors, which can handle this type of message.
 
