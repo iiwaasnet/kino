@@ -34,12 +34,20 @@ namespace Client
             request.TraceOptions = MessageTraceOptions.None;
             var callbackPoint = new CallbackPoint(GroupCharsResponseMessage.MessageIdentity);
             var promise = messageHub.EnqueueRequest(request, callbackPoint);
-            var response = promise.GetResponse().Result.GetPayload<GroupCharsResponseMessage>();
-
-            WriteLine($"Text: {response.Text}");
-            foreach (var groupInfo in response.Groups)
+            var timeout = TimeSpan.FromSeconds(4);
+            if (promise.GetResponse().Wait(timeout))
             {
-                WriteLine($"Char: {groupInfo.Char} - {groupInfo.Count} times");
+                var response = promise.GetResponse().Result.GetPayload<GroupCharsResponseMessage>();
+
+                WriteLine($"Text: {response.Text}");
+                foreach (var groupInfo in response.Groups)
+                {
+                    WriteLine($"Char: {groupInfo.Char} - {groupInfo.Count} times");
+                }
+            }
+            else
+            {
+                WriteLine($"Call timedout after {timeout.TotalSeconds} sec.");
             }
 
             ReadLine();
