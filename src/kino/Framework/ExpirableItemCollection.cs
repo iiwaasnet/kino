@@ -43,6 +43,7 @@ namespace kino.Framework
             checkExpirableItems.Wait();
             checkExpirableItems.Dispose();
             tokenSource.Dispose();
+            additionQueue.Dispose();
         }
 
         public IExpirableItem Delay(T item, TimeSpan expireAfter)
@@ -60,17 +61,24 @@ namespace kino.Framework
             {
                 while (!token.IsCancellationRequested)
                 {
-                    var smallestDelay = (expirableItems.Any())
-                                            ? expirableItems.FindMin().ExpireAfter
-                                            : Timeout.Infinite;
-                    var reason = WaitHandle.WaitAny(new[] {itemAdded, token.WaitHandle}, smallestDelay);
-                    if (reason != ProcessTerminated)
+                    try
                     {
-                        if (reason == ItemAdded)
+                        var smallestDelay = (expirableItems.Any())
+                                                ? expirableItems.FindMin().ExpireAfter
+                                                : Timeout.Infinite;
+                        var reason = WaitHandle.WaitAny(new[] {itemAdded, token.WaitHandle}, smallestDelay);
+                        if (reason != ProcessTerminated)
                         {
-                            AddEnqueuedItems();
+                            if (reason == ItemAdded)
+                            {
+                                AddEnqueuedItems();
+                            }
+                            DeleteExpiredItems();
                         }
-                        DeleteExpiredItems();
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
                     }
                 }
             }
@@ -80,10 +88,6 @@ namespace kino.Framework
             catch (Exception err)
             {
                 logger.Error(err);
-            }
-            finally
-            {
-                additionQueue.Dispose();
             }
         }
 
