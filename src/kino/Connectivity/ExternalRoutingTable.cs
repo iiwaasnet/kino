@@ -119,7 +119,7 @@ namespace kino.Connectivity
                 }
                 socketToMessageMap.Remove(socketIdentifier);
 
-                logger.Debug($"External route removed Uri:{uri.AbsolutePath} " +
+                logger.Debug($"External route removed Uri:{uri.AbsoluteUri} " +
                              $"Socket:{socketIdentifier.Identity.GetString()}");
             }
         }
