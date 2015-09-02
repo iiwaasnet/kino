@@ -10,6 +10,7 @@ namespace kino.Rendezvous
         {
             config = new RendezvousConfiguration
                      {
+                         ServiceName = appConfig.ServiceName,
                          MulticastUri = new Uri(appConfig.BroadcastUri),
                          UnicastUri = new Uri(appConfig.UnicastUri),
                          PingInterval = appConfig.PingInterval

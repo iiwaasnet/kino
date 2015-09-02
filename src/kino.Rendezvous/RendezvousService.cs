@@ -74,6 +74,9 @@ namespace kino.Rendezvous
                                 }
                                 wait.Wait(config.PingInterval, token);
                             }
+                            catch (OperationCanceledException)
+                            {
+                            }
                             catch (Exception err)
                             {
                                 logger.Error(err);
