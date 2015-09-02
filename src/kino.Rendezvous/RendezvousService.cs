@@ -63,14 +63,21 @@ namespace kino.Rendezvous
 
                         while (!token.IsCancellationRequested)
                         {
-                            var message = NodeIsLeader()
-                                              ? Message.Create(new PingMessage(), PingMessage.MessageIdentity)
-                                              : CreateNotLeaderMessage();
-                            if (message != null)
+                            try
                             {
-                                pingNotificationSocket.SendMessage(message);
+                                var message = NodeIsLeader()
+                                                  ? Message.Create(new PingMessage(), PingMessage.MessageIdentity)
+                                                  : CreateNotLeaderMessage();
+                                if (message != null)
+                                {
+                                    pingNotificationSocket.SendMessage(message);
+                                }
+                                wait.Wait(config.PingInterval, token);
                             }
-                            wait.Wait(config.PingInterval, token);
+                            catch (Exception err)
+                            {
+                                logger.Error(err);
+                            }
                         }
                     }
                 }
@@ -101,13 +108,20 @@ namespace kino.Rendezvous
                         gateway.SignalAndWait(token);
                         while (!token.IsCancellationRequested)
                         {
-                            var message = unicastSocket.ReceiveMessage(token);
-
-                            message = (NodeIsLeader()) ? message : CreateNotLeaderMessage();
-
-                            if (message != null)
+                            try
                             {
-                                broadcastSocket.SendMessage(message);
+                                var message = unicastSocket.ReceiveMessage(token);
+
+                                message = (NodeIsLeader()) ? message : CreateNotLeaderMessage();
+
+                                if (message != null)
+                                {
+                                    broadcastSocket.SendMessage(message);
+                                }
+                            }
+                            catch (Exception err)
+                            {
+                                logger.Error(err);
                             }
                         }
                     }
