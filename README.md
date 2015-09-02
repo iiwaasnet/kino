@@ -3,11 +3,11 @@
 *(Project is in development)*
 ## In a nutshell
 
-A kino **Actor** exposes some piece of functionality accessible over the network by declaring the incoming message type it is able to process. 
+In *kino*, an **Actor** exposes a piece of functionality, accessible over the network, by declaring incoming message types it is able to process.
 Actor receives an input message and may send one or more output messages, either synchronously or asynchronously. Actors are hosted by an ActorHost.
 
 
-All Actors, hosted by the same **ActorHost**, share same "mailbox" thread, i.e. until previously fetched message is not passed to an Actor, the next one is waiting in the queue.
+All Actors, hosted by the same **ActorHost**, share same receiving thread, i.e. until previously fetched message is not passed to an Actor, the next one is waiting in the queue.
 ActorHost is a unit of in-proc scaling. Every ActorHost connectes to a MessageRouter.
 
 
