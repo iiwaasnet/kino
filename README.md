@@ -113,3 +113,8 @@ foreach (IActor actor in GetAvailableActors())
     actorHost.AssignActor(actor);
 }
 ```
+Please, check [Sample](https://github.com/iiwaasnet/kino/tree/master/src/Sample) folder for Client & Server examples.
+
+I would be glad to answer your questions, hear suggestions or feedback :)
+
+**Powered by: [NetMQ](https://github.com/zeromq/netmq)**
