@@ -22,7 +22,7 @@ namespace kino.Rendezvous.Consensus
         private readonly ILogger logger;
         private static readonly byte[] All = new byte[0];
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
-        private static TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
+        private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public IntercomMessageHub(ISocketFactory socketFactory,
                                   ISynodConfiguration synodConfig,
@@ -62,6 +62,7 @@ namespace kino.Rendezvous.Consensus
         public void Stop()
         {
             cancellationTokenSource.Cancel();
+            inMessageQueue.CompleteAdding();
             multicastReceiving.Wait(TerminationWaitTimeout);
             unicastReceiving.Wait(TerminationWaitTimeout);
             sending.Wait(TerminationWaitTimeout);
@@ -72,54 +73,43 @@ namespace kino.Rendezvous.Consensus
 
         private void SendMessages(CancellationToken token, Barrier gateway)
         {
-            try
+            using (var socket = CreateSendingSocket())
             {
-                using (var socket = CreateSendingSocket())
-                {
-                    gateway.SignalAndWait(token);
+                gateway.SignalAndWait(token);
 
-                    foreach (var intercomMessage in outMessageQueue.GetConsumingEnumerable(token))
-                    {
-                        var message = (Message) intercomMessage.Message;
-                        message.SetSocketIdentity(intercomMessage.Receiver);
-                        socket.SendMessage(message);
-                    }
+                foreach (var intercomMessage in outMessageQueue.GetConsumingEnumerable(token))
+                {
+                    var message = (Message) intercomMessage.Message;
+                    message.SetSocketIdentity(intercomMessage.Receiver);
+                    socket.SendMessage(message);
                 }
-            }
-            finally
-            {
-                inMessageQueue.Dispose();
             }
         }
 
         private void ReceiveMessages(CancellationToken token, Barrier gateway, Func<ISocket> socketBuilder)
         {
-            try
+            using (var socket = socketBuilder())
             {
-                using (var socket = socketBuilder())
-                {
-                    gateway.SignalAndWait(token);
+                gateway.SignalAndWait(token);
 
-                    while (!token.IsCancellationRequested)
+                while (!token.IsCancellationRequested)
+                {
+                    try
                     {
-                        try
+                        var message = socket.ReceiveMessage(token);
+                        if (message != null)
                         {
-                            var message = socket.ReceiveMessage(token);
-                            if (message != null)
-                            {
-                                inMessageQueue.Add(message, token);
-                            }
-                        }
-                        catch (Exception err)
-                        {
-                            logger.Error(err);
+                            inMessageQueue.Add(message, token);
                         }
                     }
+                    catch (OperationCanceledException)
+                    {
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
+                    }
                 }
-            }
-            finally
-            {
-                inMessageQueue.Dispose();
             }
         }
 
@@ -153,7 +143,7 @@ namespace kino.Rendezvous.Consensus
             socket.Bind(synodConfig.LocalNode.Uri);
 
             return socket;
-        }        
+        }
 
         public IListener Subscribe()
         {
@@ -190,8 +180,6 @@ namespace kino.Rendezvous.Consensus
                     logger.Error(err);
                 }
             }
-
-            inMessageQueue.Dispose();
         }
 
         private void Unsubscribe(Listener listener)

@@ -50,7 +50,6 @@ namespace kino.Rendezvous.Consensus
 
         public void Dispose()
         {
-            register.Dispose();
             leaseTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             leaseTimer.Dispose();
             register.Dispose();
