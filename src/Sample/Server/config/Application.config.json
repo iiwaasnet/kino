@@ -1,7 +1,6 @@
 ﻿{
   "dev": {
     "routerUri": "inproc://router",
-    //"routerUri": "tcp://127.0.0.1:5100",
     "scaleOutAddressUri": "tcp://127.0.0.1:5101",
     "pingSilenceBeforeRendezvousFailover": "00:00:20",
     "pongSilenceBeforeRouteDeletion": "00:00:10",

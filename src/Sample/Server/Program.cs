@@ -18,6 +18,7 @@ namespace Server
 
             var messageRouter = container.Resolve<IMessageRouter>();
             messageRouter.Start();
+            // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
             Thread.Sleep(TimeSpan.FromMilliseconds(30));
 
             var ccMon = container.Resolve<IClusterMonitor>();
