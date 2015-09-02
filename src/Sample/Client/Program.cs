@@ -27,7 +27,7 @@ namespace Client
             var messageHub = container.Resolve<IMessageHub>();
             messageHub.Start();
 
-            Thread.Sleep(TimeSpan.FromSeconds(2));
+            Thread.Sleep(TimeSpan.FromSeconds(5));
             WriteLine($"Client is running... {DateTime.Now}");
 
             var request = Message.CreateFlowStartMessage(new HelloMessage {Greeting = Guid.NewGuid().ToString()}, HelloMessage.MessageIdentity);
