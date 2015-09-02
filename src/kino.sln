@@ -20,11 +20,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Actors", "kino.Actors\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Rendezvous", "kino.Rendezvous\kino.Rendezvous.csproj", "{4680D77E-3310-4FF1-ADBF-D728C3E1C317}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{B3967666-2296-4B28-BFD8-0ED4326E29C7}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{B3967666-2296-4B28-BFD8-0ED4326E29C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Sample\Client\Client.csproj", "{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Samples\Client\Client.csproj", "{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Sample\Server\Server.csproj", "{D5C12074-CAB2-4AED-96BC-AC322DEF4173}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Samples\Server\Server.csproj", "{D5C12074-CAB2-4AED-96BC-AC322DEF4173}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
