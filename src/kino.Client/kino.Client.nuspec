@@ -7,7 +7,7 @@
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
         <licenseUrl>https://github.com/iiwaasnet/kino/blob/master/LICENSE</licenseUrl>
-		<iconUrl>https://raw.githubusercontent.com/iiwaasnet/kino/master/img/kino-50x50.png</iconUrl>
+		<iconUrl>https://cdn.rawgit.com/iiwaasnet/kino/master/img/kino-50x50.png</iconUrl>
         <projectUrl>https://github.com/iiwaasnet/kino</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>kino is a framework for building actors networks.</description>
