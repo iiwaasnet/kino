@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace kino.Rendezvous
+namespace kino.Rendezvous.Configuration
 {
     public class SynodConfiguration
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using kino.Rendezvous.Consensus;
 
-namespace kino.Rendezvous
+namespace kino.Rendezvous.Configuration
 {
     public class SynodConfigurationProvider : ISynodConfigurationProvider
     {

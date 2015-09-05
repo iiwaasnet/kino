@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using kino.Rendezvous.Configuration;
 using kino.Rendezvous.Consensus;
 using kino.Sockets;
 using TypedConfigProvider;

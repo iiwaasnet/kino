@@ -5,6 +5,7 @@ using kino.Diagnostics;
 using kino.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
+using kino.Rendezvous.Configuration;
 using kino.Rendezvous.Consensus;
 using kino.Sockets;
 

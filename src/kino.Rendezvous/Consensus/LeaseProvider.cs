@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using kino.Diagnostics;
+using kino.Rendezvous.Configuration;
 
 namespace kino.Rendezvous.Consensus
 {

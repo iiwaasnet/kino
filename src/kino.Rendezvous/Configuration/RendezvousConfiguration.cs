@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace kino.Rendezvous
+namespace kino.Rendezvous.Configuration
 {
     public class RendezvousConfiguration
     {

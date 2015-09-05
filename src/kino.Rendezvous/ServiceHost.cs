@@ -6,9 +6,9 @@ using Topshelf.HostConfigurators;
 
 namespace kino.Rendezvous
 {
-    internal class Program
+    public class ServiceHost
     {
-        private static void Main(string[] args)
+        public static void Run()
             => HostFactory.Run(CreateServiceConfiguration);
 
         private static void CreateServiceConfiguration(HostConfigurator x)

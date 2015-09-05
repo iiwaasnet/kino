@@ -1,6 +1,6 @@
 ﻿using kino.Rendezvous.Consensus;
 
-namespace kino.Rendezvous
+namespace kino.Rendezvous.Configuration
 {
     public class LeaseConfigurationProvider : ILeaseConfigurationProvider
     {
