@@ -35,5 +35,6 @@
         <file src="config\NLog.config" target="content\net46\config\NLog.config" />
         <file src="bin\release\kino.dll" target="lib\net46\kino.dll" />
         <file src="bin\release\kino.Rendezvous.exe" target="lib\net46\kino.Rendezvous.exe" />
+		<file src="bin\release\kino.Rendezvous.exe.config" target="lib\net46\kino.Rendezvous.exe.config" />
     </files>
 </package>
