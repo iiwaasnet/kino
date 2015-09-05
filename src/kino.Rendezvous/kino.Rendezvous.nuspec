@@ -7,8 +7,8 @@
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
         <licenseUrl>https://github.com/iiwaasnet/kino/blob/master/LICENSE</licenseUrl>
-		<iconUrl>https://raw.githubusercontent.com/iiwaasnet/kino/master/img/kino-50x50.png</iconUrl>
         <projectUrl>https://github.com/iiwaasnet/kino</projectUrl>
+        <iconUrl>https://raw.githubusercontent.com/iiwaasnet/kino/master/img/kino-50x50.png</iconUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>kino is a framework for building actors networks.</description>
         <releaseNotes>This is a preview version of the framework!
@@ -31,6 +31,8 @@
         </dependencies>
     </metadata>
     <files>
+        <file src="config\Application.config.json" target="content\net46\config\Application.config.json" />
+        <file src="config\NLog.config" target="content\net46\config\NLog.config" />
         <file src="bin\release\kino.dll" target="lib\net46\kino.dll" />
         <file src="bin\release\kino.Rendezvous.exe" target="lib\net46\kino.Rendezvous.exe" />
     </files>
