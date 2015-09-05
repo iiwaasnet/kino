@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Autofac.Configuration;
 using Topshelf;
 using Topshelf.HostConfigurators;
 
@@ -13,6 +14,7 @@ namespace kino.Rendezvous
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule(new MainModule());
+            builder.RegisterModule(new ConfigurationSettingsReader("autofac"));
             var container = builder.Build();
 
             var config = container.Resolve<RendezvousConfiguration>();
