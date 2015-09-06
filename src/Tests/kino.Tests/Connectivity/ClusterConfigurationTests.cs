@@ -70,10 +70,10 @@ namespace kino.Tests.Connectivity
             config.AddClusterMember(ep2);
 
             var pingTime = DateTime.UtcNow;
-            Thread.Sleep(timingConfiguration.PongSilenceBeforeRouteDeletion);
+            var pingDelay = TimeSpan.FromSeconds(3);
+            Thread.Sleep(timingConfiguration.PongSilenceBeforeRouteDeletion + pingDelay);
 
             config.KeepAlive(ep1);
-
             
             CollectionAssert.Contains(config.GetDeadMembers(pingTime), ep2);
             CollectionAssert.DoesNotContain(config.GetDeadMembers(pingTime), ep1);
