@@ -6,11 +6,9 @@ namespace kino.Connectivity
     public interface IClusterConfiguration
     {
         IEnumerable<SocketEndpoint> GetClusterMembers();
-        IEnumerable<SocketEndpoint> GetDeadMembers();
+        IEnumerable<SocketEndpoint> GetDeadMembers(DateTime pingTime);
         void AddClusterMember(SocketEndpoint node);
         void DeleteClusterMember(SocketEndpoint node);
-        bool KeepAlive(SocketEndpoint node);
-        TimeSpan PingSilenceBeforeRendezvousFailover { get; }
-        TimeSpan PongSilenceBeforeRouteDeletion { get; } 
+        bool KeepAlive(SocketEndpoint node);        
     }
 }

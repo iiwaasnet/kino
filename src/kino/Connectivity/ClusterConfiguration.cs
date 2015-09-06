@@ -11,9 +11,13 @@ namespace kino.Connectivity
     {
         private readonly ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta> clusterMembers;
         private readonly ILogger logger;
+        private DateTime lastPingTime;
+        private readonly ClusterTimingConfiguration timingConfiguration;
 
-        public ClusterConfiguration(ILogger logger)
+        public ClusterConfiguration(ClusterTimingConfiguration timingConfiguration,  ILogger logger)
         {
+            lastPingTime = DateTime.UtcNow;
+            this.timingConfiguration = timingConfiguration;
             this.logger = logger;
             clusterMembers = new ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta>();
         }
@@ -43,13 +47,23 @@ namespace kino.Connectivity
             return updated;
         }
 
-        public IEnumerable<SocketEndpoint> GetDeadMembers()
+        public IEnumerable<SocketEndpoint> GetDeadMembers(DateTime pingTime)
         {
             var now = DateTime.UtcNow;
+            var pingDelay = CalculatePingDelay(pingTime);
+            lastPingTime = pingTime;
+            
             return clusterMembers
-                .Where(mem => now - mem.Value.LastKnownPong > PongSilenceBeforeRouteDeletion)
+                .Where(mem => now - mem.Value.LastKnownPong - pingDelay > timingConfiguration.PongSilenceBeforeRouteDeletion)
                 .Select(mem => mem.Key)
                 .ToList();
+        }
+
+        private TimeSpan CalculatePingDelay(DateTime pingTime)
+        {
+            var pingDelay = pingTime - lastPingTime - timingConfiguration.ExpectedPingInterval;
+
+            return (pingDelay <= TimeSpan.Zero) ? TimeSpan.Zero : pingDelay;
         }
 
         public void DeleteClusterMember(SocketEndpoint node)
@@ -60,8 +74,5 @@ namespace kino.Connectivity
             logger.Debug($"Dead route removed Uri:{node.Uri.AbsoluteUri} " +
                              $"Socket:{node.Identity.GetString()}");
         }
-
-        public TimeSpan PingSilenceBeforeRendezvousFailover { get; set; }
-        public TimeSpan PongSilenceBeforeRouteDeletion { get; set; }
     }
 }

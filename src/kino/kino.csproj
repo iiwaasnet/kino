@@ -66,6 +66,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Connectivity\ActorResult.cs" />
+    <Compile Include="Connectivity\ClusterTimingConfiguration.cs" />
     <Compile Include="Connectivity\ExternalRoutingTable.cs" />
     <Compile Include="Connectivity\IActorResult.cs" />
     <Compile Include="Connectivity\IExternalRoutingTable.cs" />

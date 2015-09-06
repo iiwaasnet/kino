@@ -28,15 +28,18 @@ namespace kino.Connectivity
         private readonly IRendezvousConfiguration rendezvousConfiguration;
         private ISocket clusterMonitorSubscriptionSocket;
         private ISocket clusterMonitorSendingSocket;
+        private readonly ClusterTimingConfiguration timingConfiguration;
         private readonly ILogger logger;
 
         public ClusterMonitor(ISocketFactory socketFactory,
                               RouterConfiguration routerConfiguration,
                               IClusterConfiguration clusterConfiguration,
+                              ClusterTimingConfiguration timingConfiguration,
                               IRendezvousConfiguration rendezvousConfiguration,
                               ILogger logger)
         {
             this.logger = logger;
+            this.timingConfiguration = timingConfiguration;
             pingReceived = new ManualResetEventSlim(false);
             newRendezvousLeaderSelected = new ManualResetEventSlim(false);
             this.socketFactory = socketFactory;
@@ -125,7 +128,7 @@ namespace kino.Connectivity
         {
             const int NewLeaderElected = 1;
             var result = WaitHandle.WaitAny(new[] {pingReceived.WaitHandle, newRendezvousLeaderSelected.WaitHandle},
-                                            clusterConfiguration.PingSilenceBeforeRendezvousFailover);
+                                            timingConfiguration.PingSilenceBeforeRendezvousFailover);
             if (result == WaitHandle.WaitTimeout)
             {
                 rendezvousConfiguration.RotateRendezvousServers();
@@ -289,7 +292,7 @@ namespace kino.Connectivity
                 pingReceived.Set();
                 SendPong();
 
-                UnregisterDeadNodes(routerNotificationSocket);
+                UnregisterDeadNodes(routerNotificationSocket, DateTime.UtcNow);
             }
 
             return shouldHandle;
@@ -466,9 +469,9 @@ namespace kino.Connectivity
                          $"Socket:{payload.SocketIdentity.GetString()}");
         }
 
-        private void UnregisterDeadNodes(ISocket routerNotificationSocket)
+        private void UnregisterDeadNodes(ISocket routerNotificationSocket, DateTime pingTime)
         {
-            foreach (var deadNode in clusterConfiguration.GetDeadMembers())
+            foreach (var deadNode in clusterConfiguration.GetDeadMembers(pingTime))
             {
                 var message = Message.Create(new UnregisterMessageHandlersRoutingMessage
                                              {

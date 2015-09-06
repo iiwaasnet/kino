@@ -11,17 +11,23 @@ namespace kino.Tests.Connectivity
     public class ClusterConfigurationTests
     {
         private ILogger logger;
+        private ClusterTimingConfiguration timingConfiguration;
 
         [SetUp]
         public void Setup()
         {
+            timingConfiguration = new ClusterTimingConfiguration
+            {
+                ExpectedPingInterval = TimeSpan.FromSeconds(2),
+                PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(4)
+            };
             logger = new Mock<ILogger>().Object;
         }
 
         [Test]
         public void TestAddClusterMember()
         {
-            var config = new ClusterConfiguration(logger);
+            var config = new ClusterConfiguration(timingConfiguration, logger);
             var localhost = "tcp://127.0.0.1:40";
             var ep1 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
             var ep2 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
@@ -35,7 +41,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void TestDeleteClusterMember()
         {
-            var config = new ClusterConfiguration(logger);
+            var config = new ClusterConfiguration(timingConfiguration, logger);
             var localhost = "tcp://127.0.0.1:40";
             var ep1 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
             var ep2 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
@@ -56,22 +62,21 @@ namespace kino.Tests.Connectivity
         [Test]
         public void TestNodeConsideredDead_IfLastKnownPongWasLongerThanPongSilenceBeforeRouteDeletionAgo()
         {
-            var config = new ClusterConfiguration(logger)
-                         {
-                             PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(2)
-                         };
+            var config = new ClusterConfiguration(timingConfiguration, logger);
             var localhost = "tcp://127.0.0.1:40";
             var ep1 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
             var ep2 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
             config.AddClusterMember(ep1);
             config.AddClusterMember(ep2);
 
-            Thread.Sleep(config.PongSilenceBeforeRouteDeletion);
+            var pingTime = DateTime.UtcNow;
+            Thread.Sleep(timingConfiguration.PongSilenceBeforeRouteDeletion);
 
             config.KeepAlive(ep1);
 
-            CollectionAssert.Contains(config.GetDeadMembers(), ep2);
-            CollectionAssert.DoesNotContain(config.GetDeadMembers(), ep1);
+            
+            CollectionAssert.Contains(config.GetDeadMembers(pingTime), ep2);
+            CollectionAssert.DoesNotContain(config.GetDeadMembers(pingTime), ep1);
         }
     }
 }

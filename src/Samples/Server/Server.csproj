@@ -91,7 +91,9 @@
     <Compile Include="Actors\RevertStringActor.cs" />
     <Compile Include="ApplicationConfiguration.cs" />
     <Compile Include="ClusterConfigurationProvider.cs" />
+    <Compile Include="ClusterTimingConfigurationProvider.cs" />
     <Compile Include="IClusterConfigurationProvider.cs" />
+    <Compile Include="IClusterTimingConfigurationProvider.cs" />
     <Compile Include="IRendezvousEndpointsProvider.cs" />
     <Compile Include="Messages\GroupCharsResponseMessage.cs" />
     <Compile Include="Messages\GroupCharsRequestMessage.cs" />

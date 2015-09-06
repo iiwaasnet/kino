@@ -9,11 +9,13 @@ namespace Server
 
         public ClusterConfigurationProvider(ApplicationConfiguration appConfig, ILogger logger)
         {
-            config = new ClusterConfiguration(logger)
-                     {
-                         PingSilenceBeforeRendezvousFailover = appConfig.PingSilenceBeforeRendezvousFailover,
-                         PongSilenceBeforeRouteDeletion = appConfig.PongSilenceBeforeRouteDeletion,
-                     };
+            config = new ClusterConfiguration(new ClusterTimingConfiguration
+                                              {
+                                                  PingSilenceBeforeRendezvousFailover = appConfig.PingSilenceBeforeRendezvousFailover,
+                                                  PongSilenceBeforeRouteDeletion = appConfig.PongSilenceBeforeRouteDeletion,
+                                                  ExpectedPingInterval = appConfig.ExpectedPingInterval
+                                              },
+                                              logger);
         }
 
         public IClusterConfiguration GetConfiguration()

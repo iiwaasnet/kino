@@ -54,6 +54,14 @@ namespace Server
             builder.RegisterType<RendezvousEndpointsProvider>()
                    .As<IRendezvousEndpointsProvider>()
                    .SingleInstance();
+
+            builder.RegisterType<ClusterTimingConfigurationProvider>()
+                   .As<IClusterTimingConfigurationProvider>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IClusterTimingConfigurationProvider>().GetConfiguration())
+                   .As<ClusterTimingConfiguration>()
+                   .SingleInstance();
         }
     }
 }

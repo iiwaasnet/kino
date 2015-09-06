@@ -89,8 +89,10 @@
   <ItemGroup>
     <Compile Include="ApplicationConfiguration.cs" />
     <Compile Include="ClusterConfigurationProvider.cs" />
+    <Compile Include="ClusterTimingConfigurationProvider.cs" />
     <Compile Include="ExpirableItemCollectionConfiguration.cs" />
     <Compile Include="ExpirableItemCollectionConfigurationProvider.cs" />
+    <Compile Include="IClusterTimingConfigurationProvider.cs" />
     <Compile Include="IExpirableItemCollectionConfigurationProvider.cs" />
     <Compile Include="IRendezvousEndpointsProvider.cs" />
     <Compile Include="IMessageHubConfigurationProvider.cs" />

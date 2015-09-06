@@ -28,10 +28,16 @@ namespace kino.Tests.Backend
         private Mock<IClusterMonitor> clusterMonitor;
         private MessageRouterSocketFactory messageRouterSocketFactory;
         private Mock<IMessageTracer> messageTracer;
+        private ClusterTimingConfiguration timingConfiguration;
 
         [SetUp]
         public void Setup()
         {
+            timingConfiguration = new ClusterTimingConfiguration
+                                  {
+                                      ExpectedPingInterval = TimeSpan.FromSeconds(5),
+                                      PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(10)
+                                  };
             routerConfiguration = new RouterConfiguration
                                   {
                                       ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew()),
@@ -52,7 +58,7 @@ namespace kino.Tests.Backend
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
                                            new ExternalRoutingTable(logger),
-                                           new ClusterConfiguration(logger),
+                                           new ClusterConfiguration(timingConfiguration, logger),
                                            routerConfiguration,
                                            clusterMonitor.Object,
                                            messageTracer.Object,
@@ -77,7 +83,7 @@ namespace kino.Tests.Backend
             var router = new MessageRouter(socketFactory.Object,
                                            internalRoutingTable,
                                            new ExternalRoutingTable(logger),
-                                           new ClusterConfiguration(logger),
+                                           new ClusterConfiguration(timingConfiguration, logger),
                                            routerConfiguration,
                                            clusterMonitor.Object,
                                            messageTracer.Object,
@@ -126,7 +132,7 @@ namespace kino.Tests.Backend
             var router = new MessageRouter(socketFactory.Object,
                                            internalRoutingTable.Object,
                                            new ExternalRoutingTable(logger),
-                                           new ClusterConfiguration(logger),
+                                           new ClusterConfiguration(timingConfiguration, logger),
                                            routerConfiguration,
                                            clusterMonitor.Object,
                                            messageTracer.Object,
@@ -166,7 +172,7 @@ namespace kino.Tests.Backend
             var router = new MessageRouter(socketFactory.Object,
                                            messageHandlerStack.Object,
                                            new ExternalRoutingTable(logger),
-                                           new ClusterConfiguration(logger),
+                                           new ClusterConfiguration(timingConfiguration, logger),
                                            routerConfiguration,
                                            clusterMonitor.Object,
                                            messageTracer.Object,
@@ -195,13 +201,10 @@ namespace kino.Tests.Backend
             externalRoutingTable.Setup(m => m.Pop(It.IsAny<MessageHandlerIdentifier>()))
                                 .Returns(new SocketIdentifier(Guid.NewGuid().ToByteArray()));
 
-            //externalRoutingTable.Setup(m => m.Pop(new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity)))
-            //                    .Returns(new SocketIdentifier(Guid.NewGuid().ToByteArray()));
-
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
                                            externalRoutingTable.Object,
-                                           new ClusterConfiguration(logger),
+                                           new ClusterConfiguration(timingConfiguration, logger),
                                            routerConfiguration,
                                            clusterMonitor.Object,
                                            messageTracer.Object,
@@ -229,7 +232,7 @@ namespace kino.Tests.Backend
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
                                            new ExternalRoutingTable(logger),
-                                           new ClusterConfiguration(logger),
+                                           new ClusterConfiguration(timingConfiguration, logger),
                                            routerConfiguration,
                                            clusterMonitor.Object,
                                            messageTracer.Object,
