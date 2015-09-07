@@ -4,7 +4,6 @@
     "scaleOutAddressUri": "tcp://127.0.0.1:5101",
     "pingSilenceBeforeRendezvousFailover": "00:00:20",
     "pongSilenceBeforeRouteDeletion": "00:00:10",
-    "expectedPingInterval": "00:00:05",
 
     "rendezvousServers": [
       {

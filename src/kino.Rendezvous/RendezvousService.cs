@@ -61,13 +61,14 @@ namespace kino.Rendezvous
                     using (var pingNotificationSocket = CreatePingNotificationSocket())
                     {
                         gateway.SignalAndWait(token);
+                        var pingId = 0UL;
 
                         while (!token.IsCancellationRequested)
                         {
                             try
                             {
                                 var message = NodeIsLeader()
-                                                  ? Message.Create(new PingMessage(), PingMessage.MessageIdentity)
+                                                  ? CreatePing(ref pingId)
                                                   : CreateNotLeaderMessage();
                                 if (message != null)
                                 {
@@ -138,6 +139,16 @@ namespace kino.Rendezvous
             {
                 logger.Error(err);
             }
+        }
+
+        private IMessage CreatePing(ref ulong pingId)
+        {
+            return Message.Create(new PingMessage
+                                  {
+                                      PingId = pingId++,
+                                      PingInterval = config.PingInterval
+                                  },
+                                  PingMessage.MessageIdentity);
         }
 
         private IMessage CreateNotLeaderMessage()

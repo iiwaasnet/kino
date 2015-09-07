@@ -44,13 +44,6 @@ namespace Client
                    .As<RouterConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterConfigurationProvider>()
-                   .As<IClusterConfigurationProvider>()
-                   .SingleInstance();
-            builder.Register(c => c.Resolve<IClusterConfigurationProvider>().GetConfiguration())
-                   .As<IClusterConfiguration>()
-                   .SingleInstance();
-
             builder.RegisterType<ExpirableItemCollectionConfigurationProvider>()
                    .As<IExpirableItemCollectionConfigurationProvider>()
                    .SingleInstance();

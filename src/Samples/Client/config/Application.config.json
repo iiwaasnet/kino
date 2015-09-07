@@ -5,7 +5,6 @@
     "pingSilenceBeforeRendezvousFailover": "00:00:20",
     "pongSilenceBeforeRouteDeletion": "00:00:10",
     "promiseExpirationEvaluationInterval": "00:00:10",
-    "expectedPingInterval": "00:00:05",
 
     "rendezvousServers": [
       {

@@ -35,7 +35,6 @@ namespace kino.Tests.Backend
         {
             timingConfiguration = new ClusterTimingConfiguration
                                   {
-                                      ExpectedPingInterval = TimeSpan.FromSeconds(5),
                                       PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(10)
                                   };
             routerConfiguration = new RouterConfiguration

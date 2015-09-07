@@ -40,13 +40,6 @@ namespace Server
                    .As<RouterConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterConfigurationProvider>()
-                   .As<IClusterConfigurationProvider>()
-                   .SingleInstance();
-            builder.Register(c => c.Resolve<IClusterConfigurationProvider>().GetConfiguration())
-                   .As<IClusterConfiguration>()
-                   .SingleInstance();
-
             builder.Register(c => c.Resolve<IRendezvousEndpointsProvider>().GetConfiguration())
                    .As<IEnumerable<RendezvousEndpoints>>()
                    .SingleInstance();

@@ -10,7 +10,6 @@ namespace Server
         {
             config = new ClusterTimingConfiguration
                      {
-                         ExpectedPingInterval = appConfig.ExpectedPingInterval,
                          PongSilenceBeforeRouteDeletion = appConfig.PongSilenceBeforeRouteDeletion,
                          PingSilenceBeforeRendezvousFailover = appConfig.PingSilenceBeforeRendezvousFailover
                      };

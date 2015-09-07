@@ -47,10 +47,10 @@ namespace kino.Connectivity
             return updated;
         }
 
-        public IEnumerable<SocketEndpoint> GetDeadMembers(DateTime pingTime)
+        public IEnumerable<SocketEndpoint> GetDeadMembers(DateTime pingTime, TimeSpan pingInterval)
         {
             var now = DateTime.UtcNow;
-            var pingDelay = CalculatePingDelay(pingTime);
+            var pingDelay = CalculatePingDelay(pingTime ,pingInterval);
             lastPingTime = pingTime;
             
             return clusterMembers
@@ -59,9 +59,9 @@ namespace kino.Connectivity
                 .ToList();
         }
 
-        private TimeSpan CalculatePingDelay(DateTime pingTime)
+        private TimeSpan CalculatePingDelay(DateTime pingTime, TimeSpan pingInterval)
         {
-            var pingDelay = pingTime - lastPingTime - timingConfiguration.ExpectedPingInterval;
+            var pingDelay = pingTime - lastPingTime - pingInterval;
 
             return (pingDelay <= TimeSpan.Zero) ? TimeSpan.Zero : pingDelay;
         }

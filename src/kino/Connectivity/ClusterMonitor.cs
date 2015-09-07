@@ -290,9 +290,11 @@ namespace kino.Connectivity
             if (shouldHandle)
             {
                 pingReceived.Set();
-                SendPong();
 
-                UnregisterDeadNodes(routerNotificationSocket, DateTime.UtcNow);
+                var ping = message.GetPayload<PingMessage>();
+                SendPong(ping.PingId);
+
+                UnregisterDeadNodes(routerNotificationSocket, DateTime.UtcNow, ping.PingInterval);
             }
 
             return shouldHandle;
@@ -425,12 +427,13 @@ namespace kino.Connectivity
             return false;
         }
 
-        private void SendPong()
+        private void SendPong(ulong pingId)
         {
             var message = Message.Create(new PongMessage
                                          {
                                              Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                             SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
+                                             SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                             PingId = pingId
                                          },
                                          PongMessage.MessageIdentity);
             outgoingMessages.Add(message);
@@ -469,9 +472,9 @@ namespace kino.Connectivity
                          $"Socket:{payload.SocketIdentity.GetString()}");
         }
 
-        private void UnregisterDeadNodes(ISocket routerNotificationSocket, DateTime pingTime)
+        private void UnregisterDeadNodes(ISocket routerNotificationSocket, DateTime pingTime, TimeSpan pingInterval)
         {
-            foreach (var deadNode in clusterConfiguration.GetDeadMembers(pingTime))
+            foreach (var deadNode in clusterConfiguration.GetDeadMembers(pingTime, pingInterval))
             {
                 var message = Message.Create(new UnregisterMessageHandlersRoutingMessage
                                              {

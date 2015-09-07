@@ -12,13 +12,14 @@ namespace kino.Tests.Connectivity
     {
         private ILogger logger;
         private ClusterTimingConfiguration timingConfiguration;
+        private TimeSpan pingInterval;
 
         [SetUp]
         public void Setup()
         {
+            pingInterval = TimeSpan.FromSeconds(2);
             timingConfiguration = new ClusterTimingConfiguration
             {
-                ExpectedPingInterval = TimeSpan.FromSeconds(2),
                 PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(4)
             };
             logger = new Mock<ILogger>().Object;
@@ -75,8 +76,8 @@ namespace kino.Tests.Connectivity
 
             config.KeepAlive(ep1);
             
-            CollectionAssert.Contains(config.GetDeadMembers(pingTime), ep2);
-            CollectionAssert.DoesNotContain(config.GetDeadMembers(pingTime), ep1);
+            CollectionAssert.Contains(config.GetDeadMembers(pingTime, pingInterval), ep2);
+            CollectionAssert.DoesNotContain(config.GetDeadMembers(pingTime, pingInterval), ep1);
         }
     }
 }

@@ -88,7 +88,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationConfiguration.cs" />
-    <Compile Include="ClusterConfigurationProvider.cs" />
     <Compile Include="ClusterTimingConfigurationProvider.cs" />
     <Compile Include="ExpirableItemCollectionConfiguration.cs" />
     <Compile Include="ExpirableItemCollectionConfigurationProvider.cs" />
@@ -99,7 +98,6 @@
     <Compile Include="IRouterConfigurationProvider.cs" />
     <Compile Include="Messages\GroupCharsResponseMessage.cs" />
     <Compile Include="RendezvousEndpointsProvider.cs" />
-    <Compile Include="IClusterConfigurationProvider.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="MessageHubConfigurationProvider.cs" />
     <Compile Include="Messages\EhlloMessage.cs" />
