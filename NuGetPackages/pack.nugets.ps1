@@ -10,6 +10,6 @@ foreach ($NugetSpec in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extensio
 		Wait = $true
 	}
 	
-	Start-Process @BuildArgs -NoNewWindow
+	Start-Process @BuildArgs
 	nuget pack $NugetSpec.FullName -Build -NonInteractive
 }
