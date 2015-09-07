@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
         <id>kino.Actors</id>
-        <version>0.0.1-preview</version>
+        <version>0.0.0.2-preview</version>
         <title>kino.Actors</title>
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
@@ -23,7 +23,7 @@
             <dependency id="Autofac" version="3.5.2" />
             <dependency id="TypedConfigProvider" version="1.0.1" />
             <dependency id="C5" version="2.3.0.1" />
-            <dependency id="NetMQ" version="3.3.2.0" />
+            <dependency id="NetMQ" version="3.3.2.1" />
             <dependency id="NLog.Config" version="4.1.0" />
             <dependency id="protobuf-net" version="2.0.0.668" />
         </dependencies>
