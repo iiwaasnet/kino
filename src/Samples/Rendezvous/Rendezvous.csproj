@@ -54,19 +54,19 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.Rendezvous.0.0.1-preview\lib\net46\kino.dll</HintPath>
+      <HintPath>..\..\packages\kino.Rendezvous.0.0.0.2-preview\lib\net46\kino.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="kino.Rendezvous, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.Rendezvous.0.0.1-preview\lib\net46\kino.Rendezvous.dll</HintPath>
+      <HintPath>..\..\packages\kino.Rendezvous.0.0.0.2-preview\lib\net46\kino.Rendezvous.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="NetMQ, Version=3.3.2.0, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NetMQ.3.3.2.0\lib\net40\NetMQ.dll</HintPath>
+    <Reference Include="NetMQ, Version=3.3.2.1, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NetMQ.3.3.2.1\lib\net40\NetMQ.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NLog, Version=4.1.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
@@ -102,7 +102,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="TypedConfigProvider, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TypedConfigProvider.1.0\lib\net452\TypedConfigProvider.dll</HintPath>
+      <HintPath>..\..\packages\TypedConfigProvider.1.0.1\lib\net452\TypedConfigProvider.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
