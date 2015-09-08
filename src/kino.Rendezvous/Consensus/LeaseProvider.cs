@@ -53,7 +53,6 @@ namespace kino.Rendezvous.Consensus
         {
             leaseTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             leaseTimer.Dispose();
-            register.Dispose();
             renewGateway.Dispose();
         }
 

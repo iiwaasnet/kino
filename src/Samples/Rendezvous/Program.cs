@@ -6,7 +6,7 @@ namespace Rendezvous
     {
         private static void Main(string[] args)
         {
-            ServiceHost.Run();
+            new ServiceHost().Run();
         }
     }
 }

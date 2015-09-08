@@ -197,7 +197,6 @@ namespace kino.Rendezvous
             cancellationTokenSource.Cancel();
             messageProcessing.Wait();
             pinging.Wait();
-            leaseProvider.Dispose();
         }
     }
 }
