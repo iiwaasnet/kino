@@ -50,11 +50,11 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.Actors.0.0.0.2-preview\lib\net46\kino.dll</HintPath>
+      <HintPath>..\..\packages\kino.Actors.0.0.1.2-preview\lib\net46\kino.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="kino.Actors, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.Actors.0.0.0.2-preview\lib\net46\kino.Actors.dll</HintPath>
+      <HintPath>..\..\packages\kino.Actors.0.0.1.2-preview\lib\net46\kino.Actors.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="NetMQ, Version=3.3.2.1, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
