@@ -8,10 +8,10 @@ namespace kino.Sockets
         private readonly NetMQContext context;
         private readonly SocketConfiguration config;
 
-        public SocketFactory(SocketConfiguration socketConfiguration)
+        public SocketFactory(SocketConfiguration config)
         {
             context = NetMQContext.Create();
-            config = socketConfiguration ?? CreateDefaultConfiguration();
+            this.config = config ?? CreateDefaultConfiguration();
         }
 
         public ISocket CreateDealerSocket()
