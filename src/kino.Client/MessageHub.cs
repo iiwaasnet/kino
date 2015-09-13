@@ -20,14 +20,14 @@ namespace kino.Client
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
-        private readonly IMessageHubConfiguration config;
+        private readonly MessageHubConfiguration config;
         private readonly ILogger logger;
         private readonly IMessageTracer messageTracer;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
-                          IMessageHubConfiguration config,
+                          MessageHubConfiguration config,
                           IMessageTracer messageTracer,
                           ILogger logger)
         {

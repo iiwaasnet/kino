@@ -16,7 +16,7 @@ namespace kino.Framework
         private Action<T> handler;
         private readonly ILogger logger;
 
-        public ExpirableItemScheduledCollection(IExpirableItemCollectionConfiguration config, ILogger logger)
+        public ExpirableItemScheduledCollection(ExpirableItemCollectionConfiguration config, ILogger logger)
         {
             this.logger = logger;
             delayedItems = new List<ExpirableItem<T>>();

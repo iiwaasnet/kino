@@ -74,7 +74,6 @@
     <Compile Include="Connectivity\IInternalRoutingTable.cs" />
     <Compile Include="Connectivity\AsyncMessageContext.cs" />
     <Compile Include="Connectivity\IMessageRouter.cs" />
-    <Compile Include="Connectivity\IHostConfiguration.cs" />
     <Compile Include="Connectivity\IMessageTracer.cs" />
     <Compile Include="Connectivity\MessageTracer.cs" />
     <Compile Include="Connectivity\RendezvousConfiguration.cs" />
@@ -104,7 +103,7 @@
     <Compile Include="Framework\ExceptionExtensions.cs" />
     <Compile Include="Framework\IAsyncQueue.cs" />
     <Compile Include="Framework\IExpirableItemCollection.cs" />
-    <Compile Include="Framework\IExpirableItemCollectionConfiguration.cs" />
+    <Compile Include="Framework\ExpirableItemCollectionConfiguration.cs" />
     <Compile Include="Framework\IExpirableItem.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />

@@ -82,6 +82,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configuration\ApplicationConfiguration.cs" />
+    <Compile Include="Configuration\ConfigurationProvider.cs" />
+    <Compile Include="Configuration\IConfigurationProvider.cs" />
     <Compile Include="Consensus\AwaitableMessageStreamFilter.cs" />
     <Compile Include="Consensus\Ballot.cs" />
     <Compile Include="Consensus\BallotGenerator.cs" />
@@ -126,15 +128,11 @@
     <Compile Include="Consensus\Synod.cs" />
     <Compile Include="Consensus\SynodConfiguration.cs" />
     <Compile Include="Consensus\TxOutcome.cs" />
-    <Compile Include="Configuration\ILeaseConfigurationProvider.cs" />
-    <Compile Include="Configuration\IRendezvousConfigurationProvider.cs" />
     <Compile Include="IRendezvousService.cs" />
-    <Compile Include="Configuration\LeaseConfigurationProvider.cs" />
     <Compile Include="ServiceHost.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Configuration\RendezvousConfiguration.cs" />
-    <Compile Include="Configuration\RendezvousConfigurationProvider.cs" />
     <Compile Include="RendezvousService.cs" />
     <Compile Include="Configuration\SynodConfiguration.cs" />
     <Compile Include="Configuration\SynodConfigurationProvider.cs" />

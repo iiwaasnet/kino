@@ -60,7 +60,6 @@
     <Compile Include="ICallbackHandlerStack.cs" />
     <Compile Include="ICallbackPoint.cs" />
     <Compile Include="IMessageHub.cs" />
-    <Compile Include="IMessageHubConfiguration.cs" />
     <Compile Include="IMessageTracer.cs" />
     <Compile Include="IPromise.cs" />
     <Compile Include="MainModule.cs" />

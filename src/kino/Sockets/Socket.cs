@@ -3,6 +3,7 @@ using System.Threading;
 using kino.Framework;
 using kino.Messaging;
 using NetMQ;
+using NetMQ.Monitoring;
 
 namespace kino.Sockets
 {

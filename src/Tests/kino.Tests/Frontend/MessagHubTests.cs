@@ -26,7 +26,7 @@ namespace kino.Tests.Frontend
         private readonly string localhost = "tcp://localhost:43";
         private Mock<ISocketFactory> socketFactory;
         private Mock<ILogger> loggerMock;
-        private IMessageHubConfiguration config;
+        private MessageHubConfiguration config;
         private ILogger logger;
         private Mock<ICallbackHandlerStack> callbackHandlerStack;
         private Mock<IMessageTracer> messageTracer;

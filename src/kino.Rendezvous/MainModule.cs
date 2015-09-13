@@ -37,17 +37,15 @@ namespace kino.Rendezvous
                    .As<ISynodConfigurationProvider>()
                    .SingleInstance();
 
-            builder.RegisterType<LeaseConfigurationProvider>()
-                   .As<ILeaseConfigurationProvider>()
+            builder.RegisterType<ConfigurationProvider>()
+                   .As<IConfigurationProvider>()
                    .SingleInstance();
-            builder.Register(c => c.Resolve<ILeaseConfigurationProvider>().GetConfiguration())
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetLeaseConfiguration())
                    .As<LeaseConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterType<RendezvousConfigurationProvider>()
-                   .As<IRendezvousConfigurationProvider>()
-                   .SingleInstance();
-            builder.Register(c => c.Resolve<IRendezvousConfigurationProvider>().GetConfiguration())
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousConfiguration())
                    .As<RendezvousConfiguration>()
                    .SingleInstance();
         }
