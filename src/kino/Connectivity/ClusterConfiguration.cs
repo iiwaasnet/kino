@@ -12,12 +12,12 @@ namespace kino.Connectivity
         private readonly ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta> clusterMembers;
         private readonly ILogger logger;
         private DateTime lastPingTime;
-        private readonly ClusterTimingConfiguration timingConfiguration;
+        private readonly ClusterTimingConfiguration config;
 
-        public ClusterConfiguration(ClusterTimingConfiguration timingConfiguration,  ILogger logger)
+        public ClusterConfiguration(ClusterTimingConfiguration config,  ILogger logger)
         {
             lastPingTime = DateTime.UtcNow;
-            this.timingConfiguration = timingConfiguration;
+            this.config = config;
             this.logger = logger;
             clusterMembers = new ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta>();
         }
@@ -54,7 +54,7 @@ namespace kino.Connectivity
             lastPingTime = pingTime;
             
             return clusterMembers
-                .Where(mem => now - mem.Value.LastKnownPong - pingDelay > timingConfiguration.PongSilenceBeforeRouteDeletion)
+                .Where(mem => now - mem.Value.LastKnownPong - pingDelay > config.PongSilenceBeforeRouteDeletion)
                 .Select(mem => mem.Key)
                 .ToList();
         }

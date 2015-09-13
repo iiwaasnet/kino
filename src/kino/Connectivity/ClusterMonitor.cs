@@ -30,6 +30,10 @@ namespace kino.Connectivity
         private ISocket clusterMonitorSendingSocket;
         private readonly ClusterTimingConfiguration timingConfiguration;
         private readonly ILogger logger;
+        private readonly Action startAction;
+        private readonly Action stopAction;
+        private readonly Action requestMessageHandlersRoutingAction;
+        private readonly Action<IEnumerable<MessageHandlerIdentifier>> registerSelfAction;
 
         public ClusterMonitor(ISocketFactory socketFactory,
                               RouterConfiguration routerConfiguration,
@@ -47,15 +51,21 @@ namespace kino.Connectivity
             this.clusterConfiguration = clusterConfiguration;
             this.rendezvousConfiguration = rendezvousConfiguration;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
+
+            startAction = GetStartAction(timingConfiguration.RunStandalone);
+            stopAction = GetStopAction(timingConfiguration.RunStandalone);
+            registerSelfAction = GetRegisterSelfAction(timingConfiguration.RunStandalone);
+            requestMessageHandlersRoutingAction = GetRequestMessageHandlersRoutingAction(timingConfiguration.RunStandalone);
         }
 
-        public void Start()
+        
+        private void StartMonitor()
         {
             StartProcessingClusterMessages();
             StartRendezvousMonitoring();
         }
 
-        public void Stop()
+        private void StopMonitor()
         {
             StopRendezvousMonitoring();
             StopProcessingClusterMessages();
@@ -66,6 +76,16 @@ namespace kino.Connectivity
             monitoringToken = new CancellationTokenSource();
             monitorRendezvous = Task.Factory.StartNew(_ => RendezvousConnectionMonitor(monitoringToken.Token),
                                                       TaskCreationOptions.LongRunning);
+        }
+
+        public void Start()
+        {
+            startAction();
+        }
+
+        public void Stop()
+        {
+            stopAction();
         }
 
         private void StartProcessingClusterMessages()
@@ -325,6 +345,11 @@ namespace kino.Connectivity
 
         public void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers)
         {
+            registerSelfAction(messageHandlers);
+        }
+
+        private void RegisterLocalActors(IEnumerable<MessageHandlerIdentifier> messageHandlers)
+        {
             var message = Message.Create(new RegisterMessageHandlersRoutingMessage
                                          {
                                              Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
@@ -340,6 +365,11 @@ namespace kino.Connectivity
         }
 
         public void RequestMessageHandlersRouting()
+        {
+            requestMessageHandlersRoutingAction();
+        }
+
+        private void RequestClusterMessageHandlers()
         {
             var message = Message.Create(new RequestAllMessageHandlersRoutingMessage
                                          {
@@ -486,5 +516,26 @@ namespace kino.Connectivity
                 routerNotificationSocket.SendMessage(message);
             }
         }
+
+        private Action GetStartAction(bool runStandalone)
+            => runStandalone
+                   ? (Action) (() => { })
+                   : StartMonitor;
+
+        private Action GetStopAction(bool runStandalone)
+            => runStandalone
+                   ? (Action) (() => { })
+                   : StopMonitor;
+
+        private Action GetRequestMessageHandlersRoutingAction(bool runStandalone)
+        => runStandalone
+                   ? (Action)(() => { })
+                   : RequestClusterMessageHandlers;
+
+
+        private Action<IEnumerable<MessageHandlerIdentifier>> GetRegisterSelfAction(bool runStandalone)
+            => runStandalone
+                   ? (Action<IEnumerable<MessageHandlerIdentifier>>) (_ => { })
+                   : RegisterLocalActors;
     }
 }

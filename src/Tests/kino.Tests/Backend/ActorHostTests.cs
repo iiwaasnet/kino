@@ -53,7 +53,7 @@ namespace kino.Tests.Backend
         {
             var actorRegistrationsQueue = new AsyncQueue<IActor>();
 
-            var actorHost = new ActorHost(new SocketFactory(),
+            var actorHost = new ActorHost(new SocketFactory(null),
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
                                           actorRegistrationsQueue,

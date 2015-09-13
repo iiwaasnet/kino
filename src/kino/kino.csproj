@@ -69,6 +69,7 @@
     <Compile Include="Connectivity\ClusterTimingConfiguration.cs" />
     <Compile Include="Connectivity\ExternalRoutingTable.cs" />
     <Compile Include="Connectivity\IActorResult.cs" />
+    <Compile Include="Connectivity\IClusterMonitorProvider.cs" />
     <Compile Include="Connectivity\IExternalRoutingTable.cs" />
     <Compile Include="Connectivity\IInternalRoutingTable.cs" />
     <Compile Include="Connectivity\AsyncMessageContext.cs" />
