@@ -1,29 +1,40 @@
-﻿using NetMQ;
+﻿using System;
+using NetMQ;
 
 namespace kino.Sockets
 {
     public class SocketFactory : ISocketFactory
     {
         private readonly NetMQContext context;
+        private readonly SocketConfiguration config;
 
-        public SocketFactory()
+        public SocketFactory(SocketConfiguration socketConfiguration)
         {
             context = NetMQContext.Create();
+            config = socketConfiguration ?? CreateDefaultConfiguration();
         }
 
         public ISocket CreateDealerSocket()
-            => new Socket(context.CreateDealerSocket());
+            => new Socket(context.CreateDealerSocket(), config);
 
         public ISocket CreateRouterSocket()
-            => new Socket(context.CreateRouterSocket());
+            => new Socket(context.CreateRouterSocket(), config);
 
         public ISocket CreateSubscriberSocket()
-            => new Socket(context.CreateSubscriberSocket());
+            => new Socket(context.CreateSubscriberSocket(), config);
 
         public ISocket CreatePublisherSocket()
-            => new Socket(context.CreatePublisherSocket());
+            => new Socket(context.CreatePublisherSocket(), config);
 
         public void Dispose()
             => context.Dispose();
+
+        private SocketConfiguration CreateDefaultConfiguration()
+            => new SocketConfiguration
+               {
+                   ReceivingHighWatermark = 1000,
+                   SendingHighWatermark = 1000,
+                   Linger = TimeSpan.Zero
+               };
     }
 }

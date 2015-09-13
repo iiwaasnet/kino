@@ -16,9 +16,11 @@ namespace kino.Sockets
             ReceiveWaitTimeout = TimeSpan.FromSeconds(3);
         }
 
-        public Socket(NetMQSocket socket)
+        internal Socket(NetMQSocket socket, SocketConfiguration config)
         {
-            socket.Options.Linger = TimeSpan.Zero;
+            socket.Options.Linger = config.Linger;
+            socket.Options.ReceiveHighWatermark = config.ReceivingHighWatermark;
+            socket.Options.SendHighWatermark = config.SendingHighWatermark;
             this.socket = socket;
         }
 

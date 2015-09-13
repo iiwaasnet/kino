@@ -139,6 +139,7 @@
     <Compile Include="Sockets\ISocket.cs" />
     <Compile Include="Sockets\ISocketFactory.cs" />
     <Compile Include="Sockets\Socket.cs" />
+    <Compile Include="Sockets\SocketConfiguration.cs" />
     <Compile Include="Sockets\SocketFactory.cs" />
   </ItemGroup>
   <ItemGroup>
