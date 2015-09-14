@@ -107,7 +107,7 @@
     <Compile Include="Consensus\LeaseProvider.Logging.cs" />
     <Compile Include="Consensus\LeaseTxResult.cs" />
     <Compile Include="Consensus\Listener.cs" />
-    <Compile Include="Consensus\MainModule.cs" />
+    <Compile Include="Consensus\ConsensusModule.cs" />
     <Compile Include="Consensus\MessageStreamListener.cs" />
     <Compile Include="Consensus\Messages\Ballot.cs" />
     <Compile Include="Consensus\Messages\ILeaseMessage.cs" />

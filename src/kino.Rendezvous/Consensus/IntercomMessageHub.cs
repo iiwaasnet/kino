@@ -39,8 +39,8 @@ namespace kino.Rendezvous.Consensus
 
         public void Start()
         {
-            const int participantCount = 5;
-            using (var gateway = new Barrier(participantCount))
+            const int participantsCount = 5;
+            using (var gateway = new Barrier(participantsCount))
             {
                 multicastReceiving = Task.Factory.StartNew(_ => SafeExecute(() => ReceiveMessages(cancellationTokenSource.Token, gateway, CreateMulticastListeningSocket)),
                                                            cancellationTokenSource.Token,

@@ -2,7 +2,7 @@
 
 namespace kino.Rendezvous.Consensus
 {
-    public class MainModule : Module
+    public class ConsensusModule : Module
     {
         protected override void Load(ContainerBuilder builder)
         {
