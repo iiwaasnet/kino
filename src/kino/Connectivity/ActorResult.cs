@@ -5,7 +5,7 @@ namespace kino.Connectivity
 {
     public class ActorResult : IActorResult
     {
-        public ActorResult(IMessage[] messages)
+        public ActorResult(params IMessage[] messages)
         {
             Messages = messages;
         }
