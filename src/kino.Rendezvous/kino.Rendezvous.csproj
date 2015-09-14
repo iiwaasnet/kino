@@ -125,7 +125,6 @@
     <Compile Include="Consensus\OwnerEndpoint.cs" />
     <Compile Include="Consensus\RoundBasedRegister.cs" />
     <Compile Include="Consensus\RoundBasedRegister.Logging.cs" />
-    <Compile Include="Consensus\Synod.cs" />
     <Compile Include="Consensus\SynodConfiguration.cs" />
     <Compile Include="Consensus\TxOutcome.cs" />
     <Compile Include="IRendezvousService.cs" />

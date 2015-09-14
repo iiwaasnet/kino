@@ -97,9 +97,7 @@ namespace kino.Rendezvous.Consensus
 
         private void ReadOrRenewLease()
         {
-            // TODO: Uncomment
             var now = DateTime.UtcNow;
-            //var now = DateTime.UtcNow - TimeSpan.FromMinutes(1);
 
             var lease = AсquireOrLearnLease(ballotGenerator.New(localNode.SocketIdentity), now);
 
@@ -215,7 +213,5 @@ namespace kino.Rendezvous.Consensus
                 @lock.WaitOne(delay);
             }
         }
-
-        //TODO: add Dispose() method???
     }
 }
