@@ -8,5 +8,6 @@ namespace kino.Connectivity
         void Stop();
         void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers);
         void RequestMessageHandlersRouting();
+        void UnregisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers);
     }
 }

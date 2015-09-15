@@ -106,9 +106,9 @@ namespace kino.Connectivity
             {
                 foreach (var messageHandlerIdentifier in messageHandlers)
                 {
-                    var _ = messageHandlerIdentifier;
+                    var handlerIdentifier = messageHandlerIdentifier;
                     HashedLinkedList<SocketIdentifier> socketIdentifiers;
-                    if (messageHandlersMap.Find(ref _, out socketIdentifiers))
+                    if (messageHandlersMap.Find(ref handlerIdentifier, out socketIdentifiers))
                     {
                         socketIdentifiers.Remove(socketIdentifier);
                         if (!socketIdentifiers.Any())
@@ -123,5 +123,33 @@ namespace kino.Connectivity
                              $"Socket:{socketIdentifier.Identity.GetString()}");
             }
         }
+
+        public void RemoveMessageRoute(IEnumerable<MessageHandlerIdentifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier)
+        {
+            Uri uri;
+            socketToUriMap.Remove(socketIdentifier, out uri);
+
+            foreach (var messageHandlerIdentifier in messageHandlerIdentifiers)
+            {
+                var handlerIdentifier = messageHandlerIdentifier;
+                HashedLinkedList<SocketIdentifier> socketIdentifiers;
+                if (messageHandlersMap.Find(ref handlerIdentifier, out socketIdentifiers))
+                {
+                    socketIdentifiers.Remove(socketIdentifier);
+                    if (!socketIdentifiers.Any())
+                    {
+                        messageHandlersMap.Remove(messageHandlerIdentifier);
+                    }
+                }
+            }
+            socketToMessageMap.Remove(socketIdentifier);
+
+            logger.Debug($"External message route removed Uri:{uri.AbsoluteUri} " +
+                         $"Socket:{socketIdentifier.Identity.GetString()} " +
+                         $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageHandlerIdentifiers))}]");
+        }
+
+        private static IEnumerable<string> ConcatenateMessageHandlers(IEnumerable<MessageHandlerIdentifier> messageHandlerIdentifiers)
+            => messageHandlerIdentifiers.Select(mh => $"{mh.Identity.GetString()}:{mh.Version.GetString()}");
     }
 }

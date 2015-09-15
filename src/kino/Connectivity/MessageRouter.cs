@@ -177,7 +177,11 @@ namespace kino.Connectivity
                 }
                 catch (HostUnreachableException err)
                 {
-                    var handlersLeft = internalRoutingTable.Remove(messageHandlerIdentifier, handler);
+                    var removedHandlerIdentifiers = internalRoutingTable.Remove(handler);
+                    if (removedHandlerIdentifiers.Any())
+                    {
+                        clusterMonitor.UnregisterSelf(removedHandlerIdentifiers);
+                    }
                     logger.Error(err);
                 }
             }
@@ -264,27 +268,43 @@ namespace kino.Connectivity
         }
 
         private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
-            => RegisterMessageHandler(message)
-               || RegisterExternalRoute(message, scaleOutBackend)
-               || RequestMessageHandlersRegistration(message)
-               || UnregisterMessageHandlersRouting(message, scaleOutBackend);
+            => RegisterInternalMessageRouting(message)
+               || RegisterExternalRouting(message, scaleOutBackend)
+               || RequestRoutingRegistration(message)
+               || UnregisterRouting(message, scaleOutBackend)
+               || UnregisterMessageRouting(message);
 
-        private bool UnregisterMessageHandlersRouting(IMessage message, ISocket scaleOutBackend)
+        private bool UnregisterMessageRouting(IMessage message)
         {
-            var shouldHandle = IsUnregisterMessageHandlersRouting(message);
+            var shouldHandle = IsUnregisterMessageRouting(message);
             if (shouldHandle)
             {
-                var payload = message.GetPayload<UnregisterMessageHandlersRoutingMessage>();
-                externalRoutingTable.RemoveRoute(new SocketIdentifier(payload.SocketIdentity));
-                scaleOutBackend.Disconnect(new Uri(payload.Uri));              
+                var payload = message.GetPayload<UnregisterMessageRoutingMessage>();
+                externalRoutingTable.RemoveMessageRoute(payload
+                                                            .MessageHandlers
+                                                            .Select(mh => new MessageHandlerIdentifier(mh.Version, mh.Identity)),
+                                                        new SocketIdentifier(payload.SocketIdentity));
             }
 
             return shouldHandle;
         }
 
-        private bool RequestMessageHandlersRegistration(IMessage message)
+        private bool UnregisterRouting(IMessage message, ISocket scaleOutBackend)
         {
-            var shouldHandle = IsMessageHandlersRoutingRequest(message);
+            var shouldHandle = IsUnregisterRouting(message);
+            if (shouldHandle)
+            {
+                var payload = message.GetPayload<UnregisterRoutingMessage>();
+                externalRoutingTable.RemoveRoute(new SocketIdentifier(payload.SocketIdentity));
+                scaleOutBackend.Disconnect(new Uri(payload.Uri));
+            }
+
+            return shouldHandle;
+        }
+
+        private bool RequestRoutingRegistration(IMessage message)
+        {
+            var shouldHandle = IsRoutingRequest(message);
             if (shouldHandle)
             {
                 var messageIdentifiers = internalRoutingTable.GetMessageHandlerIdentifiers();
@@ -297,12 +317,12 @@ namespace kino.Connectivity
             return shouldHandle;
         }
 
-        private bool RegisterExternalRoute(IMessage message, ISocket scaleOutBackend)
+        private bool RegisterExternalRouting(IMessage message, ISocket scaleOutBackend)
         {
             var shouldHandle = IsExternalRouteRegistration(message);
             if (shouldHandle)
             {
-                var payload = message.GetPayload<RegisterMessageHandlersRoutingMessage>();
+                var payload = message.GetPayload<RegisterMessageRoutingMessage>();
 
                 var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
                 var uri = new Uri(payload.Uri);
@@ -325,22 +345,25 @@ namespace kino.Connectivity
             return shouldHandle;
         }
 
-        private static bool IsMessageHandlersRoutingRequest(IMessage message)
-            => Unsafe.Equals(RequestAllMessageHandlersRoutingMessage.MessageIdentity, message.Identity)
-               || Unsafe.Equals(RequestNodeMessageHandlersRoutingMessage.MessageIdentity, message.Identity);
+        private static bool IsRoutingRequest(IMessage message)
+            => Unsafe.Equals(RequestAllMessageRoutingMessage.MessageIdentity, message.Identity)
+               || Unsafe.Equals(RequestNodeMessageRoutingMessage.MessageIdentity, message.Identity);
 
         private static bool IsExternalRouteRegistration(IMessage message)
-            => Unsafe.Equals(RegisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity);
+            => Unsafe.Equals(RegisterMessageRoutingMessage.MessageIdentity, message.Identity);
 
-        private static bool IsInternalHandlerRegistration(IMessage message)
+        private static bool IsInternalMessageRoutingRegistration(IMessage message)
             => Unsafe.Equals(RegisterMessageHandlersMessage.MessageIdentity, message.Identity);
 
-        private bool IsUnregisterMessageHandlersRouting(IMessage message)
-            => Unsafe.Equals(UnregisterMessageHandlersRoutingMessage.MessageIdentity, message.Identity);
+        private bool IsUnregisterRouting(IMessage message)
+            => Unsafe.Equals(UnregisterRoutingMessage.MessageIdentity, message.Identity);
 
-        private bool RegisterMessageHandler(IMessage message)
+        private bool IsUnregisterMessageRouting(IMessage message)
+            => Unsafe.Equals(UnregisterMessageRoutingMessage.MessageIdentity, message.Identity);
+
+        private bool RegisterInternalMessageRouting(IMessage message)
         {
-            var shouldHandle = IsInternalHandlerRegistration(message);
+            var shouldHandle = IsInternalMessageRoutingRegistration(message);
             if (shouldHandle)
             {
                 var payload = message.GetPayload<RegisterMessageHandlersMessage>();

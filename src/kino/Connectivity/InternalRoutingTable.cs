@@ -8,31 +8,53 @@ namespace kino.Connectivity
 
     public class InternalRoutingTable : IInternalRoutingTable
     {
-        private readonly System.Collections.Generic.IDictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>> map;
+        private readonly System.Collections.Generic.IDictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>> messageToSocketMap;
+        private readonly System.Collections.Generic.IDictionary<SocketIdentifier, HashedLinkedList<MessageHandlerIdentifier>> socketToMessageMap;
 
         public InternalRoutingTable()
         {
-            map = new Dictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>>();
+            messageToSocketMap = new Dictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>>();
+            socketToMessageMap = new Dictionary<SocketIdentifier, HashedLinkedList<MessageHandlerIdentifier>>();
         }
 
         public void Push(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
         {
-            HashedLinkedList<SocketIdentifier> hashSet;
-            if (!map.TryGetValue(messageHandlerIdentifier, out hashSet))
+            MapHandlerToSocket(messageHandlerIdentifier, socketIdentifier);
+            MapSocketToHandler(messageHandlerIdentifier, socketIdentifier);
+        }
+
+        private void MapSocketToHandler(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
+        {
+            HashedLinkedList<MessageHandlerIdentifier> handlers;
+            if (!socketToMessageMap.TryGetValue(socketIdentifier, out handlers))
             {
-                hashSet = new HashedLinkedList<SocketIdentifier>();
-                map[messageHandlerIdentifier] = hashSet;
+                handlers = new HashedLinkedList<MessageHandlerIdentifier>();
+                socketToMessageMap[socketIdentifier] = handlers;
             }
-            if (!hashSet.Contains(socketIdentifier))
+            if (!handlers.Contains(messageHandlerIdentifier))
             {
-                hashSet.InsertLast(socketIdentifier);
+                handlers.InsertLast(messageHandlerIdentifier);
+            }
+        }
+
+        private void MapHandlerToSocket(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
+        {
+            HashedLinkedList<SocketIdentifier> sockets;
+            if (!messageToSocketMap.TryGetValue(messageHandlerIdentifier, out sockets))
+            {
+                sockets = new HashedLinkedList<SocketIdentifier>();
+                messageToSocketMap[messageHandlerIdentifier] = sockets;
+            }
+            if (!sockets.Contains(socketIdentifier))
+            {
+                sockets.InsertLast(socketIdentifier);
             }
         }
 
         public SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
-            return map.TryGetValue(messageHandlerIdentifier, out collection)
+            return messageToSocketMap.TryGetValue(messageHandlerIdentifier, out collection)
                        ? Get(collection)
                        : null;
         }
@@ -40,7 +62,7 @@ namespace kino.Connectivity
         public IEnumerable<SocketIdentifier> PopAll(MessageHandlerIdentifier messageHandlerIdentifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
-            return map.TryGetValue(messageHandlerIdentifier, out collection)
+            return messageToSocketMap.TryGetValue(messageHandlerIdentifier, out collection)
                        ? collection
                        : Enumerable.Empty<SocketIdentifier>();
         }
@@ -58,23 +80,35 @@ namespace kino.Connectivity
         }
 
         public IEnumerable<MessageHandlerIdentifier> GetMessageHandlerIdentifiers()
-            => map.Keys;
+            => messageToSocketMap.Keys;
 
-        public int Remove(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
+        public IEnumerable<MessageHandlerIdentifier> Remove(SocketIdentifier socketIdentifier)
         {
-            var handlersCount = 0;
-            HashedLinkedList<SocketIdentifier> hashSet;
-            if (map.TryGetValue(messageHandlerIdentifier, out hashSet))
+            HashedLinkedList<MessageHandlerIdentifier> handlers;
+            if (socketToMessageMap.TryGetValue(socketIdentifier, out handlers))
             {
-                hashSet.Remove(socketIdentifier);
-                handlersCount = hashSet.Count;
-                if (handlersCount == 0)
+                foreach (var messageHandlerIdentifier in handlers)
                 {
-                    map.Remove(messageHandlerIdentifier);
+                    RemoveMessageHandler(messageHandlerIdentifier, socketIdentifier);
+                    if(!messageToSocketMap.ContainsKey(messageHandlerIdentifier))
+                    {
+                        yield return messageHandlerIdentifier;
+                    }
                 }
             }
+        }
 
-            return handlersCount;
+        private void RemoveMessageHandler(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
+        {
+            HashedLinkedList<SocketIdentifier> hashSet;
+            if (messageToSocketMap.TryGetValue(messageHandlerIdentifier, out hashSet))
+            {
+                hashSet.Remove(socketIdentifier);
+                if (hashSet.Count == 0)
+                {
+                    messageToSocketMap.Remove(messageHandlerIdentifier);
+                }
+            }
         }
     }
 }

@@ -4,7 +4,7 @@ using ProtoBuf;
 namespace kino.Messaging.Messages
 {
     [ProtoContract]
-    public class RequestNodeMessageHandlersRoutingMessage : Payload
+    public class RequestNodeMessageRoutingMessage : Payload
     {
         public static readonly byte[] MessageIdentity = "REQNODEROUTE".GetBytes();
 

@@ -8,6 +8,6 @@ namespace kino.Connectivity
         SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier);
         IEnumerable<SocketIdentifier> PopAll(MessageHandlerIdentifier messageHandlerIdentifier);
         IEnumerable<MessageHandlerIdentifier> GetMessageHandlerIdentifiers();
-        int Remove(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier);
+        IEnumerable<MessageHandlerIdentifier> Remove(SocketIdentifier socketIdentifier);
     }
 }
