@@ -170,9 +170,16 @@ namespace kino.Connectivity
             foreach (var handler in handlers)
             {
                 message.SetSocketIdentity(handler.Identity);
-                localSocket.SendMessage(message);
-
-                messageTracer.RoutedToLocalActor(message);
+                try
+                {
+                    localSocket.SendMessage(message);
+                    messageTracer.RoutedToLocalActor(message);
+                }
+                catch (HostUnreachableException err)
+                {
+                    var handlersLeft = internalRoutingTable.Remove(messageHandlerIdentifier, handler);
+                    logger.Error(err);
+                }
             }
 
             return handlers.Any();

@@ -58,8 +58,23 @@ namespace kino.Connectivity
         }
 
         public IEnumerable<MessageHandlerIdentifier> GetMessageHandlerIdentifiers()
+            => map.Keys;
+
+        public int Remove(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
         {
-            return map.Keys;
+            var handlersCount = 0;
+            HashedLinkedList<SocketIdentifier> hashSet;
+            if (map.TryGetValue(messageHandlerIdentifier, out hashSet))
+            {
+                hashSet.Remove(socketIdentifier);
+                handlersCount = hashSet.Count;
+                if (handlersCount == 0)
+                {
+                    map.Remove(messageHandlerIdentifier);
+                }
+            }
+
+            return handlersCount;
         }
     }
 }
