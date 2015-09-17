@@ -45,18 +45,6 @@
       <HintPath>..\..\packages\C5.2.3.0.1\lib\net40\C5.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="JetBrains.Annotations, Version=9.1.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\JetBrains.Annotations.9.1.1\lib\net20\JetBrains.Annotations.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.Client.0.0.1.2-preview\lib\net46\kino.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Client, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.Client.0.0.1.2-preview\lib\net46\kino.Client.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="NetMQ, Version=3.3.2.1, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\NetMQ.3.3.2.1\lib\net40\NetMQ.dll</HintPath>
       <Private>True</Private>
@@ -88,24 +76,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApplicationConfiguration.cs" />
-    <Compile Include="ClusterTimingConfigurationProvider.cs" />
-    <Compile Include="ExpirableItemCollectionConfiguration.cs" />
-    <Compile Include="ExpirableItemCollectionConfigurationProvider.cs" />
-    <Compile Include="IClusterTimingConfigurationProvider.cs" />
-    <Compile Include="IExpirableItemCollectionConfigurationProvider.cs" />
-    <Compile Include="IRendezvousEndpointsProvider.cs" />
-    <Compile Include="IMessageHubConfigurationProvider.cs" />
-    <Compile Include="IRouterConfigurationProvider.cs" />
+    <Compile Include="ConfigurationProvider.cs" />
+    <Compile Include="IConfigurationProvider.cs" />
     <Compile Include="Messages\GroupCharsResponseMessage.cs" />
-    <Compile Include="RendezvousEndpointsProvider.cs" />
     <Compile Include="MainModule.cs" />
-    <Compile Include="MessageHubConfigurationProvider.cs" />
     <Compile Include="Messages\EhlloMessage.cs" />
     <Compile Include="Messages\HelloMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RendezvousEndpoint.cs" />
-    <Compile Include="RouterConfigurationProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -116,6 +95,16 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\kino.Client\kino.Client.csproj">
+      <Project>{2c69ba32-dadc-4e4e-8d91-055fb9d35bff}</Project>
+      <Name>kino.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino\kino.csproj">
+      <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
+      <Name>kino</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

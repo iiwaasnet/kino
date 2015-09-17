@@ -47,7 +47,7 @@ namespace Client
             }
             else
             {
-                WriteLine($"Call timedout after {timeout.TotalSeconds} sec.");
+                WriteLine($"Call timed out after {timeout.TotalSeconds} sec.");
             }
 
             ReadLine();

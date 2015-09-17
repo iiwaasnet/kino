@@ -51,7 +51,6 @@ namespace kino.Rendezvous
             {
                 rs.Stop();
                 container.Dispose();
-                throw new Exception("Bla!");
             }
             catch (Exception err)
             {

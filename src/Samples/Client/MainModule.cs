@@ -29,41 +29,27 @@ namespace Client
             builder.RegisterType<ExpirableItemCollection<CorrelationId>>()
                    .As<IExpirableItemCollection<CorrelationId>>();
 
-            builder.RegisterType<MessageHubConfigurationProvider>()
-                   .As<IMessageHubConfigurationProvider>()
+            builder.RegisterType<ConfigurationProvider>()
+                   .As<IConfigurationProvider>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IMessageHubConfigurationProvider>().GetConfiguration())
-                   .As<IMessageHubConfiguration>()
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetMessageHubConfiguration())
+                   .As<MessageHubConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterType<RouterConfigurationProvider>()
-                   .As<IRouterConfigurationProvider>()
-                   .SingleInstance();
-            builder.Register(c => c.Resolve<IRouterConfigurationProvider>().GetConfiguration())
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRouterConfiguration())
                    .As<RouterConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterType<ExpirableItemCollectionConfigurationProvider>()
-                   .As<IExpirableItemCollectionConfigurationProvider>()
-                   .SingleInstance();
-            builder.Register(c => c.Resolve<IExpirableItemCollectionConfigurationProvider>().GetConfiguration())
-                   .As<IExpirableItemCollectionConfiguration>()
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetExpirableItemCollectionConfiguration())
+                   .As<ExpirableItemCollectionConfiguration>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IRendezvousEndpointsProvider>().GetConfiguration())
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
                    .As<IEnumerable<RendezvousEndpoints>>()
                    .SingleInstance();
 
-            builder.RegisterType<RendezvousEndpointsProvider>()
-                   .As<IRendezvousEndpointsProvider>()
-                   .SingleInstance();
-
-            builder.RegisterType<ClusterTimingConfigurationProvider>()
-                   .As<IClusterTimingConfigurationProvider>()
-                   .SingleInstance();
-
-            builder.Register(c => c.Resolve<IClusterTimingConfigurationProvider>().GetConfiguration())
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterTimingConfiguration())
                    .As<ClusterTimingConfiguration>()
                    .SingleInstance();
         }

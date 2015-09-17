@@ -33,26 +33,19 @@ namespace Server
                    .As<ApplicationConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterType<RouterConfigurationProvider>()
-                   .As<IRouterConfigurationProvider>()
+            builder.RegisterType<ConfigurationProvider>()
+                   .As<IConfigurationProvider>()
                    .SingleInstance();
-            builder.Register(c => c.Resolve<IRouterConfigurationProvider>().GetConfiguration())
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRouterConfiguration())
                    .As<RouterConfiguration>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IRendezvousEndpointsProvider>().GetConfiguration())
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
                    .As<IEnumerable<RendezvousEndpoints>>()
                    .SingleInstance();
 
-            builder.RegisterType<RendezvousEndpointsProvider>()
-                   .As<IRendezvousEndpointsProvider>()
-                   .SingleInstance();
-
-            builder.RegisterType<ClusterTimingConfigurationProvider>()
-                   .As<IClusterTimingConfigurationProvider>()
-                   .SingleInstance();
-
-            builder.Register(c => c.Resolve<IClusterTimingConfigurationProvider>().GetConfiguration())
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterTimingConfiguration())
                    .As<ClusterTimingConfiguration>()
                    .SingleInstance();
         }

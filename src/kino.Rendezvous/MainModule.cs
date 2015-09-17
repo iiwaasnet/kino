@@ -11,7 +11,7 @@ namespace kino.Rendezvous
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterModule(new kino.MainModule());
-            builder.RegisterModule(new Consensus.ConsensusModule());
+            builder.RegisterModule(new ConsensusModule());
 
             builder.RegisterType<ConfigProvider>()
                    .As<IConfigProvider>()
@@ -27,10 +27,6 @@ namespace kino.Rendezvous
 
             builder.RegisterType<RendezvousService>()
                    .As<IRendezvousService>()
-                   .SingleInstance();
-
-            builder.RegisterType<SocketFactory>()
-                   .As<ISocketFactory>()
                    .SingleInstance();
 
             builder.RegisterType<SynodConfigurationProvider>()
