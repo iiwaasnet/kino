@@ -1,5 +1,4 @@
 ﻿using System;
-using kino.Framework;
 
 namespace kino.Rendezvous.Consensus
 {
@@ -7,13 +6,13 @@ namespace kino.Rendezvous.Consensus
     {
         private void LogAwake()
         {
-            logger.Debug($"SLEEP === process {localNode.SocketIdentity.GetString()} " +
+            logger.Debug($"SLEEP === process {localNode.Uri.AbsoluteUri} " +
                          $"Waked up at {DateTime.UtcNow.ToString("HH:mm:ss fff")}");
         }
 
         private void LogStartSleep()
         {
-            logger.Debug($"SLEEP === process {localNode.SocketIdentity.GetString()} " +
+            logger.Debug($"SLEEP === process {localNode.Uri.AbsoluteUri} " +
                          $"Sleep from {DateTime.UtcNow.ToString("HH: mm:ss fff")}");
         }
 
@@ -25,7 +24,7 @@ namespace kino.Rendezvous.Consensus
                 {
                     logger.Debug($"[{DateTime.UtcNow.ToString("HH:mm:ss fff")}] " +
                                  "PROLONG === process " +
-                                 $"{localNode.SocketIdentity.GetString()} " +
+                                 $"{localNode.Uri.AbsoluteUri} " +
                                  "wants to prolong it's lease " +
                                  $"{lastReadLease.ExpiresAt.ToString("HH:mm:ss fff")}");
                 }
@@ -33,7 +32,7 @@ namespace kino.Rendezvous.Consensus
                 {
                     logger.Debug($"[{DateTime.UtcNow.ToString("HH:mm:ss fff")}] " +
                                  "RENEW === process " +
-                                 $"{localNode.SocketIdentity.GetString()} " +
+                                 $"{localNode.Uri.AbsoluteUri} " +
                                  "wants to renew lease " +
                                  $"{lastReadLease.ExpiresAt.ToString("HH:mm:ss fff")}");
                 }

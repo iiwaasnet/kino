@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using kino.Diagnostics;
+using kino.Framework;
 using kino.Rendezvous.Configuration;
 
 namespace kino.Rendezvous.Consensus
@@ -112,14 +113,14 @@ namespace kino.Rendezvous.Consensus
 
         private bool ProcessLostLeadership(Lease nextLease, Lease previousLease)
         {
-            return (previousLease != null && previousLease.OwnerIdentity.Equals(localNode)
-                    && nextLease != null && !nextLease.OwnerIdentity.Equals(localNode));
+            return (previousLease != null && Unsafe.Equals(previousLease.OwnerIdentity, localNode.SocketIdentity)
+                    && nextLease != null && !Unsafe.Equals(nextLease.OwnerIdentity, localNode.SocketIdentity));
         }
 
         private bool ProcessBecameLeader(Lease nextLease, Lease previousLease)
         {
-            return ((previousLease == null || !previousLease.OwnerIdentity.Equals(localNode))
-                    && nextLease != null && nextLease.OwnerIdentity.Equals(localNode));
+            return ((previousLease == null || !Unsafe.Equals(previousLease.OwnerIdentity, localNode.SocketIdentity))
+                    && nextLease != null && Unsafe.Equals(nextLease.OwnerIdentity, localNode.SocketIdentity));
         }
 
         private TimeSpan CalcLeaseRenewPeriod(bool leader)
@@ -186,7 +187,7 @@ namespace kino.Rendezvous.Consensus
 
         private bool IsLeaseOwner(Lease lease)
         {
-            return lease != null && lease.OwnerIdentity.Equals(localNode);
+            return lease != null && Unsafe.Equals(lease.OwnerIdentity, localNode.SocketIdentity);
         }
 
         private static bool LeaseNullOrExpired(Lease lease, DateTime now)
