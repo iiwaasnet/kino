@@ -296,7 +296,13 @@ namespace kino.Connectivity
             {
                 var payload = message.GetPayload<UnregisterRoutingMessage>();
                 externalRoutingTable.RemoveRoute(new SocketIdentifier(payload.SocketIdentity));
-                scaleOutBackend.Disconnect(new Uri(payload.Uri));
+                try
+                {
+                    scaleOutBackend.Disconnect(new Uri(payload.Uri));
+                }
+                catch (EndpointNotFoundException)
+                {
+                }
             }
 
             return shouldHandle;
