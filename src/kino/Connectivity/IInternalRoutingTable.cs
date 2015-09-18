@@ -4,10 +4,10 @@ namespace kino.Connectivity
 {
     public interface IInternalRoutingTable
     {
-        void Push(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier);
-        SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier);
-        IEnumerable<SocketIdentifier> PopAll(MessageHandlerIdentifier messageHandlerIdentifier);
-        IEnumerable<MessageHandlerIdentifier> GetMessageHandlerIdentifiers();
-        IEnumerable<MessageHandlerIdentifier> Remove(SocketIdentifier socketIdentifier);
+        void AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier);
+        SocketIdentifier FindRoute(MessageIdentifier messageIdentifier);
+        IEnumerable<SocketIdentifier> FindAllRoutes(MessageIdentifier messageIdentifier);
+        IEnumerable<MessageIdentifier> GetMessageIdentifiers();
+        IEnumerable<MessageIdentifier> RemoveActorHostRoute(SocketIdentifier socketIdentifier);
     }
 }

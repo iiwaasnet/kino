@@ -4,9 +4,9 @@ using ProtoBuf;
 namespace kino.Messaging.Messages
 {
     [ProtoContract]
-    public class RegisterMessageRoutingMessage : Payload
+    public class RegisterExternalMessageRouteMessage : Payload
     {
-        public static readonly byte[] MessageIdentity = "REGROUTE".GetBytes();
+        public static readonly byte[] MessageIdentity = "REGEXTROUTE".GetBytes();
 
         [ProtoMember(1)]
         public string Uri { get; set; }
@@ -15,6 +15,6 @@ namespace kino.Messaging.Messages
         public byte[] SocketIdentity { get; set; }
 
         [ProtoMember(3)]
-        public MessageHandlerRegistration[] MessageHandlers { get; set; }
+        public MessageContract[] MessageContracts { get; set; }
     }
 }

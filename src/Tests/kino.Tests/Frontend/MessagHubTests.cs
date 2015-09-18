@@ -14,6 +14,7 @@ using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
 using IMessageTracer = kino.Client.IMessageTracer;
+using MessageIdentifier = kino.Connectivity.MessageIdentifier;
 
 namespace kino.Tests.Frontend
 {
@@ -64,9 +65,9 @@ namespace kino.Tests.Frontend
                 var message = sendingSocket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.IsNotNull(message);
-                var registration = message.GetPayload<RegisterMessageHandlersMessage>();
+                var registration = message.GetPayload<RegisterInternalMessageRouteMessage>();
                 CollectionAssert.AreEqual(receivingSocket.GetIdentity(), registration.SocketIdentity);
-                var handler = registration.MessageHandlers.First();
+                var handler = registration.MessageContracts.First();
                 CollectionAssert.AreEqual(Message.CurrentVersion, handler.Version);
                 CollectionAssert.AreEqual(receivingSocket.GetIdentity(), handler.Identity);
             }
@@ -97,7 +98,7 @@ namespace kino.Tests.Frontend
 
                 callbackHandlerStack.Verify(m => m.Push(It.Is<CorrelationId>(c => Unsafe.Equals(c.Value, message.CorrelationId)),
                                                         It.IsAny<IPromise>(),
-                                                        It.Is<IEnumerable<MessageHandlerIdentifier>>(en => ContainsMessageAndExceptionRegistrations(en))),
+                                                        It.Is<IEnumerable<MessageIdentifier>>(en => ContainsMessageAndExceptionRegistrations(en))),
                                             Times.Once);
             }
             finally
@@ -227,7 +228,7 @@ namespace kino.Tests.Frontend
             }
         }
 
-        private bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageHandlerIdentifier> registrations)
+        private bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageIdentifier> registrations)
         {
             return registrations.Any(h => Unsafe.Equals(h.Identity, SimpleMessage.MessageIdentity))
                    && registrations.Any(h => Unsafe.Equals(h.Identity, ExceptionMessage.MessageIdentity));

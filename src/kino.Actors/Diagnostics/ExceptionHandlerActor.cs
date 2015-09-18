@@ -9,9 +9,9 @@ namespace kino.Actors.Diagnostics
 {
     public class ExceptionHandlerActor : IActor
     {
-        public IEnumerable<MessageMap> GetInterfaceDefinition()
+        public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
         {
-            yield return new MessageMap
+            yield return new MessageHandlerDefinition
                          {
                              Message = new MessageDefinition
                                        {

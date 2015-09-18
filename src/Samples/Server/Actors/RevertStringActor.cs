@@ -10,9 +10,9 @@ namespace Server.Actors
 {
     public class RevertStringActor : IActor
     {
-        public IEnumerable<MessageMap> GetInterfaceDefinition()
+        public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
         {
-            yield return new MessageMap
+            yield return new MessageHandlerDefinition
                          {
                              Handler = StartProcess,
                              Message = new MessageDefinition

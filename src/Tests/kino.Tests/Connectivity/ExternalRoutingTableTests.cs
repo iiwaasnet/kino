@@ -16,15 +16,15 @@ namespace kino.Tests.Connectivity
         {
             var logger = new Mock<ILogger>();
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
-            var messageHandlerIdentifier = new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+            var messageHandlerIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
             var socketIdentifier1 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
             var socketIdentifier2 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
-            externalRoutingTable.Push(messageHandlerIdentifier, socketIdentifier1, new Uri("tcp://127.0.0.1:40"));
-            externalRoutingTable.Push(messageHandlerIdentifier, socketIdentifier2, new Uri("tcp://127.0.0.2:40"));
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier1, new Uri("tcp://127.0.0.1:40"));
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier2, new Uri("tcp://127.0.0.2:40"));
 
-            Assert.AreEqual(socketIdentifier1, externalRoutingTable.Pop(messageHandlerIdentifier));
-            Assert.AreEqual(socketIdentifier2, externalRoutingTable.Pop(messageHandlerIdentifier));
-            Assert.AreEqual(socketIdentifier1, externalRoutingTable.Pop(messageHandlerIdentifier));
+            Assert.AreEqual(socketIdentifier1, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            Assert.AreEqual(socketIdentifier2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            Assert.AreEqual(socketIdentifier1, externalRoutingTable.FindRoute(messageHandlerIdentifier));
         }
 
 
@@ -33,18 +33,18 @@ namespace kino.Tests.Connectivity
         {
             var logger = new Mock<ILogger>();
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
-            var messageHandlerIdentifier = new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+            var messageHandlerIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
             var socketIdentifier1 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
             var socketIdentifier2 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
-            externalRoutingTable.Push(messageHandlerIdentifier, socketIdentifier1, new Uri("tcp://127.0.0.1:40"));
-            externalRoutingTable.Push(messageHandlerIdentifier, socketIdentifier2, new Uri("tcp://127.0.0.2:40"));
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier1, new Uri("tcp://127.0.0.1:40"));
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier2, new Uri("tcp://127.0.0.2:40"));
 
-            Assert.AreEqual(socketIdentifier1, externalRoutingTable.Pop(messageHandlerIdentifier));
+            Assert.AreEqual(socketIdentifier1, externalRoutingTable.FindRoute(messageHandlerIdentifier));
 
-            externalRoutingTable.RemoveRoute(socketIdentifier1);
+            externalRoutingTable.RemoveNodeRoute(socketIdentifier1);
 
-            Assert.AreEqual(socketIdentifier2, externalRoutingTable.Pop(messageHandlerIdentifier));
-            Assert.AreEqual(socketIdentifier2, externalRoutingTable.Pop(messageHandlerIdentifier));
+            Assert.AreEqual(socketIdentifier2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            Assert.AreEqual(socketIdentifier2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
         }
 
 
@@ -53,10 +53,10 @@ namespace kino.Tests.Connectivity
         {
             var logger = new Mock<ILogger>();
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
-            var messageHandlerIdentifier = new MessageHandlerIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity);
-            externalRoutingTable.Push(messageHandlerIdentifier, new SocketIdentifier(Guid.NewGuid().ToByteArray()), new Uri("tcp://127.0.0.1:40"));
+            var messageHandlerIdentifier = new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity);
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, new SocketIdentifier(Guid.NewGuid().ToByteArray()), new Uri("tcp://127.0.0.1:40"));
             
-            Assert.IsNull(externalRoutingTable.Pop(new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity)));
+            Assert.IsNull(externalRoutingTable.FindRoute(new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity)));
         }
     }
 }

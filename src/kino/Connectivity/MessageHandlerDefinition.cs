@@ -1,6 +1,6 @@
 ﻿namespace kino.Connectivity
 {
-    public class MessageMap
+    public class MessageHandlerDefinition
     {
         public MessageHandler Handler { get; set; }
         public MessageDefinition Message { get; set; }

@@ -6,7 +6,7 @@ using ProtoBuf;
 namespace kino.Connectivity
 {
     [ProtoContract]
-    public class UnregisterMessageRoutingMessage : Payload
+    public class UnregisterMessageRouteMessage : Payload
     {
         public static readonly byte[] MessageIdentity = "UNREGMSGROUTE".GetBytes();
 
@@ -17,6 +17,6 @@ namespace kino.Connectivity
         public byte[] SocketIdentity { get; set; }
 
         [ProtoMember(3)]
-        public MessageHandlerRegistration[] MessageHandlers { get; set; }
+        public MessageContract[] MessageHandlers { get; set; }
     }
 }

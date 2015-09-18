@@ -108,13 +108,13 @@ namespace kino.Actors
             }
         }
 
-        private static void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<MessageHandlerIdentifier> registrations)
+        private static void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<Connectivity.MessageIdentifier> registrations)
         {
-            var payload = new RegisterMessageHandlersMessage
+            var payload = new RegisterInternalMessageRouteMessage
                           {
                               SocketIdentity = identity,
-                              MessageHandlers = registrations
-                                  .Select(mh => new MessageHandlerRegistration
+                              MessageContracts = registrations
+                                  .Select(mh => new MessageContract
                                                 {
                                                     Identity = mh.Identity,
                                                     Version = mh.Version
@@ -122,7 +122,7 @@ namespace kino.Actors
                                   .ToArray()
                           };
 
-            socket.SendMessage(Message.Create(payload, RegisterMessageHandlersMessage.MessageIdentity));
+            socket.SendMessage(Message.Create(payload, RegisterInternalMessageRouteMessage.MessageIdentity));
         }
 
         private void ProcessAsyncResponses(CancellationToken token, Barrier gateway)
@@ -177,7 +177,7 @@ namespace kino.Actors
                         {
                             try
                             {
-                                var actorIdentifier = new MessageHandlerIdentifier(message.Version, message.Identity);
+                                var actorIdentifier = new Connectivity.MessageIdentifier(message.Version, message.Identity);
                                 var handler = actorHandlerMap.Get(actorIdentifier);
                                 if (handler != null)
                                 {

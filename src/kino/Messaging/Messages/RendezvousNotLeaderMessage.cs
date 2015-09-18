@@ -6,7 +6,7 @@ namespace kino.Messaging.Messages
     [ProtoContract]
     public class RendezvousNotLeaderMessage : Payload
     {
-        public static readonly byte[] MessageIdentity = "RNDZNOTLEADER".GetBytes();
+        public static readonly byte[] MessageIdentity = "RNDZVNOTLEADER".GetBytes();
 
         [ProtoMember(1)]
         public string LeaderMulticastUri { get; set; }

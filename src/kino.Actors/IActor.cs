@@ -5,6 +5,6 @@ namespace kino.Actors
 {
     public interface IActor
     {
-        IEnumerable<MessageMap> GetInterfaceDefinition();
+        IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition();
     }
 }

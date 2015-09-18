@@ -9,6 +9,7 @@ using kino.Messaging.Messages;
 using kino.Tests.Backend.Setup;
 using Moq;
 using NUnit.Framework;
+using MessageIdentifier = kino.Connectivity.MessageIdentifier;
 
 namespace kino.Tests.Frontend
 {
@@ -23,11 +24,11 @@ namespace kino.Tests.Frontend
 
             var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
             var promise = new Promise();
-            callbackHandlerStack.Push(correlationId, promise, Enumerable.Empty<MessageHandlerIdentifier>());
+            callbackHandlerStack.Push(correlationId, promise, Enumerable.Empty<MessageIdentifier>());
 
             Assert.Throws<DuplicatedKeyException>(() =>
                                                   {
-                                                      callbackHandlerStack.Push(correlationId, promise, Enumerable.Empty<MessageHandlerIdentifier>());
+                                                      callbackHandlerStack.Push(correlationId, promise, Enumerable.Empty<MessageIdentifier>());
                                                   });
         }
 
@@ -41,8 +42,8 @@ namespace kino.Tests.Frontend
             var promise = new Promise();
             var messageHandlerIdentifiers = new[]
                                             {
-                                                new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
-                                                new MessageHandlerIdentifier(Message.CurrentVersion, ExceptionMessage.MessageIdentity)
+                                                new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
+                                                new MessageIdentifier(Message.CurrentVersion, ExceptionMessage.MessageIdentity)
                                             };
             callbackHandlerStack.Push(correlationId, promise, messageHandlerIdentifiers);
 

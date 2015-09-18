@@ -7,6 +7,7 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Tests.Backend.Setup;
 using NUnit.Framework;
+using MessageIdentifier = kino.Connectivity.MessageIdentifier;
 
 namespace kino.Tests.Backend
 {
@@ -34,8 +35,8 @@ namespace kino.Tests.Backend
             var identifiers = actorHandlersMap.GetMessageHandlerIdentifiers();
 
             Assert.AreEqual(2, identifiers.Count());
-            CollectionAssert.Contains(identifiers, new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity));
-            CollectionAssert.Contains(identifiers, new MessageHandlerIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity));
+            CollectionAssert.Contains(identifiers, new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity));
+            CollectionAssert.Contains(identifiers, new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity));
 
         }
 
@@ -47,7 +48,7 @@ namespace kino.Tests.Backend
 
             actorHandlersMap.Add(actor);
 
-            Assert.Throws<KeyNotFoundException>(()=> actorHandlersMap.Get(new MessageHandlerIdentifier(Message.CurrentVersion, ExceptionMessage.MessageIdentity)));
+            Assert.Throws<KeyNotFoundException>(()=> actorHandlersMap.Get(new MessageIdentifier(Message.CurrentVersion, ExceptionMessage.MessageIdentity)));
         }
     }
 }

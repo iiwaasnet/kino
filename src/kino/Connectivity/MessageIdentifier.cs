@@ -3,12 +3,11 @@ using kino.Framework;
 
 namespace kino.Connectivity
 {
-    //TODO: Probably better to duplicate functionality for every derived class
-    public class MessageHandlerIdentifier : IEquatable<MessageHandlerIdentifier>
+    public class MessageIdentifier : IEquatable<MessageIdentifier>
     {
         private readonly int hashCode;
 
-        public MessageHandlerIdentifier(byte[] version, byte[] identity)
+        public MessageIdentifier(byte[] version, byte[] identity)
         {
             Version = version;
             Identity = identity;
@@ -30,7 +29,7 @@ namespace kino.Connectivity
             {
                 return false;
             }
-            return Equals((MessageHandlerIdentifier) obj);
+            return Equals((MessageIdentifier) obj);
         }
 
         private int CalculateHashCode()
@@ -46,7 +45,7 @@ namespace kino.Connectivity
         public override int GetHashCode()
             => hashCode;
 
-        public bool Equals(MessageHandlerIdentifier other)
+        public bool Equals(MessageIdentifier other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -59,7 +58,7 @@ namespace kino.Connectivity
             return StructuralCompare(other);
         }
 
-        private bool StructuralCompare(MessageHandlerIdentifier other)
+        private bool StructuralCompare(MessageIdentifier other)
             => Unsafe.Equals(Identity, other.Identity)
                && Unsafe.Equals(Version, other.Version);
 

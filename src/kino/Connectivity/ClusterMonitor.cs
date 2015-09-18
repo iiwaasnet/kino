@@ -33,8 +33,8 @@ namespace kino.Connectivity
         private readonly Action startAction;
         private readonly Action stopAction;
         private readonly Action requestMessageHandlersRoutingAction;
-        private readonly Action<IEnumerable<MessageHandlerIdentifier>> registerSelfAction;
-        private readonly Action<IEnumerable<MessageHandlerIdentifier>> unregisterSelfAction;
+        private readonly Action<IEnumerable<MessageIdentifier>> registerSelfAction;
+        private readonly Action<IEnumerable<MessageIdentifier>> unregisterSelfAction;
 
         public ClusterMonitor(ISocketFactory socketFactory,
                               RouterConfiguration routerConfiguration,
@@ -297,7 +297,7 @@ namespace kino.Connectivity
             var shouldHandle = IsUnregisterRoutingMessage(message);
             if (shouldHandle)
             {
-                var payload = message.GetPayload<UnregisterRoutingMessage>();
+                var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
                 clusterConfiguration.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
                 routerNotificationSocket.SendMessage(message);
             }
@@ -356,40 +356,40 @@ namespace kino.Connectivity
             return shouldHandle;
         }
 
-        public void RegisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers)
+        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers)
         {
             registerSelfAction(messageHandlers);
         }
 
-        private void RegisterRouter(IEnumerable<MessageHandlerIdentifier> messageHandlers)
+        private void RegisterRouter(IEnumerable<MessageIdentifier> messageHandlers)
         {
-            var message = Message.Create(new RegisterMessageRoutingMessage
+            var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
                                              Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
                                              SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                             MessageHandlers = messageHandlers.Select(mh => new MessageHandlerRegistration
-                                                                                            {
-                                                                                                Version = mh.Version,
-                                                                                                Identity = mh.Identity
-                                                                                            }).ToArray()
+                                             MessageContracts = messageHandlers.Select(mi => new MessageContract
+                                                                                             {
+                                                                                                 Version = mi.Version,
+                                                                                                 Identity = mi.Identity
+                                                                                             }).ToArray()
                                          },
-                                         RegisterMessageRoutingMessage.MessageIdentity);
+                                         RegisterExternalMessageRouteMessage.MessageIdentity);
             outgoingMessages.Add(message);
         }
 
-        public void UnregisterSelf(IEnumerable<MessageHandlerIdentifier> messageHandlers)
+        public void UnregisterSelf(IEnumerable<MessageIdentifier> messageHandlers)
         {
             unregisterSelfAction(messageHandlers);
         }
 
-        private void UnregisterLocalActor(IEnumerable<MessageHandlerIdentifier> messageHandler)
+        private void UnregisterLocalActor(IEnumerable<MessageIdentifier> messageHandler)
         {
-            var message = Message.Create(new UnregisterMessageRoutingMessage
+            var message = Message.Create(new UnregisterMessageRouteMessage
                                          {
                                              Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
                                              SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
                                              MessageHandlers = messageHandler
-                                                 .Select(mh => new MessageHandlerRegistration
+                                                 .Select(mh => new MessageContract
                                                                {
                                                                    Identity = mh.Identity,
                                                                    Version = mh.Version
@@ -397,39 +397,39 @@ namespace kino.Connectivity
                                                  )
                                                  .ToArray()
                                          },
-                                         UnregisterMessageRoutingMessage.MessageIdentity);
+                                         UnregisterMessageRouteMessage.MessageIdentity);
             outgoingMessages.Add(message);
         }
 
-        public void RequestMessageHandlersRouting()
+        public void RequestClusterRoutes()
         {
             requestMessageHandlersRoutingAction();
         }
 
         private void RequestClusterMessageHandlers()
         {
-            var message = Message.Create(new RequestAllMessageRoutingMessage
+            var message = Message.Create(new RequestClusterMessageRoutesMessage
                                          {
                                              RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
                                              RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()
                                          },
-                                         RequestAllMessageRoutingMessage.MessageIdentity);
+                                         RequestClusterMessageRoutesMessage.MessageIdentity);
             outgoingMessages.Add(message);
         }
 
         private IMessage CreateUnregisterRoutingMessage()
-            => Message.Create(new UnregisterRoutingMessage
+            => Message.Create(new UnregisterNodeMessageRouteMessage
                               {
                                   Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
                                   SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
                               },
-                              UnregisterRoutingMessage.MessageIdentity);
+                              UnregisterNodeMessageRouteMessage.MessageIdentity);
 
         private bool IsRegisterExternalRoute(IMessage message)
         {
-            if (Unsafe.Equals(RegisterMessageRoutingMessage.MessageIdentity, message.Identity))
+            if (Unsafe.Equals(RegisterExternalMessageRouteMessage.MessageIdentity, message.Identity))
             {
-                var payload = message.GetPayload<RegisterMessageRoutingMessage>();
+                var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
 
                 return !ThisNodeSocket(payload.SocketIdentity);
             }
@@ -457,9 +457,9 @@ namespace kino.Connectivity
 
         private bool IsUnregisterRoutingMessage(IMessage message)
         {
-            if (Unsafe.Equals(UnregisterRoutingMessage.MessageIdentity, message.Identity))
+            if (Unsafe.Equals(UnregisterNodeMessageRouteMessage.MessageIdentity, message.Identity))
             {
-                var payload = message.GetPayload<UnregisterRoutingMessage>();
+                var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
 
                 return !ThisNodeSocket(payload.SocketIdentity);
             }
@@ -469,9 +469,9 @@ namespace kino.Connectivity
 
         private bool IsUnregisterMessageRoutingMessage(IMessage message)
         {
-            if (Unsafe.Equals(UnregisterMessageRoutingMessage.MessageIdentity, message.Identity))
+            if (Unsafe.Equals(UnregisterMessageRouteMessage.MessageIdentity, message.Identity))
             {
-                var payload = message.GetPayload<UnregisterMessageRoutingMessage>();
+                var payload = message.GetPayload<UnregisterMessageRouteMessage>();
 
                 return !ThisNodeSocket(payload.SocketIdentity);
             }
@@ -484,9 +484,9 @@ namespace kino.Connectivity
 
         private bool IsRequestAllMessageRoutingMessage(IMessage message)
         {
-            if (Unsafe.Equals(RequestAllMessageRoutingMessage.MessageIdentity, message.Identity))
+            if (Unsafe.Equals(RequestClusterMessageRoutesMessage.MessageIdentity, message.Identity))
             {
-                var payload = message.GetPayload<RequestAllMessageRoutingMessage>();
+                var payload = message.GetPayload<RequestClusterMessageRoutesMessage>();
 
                 return !ThisNodeSocket(payload.RequestorSocketIdentity);
             }
@@ -496,9 +496,9 @@ namespace kino.Connectivity
 
         private bool IsRequestNodeMessageRoutingMessage(IMessage message)
         {
-            if (Unsafe.Equals(RequestNodeMessageRoutingMessage.MessageIdentity, message.Identity))
+            if (Unsafe.Equals(RequestNodeMessageRoutesMessage.MessageIdentity, message.Identity))
             {
-                var payload = message.GetPayload<RequestNodeMessageRoutingMessage>();
+                var payload = message.GetPayload<RequestNodeMessageRoutesMessage>();
 
                 return ThisNodeSocket(payload.TargetNodeIdentity);
             }
@@ -520,7 +520,7 @@ namespace kino.Connectivity
 
         private void AddClusterMember(IMessage message)
         {
-            var registration = message.GetPayload<RegisterMessageRoutingMessage>();
+            var registration = message.GetPayload<RegisterExternalMessageRouteMessage>();
             var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
             clusterConfiguration.AddClusterMember(clusterMember);
         }
@@ -538,12 +538,12 @@ namespace kino.Connectivity
 
         private void RequestNodeMessageHandlersRouting(PongMessage payload)
         {
-            var request = Message.Create(new RequestNodeMessageRoutingMessage
+            var request = Message.Create(new RequestNodeMessageRoutesMessage
                                          {
                                              TargetNodeIdentity = payload.SocketIdentity,
                                              TargetNodeUri = payload.Uri
                                          },
-                                         RequestNodeMessageRoutingMessage.MessageIdentity);
+                                         RequestNodeMessageRoutesMessage.MessageIdentity);
             outgoingMessages.Add(request);
 
             logger.Debug("Route not found. Requesting registrations for " +
@@ -555,12 +555,12 @@ namespace kino.Connectivity
         {
             foreach (var deadNode in clusterConfiguration.GetDeadMembers(pingTime, pingInterval))
             {
-                var message = Message.Create(new UnregisterRoutingMessage
+                var message = Message.Create(new UnregisterNodeMessageRouteMessage
                                              {
                                                  Uri = deadNode.Uri.ToSocketAddress(),
                                                  SocketIdentity = deadNode.Identity
                                              },
-                                             UnregisterRoutingMessage.MessageIdentity);
+                                             UnregisterNodeMessageRouteMessage.MessageIdentity);
                 clusterConfiguration.DeleteClusterMember(deadNode);
                 routerNotificationSocket.SendMessage(message);
             }
@@ -581,14 +581,14 @@ namespace kino.Connectivity
                    ? (Action) (() => { })
                    : RequestClusterMessageHandlers;
 
-        private Action<IEnumerable<MessageHandlerIdentifier>> GetRegisterSelfAction(bool runStandalone)
+        private Action<IEnumerable<MessageIdentifier>> GetRegisterSelfAction(bool runStandalone)
             => runStandalone
-                   ? (Action<IEnumerable<MessageHandlerIdentifier>>) (_ => { })
+                   ? (Action<IEnumerable<MessageIdentifier>>) (_ => { })
                    : RegisterRouter;
 
-        private Action<IEnumerable<MessageHandlerIdentifier>> GetUnregisterSelfAction(bool runStandalone)
+        private Action<IEnumerable<MessageIdentifier>> GetUnregisterSelfAction(bool runStandalone)
             => runStandalone
-                   ? (Action<IEnumerable<MessageHandlerIdentifier>>) (_ => { })
+                   ? (Action<IEnumerable<MessageIdentifier>>) (_ => { })
                    : UnregisterLocalActor;
     }
 }

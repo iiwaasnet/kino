@@ -3,7 +3,7 @@
 namespace kino.Messaging.Messages
 {
     [ProtoContract]
-    public class MessageHandlerRegistration
+    public class MessageContract
     {
         [ProtoMember(1)]
         public byte[] Version { get; set; }

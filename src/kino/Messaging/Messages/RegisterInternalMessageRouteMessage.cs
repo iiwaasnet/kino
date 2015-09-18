@@ -4,12 +4,12 @@ using ProtoBuf;
 namespace kino.Messaging.Messages
 {
     [ProtoContract]
-    public class RegisterMessageHandlersMessage : Payload
+    public class RegisterInternalMessageRouteMessage : Payload
     {
-        public static readonly byte[] MessageIdentity = "REGMSGH".GetBytes();
+        public static readonly byte[] MessageIdentity = "REGINTROUTE".GetBytes();
 
         [ProtoMember(1)]
-        public MessageHandlerRegistration[] MessageHandlers { get; set; }
+        public MessageContract[] MessageContracts { get; set; }
 
         [ProtoMember(2)]
         public byte[] SocketIdentity { get; set; }

@@ -9,9 +9,9 @@ namespace kino.Tests.Backend.Setup
 {
     public class ExceptionActor : IActor
     {
-        public IEnumerable<MessageMap> GetInterfaceDefinition()
+        public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
         {
-            yield return new MessageMap
+            yield return new MessageHandlerDefinition
                          {
                              Message = new MessageDefinition
                                        {
@@ -20,7 +20,7 @@ namespace kino.Tests.Backend.Setup
                                        },
                              Handler = Process
                          };
-            yield return new MessageMap
+            yield return new MessageHandlerDefinition
                          {
                              Message = new MessageDefinition
                                        {

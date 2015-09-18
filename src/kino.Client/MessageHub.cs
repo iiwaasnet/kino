@@ -91,8 +91,8 @@ namespace kino.Client
                                                       promise,
                                                       new[]
                                                       {
-                                                          new MessageHandlerIdentifier(message.Version, callbackPoint.MessageIdentity),
-                                                          new MessageHandlerIdentifier(message.Version, ExceptionMessage.MessageIdentity)
+                                                          new Connectivity.MessageIdentifier(message.Version, callbackPoint.MessageIdentity),
+                                                          new Connectivity.MessageIdentifier(message.Version, ExceptionMessage.MessageIdentity)
                                                       });
                                 messageTracer.CallbackRegistered(message);
                             }
@@ -186,19 +186,19 @@ namespace kino.Client
 
         private void RegisterMessageHub(ISocket socket, byte[] receivingSocketIdentity)
         {
-            var rdyMessage = Message.Create(new RegisterMessageHandlersMessage
+            var rdyMessage = Message.Create(new RegisterInternalMessageRouteMessage
                                             {
                                                 SocketIdentity = receivingSocketIdentity,
-                                                MessageHandlers = new[]
+                                                MessageContracts = new[]
                                                                   {
-                                                                      new MessageHandlerRegistration
+                                                                      new MessageContract
                                                                       {
                                                                           Version = Message.CurrentVersion,
                                                                           Identity = receivingSocketIdentity
                                                                       }
                                                                   }
                                             },
-                                            RegisterMessageHandlersMessage.MessageIdentity);
+                                            RegisterInternalMessageRouteMessage.MessageIdentity);
             socket.SendMessage(rdyMessage);
 
             hubRegistered.Set();

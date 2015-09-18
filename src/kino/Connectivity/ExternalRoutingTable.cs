@@ -9,44 +9,44 @@ namespace kino.Connectivity
 {
     public class ExternalRoutingTable : IExternalRoutingTable
     {
-        private readonly C5.IDictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>> messageHandlersMap;
-        private readonly C5.IDictionary<SocketIdentifier, C5.HashSet<MessageHandlerIdentifier>> socketToMessageMap;
+        private readonly C5.IDictionary<MessageIdentifier, HashedLinkedList<SocketIdentifier>> messageToSocketMap;
+        private readonly C5.IDictionary<SocketIdentifier, C5.HashSet<MessageIdentifier>> socketToMessageMap;
         private readonly C5.IDictionary<SocketIdentifier, Uri> socketToUriMap;
         private readonly ILogger logger;
 
         public ExternalRoutingTable(ILogger logger)
         {
             this.logger = logger;
-            messageHandlersMap = new HashDictionary<MessageHandlerIdentifier, HashedLinkedList<SocketIdentifier>>();
-            socketToMessageMap = new HashDictionary<SocketIdentifier, C5.HashSet<MessageHandlerIdentifier>>();
+            messageToSocketMap = new HashDictionary<MessageIdentifier, HashedLinkedList<SocketIdentifier>>();
+            socketToMessageMap = new HashDictionary<SocketIdentifier, C5.HashSet<MessageIdentifier>>();
             socketToUriMap = new HashDictionary<SocketIdentifier, Uri>();
         }
 
-        public void Push(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier, Uri uri)
+        public void AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri)
         {
-            var mapped = MapMessageToSocket(messageHandlerIdentifier, socketIdentifier);
+            var mapped = MapMessageToSocket(messageIdentifier, socketIdentifier);
 
             if (mapped)
             {
                 socketToUriMap[socketIdentifier] = uri;
 
-                MapSocketToMessage(messageHandlerIdentifier, socketIdentifier);
+                MapSocketToMessage(messageIdentifier, socketIdentifier);
 
                 logger.Debug("External route added " +
                              $"Uri:{uri.AbsoluteUri} " +
                              $"Socket:{socketIdentifier.Identity.GetString()} " +
-                             $"Version:{messageHandlerIdentifier.Version.GetString()} " +
-                             $"Message:{messageHandlerIdentifier.Identity.GetString()}");
+                             $"Version:{messageIdentifier.Version.GetString()} " +
+                             $"Message:{messageIdentifier.Identity.GetString()}");
             }
         }
 
-        private bool MapMessageToSocket(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
+        private bool MapMessageToSocket(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier)
         {
             HashedLinkedList<SocketIdentifier> hashSet;
-            if (!messageHandlersMap.Find(ref messageHandlerIdentifier, out hashSet))
+            if (!messageToSocketMap.Find(ref messageIdentifier, out hashSet))
             {
                 hashSet = new HashedLinkedList<SocketIdentifier>();
-                messageHandlersMap[messageHandlerIdentifier] = hashSet;
+                messageToSocketMap[messageIdentifier] = hashSet;
             }
             if (!hashSet.Contains(socketIdentifier))
             {
@@ -57,29 +57,29 @@ namespace kino.Connectivity
             return false;
         }
 
-        private void MapSocketToMessage(MessageHandlerIdentifier messageHandlerIdentifier, SocketIdentifier socketIdentifier)
+        private void MapSocketToMessage(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier)
         {
-            C5.HashSet<MessageHandlerIdentifier> hashSet;
+            C5.HashSet<MessageIdentifier> hashSet;
             if (!socketToMessageMap.Find(ref socketIdentifier, out hashSet))
             {
-                hashSet = new C5.HashSet<MessageHandlerIdentifier>();
+                hashSet = new C5.HashSet<MessageIdentifier>();
                 socketToMessageMap[socketIdentifier] = hashSet;
             }
-            hashSet.Add(messageHandlerIdentifier);
+            hashSet.Add(messageIdentifier);
         }
 
-        public SocketIdentifier Pop(MessageHandlerIdentifier messageHandlerIdentifier)
+        public SocketIdentifier FindRoute(MessageIdentifier messageIdentifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
-            return messageHandlersMap.Find(ref messageHandlerIdentifier, out collection)
+            return messageToSocketMap.Find(ref messageIdentifier, out collection)
                        ? Get(collection)
                        : null;
         }
 
-        public IEnumerable<SocketIdentifier> PopAll(MessageHandlerIdentifier messageHandlerIdentifier)
+        public IEnumerable<SocketIdentifier> FindAllRoutes(MessageIdentifier messageIdentifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
-            return messageHandlersMap.Find(ref messageHandlerIdentifier, out collection)
+            return messageToSocketMap.Find(ref messageIdentifier, out collection)
                        ? collection
                        : Enumerable.Empty<SocketIdentifier>();
         }
@@ -96,24 +96,24 @@ namespace kino.Connectivity
             return default(T);
         }
 
-        public void RemoveRoute(SocketIdentifier socketIdentifier)
+        public void RemoveNodeRoute(SocketIdentifier socketIdentifier)
         {
             Uri uri;
             socketToUriMap.Remove(socketIdentifier, out uri);
 
-            C5.HashSet<MessageHandlerIdentifier> messageHandlers;
+            C5.HashSet<MessageIdentifier> messageHandlers;
             if (socketToMessageMap.Find(ref socketIdentifier, out messageHandlers))
             {
                 foreach (var messageHandlerIdentifier in messageHandlers)
                 {
                     var handlerIdentifier = messageHandlerIdentifier;
                     HashedLinkedList<SocketIdentifier> socketIdentifiers;
-                    if (messageHandlersMap.Find(ref handlerIdentifier, out socketIdentifiers))
+                    if (messageToSocketMap.Find(ref handlerIdentifier, out socketIdentifiers))
                     {
                         socketIdentifiers.Remove(socketIdentifier);
                         if (!socketIdentifiers.Any())
                         {
-                            messageHandlersMap.Remove(messageHandlerIdentifier);
+                            messageToSocketMap.Remove(messageHandlerIdentifier);
                         }
                     }
                 }
@@ -124,7 +124,7 @@ namespace kino.Connectivity
             }
         }
 
-        public void RemoveMessageRoute(IEnumerable<MessageHandlerIdentifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier)
+        public void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier)
         {
             Uri uri;
             socketToUriMap.Remove(socketIdentifier, out uri);
@@ -133,12 +133,12 @@ namespace kino.Connectivity
             {
                 var handlerIdentifier = messageHandlerIdentifier;
                 HashedLinkedList<SocketIdentifier> socketIdentifiers;
-                if (messageHandlersMap.Find(ref handlerIdentifier, out socketIdentifiers))
+                if (messageToSocketMap.Find(ref handlerIdentifier, out socketIdentifiers))
                 {
                     socketIdentifiers.Remove(socketIdentifier);
                     if (!socketIdentifiers.Any())
                     {
-                        messageHandlersMap.Remove(messageHandlerIdentifier);
+                        messageToSocketMap.Remove(messageHandlerIdentifier);
                     }
                 }
             }
@@ -149,7 +149,7 @@ namespace kino.Connectivity
                          $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageHandlerIdentifiers))}]");
         }
 
-        private static IEnumerable<string> ConcatenateMessageHandlers(IEnumerable<MessageHandlerIdentifier> messageHandlerIdentifiers)
+        private static IEnumerable<string> ConcatenateMessageHandlers(IEnumerable<MessageIdentifier> messageHandlerIdentifiers)
             => messageHandlerIdentifiers.Select(mh => $"{mh.Identity.GetString()}:{mh.Version.GetString()}");
     }
 }

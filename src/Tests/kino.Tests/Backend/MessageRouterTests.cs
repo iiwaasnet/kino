@@ -94,24 +94,24 @@ namespace kino.Tests.Backend
                 var messageIdentity = Guid.NewGuid().ToByteArray();
                 var version = Guid.NewGuid().ToByteArray();
                 var socketIdentity = Guid.NewGuid().ToByteArray();
-                var message = Message.Create(new RegisterMessageHandlersMessage
+                var message = Message.Create(new RegisterInternalMessageRouteMessage
                                              {
                                                  SocketIdentity = socketIdentity,
-                                                 MessageHandlers = new[]
+                                                 MessageContracts = new[]
                                                                    {
-                                                                       new MessageHandlerRegistration
+                                                                       new MessageContract
                                                                        {
                                                                            Identity = messageIdentity,
                                                                            Version = version
                                                                        }
                                                                    }
                                              },
-                                             RegisterMessageHandlersMessage.MessageIdentity);
+                                             RegisterInternalMessageRouteMessage.MessageIdentity);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                var identifier = internalRoutingTable.Pop(new MessageHandlerIdentifier(version, messageIdentity));
+                var identifier = internalRoutingTable.FindRoute(new kino.Connectivity.MessageIdentifier(version, messageIdentity));
 
                 Assert.IsNotNull(identifier);
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
@@ -143,15 +143,15 @@ namespace kino.Tests.Backend
                 var message = (Message) SendMessageOverMessageHub();
 
                 var callbackSocketIdentity = message.CallbackReceiverIdentity;
-                var callbackIdentifier = new MessageHandlerIdentifier(Message.CurrentVersion, callbackSocketIdentity);
-                internalRoutingTable.Setup(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(callbackIdentifier))))
+                var callbackIdentifier = new kino.Connectivity.MessageIdentifier(Message.CurrentVersion, callbackSocketIdentity);
+                internalRoutingTable.Setup(m => m.FindRoute(It.Is<kino.Connectivity.MessageIdentifier>(mhi => mhi.Equals(callbackIdentifier))))
                                     .Returns(new SocketIdentifier(callbackSocketIdentity));
 
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
 
-                internalRoutingTable.Verify(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(callbackIdentifier))), Times.Once());
+                internalRoutingTable.Verify(m => m.FindRoute(It.Is<kino.Connectivity.MessageIdentifier>(mhi => mhi.Equals(callbackIdentifier))), Times.Once());
             }
             finally
             {
@@ -163,9 +163,9 @@ namespace kino.Tests.Backend
         public void TestMessageIsRouted_BasedOnHandlerIdentities()
         {
             var actorSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
-            var actorIdentifier = new MessageHandlerIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+            var actorIdentifier = new kino.Connectivity.MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
             var messageHandlerStack = new Mock<IInternalRoutingTable>();
-            messageHandlerStack.Setup(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(actorIdentifier))))
+            messageHandlerStack.Setup(m => m.FindRoute(It.Is<kino.Connectivity.MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
                                .Returns(actorSocketIdentity);
 
             var router = new MessageRouter(socketFactory.Object,
@@ -185,7 +185,7 @@ namespace kino.Tests.Backend
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                messageHandlerStack.Verify(m => m.Pop(It.Is<MessageHandlerIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Once());
+                messageHandlerStack.Verify(m => m.FindRoute(It.Is<kino.Connectivity.MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Once());
             }
             finally
             {
@@ -197,7 +197,7 @@ namespace kino.Tests.Backend
         public void TestIfLocalRoutingTableHasNoMessageHandlerRegistration_MessageRoutedToOtherNodes()
         {
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
-            externalRoutingTable.Setup(m => m.Pop(It.IsAny<MessageHandlerIdentifier>()))
+            externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<kino.Connectivity.MessageIdentifier>()))
                                 .Returns(new SocketIdentifier(Guid.NewGuid().ToByteArray()));
 
             var router = new MessageRouter(socketFactory.Object,

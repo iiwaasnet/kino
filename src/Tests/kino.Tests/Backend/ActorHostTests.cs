@@ -89,19 +89,19 @@ namespace kino.Tests.Backend
                     .BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.IsNotNull(registration);
-                var payload = new RegisterMessageHandlersMessage
+                var payload = new RegisterInternalMessageRouteMessage
                               {
                                   SocketIdentity = routableSocket.GetIdentity(),
-                                  MessageHandlers = actorHandlersMap
+                                  MessageContracts = actorHandlersMap
                                       .GetMessageHandlerIdentifiers()
-                                      .Select(mh => new MessageHandlerRegistration
+                                      .Select(mh => new MessageContract
                                                     {
                                                         Identity = mh.Identity,
                                                         Version = mh.Version
                                                     })
                                       .ToArray()
                               };
-                var regMessage = Message.Create(payload, RegisterMessageHandlersMessage.MessageIdentity);
+                var regMessage = Message.Create(payload, RegisterInternalMessageRouteMessage.MessageIdentity);
 
                 CollectionAssert.AreEqual(registration.Body, regMessage.Body);
             }

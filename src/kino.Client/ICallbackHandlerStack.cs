@@ -6,7 +6,7 @@ namespace kino.Client
 {
     public interface ICallbackHandlerStack
     {
-        void Push(CorrelationId correlation, IPromise promise, IEnumerable<MessageHandlerIdentifier> messageHandlerIdentifiers);
+        void Push(CorrelationId correlation, IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers);
         IPromise Pop(CallbackHandlerKey callbackIdentifier);
     }
 }
