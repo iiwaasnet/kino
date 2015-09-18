@@ -50,7 +50,7 @@ namespace Client
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterTimingConfiguration())
-                   .As<ClusterTimingConfiguration>()
+                   .As<ClusterMembershipConfiguration>()
                    .SingleInstance();
         }
     }

@@ -28,11 +28,12 @@ namespace Server
                    ScaleOutAddress = new SocketEndpoint(new Uri(appConfig.ScaleOutAddressUri), SocketIdentifier.CreateNew())
                };
 
-        public ClusterTimingConfiguration GetClusterTimingConfiguration()
-            => new ClusterTimingConfiguration
+        public ClusterMembershipConfiguration GetClusterTimingConfiguration()
+            => new ClusterMembershipConfiguration
                {
                    PongSilenceBeforeRouteDeletion = appConfig.PongSilenceBeforeRouteDeletion,
-                   PingSilenceBeforeRendezvousFailover = appConfig.PingSilenceBeforeRendezvousFailover
+                   PingSilenceBeforeRendezvousFailover = appConfig.PingSilenceBeforeRendezvousFailover,
+                   RunAsStandalone = appConfig.RunAsStandalone
                };
     }
 }

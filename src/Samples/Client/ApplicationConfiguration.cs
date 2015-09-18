@@ -11,5 +11,6 @@ namespace Client
         public TimeSpan PingSilenceBeforeRendezvousFailover { get; set; }
         public TimeSpan PongSilenceBeforeRouteDeletion { get; set; }
         public TimeSpan PromiseExpirationEvaluationInterval { get; set; }
+        public bool RunAsStandalone { get; set; }
     }
 }

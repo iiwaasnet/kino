@@ -66,7 +66,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Connectivity\ActorResult.cs" />
-    <Compile Include="Connectivity\ClusterTimingConfiguration.cs" />
+    <Compile Include="Connectivity\ClusterMembershipConfiguration.cs" />
+    <Compile Include="Connectivity\ClusterMonitorProvider.cs" />
     <Compile Include="Connectivity\ExternalRoutingTable.cs" />
     <Compile Include="Connectivity\IActorResult.cs" />
     <Compile Include="Connectivity\IClusterMonitorProvider.cs" />
@@ -75,14 +76,15 @@
     <Compile Include="Connectivity\AsyncMessageContext.cs" />
     <Compile Include="Connectivity\IMessageRouter.cs" />
     <Compile Include="Connectivity\IMessageTracer.cs" />
+    <Compile Include="Connectivity\LoopbackClusterMonitor.cs" />
     <Compile Include="Connectivity\MessageTracer.cs" />
     <Compile Include="Connectivity\RendezvousConfiguration.cs" />
     <Compile Include="Connectivity\RendezvousEndpoints.cs" />
-    <Compile Include="Connectivity\ClusterConfiguration.cs" />
+    <Compile Include="Connectivity\ClusterMembership.cs" />
     <Compile Include="Connectivity\ClusterMonitor.cs" />
     <Compile Include="Connectivity\SocketEndpoint.cs" />
     <Compile Include="Connectivity\IRendezvousConfiguration.cs" />
-    <Compile Include="Connectivity\IClusterConfiguration.cs" />
+    <Compile Include="Connectivity\IClusterMembership.cs" />
     <Compile Include="Connectivity\IClusterMonitor.cs" />
     <Compile Include="Connectivity\RouterConfiguration.cs" />
     <Compile Include="Connectivity\MessageDefinition.cs" />

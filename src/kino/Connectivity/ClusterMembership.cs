@@ -7,14 +7,14 @@ using kino.Framework;
 
 namespace kino.Connectivity
 {
-    public class ClusterConfiguration : IClusterConfiguration
+    public class ClusterMembership : IClusterMembership
     {
         private readonly ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta> clusterMembers;
         private readonly ILogger logger;
         private DateTime lastPingTime;
-        private readonly ClusterTimingConfiguration config;
+        private readonly ClusterMembershipConfiguration config;
 
-        public ClusterConfiguration(ClusterTimingConfiguration config,  ILogger logger)
+        public ClusterMembership(ClusterMembershipConfiguration config,  ILogger logger)
         {
             lastPingTime = DateTime.UtcNow;
             this.config = config;

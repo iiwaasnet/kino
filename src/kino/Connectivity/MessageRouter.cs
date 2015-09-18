@@ -22,7 +22,6 @@ namespace kino.Connectivity
         private readonly ISocketFactory socketFactory;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly IClusterMonitor clusterMonitor;
-        private readonly IClusterConfiguration clusterConfiguration;
         private readonly RouterConfiguration routerConfiguration;
         private readonly ILogger logger;
         private readonly IMessageTracer messageTracer;
@@ -31,7 +30,6 @@ namespace kino.Connectivity
         public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
                              IExternalRoutingTable externalRoutingTable,
-                             IClusterConfiguration clusterConfiguration,
                              RouterConfiguration routerConfiguration,
                              IClusterMonitor clusterMonitor,
                              IMessageTracer messageTracer,
@@ -40,7 +38,6 @@ namespace kino.Connectivity
             this.logger = logger;
             this.messageTracer = messageTracer;
             this.socketFactory = socketFactory;
-            this.clusterConfiguration = clusterConfiguration;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
@@ -238,7 +235,7 @@ namespace kino.Connectivity
         private ISocket CreateScaleOutBackendSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
-            foreach (var peer in clusterConfiguration.GetClusterMembers())
+            foreach (var peer in clusterMonitor.GetClusterMembers())
             {
                 socket.Connect(peer.Uri);
             }

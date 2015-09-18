@@ -12,13 +12,13 @@ using kino.Sockets;
 
 namespace kino.Connectivity
 {
-    public class ClusterMonitor : IClusterMonitor
+    internal class ClusterMonitor : IClusterMonitor
     {
         private readonly ISocketFactory socketFactory;
         private CancellationTokenSource monitoringToken;
         private CancellationTokenSource messageProcessingToken;
         private readonly BlockingCollection<IMessage> outgoingMessages;
-        private readonly IClusterConfiguration clusterConfiguration;
+        private readonly IClusterMembership clusterMembership;
         private readonly RouterConfiguration routerConfiguration;
         private Task sendingMessages;
         private Task listenningMessages;
@@ -28,45 +28,34 @@ namespace kino.Connectivity
         private readonly IRendezvousConfiguration rendezvousConfiguration;
         private ISocket clusterMonitorSubscriptionSocket;
         private ISocket clusterMonitorSendingSocket;
-        private readonly ClusterTimingConfiguration timingConfiguration;
+        private readonly ClusterMembershipConfiguration membershipConfiguration;
         private readonly ILogger logger;
-        private readonly Action startAction;
-        private readonly Action stopAction;
-        private readonly Action requestMessageHandlersRoutingAction;
-        private readonly Action<IEnumerable<MessageIdentifier>> registerSelfAction;
-        private readonly Action<IEnumerable<MessageIdentifier>> unregisterSelfAction;
 
         public ClusterMonitor(ISocketFactory socketFactory,
                               RouterConfiguration routerConfiguration,
-                              IClusterConfiguration clusterConfiguration,
-                              ClusterTimingConfiguration timingConfiguration,
+                              IClusterMembership clusterMembership,
+                              ClusterMembershipConfiguration membershipConfiguration,
                               IRendezvousConfiguration rendezvousConfiguration,
                               ILogger logger)
         {
             this.logger = logger;
-            this.timingConfiguration = timingConfiguration;
+            this.membershipConfiguration = membershipConfiguration;
             pingReceived = new ManualResetEventSlim(false);
             newRendezvousLeaderSelected = new ManualResetEventSlim(false);
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
-            this.clusterConfiguration = clusterConfiguration;
+            this.clusterMembership = clusterMembership;
             this.rendezvousConfiguration = rendezvousConfiguration;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
-
-            startAction = GetStartAction(timingConfiguration.RunStandalone);
-            stopAction = GetStopAction(timingConfiguration.RunStandalone);
-            registerSelfAction = GetRegisterSelfAction(timingConfiguration.RunStandalone);
-            requestMessageHandlersRoutingAction = GetRequestMessageHandlersRoutingAction(timingConfiguration.RunStandalone);
-            unregisterSelfAction = GetUnregisterSelfAction(timingConfiguration.RunStandalone);
         }
 
-        private void StartMonitor()
+        public void Start()
         {
             StartProcessingClusterMessages();
             StartRendezvousMonitoring();
         }
 
-        private void StopMonitor()
+        public void Stop()
         {
             StopRendezvousMonitoring();
             StopProcessingClusterMessages();
@@ -77,16 +66,6 @@ namespace kino.Connectivity
             monitoringToken = new CancellationTokenSource();
             monitorRendezvous = Task.Factory.StartNew(_ => RendezvousConnectionMonitor(monitoringToken.Token),
                                                       TaskCreationOptions.LongRunning);
-        }
-
-        public void Start()
-        {
-            startAction();
-        }
-
-        public void Stop()
-        {
-            stopAction();
         }
 
         private void StartProcessingClusterMessages()
@@ -149,7 +128,7 @@ namespace kino.Connectivity
         {
             const int NewLeaderElected = 1;
             var result = WaitHandle.WaitAny(new[] {pingReceived.WaitHandle, newRendezvousLeaderSelected.WaitHandle},
-                                            timingConfiguration.PingSilenceBeforeRendezvousFailover);
+                                            membershipConfiguration.PingSilenceBeforeRendezvousFailover);
             if (result == WaitHandle.WaitTimeout)
             {
                 rendezvousConfiguration.RotateRendezvousServers();
@@ -298,7 +277,7 @@ namespace kino.Connectivity
             if (shouldHandle)
             {
                 var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
-                clusterConfiguration.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
+                clusterMembership.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
                 routerNotificationSocket.SendMessage(message);
             }
 
@@ -358,11 +337,6 @@ namespace kino.Connectivity
 
         public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers)
         {
-            registerSelfAction(messageHandlers);
-        }
-
-        private void RegisterRouter(IEnumerable<MessageIdentifier> messageHandlers)
-        {
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
                                              Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
@@ -377,22 +351,17 @@ namespace kino.Connectivity
             outgoingMessages.Add(message);
         }
 
-        public void UnregisterSelf(IEnumerable<MessageIdentifier> messageHandlers)
-        {
-            unregisterSelfAction(messageHandlers);
-        }
-
-        private void UnregisterLocalActor(IEnumerable<MessageIdentifier> messageHandler)
+        public void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers)
         {
             var message = Message.Create(new UnregisterMessageRouteMessage
                                          {
                                              Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
                                              SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                             MessageHandlers = messageHandler
-                                                 .Select(mh => new MessageContract
+                                             MessageHandlers = messageIdentifiers
+                                                 .Select(mi => new MessageContract
                                                                {
-                                                                   Identity = mh.Identity,
-                                                                   Version = mh.Version
+                                                                   Identity = mi.Identity,
+                                                                   Version = mi.Version
                                                                }
                                                  )
                                                  .ToArray()
@@ -403,11 +372,6 @@ namespace kino.Connectivity
 
         public void RequestClusterRoutes()
         {
-            requestMessageHandlersRoutingAction();
-        }
-
-        private void RequestClusterMessageHandlers()
-        {
             var message = Message.Create(new RequestClusterMessageRoutesMessage
                                          {
                                              RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
@@ -416,6 +380,9 @@ namespace kino.Connectivity
                                          RequestClusterMessageRoutesMessage.MessageIdentity);
             outgoingMessages.Add(message);
         }
+
+        public IEnumerable<SocketEndpoint> GetClusterMembers()
+            => clusterMembership.GetClusterMembers();
 
         private IMessage CreateUnregisterRoutingMessage()
             => Message.Create(new UnregisterNodeMessageRouteMessage
@@ -522,14 +489,14 @@ namespace kino.Connectivity
         {
             var registration = message.GetPayload<RegisterExternalMessageRouteMessage>();
             var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
-            clusterConfiguration.AddClusterMember(clusterMember);
+            clusterMembership.AddClusterMember(clusterMember);
         }
 
         private void ProcessPongMessage(IMessage message)
         {
             var payload = message.GetPayload<PongMessage>();
 
-            var nodeNotFound = clusterConfiguration.KeepAlive(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
+            var nodeNotFound = clusterMembership.KeepAlive(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
             if (!nodeNotFound)
             {
                 RequestNodeMessageHandlersRouting(payload);
@@ -553,7 +520,7 @@ namespace kino.Connectivity
 
         private void UnregisterDeadNodes(ISocket routerNotificationSocket, DateTime pingTime, TimeSpan pingInterval)
         {
-            foreach (var deadNode in clusterConfiguration.GetDeadMembers(pingTime, pingInterval))
+            foreach (var deadNode in clusterMembership.GetDeadMembers(pingTime, pingInterval))
             {
                 var message = Message.Create(new UnregisterNodeMessageRouteMessage
                                              {
@@ -561,34 +528,9 @@ namespace kino.Connectivity
                                                  SocketIdentity = deadNode.Identity
                                              },
                                              UnregisterNodeMessageRouteMessage.MessageIdentity);
-                clusterConfiguration.DeleteClusterMember(deadNode);
+                clusterMembership.DeleteClusterMember(deadNode);
                 routerNotificationSocket.SendMessage(message);
             }
         }
-
-        private Action GetStartAction(bool runStandalone)
-            => runStandalone
-                   ? (Action) (() => { })
-                   : StartMonitor;
-
-        private Action GetStopAction(bool runStandalone)
-            => runStandalone
-                   ? (Action) (() => { })
-                   : StopMonitor;
-
-        private Action GetRequestMessageHandlersRoutingAction(bool runStandalone)
-            => runStandalone
-                   ? (Action) (() => { })
-                   : RequestClusterMessageHandlers;
-
-        private Action<IEnumerable<MessageIdentifier>> GetRegisterSelfAction(bool runStandalone)
-            => runStandalone
-                   ? (Action<IEnumerable<MessageIdentifier>>) (_ => { })
-                   : RegisterRouter;
-
-        private Action<IEnumerable<MessageIdentifier>> GetUnregisterSelfAction(bool runStandalone)
-            => runStandalone
-                   ? (Action<IEnumerable<MessageIdentifier>>) (_ => { })
-                   : UnregisterLocalActor;
     }
 }

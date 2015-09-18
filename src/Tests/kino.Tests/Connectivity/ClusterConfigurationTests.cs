@@ -11,14 +11,14 @@ namespace kino.Tests.Connectivity
     public class ClusterConfigurationTests
     {
         private ILogger logger;
-        private ClusterTimingConfiguration timingConfiguration;
+        private ClusterMembershipConfiguration membershipConfiguration;
         private TimeSpan pingInterval;
 
         [SetUp]
         public void Setup()
         {
             pingInterval = TimeSpan.FromSeconds(2);
-            timingConfiguration = new ClusterTimingConfiguration
+            membershipConfiguration = new ClusterMembershipConfiguration
             {
                 PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(4)
             };
@@ -28,7 +28,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void TestAddClusterMember()
         {
-            var config = new ClusterConfiguration(timingConfiguration, logger);
+            var config = new ClusterMembership(membershipConfiguration, logger);
             var localhost = "tcp://127.0.0.1:40";
             var ep1 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
             var ep2 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
@@ -42,7 +42,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void TestDeleteClusterMember()
         {
-            var config = new ClusterConfiguration(timingConfiguration, logger);
+            var config = new ClusterMembership(membershipConfiguration, logger);
             var localhost = "tcp://127.0.0.1:40";
             var ep1 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
             var ep2 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
@@ -63,7 +63,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void TestNodeConsideredDead_IfLastKnownPongWasLongerThanPongSilenceBeforeRouteDeletionAgo()
         {
-            var config = new ClusterConfiguration(timingConfiguration, logger);
+            var config = new ClusterMembership(membershipConfiguration, logger);
             var localhost = "tcp://127.0.0.1:40";
             var ep1 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
             var ep2 = new SocketEndpoint(new Uri(localhost), Guid.NewGuid().ToByteArray());
@@ -72,7 +72,7 @@ namespace kino.Tests.Connectivity
 
             var pingTime = DateTime.UtcNow;
             var pingDelay = TimeSpan.FromSeconds(3);
-            Thread.Sleep(timingConfiguration.PongSilenceBeforeRouteDeletion + pingDelay);
+            Thread.Sleep(membershipConfiguration.PongSilenceBeforeRouteDeletion + pingDelay);
 
             config.KeepAlive(ep1);
             

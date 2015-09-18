@@ -7,6 +7,6 @@ namespace Server
     {
         IEnumerable<RendezvousEndpoints> GetRendezvousEndpointsConfiguration();
         RouterConfiguration GetRouterConfiguration();
-        ClusterTimingConfiguration GetClusterTimingConfiguration();
+        ClusterMembershipConfiguration GetClusterTimingConfiguration();
     }
 }

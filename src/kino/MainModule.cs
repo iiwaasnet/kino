@@ -32,8 +32,12 @@ namespace kino
                    .As<IExternalRoutingTable>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterConfiguration>()
-                   .As<IClusterConfiguration>()
+            builder.RegisterType<ClusterMonitorProvider>()
+                   .As<IClusterMonitorProvider>()
+                   .SingleInstance();
+
+            builder.RegisterType<ClusterMembership>()
+                   .As<IClusterMembership>()
                    .SingleInstance();
 
             builder.RegisterType<ClusterMonitor>()
