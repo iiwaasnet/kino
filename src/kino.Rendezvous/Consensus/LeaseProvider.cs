@@ -41,11 +41,6 @@ namespace kino.Rendezvous.Consensus
             leaseTimer = new Timer(state => ScheduledReadOrRenewLease(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
         }
 
-        public void ResetLease()
-        {
-            lastKnownLease = null;
-        }
-
         public Lease GetLease()
         {
             return GetLastKnownLease();
