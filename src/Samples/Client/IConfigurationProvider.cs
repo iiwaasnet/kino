@@ -9,7 +9,7 @@ namespace Client
     {
         IEnumerable<RendezvousEndpoints> GetRendezvousEndpointsConfiguration();
         RouterConfiguration GetRouterConfiguration();
-        ClusterMembershipConfiguration GetClusterTimingConfiguration();
+        ClusterMembershipConfiguration GetClusterMembershipConfiguration();
         ExpirableItemCollectionConfiguration GetExpirableItemCollectionConfiguration();
         MessageHubConfiguration GetMessageHubConfiguration();
     }

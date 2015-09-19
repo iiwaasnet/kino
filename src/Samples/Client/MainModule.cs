@@ -49,7 +49,7 @@ namespace Client
                    .As<IEnumerable<RendezvousEndpoints>>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterTimingConfiguration())
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())
                    .As<ClusterMembershipConfiguration>()
                    .SingleInstance();
         }

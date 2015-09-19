@@ -30,7 +30,7 @@ namespace Client
                    ScaleOutAddress = new SocketEndpoint(new Uri(appConfig.ScaleOutAddressUri), SocketIdentifier.CreateNew())
                };
 
-        public ClusterMembershipConfiguration GetClusterTimingConfiguration()
+        public ClusterMembershipConfiguration GetClusterMembershipConfiguration()
             => new ClusterMembershipConfiguration
                {
                    PongSilenceBeforeRouteDeletion = appConfig.PongSilenceBeforeRouteDeletion,
