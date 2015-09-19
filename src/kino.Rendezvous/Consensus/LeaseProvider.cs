@@ -17,6 +17,7 @@ namespace kino.Rendezvous.Consensus
         private readonly IRoundBasedRegister register;
         private readonly SemaphoreSlim renewGateway;
         private volatile Lease lastKnownLease;
+        private readonly TimeSpan leaseRenewWaitTimeout;
 
         public LeaseProvider(IRoundBasedRegister register,
                              IBallotGenerator ballotGenerator,
@@ -35,14 +36,14 @@ namespace kino.Rendezvous.Consensus
             this.rendezvousConfig = rendezvousConfig;
             this.ballotGenerator = ballotGenerator;
             this.register = register;
-
+            leaseRenewWaitTimeout = TimeSpan.FromMilliseconds(10);
             renewGateway = new SemaphoreSlim(1);
             leaseTimer = new Timer(state => ScheduledReadOrRenewLease(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
         }
 
         public void ResetLease()
         {
-            Interlocked.Exchange(ref lastKnownLease, null);
+            lastKnownLease = null;
         }
 
         public Lease GetLease()
@@ -61,14 +62,13 @@ namespace kino.Rendezvous.Consensus
         {
             if (config.NodeResponseTimeout.TotalMilliseconds * 2 > config.MessageRoundtrip.TotalMilliseconds)
             {
-                throw new Exception("NodeResponseTimeout" +
-                                    $"[{config.NodeResponseTimeout.TotalMilliseconds} msec]" +
-                                    " should be at least 2 times shorter than MessageRoundtrip" +
-                                    $"[{config.MessageRoundtrip.TotalMilliseconds} msec]!");
+                throw new Exception("NodeResponseTimeout[{config.NodeResponseTimeout.TotalMilliseconds} msec] " +
+                                    "should be at least 2 times shorter than " +
+                                    "MessageRoundtrip[{config.MessageRoundtrip.TotalMilliseconds} msec]");
             }
             if (config.MaxLeaseTimeSpan
                 - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
-                - config.ClockDrift <= TimeSpan.FromMilliseconds(0))
+                - config.ClockDrift <= TimeSpan.Zero)
             {
                 throw new Exception($"MaxLeaseTimeSpan[{config.MaxLeaseTimeSpan.TotalMilliseconds} msec] " +
                                     "should be longer than " +
@@ -79,7 +79,7 @@ namespace kino.Rendezvous.Consensus
 
         private void ScheduledReadOrRenewLease()
         {
-            if (renewGateway.Wait(TimeSpan.FromMilliseconds(10)))
+            if (renewGateway.Wait(leaseRenewWaitTimeout))
             {
                 try
                 {
