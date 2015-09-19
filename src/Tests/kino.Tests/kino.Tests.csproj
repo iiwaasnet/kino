@@ -70,6 +70,7 @@
     <Compile Include="Connectivity\ClusterConfigurationTests.cs" />
     <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
     <Compile Include="Connectivity\SocketEndpointTests.cs" />
+    <Compile Include="Consensus\BallotGeneratorTests.cs" />
     <Compile Include="Helpers\MessageHubSocketFactory.cs" />
     <Compile Include="Helpers\ActorHostSocketFactory.cs" />
     <Compile Include="Helpers\MessageRouterSocketFactory.cs" />
@@ -103,11 +104,16 @@
       <Project>{2c69ba32-dadc-4e4e-8d91-055fb9d35bff}</Project>
       <Name>kino.Client</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\kino.Rendezvous\kino.Rendezvous.csproj">
+      <Project>{4680d77e-3310-4ff1-adbf-d728c3e1c317}</Project>
+      <Name>kino.Rendezvous</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\kino\kino.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
       <Name>kino</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
