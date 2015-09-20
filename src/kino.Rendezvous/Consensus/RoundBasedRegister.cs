@@ -42,9 +42,9 @@ namespace kino.Rendezvous.Consensus
             listener = intercomMessageHub.Subscribe();
 
             listener.Where(m => Unsafe.Equals(m.Identity, LeaseReadMessage.MessageIdentity))
-                    .Subscribe(new MessageStreamListener(OnReadReceived));
+                    .Subscribe(OnReadReceived);
             listener.Where(m => Unsafe.Equals(m.Identity, LeaseWriteMessage.MessageIdentity))
-                    .Subscribe(new MessageStreamListener(OnWriteReceived));
+                    .Subscribe(OnWriteReceived);
 
             ackReadStream = listener.Where(m => Unsafe.Equals(m.Identity, LeaseAckReadMessage.MessageIdentity));
             nackReadStream = listener.Where(m => Unsafe.Equals(m.Identity, LeaseNackReadMessage.MessageIdentity));
