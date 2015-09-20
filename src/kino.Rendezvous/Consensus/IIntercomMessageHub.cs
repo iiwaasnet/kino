@@ -4,7 +4,7 @@ namespace kino.Rendezvous.Consensus
 {
 	public interface IIntercomMessageHub
 	{
-		IListener Subscribe();
+		Listener Subscribe();
 		void Broadcast(IMessage message);
 		void Send(IMessage message, byte[] receiver);
         void Start();

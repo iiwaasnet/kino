@@ -5,7 +5,7 @@ using kino.Messaging;
 
 namespace kino.Rendezvous.Consensus
 {
-    public class Listener : IListener
+    public class Listener : IObservable<IMessage>, IDisposable
     {
         private readonly ConcurrentDictionary<IObserver<IMessage>, object> observers;
         private readonly Action<Listener> unsubscribe;

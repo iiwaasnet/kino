@@ -15,7 +15,7 @@ namespace kino.Rendezvous.Consensus
         private Ballot readBallot;
         private Ballot writeBallot;
         private Lease lease;
-        private readonly IListener listener;
+        private readonly Listener listener;
         private readonly ISynodConfiguration synodConfig;
         private readonly LeaseConfiguration leaseConfig;
         private readonly ILogger logger;

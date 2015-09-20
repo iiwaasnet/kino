@@ -145,7 +145,7 @@ namespace kino.Rendezvous.Consensus
             return socket;
         }
 
-        public IListener Subscribe()
+        public Listener Subscribe()
         {
             var listener = new Listener(Unsubscribe, logger);
             subscriptions.TryAdd(listener, null);
