@@ -55,10 +55,7 @@ public class HelloMessage : Payload
     public string Greeting { get; set; }
 }
 ```
-Default serializer for all messages, other than Exception, - protobuf-net. Different serializer could be injected via protected contructor (?):
-```csharp
-protected Payload(IMessageSerializer messageSerializer)
-```
+Default serializer for all messages, other than Exception, [protobuf-net](https://github.com/mgravell/protobuf-net).
 
 ## Sample Actor
 ```csharp
