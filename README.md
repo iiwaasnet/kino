@@ -1,7 +1,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/khn5imataa5uw4oj?svg=true)](https://ci.appveyor.com/project/iiwaasnet/kino)
 [![NuGet kino.Client](https://badge.fury.io/nu/kino.Client.svg)](http://badge.fury.io/nu/kino.Client)
 [![NuGet kino.Actors](https://badge.fury.io/nu/kino.Actors.svg)](http://badge.fury.io/nu/kino.Actors)
-[![NuGet version](https://badge.fury.io/nu/kino.Rendezvous.svg)](http://badge.fury.io/nu/kino.Rendezvous)
+[![NuGet kino.Rendezvous](https://badge.fury.io/nu/kino.Rendezvous.svg)](http://badge.fury.io/nu/kino.Rendezvous)
 
 # Kino - framework for building Actors networks
 *(Project is in development)*
