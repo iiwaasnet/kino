@@ -7,34 +7,41 @@
 *(Project is in development)*
 ## In a nutshell
 
-In *kino*, an **Actor** exposes a piece of functionality, accessible over the network, by declaring incoming message types it is able to process.
-Actor receives an input message and may send one or more output messages, either synchronously or asynchronously. Actors are hosted by an ActorHost.
+In *kino*, an **Actor** exposes a piece of functionality over the network. It does so by declaring the message type it can process.
+Actor receives one input message and may send one or more output messages, either synchronously or asynchronously. It may produce no output as well.
+Actors are hosted by an ActorHost.
 
 
-All Actors, hosted by the same **ActorHost**, share same receiving thread, i.e. until previously fetched message is not passed to an Actor, the next one is waiting in the queue.
-ActorHost is a unit of in-proc scaling. Every ActorHost connectes to a MessageRouter.
+
+**ActorHost** receives messages and calles corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same **ActorHost**, share same receiving thread. 
+This means that until previously fetched message is not processed by an Actor, the next one is waiting in the queue. ActorHost is a unit of in-proc scaling.
+Every ActorHost connectes to a MessageRouter.
+
 
 
 **MessageRouter** is responsible for:
   * registering all Actors, which are hosted by connected ActorHosts;
-  * type-based message routing to locally registered Actors;
+  * type-based message routing to locally connected Actors;
   * typed-based message routing to external, i.e. out-of-proc Actors, if non of the locally registered Actors is able to process a message.
 
-MessageRouter provides Actors connectivity between processes/nodes. MessageRouter connects to Rendezvous server.
+In order to be able to discover other Actors, MessageRouter connects to Rendezvous server.
 
 
-**Rendezvous** server is a point, where all MessageRouters connect to build up the Actors network. 
+
+**Rendezvous** server is a well-known point, where all MessageRouters connect, building up an Actors network. 
 Rendezvous server broadcasts:
-  * MessageRouters' registration messages, announcing which type of messages Actors are able to process;
-  * Ping to check nodes availability;
+  * MessageRouters' registration messages, announcing which type of messages locally registered Actors are able to process;
+  * Ping message, to check nodes availability;
   * Pong response from all the registered nodes to all registered nodes.
 
 Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build a fault-tolorent cluster.
 
 
-**MessageHub** is one of the ways to send messages into Actors network. It a *starting point of the flow*. First message sent from MessageHub gets CorrelationId assigned, 
-which is then copied to any other messages, created during the message flow. It is possible to create a *callback point*, which allows to route back to the caller the message, 
-on which the callback is defined. Thus, clients may emulate a synchronous call, waiting for the callback to be resolved with the resulting message or exception.
+
+**MessageHub** is one of the ways to send messages into Actors network. It is a *starting point of the flow*. First message sent from MessageHub gets CorrelationId assigned, 
+which is then copied to any other message, created during the message flow. It is possible to create a *callback point*, which is defined by message type and caller address. 
+Whenever an Actor responds with the message, which type corresponds to the one registered in the callback, it is immediatelly routed back to the address in the callback point.
+Thus, clients may emulate synchronous calls, waiting for the callback to be resolved. Callback may return back a message or an exception, whatever happens first.
 
 
 ## Message declaration
@@ -57,9 +64,9 @@ protected Payload(IMessageSerializer messageSerializer)
 ```csharp
 public class RevertStringActor : IActor
 {
-    public IEnumerable<MessageMap> GetInterfaceDefinition()
+    public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
     {
-        yield return new MessageMap
+        yield return new MessageHandlerDefinition
                      {
                          Handler = StartProcess,
                          Message = new MessageDefinition
@@ -117,8 +124,8 @@ foreach (IActor actor in GetAvailableActors())
     actorHost.AssignActor(actor);
 }
 ```
-Please, check [Samples](https://github.com/iiwaasnet/kino/tree/master/src/Samples) folder for Client & Server examples.
+For basic usage, please, check [Samples](https://github.com/iiwaasnet/kino/tree/master/src/Samples) folder.
+Another [example](https://github.com/iiwaasnet/weather) of scaling out requests and grouping final result.
 
-I would be glad to answer your questions, hear suggestions or feedback :)
 
 **Powered by: [NetMQ](https://github.com/zeromq/netmq)**
