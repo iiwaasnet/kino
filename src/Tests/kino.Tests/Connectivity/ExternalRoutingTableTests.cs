@@ -2,7 +2,7 @@
 using kino.Connectivity;
 using kino.Diagnostics;
 using kino.Messaging;
-using kino.Tests.Backend.Setup;
+using kino.Tests.Actors.Setup;
 using Moq;
 using NUnit.Framework;
 

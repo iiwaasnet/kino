@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Linq;
 using kino.Client;
-using kino.Connectivity;
 using kino.Diagnostics;
 using kino.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
-using kino.Tests.Backend.Setup;
+using kino.Tests.Actors.Setup;
 using Moq;
 using NUnit.Framework;
 using MessageIdentifier = kino.Connectivity.MessageIdentifier;
 
-namespace kino.Tests.Frontend
+namespace kino.Tests.Client
 {
     [TestFixture]
     public class CallbackHandlerStackTests

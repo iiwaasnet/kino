@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using kino.Sockets;
-using kino.Tests.Backend.Setup;
+using kino.Tests.Actors.Setup;
 
 namespace kino.Tests.Helpers
 {

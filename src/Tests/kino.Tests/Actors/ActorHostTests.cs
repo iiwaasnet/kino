@@ -9,13 +9,13 @@ using kino.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Sockets;
-using kino.Tests.Backend.Setup;
+using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
 using IMessageTracer = kino.Actors.IMessageTracer;
 
-namespace kino.Tests.Backend
+namespace kino.Tests.Actors
 {
     [TestFixture]
     public class ActorHostTests

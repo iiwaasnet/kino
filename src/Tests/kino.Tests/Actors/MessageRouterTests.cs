@@ -7,13 +7,13 @@ using kino.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Sockets;
-using kino.Tests.Backend.Setup;
+using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
 using IMessageTracer = kino.Connectivity.IMessageTracer;
 
-namespace kino.Tests.Backend
+namespace kino.Tests.Actors
 {
     [TestFixture]
     public class MessageRouterTests
@@ -249,7 +249,7 @@ namespace kino.Tests.Backend
 
         private static IMessage SendMessageOverMessageHub()
         {
-            var messageTracer = new Mock<Client.IMessageTracer>();
+            var messageTracer = new Mock<kino.Client.IMessageTracer>();
             var logger = new Mock<ILogger>();
             var sockrtFactory = new Mock<ISocketFactory>();
             var socket = new StubSocket();

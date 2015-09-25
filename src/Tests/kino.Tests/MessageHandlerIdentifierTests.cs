@@ -1,7 +1,7 @@
 ﻿using System;
 using kino.Connectivity;
 using kino.Messaging;
-using kino.Tests.Backend.Setup;
+using kino.Tests.Actors.Setup;
 using NUnit.Framework;
 
 namespace kino.Tests

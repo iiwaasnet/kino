@@ -64,9 +64,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Backend\ActorHandlersMapTests.cs" />
-    <Compile Include="Backend\ActorHostTests.cs" />
-    <Compile Include="Backend\MessageRouterTests.cs" />
+    <Compile Include="Actors\ActorHandlersMapTests.cs" />
+    <Compile Include="Actors\ActorHostTests.cs" />
+    <Compile Include="Actors\MessageRouterTests.cs" />
     <Compile Include="Connectivity\ClusterConfigurationTests.cs" />
     <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
     <Compile Include="Connectivity\SocketEndpointTests.cs" />
@@ -80,15 +80,15 @@
     <Compile Include="Helpers\MessageHubSocketFactory.cs" />
     <Compile Include="Helpers\ActorHostSocketFactory.cs" />
     <Compile Include="Helpers\MessageRouterSocketFactory.cs" />
-    <Compile Include="Backend\Setup\AsyncExceptionMessage.cs" />
-    <Compile Include="Backend\Setup\AsyncMessage.cs" />
-    <Compile Include="Backend\Setup\ExceptionActor.cs" />
-    <Compile Include="Backend\Setup\EchoActor.cs" />
-    <Compile Include="Backend\Setup\SimpleMessage.cs" />
-    <Compile Include="Backend\Setup\StubSocket.cs" />
-    <Compile Include="Frontend\CallbackHandlerKeyTests.cs" />
-    <Compile Include="Frontend\CallbackHandlerStackTests.cs" />
-    <Compile Include="Frontend\MessagHubTests.cs" />
+    <Compile Include="Actors\Setup\AsyncExceptionMessage.cs" />
+    <Compile Include="Actors\Setup\AsyncMessage.cs" />
+    <Compile Include="Actors\Setup\ExceptionActor.cs" />
+    <Compile Include="Actors\Setup\EchoActor.cs" />
+    <Compile Include="Actors\Setup\SimpleMessage.cs" />
+    <Compile Include="Actors\Setup\StubSocket.cs" />
+    <Compile Include="Client\CallbackHandlerKeyTests.cs" />
+    <Compile Include="Client\CallbackHandlerStackTests.cs" />
+    <Compile Include="Client\MessagHubTests.cs" />
     <Compile Include="Helpers\BlockingCollectionExtensions.cs" />
     <Compile Include="MessageHandlerIdentifierTests.cs" />
     <Compile Include="Messaging\MessageTests.cs" />

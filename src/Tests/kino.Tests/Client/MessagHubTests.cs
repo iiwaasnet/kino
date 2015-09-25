@@ -3,20 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using kino.Client;
-using kino.Connectivity;
 using kino.Diagnostics;
 using kino.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Sockets;
-using kino.Tests.Backend.Setup;
+using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
 using IMessageTracer = kino.Client.IMessageTracer;
 using MessageIdentifier = kino.Connectivity.MessageIdentifier;
 
-namespace kino.Tests.Frontend
+namespace kino.Tests.Client
 {
     [TestFixture]
     public class MessagHubTests

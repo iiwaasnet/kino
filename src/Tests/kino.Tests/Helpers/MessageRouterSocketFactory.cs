@@ -5,7 +5,7 @@ using System.Threading;
 using kino.Connectivity;
 using kino.Framework;
 using kino.Sockets;
-using kino.Tests.Backend.Setup;
+using kino.Tests.Actors.Setup;
 
 namespace kino.Tests.Helpers
 {

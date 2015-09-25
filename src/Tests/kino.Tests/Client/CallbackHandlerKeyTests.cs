@@ -2,10 +2,10 @@
 using kino.Client;
 using kino.Messaging;
 using kino.Messaging.Messages;
-using kino.Tests.Backend.Setup;
+using kino.Tests.Actors.Setup;
 using NUnit.Framework;
 
-namespace kino.Tests.Frontend
+namespace kino.Tests.Client
 {
     [TestFixture]
     public class CallbackHandlerKeyTests

@@ -1,15 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using kino.Actors;
-using kino.Connectivity;
 using kino.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
-using kino.Tests.Backend.Setup;
+using kino.Tests.Actors.Setup;
 using NUnit.Framework;
 using MessageIdentifier = kino.Connectivity.MessageIdentifier;
 
-namespace kino.Tests.Backend
+namespace kino.Tests.Actors
 {
     [TestFixture]
     public class ActorHandlersMapTests
