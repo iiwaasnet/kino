@@ -11,6 +11,7 @@ namespace kino.Messaging
 
         private object payload;
         private readonly List<SocketEndpoint> hops;
+        private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
         private Message(IPayload payload, byte[] messageIdentity, DistributionPattern distributionPattern)
         {
@@ -27,7 +28,7 @@ namespace kino.Messaging
             => new Message(payload, messageIdentity, DistributionPattern.Unicast) {CorrelationId = GenerateCorrelationId()};
 
         public static IMessage Create(IPayload payload, byte[] messageIdentity, DistributionPattern distributionPattern = DistributionPattern.Unicast)
-            => new Message(payload, messageIdentity, distributionPattern);
+            => new Message(payload, messageIdentity, distributionPattern) {CorrelationId = EmptyCorrelationId};
 
         private static byte[] GenerateCorrelationId()
             //TODO: Better implementation

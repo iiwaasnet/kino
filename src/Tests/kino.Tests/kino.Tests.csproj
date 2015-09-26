@@ -67,6 +67,7 @@
     <Compile Include="Actors\ActorHandlersMapTests.cs" />
     <Compile Include="Actors\ActorHostTests.cs" />
     <Compile Include="Actors\MessageRouterTests.cs" />
+    <Compile Include="Client\MessageTracerTests.cs" />
     <Compile Include="Connectivity\ClusterConfigurationTests.cs" />
     <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
     <Compile Include="Connectivity\SocketEndpointTests.cs" />
