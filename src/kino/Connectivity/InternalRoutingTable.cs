@@ -90,7 +90,7 @@ namespace kino.Connectivity
                 foreach (var messageHandlerIdentifier in handlers)
                 {
                     RemoveMessageHandler(messageHandlerIdentifier, socketIdentifier);
-                    if(!messageToSocketMap.ContainsKey(messageHandlerIdentifier))
+                    if (!messageToSocketMap.ContainsKey(messageHandlerIdentifier))
                     {
                         yield return messageHandlerIdentifier;
                     }
@@ -110,5 +110,12 @@ namespace kino.Connectivity
                 }
             }
         }
+
+        public IEnumerable<InternalRoute> GetAllRoutes()
+            => socketToMessageMap.Select(sm => new InternalRoute
+                                               {
+                                                   Socket = sm.Key,
+                                                   Messages = sm.Value
+                                               });
     }
 }

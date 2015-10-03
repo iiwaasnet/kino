@@ -9,5 +9,6 @@ namespace kino.Connectivity
         IEnumerable<SocketIdentifier> FindAllRoutes(MessageIdentifier messageIdentifier);
         IEnumerable<MessageIdentifier> GetMessageIdentifiers();
         IEnumerable<MessageIdentifier> RemoveActorHostRoute(SocketIdentifier socketIdentifier);
+        IEnumerable<InternalRoute> GetAllRoutes();
     }
 }

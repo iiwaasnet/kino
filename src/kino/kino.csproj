@@ -68,6 +68,7 @@
     <Compile Include="Connectivity\ActorResult.cs" />
     <Compile Include="Connectivity\ClusterMembershipConfiguration.cs" />
     <Compile Include="Connectivity\ClusterMonitorProvider.cs" />
+    <Compile Include="Connectivity\ExternalRoute.cs" />
     <Compile Include="Connectivity\ExternalRoutingTable.cs" />
     <Compile Include="Connectivity\IActorResult.cs" />
     <Compile Include="Connectivity\IClusterMonitorProvider.cs" />
@@ -76,6 +77,7 @@
     <Compile Include="Connectivity\AsyncMessageContext.cs" />
     <Compile Include="Connectivity\IMessageRouter.cs" />
     <Compile Include="Connectivity\IMessageTracer.cs" />
+    <Compile Include="Connectivity\InternalRoute.cs" />
     <Compile Include="Connectivity\LoopbackClusterMonitor.cs" />
     <Compile Include="Connectivity\MessageTracer.cs" />
     <Compile Include="Connectivity\RendezvousConfiguration.cs" />
@@ -94,6 +96,8 @@
     <Compile Include="Connectivity\MessageRouter.cs" />
     <Compile Include="Connectivity\SocketIdentifier.cs" />
     <Compile Include="Connectivity\ClusterMemberMeta.cs" />
+    <Compile Include="Messaging\Messages\KnownMessageRoutesMessage.cs" />
+    <Compile Include="Messaging\Messages\RequestKnownMessageRoutesMessage.cs" />
     <Compile Include="Messaging\Messages\UnregisterMessageRouteMessage.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />
     <Compile Include="Diagnostics\Logger.cs" />

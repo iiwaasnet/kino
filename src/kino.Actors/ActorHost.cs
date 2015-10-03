@@ -108,7 +108,7 @@ namespace kino.Actors
             }
         }
 
-        private static void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<Connectivity.MessageIdentifier> registrations)
+        private static void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<MessageIdentifier> registrations)
         {
             var payload = new RegisterInternalMessageRouteMessage
                           {
@@ -177,7 +177,7 @@ namespace kino.Actors
                         {
                             try
                             {
-                                var actorIdentifier = new Connectivity.MessageIdentifier(message.Version, message.Identity);
+                                var actorIdentifier = new MessageIdentifier(message.Version, message.Identity);
                                 var handler = actorHandlerMap.Get(actorIdentifier);
                                 if (handler != null)
                                 {

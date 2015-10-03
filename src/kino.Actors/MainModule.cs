@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using kino.Actors.Diagnostics;
 using kino.Connectivity;
 using kino.Framework;
 
@@ -28,6 +29,10 @@ namespace kino.Actors
 
             builder.RegisterType<MessageTracer>()
                    .As<IMessageTracer>()
+                   .SingleInstance();
+
+            builder.RegisterType<KnownMessageRoutesActor>()
+                   .As<IActor>()
                    .SingleInstance();
         }
     }

@@ -151,5 +151,13 @@ namespace kino.Connectivity
 
         private static IEnumerable<string> ConcatenateMessageHandlers(IEnumerable<MessageIdentifier> messageHandlerIdentifiers)
             => messageHandlerIdentifiers.Select(mh => $"{mh.Identity.GetString()}:{mh.Version.GetString()}");
+
+        public IEnumerable<ExternalRoute> GetAllRoutes()
+            => socketToMessageMap.Select(sm => new ExternalRoute
+                                               {
+                                                   Node = socketToUriMap[sm.Key],
+                                                   Socket = sm.Key,
+                                                   Messages = sm.Value
+                                               });
     }
 }

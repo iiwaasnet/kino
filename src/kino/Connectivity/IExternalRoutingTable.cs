@@ -10,5 +10,6 @@ namespace kino.Connectivity
         void RemoveNodeRoute(SocketIdentifier socketIdentifier);
         void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier);
         IEnumerable<SocketIdentifier> FindAllRoutes(MessageIdentifier messageIdentifier);
+        IEnumerable<ExternalRoute> GetAllRoutes();
     }
 }
