@@ -91,8 +91,8 @@ namespace kino.Client
                                                       promise,
                                                       new[]
                                                       {
-                                                          new Connectivity.MessageIdentifier(message.Version, callbackPoint.MessageIdentity),
-                                                          new Connectivity.MessageIdentifier(message.Version, ExceptionMessage.MessageIdentity)
+                                                          new MessageIdentifier(message.Version, callbackPoint.MessageIdentity),
+                                                          new MessageIdentifier(message.Version, ExceptionMessage.MessageIdentity)
                                                       });
                                 messageTracer.CallbackRegistered(message);
                             }
