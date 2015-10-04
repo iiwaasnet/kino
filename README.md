@@ -3,7 +3,7 @@
 [![NuGet kino.Actors](https://badge.fury.io/nu/kino.Actors.svg)](http://badge.fury.io/nu/kino.Actors)
 [![NuGet kino.Rendezvous](https://badge.fury.io/nu/kino.Rendezvous.svg)](http://badge.fury.io/nu/kino.Rendezvous)
 
-# Kino - framework for building actor networks
+# Kino - framework for building actors networks
 *(Project is in development)*
 ## In a nutshell
 
