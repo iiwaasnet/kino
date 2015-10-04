@@ -3,18 +3,18 @@
 [![NuGet kino.Actors](https://badge.fury.io/nu/kino.Actors.svg)](http://badge.fury.io/nu/kino.Actors)
 [![NuGet kino.Rendezvous](https://badge.fury.io/nu/kino.Rendezvous.svg)](http://badge.fury.io/nu/kino.Rendezvous)
 
-# Kino - framework for building Actors networks
+# Kino - framework for building actor networks
 *(Project is in development)*
 ## In a nutshell
 
-In *kino*, an **Actor** exposes a piece of functionality over the network. It does so by declaring the message type it can process.
-Actor receives one input message and may send one or more output messages, either synchronously or asynchronously. It may produce no output as well.
+In *kino*, an **Actor** registers itself by declaring message types it can process. There is no hierarchy of actors, as well as no logical addresses assigned to them.
+Actor's message handling method receives one input message and may send one or more output messages, either synchronously or asynchronously. It may produce no output as well.
 Actors are hosted by an ActorHost.
 
 
 
 **ActorHost** receives messages and calles corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same **ActorHost**, share same receiving thread. 
-This means that until previously fetched message is not processed by an Actor, the next one is waiting in the queue. ActorHost is a unit of in-proc scaling.
+This means that until previously fetched message is processed by an Actor, the next one will be waiting in the queue. ActorHost is a unit of in-proc scaling.
 Every ActorHost connectes to a MessageRouter.
 
 
