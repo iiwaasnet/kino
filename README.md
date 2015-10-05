@@ -42,7 +42,7 @@ Since Rendezvous server is a single point of failure, it is recommended to start
 which is then copied to any other message, created during the message flow. It is possible to create a *callback point*, which is defined by message type and caller address. 
 Whenever an Actor responds with the message, which type corresponds to the one registered in the callback, it is immediatelly routed back to the address in the callback point.
 Thus, clients may emulate synchronous calls, waiting for the callback to be resolved. Callback may return back a message or an exception, whatever happens first.
-
+![](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Callback.png)
 
 ## Message declaration
 ```csharp
