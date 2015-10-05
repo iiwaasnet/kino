@@ -89,18 +89,21 @@ public class RevertStringActor : IActor
 
 ## Sending a message with callback
 ```csharp
+// Create and start MessageRouter
 // ctor parameters are omitted for clarity
 var messageRouter = new MessageRouter(...);
 messageRouter.Start();
-
+// Create and start ClusterMonitor
 var clusterMonitor = new ClusterMonitor(...);
 clusterMonitor.Start();
-
+// Create and start MessageHub
 var messageHub = new MessageHub(...);
 messageHub.Start();
 
 var request = Message.CreateFlowStartMessage(new HelloMessage(), HelloMessage.MessageIdentity);
+// Define which message type should be reurned back to caller
 var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
+// Send request and wait for the promise to be resolved with the expected callback message
 var promise = messageHub.EnqueueRequest(request, callbackPoint);
 var response = promise.GetResponse().Result.GetPayload<EhlloMessage>();
 ```
