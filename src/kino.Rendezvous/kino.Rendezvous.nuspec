@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
         <id>kino.Rendezvous</id>
-        <version>0.0.1.3-preview</version>
+        <version>0.0.1.4-preview</version>
         <title>kino.Rendezvous</title>
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
