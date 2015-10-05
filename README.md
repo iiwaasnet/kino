@@ -101,7 +101,7 @@ var messageHub = new MessageHub(...);
 messageHub.Start();
 
 var request = Message.CreateFlowStartMessage(new HelloMessage(), HelloMessage.MessageIdentity);
-// Define which message type should be reurned back to caller
+// Define which message type should be returned back to caller
 var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
 // Send request and wait for the promise to be resolved with the expected callback message
 var promise = messageHub.EnqueueRequest(request, callbackPoint);
@@ -110,15 +110,17 @@ var response = promise.GetResponse().Result.GetPayload<EhlloMessage>();
 
 ## Starting Actors
 ```csharp
+// Create and start MessageRouter
 // ctor parameters are omitted for clarity
 var messageRouter = new MessageRouter(...);
 messageRouter.Start();
-
+// Create and start ClusterMonitor
 var clusterMonitor = new ClusterMonitor(...);
 clusterMonitor.Start();
-
+// Create and start ActorHost
 var actorHost = new ActorHost(...);
 actorHost.Start();
+// Resolve actors implementations and assign them to ActorHost
 foreach (IActor actor in GetAvailableActors())
 {
     actorHost.AssignActor(actor);
