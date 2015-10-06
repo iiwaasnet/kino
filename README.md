@@ -7,8 +7,8 @@
 *(Project is in development)*
 ## In a nutshell
 
-
 ![Actors](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png)
+
 In *kino*, an **Actor** registers itself by declaring message types it can process. There is no hierarchy of actors, as well as no logical addresses assigned to them.
 Actor's message handling method receives one input message and may send one or more output messages, either synchronously or asynchronously. It may produce no output as well.
 Actors are hosted by an ActorHost.
