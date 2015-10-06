@@ -15,12 +15,12 @@ Actors are hosted by an ActorHost.
 
 
 
-**ActorHost** receives messages and calles corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same **ActorHost**, share same receiving thread. 
+**ActorHost** receives messages and calls corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same **ActorHost**, share same receiving thread. 
 This means that until previously fetched message is processed by an Actor, the next one will be waiting in the queue. ActorHost is a unit of in-proc scaling.
 
 ![ActorHost](https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png)
 
-Every ActorHost connectes to a MessageRouter.
+Every ActorHost connects to a MessageRouter.
 
 
 **MessageRouter** is responsible for:
@@ -40,14 +40,14 @@ Rendezvous server broadcasts:
   * Ping message, to check nodes availability;
   * Pong response from all the registered nodes to all registered nodes.
 
-Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build a fault-tolorent cluster.
+Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build a fault-tolerant cluster.
 
 ![Rendezvous](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Rendezvous.png)
 
 
 **MessageHub** is one of the ways to send messages into Actors network. It is a *starting point of the flow*. First message sent from MessageHub gets CorrelationId assigned, 
 which is then copied to any other message, created during the message flow. It is possible to create a *callback point*, which is defined by message type and caller address. 
-Whenever an Actor responds with the message, which type corresponds to the one registered in the callback, it is immediatelly routed back to the address in the callback point.
+Whenever an Actor responds with the message, which type corresponds to the one registered in the callback, it is immediately routed back to the address in the callback point.
 Thus, clients may emulate synchronous calls, waiting for the callback to be resolved. Callback may return back a message or an exception, whatever happens first.
 
 ![Callback](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Callback.png)
