@@ -8,18 +8,18 @@
 ## In a nutshell
 
 
-![](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png)
+![Actors](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png)
 In *kino*, an **Actor** registers itself by declaring message types it can process. There is no hierarchy of actors, as well as no logical addresses assigned to them.
 Actor's message handling method receives one input message and may send one or more output messages, either synchronously or asynchronously. It may produce no output as well.
 Actors are hosted by an ActorHost.
 
-![](https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png)
+![ActorHost](https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png)
 
 **ActorHost** receives messages and calles corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same **ActorHost**, share same receiving thread. 
 This means that until previously fetched message is processed by an Actor, the next one will be waiting in the queue. ActorHost is a unit of in-proc scaling.
 Every ActorHost connectes to a MessageRouter.
 
-![](https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png)
+![MessageRouter](https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png)
 
 **MessageRouter** is responsible for:
   * registering all Actors, which are hosted by connected ActorHosts;
@@ -28,7 +28,7 @@ Every ActorHost connectes to a MessageRouter.
 
 In order to be able to discover other Actors, MessageRouter connects to Rendezvous server.
 
-![](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Rendezvous.png)
+![Rendezvous](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Rendezvous.png)
 
 **Rendezvous** server is a well-known point, where all MessageRouters connect, building up an Actors network. 
 Rendezvous server broadcasts:
@@ -38,7 +38,7 @@ Rendezvous server broadcasts:
 
 Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build a fault-tolorent cluster.
 
-![](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Callback.png)
+![Callback](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Callback.png)
 
 **MessageHub** is one of the ways to send messages into Actors network. It is a *starting point of the flow*. First message sent from MessageHub gets CorrelationId assigned, 
 which is then copied to any other message, created during the message flow. It is possible to create a *callback point*, which is defined by message type and caller address. 
