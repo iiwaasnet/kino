@@ -17,9 +17,10 @@ Actors are hosted by an ActorHost.
 
 **ActorHost** receives messages and calles corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same **ActorHost**, share same receiving thread. 
 This means that until previously fetched message is processed by an Actor, the next one will be waiting in the queue. ActorHost is a unit of in-proc scaling.
-Every ActorHost connectes to a MessageRouter.
 
 ![ActorHost](https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png)
+
+Every ActorHost connectes to a MessageRouter.
 
 
 **MessageRouter** is responsible for:
