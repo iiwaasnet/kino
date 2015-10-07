@@ -9,7 +9,7 @@
 
 ![Actors](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png)
 
-Original ![Actor model](https://en.wikipedia.org/wiki/Actor_model) is very well known. *kino* could be named as a flavor of the former and comes with the following differences.
+Original [Actor model](https://en.wikipedia.org/wiki/Actor_model) is very well known. *kino* could be named as a flavor of the former and comes with the following differences.
 In *kino*, an **Actor** registers itself by declaring message types it can process. There is no hierarchy of actors, as well as no logical addresses assigned to them.
 Actor's message handling method receives one input message and may send one or more output messages, either synchronously or asynchronously. It may produce no output as well.
 Actors are hosted by an ActorHost.
