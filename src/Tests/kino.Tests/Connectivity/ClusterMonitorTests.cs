@@ -66,7 +66,7 @@ namespace kino.Tests.Connectivity
             {
                 clusterMonitor.Start();
 
-                Thread.Sleep(clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover);
+                WaitLongerThanPingSilenceFailover();
 
                 rendezvousConfiguration.Verify(m => m.GetCurrentRendezvousServer(), Times.AtLeastOnce);
                 rendezvousConfiguration.Verify(m => m.RotateRendezvousServers(), Times.AtLeastOnce);
@@ -76,6 +76,8 @@ namespace kino.Tests.Connectivity
                 clusterMonitor.Stop();
             }
         }
+
+        
 
         [Test]
         public void TestIfPingComesInTime_SwitchToNextRendezvousServerNeverHappens()
@@ -111,11 +113,7 @@ namespace kino.Tests.Connectivity
             }
         }
 
-        private void WaitLessThanPingSilenceFailover()
-        {
-            Thread.Sleep((int) (clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover.TotalMilliseconds * 0.5));
-        }
-
+        
         [Test]
         public void TestIfNonLeaderMessageArrives_NewLeaderIsSelectedFromReceivedMessage()
         {
@@ -241,6 +239,16 @@ namespace kino.Tests.Connectivity
         {
             return e.MulticastUri.ToSocketAddress() == notLeaderMessage.LeaderMulticastUri
                    && e.UnicastUri.ToSocketAddress() == notLeaderMessage.LeaderUnicastUri;
+        }
+
+        private void WaitLessThanPingSilenceFailover()
+        {
+            Thread.Sleep((int)(clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover.TotalMilliseconds * 0.5));
+        }
+
+        private void WaitLongerThanPingSilenceFailover()
+        {
+            Thread.Sleep((int)(clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover.TotalMilliseconds * 1.5));
         }
     }
 }
