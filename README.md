@@ -5,6 +5,8 @@
 
 # Kino - framework for building Actor-like networks
 *(Project is in development)*
+
+
 ![Actors](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png)
 
 **kino** is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)-like* framework, built to allow scaling of Actors over the network with low efforts for configuration management. A *kino* **Actor** registers itself by declaring message type(s) it can process. There is no hierarchy of Actors, as well as no logical addresses assigned to them.
