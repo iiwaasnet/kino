@@ -13,7 +13,7 @@ using Moq;
 using NUnit.Framework;
 using IMessageTracer = kino.Connectivity.IMessageTracer;
 
-namespace kino.Tests.Actors
+namespace kino.Tests.Connectivity
 {
     [TestFixture]
     public class MessageRouterTests

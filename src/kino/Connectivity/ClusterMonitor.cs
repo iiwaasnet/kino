@@ -126,7 +126,7 @@ namespace kino.Connectivity
 
         private bool PingSilence()
         {
-            const int NewLeaderElected = 1;
+            const int newLeaderElected = 1;
             var result = WaitHandle.WaitAny(new[] {pingReceived.WaitHandle, newRendezvousLeaderSelected.WaitHandle},
                                             membershipConfiguration.PingSilenceBeforeRendezvousFailover);
             if (result == WaitHandle.WaitTimeout)
@@ -134,7 +134,7 @@ namespace kino.Connectivity
                 rendezvousConfiguration.RotateRendezvousServers();
                 return true;
             }
-            if (result == NewLeaderElected)
+            if (result == newLeaderElected)
             {
                 newRendezvousLeaderSelected.Reset();
                 return true;

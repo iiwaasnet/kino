@@ -66,9 +66,10 @@
   <ItemGroup>
     <Compile Include="Actors\ActorHandlersMapTests.cs" />
     <Compile Include="Actors\ActorHostTests.cs" />
-    <Compile Include="Actors\MessageRouterTests.cs" />
+    <Compile Include="Connectivity\MessageRouterTests.cs" />
     <Compile Include="Client\MessageTracerTests.cs" />
     <Compile Include="Connectivity\ClusterConfigurationTests.cs" />
+    <Compile Include="Connectivity\ClusterMonitorTests.cs" />
     <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
     <Compile Include="Connectivity\SocketEndpointTests.cs" />
     <Compile Include="Consensus\BallotGeneratorTests.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="Consensus\Setup\RoundBasedRegisterTestsHelper.cs" />
     <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR1.cs" />
     <Compile Include="Consensus\Setup\RoundBasedRegisterTestSetup.cs" />
+    <Compile Include="Helpers\ClusterMonitorSocketFactory.cs" />
     <Compile Include="Helpers\IntercomMessageHubSocketFactory.cs" />
     <Compile Include="Helpers\MessageHubSocketFactory.cs" />
     <Compile Include="Helpers\ActorHostSocketFactory.cs" />
