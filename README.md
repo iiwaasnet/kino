@@ -3,21 +3,17 @@
 [![NuGet kino.Actors](https://badge.fury.io/nu/kino.Actors.svg)](http://badge.fury.io/nu/kino.Actors)
 [![NuGet kino.Rendezvous](https://badge.fury.io/nu/kino.Rendezvous.svg)](http://badge.fury.io/nu/kino.Rendezvous)
 
-# Kino - framework for building actor-like networks
+# Kino - framework for building Actor-like networks
 *(Project is in development)*
-## In a nutshell
-
 ![Actors](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png)
 
-Original [Actor model](https://en.wikipedia.org/wiki/Actor_model) is very well known. **kino** is an *Actor-like* framework and comes with the following differences.
-A *kino* **Actor** registers itself by declaring message types it can process. There is no hierarchy of actors, as well as no logical addresses assigned to them.
+**kino** is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)-like* framework, built to allow scaling of Actors over the network with low efforts for configuration management. A *kino* **Actor** registers itself by declaring message type(s) it can process. There is no hierarchy of Actors, as well as no logical addresses assigned to them.
 Actor's message handling method receives one input message and may send one or more output messages, either synchronously or asynchronously. It may produce no output as well.
 Actors are hosted by an ActorHost.
 
 
 
-**ActorHost** receives messages and calls corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same **ActorHost**, share same receiving thread. 
-This means that until previously fetched message is processed by an Actor, the next one will be waiting in the queue. ActorHost is a unit of in-proc scaling.
+**ActorHost** receives messages and calls corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same **ActorHost**, share same receiving thread. This means that until previously fetched message is processed by an Actor, the next one will be waiting in the queue. ActorHost is a unit of in-proc scaling.
 
 ![ActorHost](https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png)
 
@@ -27,7 +23,7 @@ Every ActorHost connects to a MessageRouter.
 **MessageRouter** is responsible for:
   * registering all Actors, which are hosted by connected ActorHosts;
   * type-based message routing to locally connected Actors;
-  * typed-based message routing to external, i.e. out-of-proc Actors, if non of the locally registered Actors is able to process a message.
+  * typed-based message routing to external, i.e. out-of-proc Actors, if no locally registered Actors are able to process the message.
 
 ![MessageRouter](https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png)
 
@@ -35,13 +31,12 @@ In order to be able to discover other Actors, MessageRouter connects to Rendezvo
 
 
 
-**Rendezvous** server is a well-known point, where all MessageRouters connect, building up an Actors network. 
-Rendezvous server broadcasts:
+**Rendezvous** server is a well-known point, where all MessageRouters connect, building up an Actors network. Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build up a *fault-tolerant cluster*. In this case, MessageRouter should be configured with endpoints of all Rendezvous servers from the cluster. On startup, Rendezvous synod [elects](http://www.xtreemfs.org/publications/flease_paper_ipdps.pdf) a Leader, which than starts to broadcast:
   * MessageRouters' registration messages, announcing which type of messages locally registered Actors are able to process;
   * Ping message, to check nodes availability;
   * Pong response from all the registered nodes to all registered nodes.
 
-Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build a fault-tolerant cluster.
+In case Rendezvous Leader changes, MessageRouter do a round-robin search among all configured endpoints to connect to a new Leader.  Dynamic reconfiguration of Rendezvous cluster is not supported. Nevertheless, the cluster can be stopped. In this case, although Actors will still exchange messages, configuration changes will not be propagated to all nodes of the network.
 
 ![Rendezvous](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Rendezvous.png)
 
