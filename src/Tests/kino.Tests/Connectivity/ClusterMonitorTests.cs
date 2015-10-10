@@ -77,8 +77,6 @@ namespace kino.Tests.Connectivity
             }
         }
 
-        
-
         [Test]
         public void TestIfPingComesInTime_SwitchToNextRendezvousServerNeverHappens()
         {
@@ -113,7 +111,6 @@ namespace kino.Tests.Connectivity
             }
         }
 
-        
         [Test]
         public void TestIfNonLeaderMessageArrives_NewLeaderIsSelectedFromReceivedMessage()
         {
@@ -235,6 +232,108 @@ namespace kino.Tests.Connectivity
             }
         }
 
+        [Test]
+        public void TestRequestClusterMessageRoutesMessage_IsForwardedToMessageRouter()
+        {
+            var payload = new RequestClusterMessageRoutesMessage();
+            TestMessageIsForwardedToMessageRouter(payload, RequestClusterMessageRoutesMessage.MessageIdentity);
+        }
+
+        [Test]
+        public void TestUnregisterMessageRouteMessage_IsForwardedToMessageRouter()
+        {
+            var payload = new UnregisterMessageRouteMessage
+                          {
+                              Uri = "tcp://127.1.1.1:5000",
+                              SocketIdentity = SocketIdentifier.CreateNew()
+                          };
+            TestMessageIsForwardedToMessageRouter(payload, UnregisterMessageRouteMessage.MessageIdentity);
+        }
+
+        [Test]
+        public void TestUnregisterNodeMessageRouteMessage_IsForwardedToMessageRouter()
+        {
+            var payload = new UnregisterNodeMessageRouteMessage
+                          {
+                              Uri = "tcp://127.0.0.3:6000",
+                              SocketIdentity = SocketIdentifier.CreateNew()
+                          };
+            TestMessageIsForwardedToMessageRouter(payload, UnregisterNodeMessageRouteMessage.MessageIdentity);
+        }
+
+        [Test]
+        public void TestRegisterExternalMessageRouteMessage_IsForwardedToMessageRouter()
+        {
+            var payload = new RegisterExternalMessageRouteMessage
+                          {
+                              Uri = "tcp://127.0.0.3:6000",
+                              SocketIdentity = SocketIdentifier.CreateNew()
+                          };
+            TestMessageIsForwardedToMessageRouter(payload, RegisterExternalMessageRouteMessage.MessageIdentity);
+        }
+
+        [Test]
+        public void TestUnregisterMessageRouteMessage_DeletesClusterMember()
+        {
+            var clusterMonitor = new ClusterMonitor(socketFactory.Object,
+                                                    routerConfiguration,
+                                                    clusterMembership.Object,
+                                                    clusterMembershipConfiguration,
+                                                    rendezvousConfiguration.Object,
+                                                    logger.Object);
+            try
+            {
+                clusterMonitor.Start();
+
+                var socket = clusterMonitorSocketFactory.GetClusterMonitorSubscriptionSocket();
+                var message = new UnregisterNodeMessageRouteMessage
+                              {
+                                  Uri = "tcp://127.0.0.1:5000",
+                                  SocketIdentity = SocketIdentifier.CreateNew()
+                              };
+                socket.DeliverMessage(Message.Create(message, UnregisterNodeMessageRouteMessage.MessageIdentity));
+                Thread.Sleep(AsyncOp);
+
+                clusterMembership.Verify(m => m.DeleteClusterMember(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == message.Uri
+                                                                                               && Unsafe.Equals(e.Identity, message.SocketIdentity))),
+                                         Times.Once());
+            }
+            finally
+            {
+                clusterMonitor.Stop();
+            }
+        }
+
+        private void TestMessageIsForwardedToMessageRouter<TPayload>(TPayload payload, byte[] messageIdentity)
+            where TPayload : IPayload
+        {
+            var clusterMonitor = new ClusterMonitor(socketFactory.Object,
+                                                    routerConfiguration,
+                                                    clusterMembership.Object,
+                                                    clusterMembershipConfiguration,
+                                                    rendezvousConfiguration.Object,
+                                                    logger.Object);
+            try
+            {
+                clusterMonitor.Start();
+
+                var socket = clusterMonitorSocketFactory.GetClusterMonitorSubscriptionSocket();
+                socket.DeliverMessage(Message.Create(payload, messageIdentity));
+
+                var messageRouterMessage = clusterMonitorSocketFactory
+                    .GetRouterCommunicationSocket()
+                    .GetSentMessages()
+                    .BlockingLast(AsyncOp);
+
+                Assert.IsNotNull(messageRouterMessage);
+                Assert.IsTrue(Unsafe.Equals(messageRouterMessage.Identity, messageIdentity));
+            }
+            finally
+            {
+                clusterMonitor.Stop();
+            }
+        }
+
         private static bool SameServer(RendezvousEndpoints e, RendezvousNotLeaderMessage notLeaderMessage)
         {
             return e.MulticastUri.ToSocketAddress() == notLeaderMessage.LeaderMulticastUri
@@ -243,12 +342,12 @@ namespace kino.Tests.Connectivity
 
         private void WaitLessThanPingSilenceFailover()
         {
-            Thread.Sleep((int)(clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover.TotalMilliseconds * 0.5));
+            Thread.Sleep((int) (clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover.TotalMilliseconds * 0.5));
         }
 
         private void WaitLongerThanPingSilenceFailover()
         {
-            Thread.Sleep((int)(clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover.TotalMilliseconds * 1.5));
+            Thread.Sleep((int) (clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover.TotalMilliseconds * 1.5));
         }
     }
 }
