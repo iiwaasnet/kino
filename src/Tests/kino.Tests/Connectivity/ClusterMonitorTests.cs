@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using kino.Connectivity;
 using kino.Diagnostics;
@@ -6,6 +7,7 @@ using kino.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Sockets;
+using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
@@ -297,6 +299,99 @@ namespace kino.Tests.Connectivity
                 clusterMembership.Verify(m => m.DeleteClusterMember(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == message.Uri
                                                                                                && Unsafe.Equals(e.Identity, message.SocketIdentity))),
                                          Times.Once());
+            }
+            finally
+            {
+                clusterMonitor.Stop();
+            }
+        }
+
+        [Test]
+        public void TestRegisterSelf_SendRegistrationMessageToRendezvous()
+        {
+            var clusterMonitor = new ClusterMonitor(socketFactory.Object,
+                                                    routerConfiguration,
+                                                    clusterMembership.Object,
+                                                    clusterMembershipConfiguration,
+                                                    rendezvousConfiguration.Object,
+                                                    logger.Object);
+            try
+            {
+                clusterMonitor.Start();
+
+                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+                clusterMonitor.RegisterSelf(new[] {messageIdentifier});
+
+                var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
+                var message = socket.GetSentMessages().BlockingLast(AsyncOp);
+
+                Assert.IsNotNull(message);
+                Assert.IsTrue(Unsafe.Equals(message.Identity, RegisterExternalMessageRouteMessage.MessageIdentity));
+                var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
+                Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
+                Assert.AreEqual(payload.Uri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
+                Assert.IsTrue(payload.MessageContracts.Any(mc => Unsafe.Equals(mc.Identity, messageIdentifier.Identity)
+                                                                 && Unsafe.Equals(mc.Version, messageIdentifier.Version)));
+            }
+            finally
+            {
+                clusterMonitor.Stop();
+            }
+        }
+
+        [Test]
+        public void TestUnregisterSelf_SendUnregisterMessageRouteMessageToRendezvous()
+        {
+            var clusterMonitor = new ClusterMonitor(socketFactory.Object,
+                                                    routerConfiguration,
+                                                    clusterMembership.Object,
+                                                    clusterMembershipConfiguration,
+                                                    rendezvousConfiguration.Object,
+                                                    logger.Object);
+            try
+            {
+                clusterMonitor.Start();
+
+                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+                clusterMonitor.UnregisterSelf(new[] {messageIdentifier});
+
+                var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
+                var message = socket.GetSentMessages().BlockingLast(AsyncOp);
+
+                Assert.IsNotNull(message);
+                Assert.IsTrue(Unsafe.Equals(message.Identity, UnregisterMessageRouteMessage.MessageIdentity));
+                var payload = message.GetPayload<UnregisterMessageRouteMessage>();
+                Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
+                Assert.AreEqual(payload.Uri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
+                Assert.IsTrue(payload.MessageContracts.Any(mc => Unsafe.Equals(mc.Identity, messageIdentifier.Identity)
+                                                                 && Unsafe.Equals(mc.Version, messageIdentifier.Version)));
+            }
+            finally
+            {
+                clusterMonitor.Stop();
+            }
+        }
+
+        [Test]
+        public void TestRequestClusterRoutes_SendRequestClusterMessageRoutesMessageToRendezvous()
+        {
+            var clusterMonitor = new ClusterMonitor(socketFactory.Object,
+                                                    routerConfiguration,
+                                                    clusterMembership.Object,
+                                                    clusterMembershipConfiguration,
+                                                    rendezvousConfiguration.Object,
+                                                    logger.Object);
+            try
+            {
+                clusterMonitor.Start();
+
+                clusterMonitor.RequestClusterRoutes();
+
+                var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
+                var message = socket.GetSentMessages().BlockingLast(AsyncOp);
+
+                Assert.IsNotNull(message);
+                Assert.IsTrue(Unsafe.Equals(message.Identity, RequestClusterMessageRoutesMessage.MessageIdentity));
             }
             finally
             {

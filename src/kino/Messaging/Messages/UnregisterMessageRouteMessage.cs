@@ -17,6 +17,6 @@ namespace kino.Connectivity
         public byte[] SocketIdentity { get; set; }
 
         [ProtoMember(3)]
-        public MessageContract[] MessageHandlers { get; set; }
+        public MessageContract[] MessageContracts { get; set; }
     }
 }

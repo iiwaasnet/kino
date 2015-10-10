@@ -357,7 +357,7 @@ namespace kino.Connectivity
                                          {
                                              Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
                                              SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                             MessageHandlers = messageIdentifiers
+                                             MessageContracts = messageIdentifiers
                                                  .Select(mi => new MessageContract
                                                                {
                                                                    Identity = mi.Identity,

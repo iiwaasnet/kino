@@ -278,7 +278,7 @@ namespace kino.Connectivity
             {
                 var payload = message.GetPayload<UnregisterMessageRouteMessage>();
                 externalRoutingTable.RemoveMessageRoute(payload
-                                                            .MessageHandlers
+                                                            .MessageContracts
                                                             .Select(mh => new MessageIdentifier(mh.Version, mh.Identity)),
                                                         new SocketIdentifier(payload.SocketIdentity));
             }
