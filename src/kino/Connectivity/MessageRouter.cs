@@ -153,7 +153,7 @@ namespace kino.Connectivity
 
             return HandleMessageLocally(messageHandlerIdentifier, message, localSocket)
                    || ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend)
-                   || LogUnhandledMessage(message, messageHandlerIdentifier);
+                   || ProcessUnhandledMessage(message, messageHandlerIdentifier);
         }
 
         private bool HandleMessageLocally(MessageIdentifier messageIdentifier, Message message, ISocket localSocket)
@@ -208,14 +208,20 @@ namespace kino.Connectivity
             return handlers.Any();
         }
 
-        private bool LogUnhandledMessage(Message message, MessageIdentifier messageIdentifier)
+        private bool ProcessUnhandledMessage(Message message, MessageIdentifier messageIdentifier)
         {
-            if (!MessageCameFromLocalActor(message) && message.Distribution == DistributionPattern.Broadcast)
+            if (MessageCameFromOtherNode(message))
             {
-                logger.Warn("Broadcast message: " +
-                            $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                            $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                            "didn't find any local handler and was not forwarded.");
+                clusterMonitor.UnregisterSelf(new[] {messageIdentifier});
+                clusterMonitor.DiscoverMessageRoute(messageIdentifier);
+
+                if (message.Distribution == DistributionPattern.Broadcast)
+                {
+                    logger.Warn("Broadcast message: " +
+                                $"{nameof(message.Version)}:{message.Version.GetString()} " +
+                                $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
+                                "didn't find any local handler and was not forwarded.");
+                }
             }
             else
             {
@@ -230,6 +236,11 @@ namespace kino.Connectivity
         private bool MessageCameFromLocalActor(Message message)
         {
             return !message.GetMessageHops().Any();
+        }
+
+        private bool MessageCameFromOtherNode(Message message)
+        {
+            return !MessageCameFromLocalActor(message);
         }
 
         private ISocket CreateScaleOutBackendSocket()
@@ -265,13 +276,14 @@ namespace kino.Connectivity
         }
 
         private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
-            => RegisterInternalMessageRouting(message)
-               || RegisterExternalRouting(message, scaleOutBackend)
-               || RequestRoutingRegistration(message)
-               || UnregisterRouting(message, scaleOutBackend)
-               || UnregisterMessageRouting(message);
+            => RegisterInternalMessageRoutes(message)
+               || RegisterExternalRoutes(message, scaleOutBackend)
+               || RequestRoutesRegistration(message)
+               || DiscoverMessageRoute(message)
+               || UnregisterRoute(message, scaleOutBackend)
+               || UnregisterMessageRoute(message);        
 
-        private bool UnregisterMessageRouting(IMessage message)
+        private bool UnregisterMessageRoute(IMessage message)
         {
             var shouldHandle = IsUnregisterMessageRouting(message);
             if (shouldHandle)
@@ -286,7 +298,7 @@ namespace kino.Connectivity
             return shouldHandle;
         }
 
-        private bool UnregisterRouting(IMessage message, ISocket scaleOutBackend)
+        private bool UnregisterRoute(IMessage message, ISocket scaleOutBackend)
         {
             var shouldHandle = IsUnregisterRouting(message);
             if (shouldHandle)
@@ -305,9 +317,9 @@ namespace kino.Connectivity
             return shouldHandle;
         }
 
-        private bool RequestRoutingRegistration(IMessage message)
+        private bool RequestRoutesRegistration(IMessage message)
         {
-            var shouldHandle = IsRoutingRequest(message);
+            var shouldHandle = IsRoutesRequest(message);
             if (shouldHandle)
             {
                 var messageIdentifiers = internalRoutingTable.GetMessageIdentifiers();
@@ -320,7 +332,25 @@ namespace kino.Connectivity
             return shouldHandle;
         }
 
-        private bool RegisterExternalRouting(IMessage message, ISocket scaleOutBackend)
+        private bool DiscoverMessageRoute(IMessage message)
+        {
+            var shouldHandle = IsDiscoverMessageRouteRequest(message);
+            if (shouldHandle)
+            {
+                var messageContract = message.GetPayload<DiscoverMessageRouteMessage>().MessageContract;
+                var messageIdentifier = new MessageIdentifier(messageContract.Version, messageContract.Identity);
+                if (internalRoutingTable.CanRouteMessage(messageIdentifier))
+                {
+                    clusterMonitor.RegisterSelf(new [] { messageIdentifier});
+                }
+            }
+
+            return shouldHandle;
+        }
+
+        
+
+        private bool RegisterExternalRoutes(IMessage message, ISocket scaleOutBackend)
         {
             var shouldHandle = IsExternalRouteRegistration(message);
             if (shouldHandle)
@@ -348,7 +378,7 @@ namespace kino.Connectivity
             return shouldHandle;
         }
 
-        private static bool IsRoutingRequest(IMessage message)
+        private static bool IsRoutesRequest(IMessage message)
             => Unsafe.Equals(RequestClusterMessageRoutesMessage.MessageIdentity, message.Identity)
                || Unsafe.Equals(RequestNodeMessageRoutesMessage.MessageIdentity, message.Identity);
 
@@ -364,7 +394,10 @@ namespace kino.Connectivity
         private bool IsUnregisterMessageRouting(IMessage message)
             => Unsafe.Equals(UnregisterMessageRouteMessage.MessageIdentity, message.Identity);
 
-        private bool RegisterInternalMessageRouting(IMessage message)
+        private bool IsDiscoverMessageRouteRequest(IMessage message)
+        => Unsafe.Equals(DiscoverMessageRouteMessage.MessageIdentity, message.Identity);
+
+        private bool RegisterInternalMessageRoutes(IMessage message)
         {
             var shouldHandle = IsInternalMessageRoutingRegistration(message);
             if (shouldHandle)

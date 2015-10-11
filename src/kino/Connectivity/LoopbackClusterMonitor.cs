@@ -27,5 +27,9 @@ namespace kino.Connectivity
 
         public IEnumerable<SocketEndpoint> GetClusterMembers()
             => Enumerable.Empty<SocketEndpoint>();
+
+        public void DiscoverMessageRoute(MessageIdentifier messageIdentifier)
+        {
+        }
     }
 }

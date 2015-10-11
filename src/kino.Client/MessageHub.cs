@@ -178,7 +178,7 @@ namespace kino.Client
         private ISocket CreateRoutableSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.SetIdentity(SocketIdentifier.CreateNew());
+            socket.SetIdentity(SocketIdentifier.CreateIdentity());
             socket.Connect(config.RouterUri);
 
             return socket;

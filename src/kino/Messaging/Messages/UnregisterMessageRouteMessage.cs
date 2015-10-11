@@ -1,9 +1,7 @@
 using kino.Framework;
-using kino.Messaging;
-using kino.Messaging.Messages;
 using ProtoBuf;
 
-namespace kino.Connectivity
+namespace kino.Messaging.Messages
 {
     [ProtoContract]
     public class UnregisterMessageRouteMessage : Payload

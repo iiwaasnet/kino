@@ -297,7 +297,7 @@ namespace kino.Actors
         private ISocket CreateRoutableSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.SetIdentity(SocketIdentifier.CreateNew());
+            socket.SetIdentity(SocketIdentifier.CreateIdentity());
             socket.Connect(routerConfiguration.RouterAddress.Uri);
 
             return socket;

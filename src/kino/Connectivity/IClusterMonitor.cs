@@ -10,5 +10,6 @@ namespace kino.Connectivity
         void RequestClusterRoutes();
         void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers);
         IEnumerable<SocketEndpoint> GetClusterMembers();
+        void DiscoverMessageRoute(MessageIdentifier messageIdentifier);
     }
 }

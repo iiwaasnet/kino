@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using C5;
 
 namespace kino.Connectivity
@@ -117,5 +118,8 @@ namespace kino.Connectivity
                                                    Socket = sm.Key,
                                                    Messages = sm.Value
                                                });
+
+        public bool CanRouteMessage(MessageIdentifier messageIdentifier)
+            => messageToSocketMap.ContainsKey(messageIdentifier);
     }
 }

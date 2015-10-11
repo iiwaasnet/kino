@@ -231,12 +231,9 @@ namespace kino.Connectivity
         }
 
         private bool ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)
-            => RegisterExternalRouting(message, routerNotificationSocket)
-               || Ping(message, routerNotificationSocket)
+            => Ping(message, routerNotificationSocket)
                || Pong(message)
-               || RequestMessageRouting(message, routerNotificationSocket)
-               || UnregisterRouting(message, routerNotificationSocket)
-               || UnregisterMessageRouting(message, routerNotificationSocket)
+               || MessageRoutingControlMessage(message, routerNotificationSocket)
                || RendezvousNotLeader(message);
 
         private bool RendezvousNotLeader(IMessage message)
@@ -258,42 +255,6 @@ namespace kino.Connectivity
             }
 
             return shouldHandle;
-        }
-
-        private bool UnregisterMessageRouting(IMessage message, ISocket routerNotificationSocket)
-        {
-            var shouldHandle = IsUnregisterMessageRoutingMessage(message);
-            if (shouldHandle)
-            {
-                routerNotificationSocket.SendMessage(message);
-            }
-
-            return shouldHandle;
-        }
-
-        private bool UnregisterRouting(IMessage message, ISocket routerNotificationSocket)
-        {
-            var shouldHandle = IsUnregisterRoutingMessage(message);
-            if (shouldHandle)
-            {
-                var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
-                clusterMembership.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
-                routerNotificationSocket.SendMessage(message);
-            }
-
-            return shouldHandle;
-        }
-
-        private bool RegisterExternalRouting(IMessage message, ISocket routerNotificationSocket)
-        {
-            var shouldHandler = IsRegisterExternalRoute(message);
-            if (shouldHandler)
-            {
-                AddClusterMember(message);
-                routerNotificationSocket.SendMessage(message);
-            }
-
-            return shouldHandler;
         }
 
         private bool Ping(IMessage message, ISocket routerNotificationSocket)
@@ -323,18 +284,33 @@ namespace kino.Connectivity
             return shouldHandle;
         }
 
-        private bool RequestMessageRouting(IMessage message, ISocket routerNotificationSocket)
+        private bool MessageRoutingControlMessage(IMessage message, ISocket routerNotificationSocket)
         {
             var shouldHandle = IsRequestAllMessageRoutingMessage(message)
-                               || IsRequestNodeMessageRoutingMessage(message);
+                               || IsRequestNodeMessageRoutingMessage(message)
+                               || IsUnregisterMessageRoutingMessage(message)
+                               || IsRegisterExternalRoute(message)
+                               || IsUnregisterRoutingMessage(message)
+                               || IsDiscoverMessageRouteMessage(message);
+
             if (shouldHandle)
             {
+                if (IsRegisterExternalRoute(message))
+                {
+                    AddClusterMember(message);
+                }
+                if (IsUnregisterRoutingMessage(message))
+                {
+                    var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
+                    clusterMembership.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
+                }
+
                 routerNotificationSocket.SendMessage(message);
             }
 
             return shouldHandle;
         }
-
+       
         public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers)
         {
             var message = Message.Create(new RegisterExternalMessageRouteMessage
@@ -384,6 +360,22 @@ namespace kino.Connectivity
         public IEnumerable<SocketEndpoint> GetClusterMembers()
             => clusterMembership.GetClusterMembers();
 
+        public void DiscoverMessageRoute(MessageIdentifier messageIdentifier)
+        {
+            var message = Message.Create(new DiscoverMessageRouteMessage
+                                         {
+                                             RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                             RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                             MessageContract = new MessageContract
+                                                               {
+                                                                   Version = messageIdentifier.Version,
+                                                                   Identity = messageIdentifier.Identity
+                                                               }
+                                         },
+                                         DiscoverMessageRouteMessage.MessageIdentity);
+            outgoingMessages.Add(message);
+        }
+
         private IMessage CreateUnregisterRoutingMessage()
             => Message.Create(new UnregisterNodeMessageRouteMessage
                               {
@@ -399,6 +391,18 @@ namespace kino.Connectivity
                 var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
 
                 return !ThisNodeSocket(payload.SocketIdentity);
+            }
+
+            return false;
+        }
+
+        private bool IsDiscoverMessageRouteMessage(IMessage message)
+        {
+            if (Unsafe.Equals(DiscoverMessageRouteMessage.MessageIdentity, message.Identity))
+            {
+                var payload = message.GetPayload<DiscoverMessageRouteMessage>();
+
+                return !ThisNodeSocket(payload.RequestorSocketIdentity);
             }
 
             return false;

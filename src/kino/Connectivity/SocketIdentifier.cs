@@ -10,8 +10,11 @@ namespace kino.Connectivity
             Identity = identity;
         }
 
-        public static byte[] CreateNew()
+        public static byte[] CreateIdentity()
             => Guid.NewGuid().ToString().GetBytes();
+
+        public static SocketIdentifier Create()
+            => new SocketIdentifier(CreateIdentity());
 
         public override bool Equals(object obj)
         {

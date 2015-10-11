@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using kino.Client;
 using kino.Connectivity;
@@ -18,7 +20,7 @@ namespace kino.Tests.Connectivity
     [TestFixture]
     public class MessageRouterTests
     {
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(4);
         private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
@@ -34,13 +36,13 @@ namespace kino.Tests.Connectivity
         public void Setup()
         {
             membershipConfiguration = new ClusterMembershipConfiguration
-                                  {
-                                      PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(10)
-                                  };
+                                      {
+                                          PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(10)
+                                      };
             routerConfiguration = new RouterConfiguration
                                   {
-                                      ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew()),
-                                      RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateNew())
+                                      ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity()),
+                                      RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity())
                                   };
             messageRouterSocketFactory = new MessageRouterSocketFactory(routerConfiguration);
             clusterMonitor = new Mock<IClusterMonitor>();
@@ -96,20 +98,20 @@ namespace kino.Tests.Connectivity
                                              {
                                                  SocketIdentity = socketIdentity,
                                                  MessageContracts = new[]
-                                                                   {
-                                                                       new MessageContract
-                                                                       {
-                                                                           Identity = messageIdentity,
-                                                                           Version = version
-                                                                       }
-                                                                   }
+                                                                    {
+                                                                        new MessageContract
+                                                                        {
+                                                                            Identity = messageIdentity,
+                                                                            Version = version
+                                                                        }
+                                                                    }
                                              },
                                              RegisterInternalMessageRouteMessage.MessageIdentity);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                var identifier = internalRoutingTable.FindRoute(new kino.Connectivity.MessageIdentifier(version, messageIdentity));
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
 
                 Assert.IsNotNull(identifier);
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
@@ -140,15 +142,15 @@ namespace kino.Tests.Connectivity
                 var message = (Message) SendMessageOverMessageHub();
 
                 var callbackSocketIdentity = message.CallbackReceiverIdentity;
-                var callbackIdentifier = new kino.Connectivity.MessageIdentifier(Message.CurrentVersion, callbackSocketIdentity);
-                internalRoutingTable.Setup(m => m.FindRoute(It.Is<kino.Connectivity.MessageIdentifier>(mhi => mhi.Equals(callbackIdentifier))))
+                var callbackIdentifier = new MessageIdentifier(Message.CurrentVersion, callbackSocketIdentity);
+                internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(callbackIdentifier))))
                                     .Returns(new SocketIdentifier(callbackSocketIdentity));
 
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
 
-                internalRoutingTable.Verify(m => m.FindRoute(It.Is<kino.Connectivity.MessageIdentifier>(mhi => mhi.Equals(callbackIdentifier))), Times.Once());
+                internalRoutingTable.Verify(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(callbackIdentifier))), Times.Once());
             }
             finally
             {
@@ -160,9 +162,9 @@ namespace kino.Tests.Connectivity
         public void TestMessageIsRouted_BasedOnHandlerIdentities()
         {
             var actorSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
-            var actorIdentifier = new kino.Connectivity.MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+            var actorIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
             var messageHandlerStack = new Mock<IInternalRoutingTable>();
-            messageHandlerStack.Setup(m => m.FindRoute(It.Is<kino.Connectivity.MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
+            messageHandlerStack.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
                                .Returns(actorSocketIdentity);
 
             var router = new MessageRouter(socketFactory.Object,
@@ -181,7 +183,7 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                messageHandlerStack.Verify(m => m.FindRoute(It.Is<kino.Connectivity.MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Once());
+                messageHandlerStack.Verify(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Once());
             }
             finally
             {
@@ -193,7 +195,7 @@ namespace kino.Tests.Connectivity
         public void TestIfLocalRoutingTableHasNoMessageHandlerRegistration_MessageRoutedToOtherNodes()
         {
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
-            externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<kino.Connectivity.MessageIdentifier>()))
+            externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>()))
                                 .Returns(new SocketIdentifier(Guid.NewGuid().ToByteArray()));
 
             var router = new MessageRouter(socketFactory.Object,
@@ -240,6 +242,251 @@ namespace kino.Tests.Connectivity
                 var messageOut = messageRouterSocketFactory.GetScaleoutFrontendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.AreEqual(message, messageOut);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void TestIfUnhandledMessageReceivedFromOtherNode_RouterUnregistersSelfAndRequestsDiscovery()
+        {
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           new ExternalRoutingTable(logger),
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           messageTracer.Object,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+                var message = (Message) Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                message.PushRouterAddress(new SocketEndpoint(new Uri("tcp://127.1.1.1:9000"), SocketIdentifier.CreateIdentity()));
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                clusterMonitor.Verify(m => m.UnregisterSelf(It.Is<IEnumerable<MessageIdentifier>>(ids => ids.First().Equals(messageIdentifier))), Times.Once());
+                clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<MessageIdentifier>(id => id.Equals(messageIdentifier))), Times.Once());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void TestIfMessageRouterCannotHandleMessage_SelfRegisterIsNotCalled()
+        {
+            var internalRoutingTable = new InternalRoutingTable();
+            var router = new MessageRouter(socketFactory.Object,
+                                           internalRoutingTable,
+                                           new ExternalRoutingTable(logger),
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           messageTracer.Object,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+                var message = Message.Create(new DiscoverMessageRouteMessage
+                                             {
+                                                 MessageContract = new MessageContract
+                                                                   {
+                                                                       Version = messageIdentifier.Version,
+                                                                       Identity = messageIdentifier.Identity
+                                                                   }
+                                             },
+                                             DiscoverMessageRouteMessage.MessageIdentity);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                Assert.IsFalse(internalRoutingTable.CanRouteMessage(messageIdentifier));
+                clusterMonitor.Verify(m => m.RegisterSelf(It.IsAny<IEnumerable<MessageIdentifier>>()), Times.Never());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void TestIfMessageRouterCanHandleMessage_SelfRegisterIsCalled()
+        {
+            var internalRoutingTable = new InternalRoutingTable();
+            var router = new MessageRouter(socketFactory.Object,
+                                           internalRoutingTable,
+                                           new ExternalRoutingTable(logger),
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           messageTracer.Object,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+                internalRoutingTable.AddMessageRoute(messageIdentifier, SocketIdentifier.Create());
+                var message = Message.Create(new DiscoverMessageRouteMessage
+                                             {
+                                                 MessageContract = new MessageContract
+                                                                   {
+                                                                       Version = messageIdentifier.Version,
+                                                                       Identity = messageIdentifier.Identity
+                                                                   }
+                                             },
+                                             DiscoverMessageRouteMessage.MessageIdentity);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                Assert.IsTrue(internalRoutingTable.CanRouteMessage(messageIdentifier));
+                clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageIdentifier>>(ids => ids.First().Equals(messageIdentifier))), Times.Once());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void TestIfRegisterExternalMessageRouteMessageReceived_AllRoutesAreAddedToExternalRoutingTable()
+        {
+            var externalRoutingTable = new ExternalRoutingTable(logger);
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           externalRoutingTable,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           messageTracer.Object,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentifiers = new[]
+                                         {
+                                             new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
+                                             new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity)
+                                         };
+                var socketIdentity = SocketIdentifier.CreateIdentity();
+                var message = Message.Create(new RegisterExternalMessageRouteMessage
+                                             {
+                                                 Uri = "tcp://127.0.0.1:8000",
+                                                 SocketIdentity = socketIdentity,
+                                                 MessageContracts = messageIdentifiers.Select(mi => new MessageContract
+                                                                                                    {
+                                                                                                        Version = mi.Version,
+                                                                                                        Identity = mi.Identity
+                                                                                                    }).ToArray()
+                                             },
+                                             RegisterExternalMessageRouteMessage.MessageIdentity);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                Assert.IsTrue(Unsafe.Equals(socketIdentity, externalRoutingTable.FindRoute(messageIdentifiers.First()).Identity));
+                Assert.IsTrue(Unsafe.Equals(socketIdentity, externalRoutingTable.FindRoute(messageIdentifiers.Second()).Identity));
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void TestIfUnregisterMessageRouteMessage_RoutesAreRemovedFromExternalRoutingTable()
+        {
+            var externalRoutingTable = new ExternalRoutingTable(logger);
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           externalRoutingTable,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           messageTracer.Object,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentifiers = new[]
+                                         {
+                                             new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
+                                             new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity)
+                                         };
+
+                var socketIdentity = SocketIdentifier.Create();
+                var uri = new Uri("tcp://127.0.0.1:8000");
+                messageIdentifiers.ForEach(mi => externalRoutingTable.AddMessageRoute(mi, socketIdentity, uri));
+                var message = Message.Create(new UnregisterMessageRouteMessage
+                                             {
+                                                 Uri = uri.ToSocketAddress(),
+                                                 SocketIdentity = socketIdentity.Identity,
+                                                 MessageContracts = messageIdentifiers.Select(mi => new MessageContract
+                                                                                                    {
+                                                                                                        Version = mi.Version,
+                                                                                                        Identity = mi.Identity
+                                                                                                    }).ToArray()
+                                             },
+                                             UnregisterMessageRouteMessage.MessageIdentity);
+
+                CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                CollectionAssert.IsEmpty(externalRoutingTable.GetAllRoutes());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void TestIfUnregisterNodeMessageRouteMessage_AllRoutesAreRemovedFromExternalRoutingTable()
+        {
+            var externalRoutingTable = new ExternalRoutingTable(logger);
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           externalRoutingTable,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           messageTracer.Object,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentifiers = new[]
+                                         {
+                                             new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
+                                             new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity)
+                                         };
+
+                var socketIdentity = SocketIdentifier.Create();
+                var uri = new Uri("tcp://127.0.0.1:8000");
+                messageIdentifiers.ForEach(mi => externalRoutingTable.AddMessageRoute(mi, socketIdentity, uri));
+                var message = Message.Create(new UnregisterNodeMessageRouteMessage
+                {
+                                                 Uri = uri.ToSocketAddress(),
+                                                 SocketIdentity = socketIdentity.Identity
+                                             },
+                                             UnregisterNodeMessageRouteMessage.MessageIdentity);
+
+                CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                CollectionAssert.IsEmpty(externalRoutingTable.GetAllRoutes());
             }
             finally
             {

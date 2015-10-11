@@ -10,7 +10,7 @@ namespace kino.Rendezvous.Consensus
 
         public SynodConfiguration(ISynodConfigurationProvider configProvider)
         {
-            LocalNode = new Node(configProvider.LocalNode, SocketIdentifier.CreateNew());
+            LocalNode = new Node(configProvider.LocalNode, SocketIdentifier.CreateIdentity());
             synod = new HashSet<Uri>(configProvider.Synod); 
         }
 

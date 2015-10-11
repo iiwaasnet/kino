@@ -37,8 +37,8 @@ namespace kino.Tests.Connectivity
             rendezvousConfiguration = new Mock<IRendezvousConfiguration>();
             routerConfiguration = new RouterConfiguration
                                   {
-                                      ScaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateNew()),
-                                      RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateNew())
+                                      ScaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity()),
+                                      RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
                                   };
             var rendezvousEndpoint = new RendezvousEndpoints
                                      {
@@ -153,7 +153,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void TestPongMessage_RenewesRegistrationOfSourceNode()
         {
-            var sourceNode = new SocketEndpoint(new Uri("tpc://127.0.0.3:7000"), SocketIdentifier.CreateNew());
+            var sourceNode = new SocketEndpoint(new Uri("tpc://127.0.0.3:7000"), SocketIdentifier.CreateIdentity());
 
             clusterMembership.Setup(m => m.KeepAlive(sourceNode)).Returns(true);
 
@@ -190,7 +190,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void TestIfPongMessageComesFromUnknownNode_RequestNodeMessageRoutesMessageSent()
         {
-            var sourceNode = new SocketEndpoint(new Uri("tpc://127.0.0.3:7000"), SocketIdentifier.CreateNew());
+            var sourceNode = new SocketEndpoint(new Uri("tpc://127.0.0.3:7000"), SocketIdentifier.CreateIdentity());
 
             clusterMembership.Setup(m => m.KeepAlive(sourceNode)).Returns(false);
 
@@ -247,7 +247,7 @@ namespace kino.Tests.Connectivity
             var payload = new UnregisterMessageRouteMessage
                           {
                               Uri = "tcp://127.1.1.1:5000",
-                              SocketIdentity = SocketIdentifier.CreateNew()
+                              SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
             TestMessageIsForwardedToMessageRouter(payload, UnregisterMessageRouteMessage.MessageIdentity);
         }
@@ -258,9 +258,20 @@ namespace kino.Tests.Connectivity
             var payload = new UnregisterNodeMessageRouteMessage
                           {
                               Uri = "tcp://127.0.0.3:6000",
-                              SocketIdentity = SocketIdentifier.CreateNew()
+                              SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
             TestMessageIsForwardedToMessageRouter(payload, UnregisterNodeMessageRouteMessage.MessageIdentity);
+        }
+
+        [Test]
+        public void TestDiscoverMessageRouteMessage_IsForwardedToMessageRouter()
+        {
+            var payload = new DiscoverMessageRouteMessage
+                          {
+                              RequestorUri = "tcp://127.0.0.3:6000",
+                              RequestorSocketIdentity = SocketIdentifier.CreateIdentity()
+                          };
+            TestMessageIsForwardedToMessageRouter(payload, DiscoverMessageRouteMessage.MessageIdentity);
         }
 
         [Test]
@@ -269,7 +280,7 @@ namespace kino.Tests.Connectivity
             var payload = new RegisterExternalMessageRouteMessage
                           {
                               Uri = "tcp://127.0.0.3:6000",
-                              SocketIdentity = SocketIdentifier.CreateNew()
+                              SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
             TestMessageIsForwardedToMessageRouter(payload, RegisterExternalMessageRouteMessage.MessageIdentity);
         }
@@ -291,7 +302,7 @@ namespace kino.Tests.Connectivity
                 var message = new UnregisterNodeMessageRouteMessage
                               {
                                   Uri = "tcp://127.0.0.1:5000",
-                                  SocketIdentity = SocketIdentifier.CreateNew()
+                                  SocketIdentity = SocketIdentifier.CreateIdentity()
                               };
                 socket.DeliverMessage(Message.Create(message, UnregisterNodeMessageRouteMessage.MessageIdentity));
                 Thread.Sleep(AsyncOp);
@@ -392,6 +403,39 @@ namespace kino.Tests.Connectivity
 
                 Assert.IsNotNull(message);
                 Assert.IsTrue(Unsafe.Equals(message.Identity, RequestClusterMessageRoutesMessage.MessageIdentity));
+            }
+            finally
+            {
+                clusterMonitor.Stop();
+            }
+        }
+
+        [Test]
+        public void TestDiscoverMessageRoute_SendDiscoverMessageRouteMessageToRendezvous()
+        {
+            var clusterMonitor = new ClusterMonitor(socketFactory.Object,
+                                                    routerConfiguration,
+                                                    clusterMembership.Object,
+                                                    clusterMembershipConfiguration,
+                                                    rendezvousConfiguration.Object,
+                                                    logger.Object);
+            try
+            {
+                clusterMonitor.Start();
+
+                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, Guid.NewGuid().ToByteArray());
+                clusterMonitor.DiscoverMessageRoute(messageIdentifier);
+
+                var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
+                var message = socket.GetSentMessages().BlockingLast(AsyncOp);
+
+                Assert.IsNotNull(message);
+                Assert.IsTrue(Unsafe.Equals(message.Identity, DiscoverMessageRouteMessage.MessageIdentity));
+                var payload = message.GetPayload<DiscoverMessageRouteMessage>();
+                Assert.IsTrue(Unsafe.Equals(payload.RequestorSocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
+                Assert.AreEqual(payload.RequestorUri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
+                Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Identity, messageIdentifier.Identity));
+                Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Version, messageIdentifier.Version));
             }
             finally
             {

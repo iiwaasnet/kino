@@ -26,8 +26,8 @@ namespace Client
         public RouterConfiguration GetRouterConfiguration()
             => new RouterConfiguration
                {
-                   RouterAddress = new SocketEndpoint(new Uri(appConfig.RouterUri), SocketIdentifier.CreateNew()),
-                   ScaleOutAddress = new SocketEndpoint(new Uri(appConfig.ScaleOutAddressUri), SocketIdentifier.CreateNew())
+                   RouterAddress = new SocketEndpoint(new Uri(appConfig.RouterUri), SocketIdentifier.CreateIdentity()),
+                   ScaleOutAddress = new SocketEndpoint(new Uri(appConfig.ScaleOutAddressUri), SocketIdentifier.CreateIdentity())
                };
 
         public ClusterMembershipConfiguration GetClusterMembershipConfiguration()
