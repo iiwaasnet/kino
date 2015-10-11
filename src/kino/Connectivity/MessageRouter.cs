@@ -210,10 +210,11 @@ namespace kino.Connectivity
 
         private bool ProcessUnhandledMessage(Message message, MessageIdentifier messageIdentifier)
         {
+            clusterMonitor.DiscoverMessageRoute(messageIdentifier);
+
             if (MessageCameFromOtherNode(message))
             {
                 clusterMonitor.UnregisterSelf(new[] {messageIdentifier});
-                clusterMonitor.DiscoverMessageRoute(messageIdentifier);
 
                 if (message.Distribution == DistributionPattern.Broadcast)
                 {

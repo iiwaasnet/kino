@@ -280,6 +280,35 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
+        public void TestIfUnhandledMessageReceivedFromLocalActor_RouterRequestsDiscovery()
+        {
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           new ExternalRoutingTable(logger),
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           messageTracer.Object,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+                var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                clusterMonitor.Verify(m => m.UnregisterSelf(It.IsAny<IEnumerable<MessageIdentifier>>()), Times.Never());
+                clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<MessageIdentifier>(id => id.Equals(messageIdentifier))), Times.Once());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
         public void TestIfMessageRouterCannotHandleMessage_SelfRegisterIsNotCalled()
         {
             var internalRoutingTable = new InternalRoutingTable();
