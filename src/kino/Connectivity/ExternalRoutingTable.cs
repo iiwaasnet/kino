@@ -101,19 +101,19 @@ namespace kino.Connectivity
             Uri uri;
             socketToUriMap.Remove(socketIdentifier, out uri);
 
-            C5.HashSet<MessageIdentifier> messageHandlers;
-            if (socketToMessageMap.Find(ref socketIdentifier, out messageHandlers))
+            C5.HashSet<MessageIdentifier> messageIdentifiers;
+            if (socketToMessageMap.Find(ref socketIdentifier, out messageIdentifiers))
             {
-                foreach (var messageHandlerIdentifier in messageHandlers)
+                foreach (var messageIdentifier in messageIdentifiers)
                 {
-                    var handlerIdentifier = messageHandlerIdentifier;
+                    var tmpMessageIdentifier = messageIdentifier;
                     HashedLinkedList<SocketIdentifier> socketIdentifiers;
-                    if (messageToSocketMap.Find(ref handlerIdentifier, out socketIdentifiers))
+                    if (messageToSocketMap.Find(ref tmpMessageIdentifier, out socketIdentifiers))
                     {
                         socketIdentifiers.Remove(socketIdentifier);
                         if (!socketIdentifiers.Any())
                         {
-                            messageToSocketMap.Remove(messageHandlerIdentifier);
+                            messageToSocketMap.Remove(messageIdentifier);
                         }
                     }
                 }
@@ -124,29 +124,44 @@ namespace kino.Connectivity
             }
         }
 
-        public void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier)
+        public void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageIdentifiers, SocketIdentifier socketIdentifier)
         {
-            Uri uri;
-            socketToUriMap.Remove(socketIdentifier, out uri);
-
-            foreach (var messageHandlerIdentifier in messageHandlerIdentifiers)
+            foreach (var messageIdentifier in messageIdentifiers)
             {
-                var handlerIdentifier = messageHandlerIdentifier;
+                var tmpMessageIdentifier = messageIdentifier;
                 HashedLinkedList<SocketIdentifier> socketIdentifiers;
-                if (messageToSocketMap.Find(ref handlerIdentifier, out socketIdentifiers))
+                if (messageToSocketMap.Find(ref tmpMessageIdentifier, out socketIdentifiers))
                 {
                     socketIdentifiers.Remove(socketIdentifier);
                     if (!socketIdentifiers.Any())
                     {
-                        messageToSocketMap.Remove(messageHandlerIdentifier);
+                        messageToSocketMap.Remove(messageIdentifier);
                     }
                 }
             }
-            socketToMessageMap.Remove(socketIdentifier);
 
-            logger.Debug($"External message route removed Uri:{uri.AbsoluteUri} " +
-                         $"Socket:{socketIdentifier.Identity.GetString()} " +
-                         $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageHandlerIdentifiers))}]");
+            C5.HashSet<MessageIdentifier> allSocketMessageIdentifiers;
+            if (socketToMessageMap.Find(ref socketIdentifier, out allSocketMessageIdentifiers))
+            {
+                foreach (var messageIdentifier in messageIdentifiers)
+                {
+                    allSocketMessageIdentifiers.Remove(messageIdentifier);
+                }
+                if (!allSocketMessageIdentifiers.Any())
+                {
+                    socketToMessageMap.Remove(socketIdentifier);
+                    Uri uri;
+                    socketToUriMap.Remove(socketIdentifier, out uri);
+
+                    logger.Debug($"External route removed Uri:{uri.AbsoluteUri} " +
+                             $"Socket:{socketIdentifier.Identity.GetString()}");
+                }
+            }
+
+            logger.Debug($"External message route removed " +
+                                 $"Socket:{socketIdentifier.Identity.GetString()} " +
+                                 $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageIdentifiers))}]");
+
         }
 
         private static IEnumerable<string> ConcatenateMessageHandlers(IEnumerable<MessageIdentifier> messageHandlerIdentifiers)

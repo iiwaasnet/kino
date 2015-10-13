@@ -8,7 +8,7 @@ namespace kino.Connectivity
         void AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri);
         SocketIdentifier FindRoute(MessageIdentifier messageIdentifier);
         void RemoveNodeRoute(SocketIdentifier socketIdentifier);
-        void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier);
+        void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageIdentifiers, SocketIdentifier socketIdentifier);
         IEnumerable<SocketIdentifier> FindAllRoutes(MessageIdentifier messageIdentifier);
         IEnumerable<ExternalRoute> GetAllRoutes();
     }
