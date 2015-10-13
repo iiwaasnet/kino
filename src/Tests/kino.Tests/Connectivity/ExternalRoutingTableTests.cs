@@ -19,12 +19,17 @@ namespace kino.Tests.Connectivity
             var messageHandlerIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
             var socketIdentifier1 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
             var socketIdentifier2 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
-            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier1, new Uri("tcp://127.0.0.1:40"));
-            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier2, new Uri("tcp://127.0.0.2:40"));
+            var uri1 = new Uri("tcp://127.0.0.1:40");
+            var uri2 = new Uri("tcp://127.0.0.2:40");
+            var node1 = new Node(uri1, socketIdentifier1.Identity);
+            var node2 = new Node(uri2, socketIdentifier2.Identity);
 
-            Assert.AreEqual(socketIdentifier1, externalRoutingTable.FindRoute(messageHandlerIdentifier));
-            Assert.AreEqual(socketIdentifier2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
-            Assert.AreEqual(socketIdentifier1, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier1, uri1);
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier2, uri2);
+
+            Assert.AreEqual(node1, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            Assert.AreEqual(node2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            Assert.AreEqual(node1, externalRoutingTable.FindRoute(messageHandlerIdentifier));
         }
 
 
@@ -36,15 +41,21 @@ namespace kino.Tests.Connectivity
             var messageHandlerIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
             var socketIdentifier1 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
             var socketIdentifier2 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
-            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier1, new Uri("tcp://127.0.0.1:40"));
-            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier2, new Uri("tcp://127.0.0.2:40"));
+            var uri1 = new Uri("tcp://127.0.0.1:40");
+            var uri2 = new Uri("tcp://127.0.0.2:40");
+            var node1 = new Node(uri1, socketIdentifier1.Identity);
+            var node2 = new Node(uri2, socketIdentifier2.Identity);
 
-            Assert.AreEqual(socketIdentifier1, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier1, uri1);
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier2, uri2);
+
+
+            Assert.AreEqual(node1, externalRoutingTable.FindRoute(messageHandlerIdentifier));
 
             externalRoutingTable.RemoveNodeRoute(socketIdentifier1);
 
-            Assert.AreEqual(socketIdentifier2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
-            Assert.AreEqual(socketIdentifier2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            Assert.AreEqual(node2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            Assert.AreEqual(node2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
         }
 
 

@@ -1,4 +1,5 @@
 using System;
+using kino.Connectivity;
 using kino.Rendezvous.Consensus;
 
 namespace kino.Tests.Consensus.Setup

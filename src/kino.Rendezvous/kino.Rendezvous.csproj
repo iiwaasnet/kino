@@ -117,7 +117,6 @@
     <Compile Include="Consensus\Messages\LeaseReadMessage.cs" />
     <Compile Include="Consensus\Messages\LeaseWriteMessage.cs" />
     <Compile Include="Consensus\Messages\OwnerEndpoint.cs" />
-    <Compile Include="Consensus\Node.cs" />
     <Compile Include="Consensus\OwnerEndpoint.cs" />
     <Compile Include="Consensus\RoundBasedRegister.cs" />
     <Compile Include="Consensus\RoundBasedRegister.Logging.cs" />

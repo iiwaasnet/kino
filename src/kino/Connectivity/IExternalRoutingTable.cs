@@ -6,10 +6,10 @@ namespace kino.Connectivity
     public interface IExternalRoutingTable
     {
         void AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri);
-        SocketIdentifier FindRoute(MessageIdentifier messageIdentifier);
+        Node FindRoute(MessageIdentifier messageIdentifier);
         void RemoveNodeRoute(SocketIdentifier socketIdentifier);
-        void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageIdentifiers, SocketIdentifier socketIdentifier);
-        IEnumerable<SocketIdentifier> FindAllRoutes(MessageIdentifier messageIdentifier);
+        void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier);
+        IEnumerable<Node> FindAllRoutes(MessageIdentifier messageIdentifier);
         IEnumerable<ExternalRoute> GetAllRoutes();
     }
 }

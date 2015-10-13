@@ -68,20 +68,24 @@ namespace kino.Connectivity
             hashSet.Add(messageIdentifier);
         }
 
-        public SocketIdentifier FindRoute(MessageIdentifier messageIdentifier)
+        public Node FindRoute(MessageIdentifier messageIdentifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
-            return messageToSocketMap.Find(ref messageIdentifier, out collection)
-                       ? Get(collection)
-                       : null;
+            if (messageToSocketMap.Find(ref messageIdentifier, out collection))
+            {
+                var socketIdentifier = Get(collection);
+                return new Node(socketToUriMap[socketIdentifier], socketIdentifier.Identity);
+            }
+
+            return null;
         }
 
-        public IEnumerable<SocketIdentifier> FindAllRoutes(MessageIdentifier messageIdentifier)
+        public IEnumerable<Node> FindAllRoutes(MessageIdentifier messageIdentifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
             return messageToSocketMap.Find(ref messageIdentifier, out collection)
-                       ? collection
-                       : Enumerable.Empty<SocketIdentifier>();
+                       ? collection.Select(el => new Node(socketToUriMap[el], el.Identity))
+                       : Enumerable.Empty<Node>();
         }
 
         private static T Get<T>(HashedLinkedList<T> hashSet)
@@ -170,8 +174,7 @@ namespace kino.Connectivity
         public IEnumerable<ExternalRoute> GetAllRoutes()
             => socketToMessageMap.Select(sm => new ExternalRoute
                                                {
-                                                   Node = socketToUriMap[sm.Key],
-                                                   Socket = sm.Key,
+                                                   Node = new Node(socketToUriMap[sm.Key], sm.Key.Identity),
                                                    Messages = sm.Value
                                                });
     }

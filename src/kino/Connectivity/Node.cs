@@ -1,7 +1,7 @@
 using System;
 using kino.Framework;
 
-namespace kino.Rendezvous.Consensus
+namespace kino.Connectivity
 {
     public class Node : IEquatable<Node>
     {
@@ -13,6 +13,11 @@ namespace kino.Rendezvous.Consensus
             SocketIdentity = socketIdentity;
 
             hashCode = CalculateHashCode();
+        }
+
+        public Node(string uri, byte[] socketIdentity)
+            :this(new Uri(uri), socketIdentity)
+        {
         }
 
         public override bool Equals(object obj)

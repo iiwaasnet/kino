@@ -192,17 +192,26 @@ namespace kino.Connectivity
                                 ? new[] {externalRoutingTable.FindRoute(messageIdentifier)}
                                 : (MessageCameFromLocalActor(message)
                                        ? externalRoutingTable.FindAllRoutes(messageIdentifier)
-                                       : Enumerable.Empty<SocketIdentifier>()))
+                                       : Enumerable.Empty<Node>()))
                 .Where(h => h != null)
                 .ToList();
 
             foreach (var handler in handlers)
             {
-                message.SetSocketIdentity(handler.Identity);
-                message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
-                scaleOutBackend.SendMessage(message);
+                try
+                {
+                    message.SetSocketIdentity(handler.SocketIdentity);
+                    message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
+                    scaleOutBackend.SendMessage(message);
 
-                messageTracer.ForwardedToOtherNode(message);
+                    messageTracer.ForwardedToOtherNode(message);
+                }
+                catch (HostUnreachableException err)
+                {
+                    externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(handler.SocketIdentity));
+                    scaleOutBackend.Disconnect(handler.Uri);
+                    logger.Error(err);
+                }
             }
 
             return handlers.Any();

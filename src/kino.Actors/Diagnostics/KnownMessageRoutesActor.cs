@@ -52,8 +52,8 @@ namespace kino.Actors.Diagnostics
                 .GetAllRoutes()
                 .Select(mr => new MessageRoute
                               {
-                                  SocketIdentity = mr.Socket.Identity,
-                                  Uri = mr.Node.ToSocketAddress(),
+                                  SocketIdentity = mr.Node.SocketIdentity,
+                                  Uri = mr.Node.Uri.ToSocketAddress(),
                                   MessageContracts = mr.Messages
                                                        .Select(m => new MessageContract
                                                                     {

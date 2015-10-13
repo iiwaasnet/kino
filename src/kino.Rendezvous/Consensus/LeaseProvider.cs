@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Threading;
+using kino.Connectivity;
 using kino.Diagnostics;
 using kino.Framework;
-using kino.Rendezvous.Configuration;
+using RendezvousConfiguration = kino.Rendezvous.Configuration.RendezvousConfiguration;
 
 namespace kino.Rendezvous.Consensus
 {
