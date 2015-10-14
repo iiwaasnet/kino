@@ -38,7 +38,8 @@ namespace kino.Tests.Connectivity
         {
             var logger = new Mock<ILogger>();
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
-            var messageHandlerIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+            var messageHandlerIdentifier1 = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+            var messageHandlerIdentifier2 = new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity);
             var socketIdentifier1 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
             var socketIdentifier2 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
             var uri1 = new Uri("tcp://127.0.0.1:40");
@@ -46,16 +47,18 @@ namespace kino.Tests.Connectivity
             var node1 = new Node(uri1, socketIdentifier1.Identity);
             var node2 = new Node(uri2, socketIdentifier2.Identity);
 
-            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier1, uri1);
-            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, socketIdentifier2, uri2);
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier1, socketIdentifier1, uri1);
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier2, socketIdentifier1, uri1);
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier1, socketIdentifier2, uri2);
 
 
-            Assert.AreEqual(node1, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            Assert.AreEqual(node1, externalRoutingTable.FindRoute(messageHandlerIdentifier1));
 
             externalRoutingTable.RemoveNodeRoute(socketIdentifier1);
 
-            Assert.AreEqual(node2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
-            Assert.AreEqual(node2, externalRoutingTable.FindRoute(messageHandlerIdentifier));
+            Assert.AreEqual(node2, externalRoutingTable.FindRoute(messageHandlerIdentifier1));
+            Assert.AreEqual(node2, externalRoutingTable.FindRoute(messageHandlerIdentifier1));
+            Assert.IsNull(externalRoutingTable.FindRoute(messageHandlerIdentifier2));
         }
 
 
@@ -68,6 +71,31 @@ namespace kino.Tests.Connectivity
             externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, new SocketIdentifier(Guid.NewGuid().ToByteArray()), new Uri("tcp://127.0.0.1:40"));
             
             Assert.IsNull(externalRoutingTable.FindRoute(new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity)));
+        }
+
+        [Test]
+        public void TestRemoveMessageRoute_RemovesOnlyProvidedMessageIdentifiers()
+        {
+            var logger = new Mock<ILogger>();
+            var externalRoutingTable = new ExternalRoutingTable(logger.Object);
+            var messageHandlerIdentifier1 = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+            var messageHandlerIdentifier2 = new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity);
+            var messageHandlerIdentifier3 = new MessageIdentifier(Message.CurrentVersion, AsyncExceptionMessage.MessageIdentity);
+            var socketIdentifier = new SocketIdentifier(Guid.NewGuid().ToByteArray());
+            var uri = new Uri("tcp://127.0.0.1:40");
+            var node = new Node(uri, socketIdentifier.Identity);
+
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier1, socketIdentifier, uri);
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier2, socketIdentifier, uri);
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier3, socketIdentifier, uri);
+
+            Assert.AreEqual(node, externalRoutingTable.FindRoute(messageHandlerIdentifier3));
+
+            externalRoutingTable.RemoveMessageRoute(new[] {messageHandlerIdentifier2, messageHandlerIdentifier3}, socketIdentifier);
+
+            Assert.AreEqual(node, externalRoutingTable.FindRoute(messageHandlerIdentifier1));
+            Assert.IsNull(externalRoutingTable.FindRoute(messageHandlerIdentifier2));
+            Assert.IsNull(externalRoutingTable.FindRoute(messageHandlerIdentifier3));
         }
     }
 }
