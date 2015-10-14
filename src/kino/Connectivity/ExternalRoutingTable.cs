@@ -108,19 +108,8 @@ namespace kino.Connectivity
             C5.HashSet<MessageIdentifier> messageIdentifiers;
             if (socketToMessageMap.Find(ref socketIdentifier, out messageIdentifiers))
             {
-                foreach (var messageIdentifier in messageIdentifiers)
-                {
-                    var tmpMessageIdentifier = messageIdentifier;
-                    HashedLinkedList<SocketIdentifier> socketIdentifiers;
-                    if (messageToSocketMap.Find(ref tmpMessageIdentifier, out socketIdentifiers))
-                    {
-                        socketIdentifiers.Remove(socketIdentifier);
-                        if (!socketIdentifiers.Any())
-                        {
-                            messageToSocketMap.Remove(messageIdentifier);
-                        }
-                    }
-                }
+                RemoveMessageRoutesForSocketIdentifier(socketIdentifier, messageIdentifiers);
+
                 socketToMessageMap.Remove(socketIdentifier);
 
                 logger.Debug($"External route removed Uri:{uri.AbsoluteUri} " +
@@ -128,22 +117,12 @@ namespace kino.Connectivity
             }
         }
 
+        
+
         public void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageIdentifiers, SocketIdentifier socketIdentifier)
         {
-            foreach (var messageIdentifier in messageIdentifiers)
-            {
-                var tmpMessageIdentifier = messageIdentifier;
-                HashedLinkedList<SocketIdentifier> socketIdentifiers;
-                if (messageToSocketMap.Find(ref tmpMessageIdentifier, out socketIdentifiers))
-                {
-                    socketIdentifiers.Remove(socketIdentifier);
-                    if (!socketIdentifiers.Any())
-                    {
-                        messageToSocketMap.Remove(messageIdentifier);
-                    }
-                }
-            }
-
+            RemoveMessageRoutesForSocketIdentifier(socketIdentifier, messageIdentifiers);
+            
             C5.HashSet<MessageIdentifier> allSocketMessageIdentifiers;
             if (socketToMessageMap.Find(ref socketIdentifier, out allSocketMessageIdentifiers))
             {
@@ -166,6 +145,23 @@ namespace kino.Connectivity
                                  $"Socket:{socketIdentifier.Identity.GetString()} " +
                                  $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageIdentifiers))}]");
 
+        }
+
+        private void RemoveMessageRoutesForSocketIdentifier(SocketIdentifier socketIdentifier, IEnumerable<MessageIdentifier> messageIdentifiers)
+        {
+            foreach (var messageIdentifier in messageIdentifiers)
+            {
+                var tmpMessageIdentifier = messageIdentifier;
+                HashedLinkedList<SocketIdentifier> socketIdentifiers;
+                if (messageToSocketMap.Find(ref tmpMessageIdentifier, out socketIdentifiers))
+                {
+                    socketIdentifiers.Remove(socketIdentifier);
+                    if (!socketIdentifiers.Any())
+                    {
+                        messageToSocketMap.Remove(messageIdentifier);
+                    }
+                }
+            }
         }
 
         private static IEnumerable<string> ConcatenateMessageHandlers(IEnumerable<MessageIdentifier> messageHandlerIdentifiers)
