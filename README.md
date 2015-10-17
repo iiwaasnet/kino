@@ -64,7 +64,7 @@ In Message                        Action                                  Out Me
                                    Send                                -> {List of Cities}
 {List of Cities}                -> For each City Send                  -> {Weather Request for a City}
 {Weather Request for a City}    -> Get Current Weather for a City      -> [{City Weather}, {Log City Weather}]
-{Log City Weather}              -> Save City Weather
+{Log City Weather}              -> Log City Weather
 {City Weather}                  -> Aggregate City Weather              -> {Cities with Highest and Lowest Temperature}
 ```
 
