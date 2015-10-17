@@ -43,97 +43,148 @@ In case Rendezvous Leader changes, MessageRouter do a round-robin search among a
 ![Rendezvous](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Rendezvous.png)
 
 
-**MessageHub** is one of the ways to send messages into Actors network. It is a *starting point of the flow*. First message sent from MessageHub gets CorrelationId assigned, 
-which is then copied to any other message, created during the message flow. It is possible to create a *callback point*, which is defined by message type and caller address. 
+**MessageHub** is one of the ways to send messages into Actors network. It is a *starting point of the flow*. First message sent from MessageHub gets CorrelationId assigned, which is then copied to any other message, created during the message flow. It is possible to create a *callback point*, which is defined by message type and caller address. 
 Whenever an Actor responds with the message, which type corresponds to the one registered in the callback, it is immediately routed back to the address in the callback point.
 Thus, clients may emulate synchronous calls, waiting for the callback to be resolved. Callback may return back a message or an exception, whatever happens first.
 
 ![Callback](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Callback.png)
 
-## Message declaration
+## Example
+We've got a very important task to find out the cities with highest and lowest temperature.
+
+How we are going to do that:
+  * get list of all cities
+  * retrieve current weather for each city from the list
+  * collect all weather data and find cities with highest and lowest temperature
+  
+Let's define logical flow of the messages for this task:
+```
+In Message                        Action                                  Out Message
+
+                                   Send                                -> {List of Cities}
+{List of Cities}                -> For each City Send                  -> {Weather Request for a City}
+{Weather Request for a City}    -> Get Current Weather for a City      -> [{City Weather}, {Log City Weather}]
+{Log City Weather}              -> Save City Weather
+{City Weather}                  -> Aggregate City Weather              -> {Cities with Highest and Lowest Temperature}
+```
+
+![pic]( https://cdn.rawgit.com/iiwaasnet/kino/master/img/Weather.png)
+
+Nevertheless, there are some questions to this design:
+  * how does **WeatherAggregator** actor groups all messages together for each client request?
+  * how does it know, when the last message arrives?
+  * if we host several instances of **WeatherAggregator** actor, which one will be responsible for grouping up final result?
+
+The first problem is solved by using **CorrelationId**, which is generated once for initial message and then copied onto every other message within the same flow. Additionally, in every **CityWeather** message we provide the **Total Number** of all messages to be expected. 
+Now, we can use combination of **CorrelationId** and **Total Number** properties to aggregate all the messages of current flow.
+To solve the last problem, we use some central storage, where all instances of **CityWeather** actor save intermediate results:
+  * what are the currently known highest and lowest temperatures;
+  * how many messages from the **Total Number** of expected messages are already processed.
+
+Instance, which updates the shared storage with the last message of the flow, will send the resulting message for the client.
+
+Now, some code. 
+### Client
+[WeatherRequestScheduler.cs](https://github.com/iiwaasnet/weather/blob/master/src/weather.stat/Scheduler/WeatherRequestScheduler.cs)
+``` csharp
+// Read list of cities
+var cities = (await GetCityList()).Select(c => c.Name);
+
+// Create initial message with CorrelationId assigned to it
+var message = Message.CreateFlowStartMessage(new RequestWeatherHighlightsMessage
+                                             {
+                                                 Cities = cities
+                                             },
+                                             RequestWeatherHighlightsMessage.Identity);
+message.TraceOptions = MessageTraceOptions.Routing;
+
+// Define callback with result message
+var callback = new CallbackPoint(WeatherHighlightsMessage.Identity);
+
+// Send message into actors network and specify wait timeout
+var promise = messageHub.EnqueueRequest(message, callback, TimeSpan.FromMinutes(1));
+
+// Wait for result
+var weatherAggregates = (await promise.GetResponse()).GetPayload<WeatherHighlightsMessage>();
+
+// Print result
+WriteLine($"Lowest T: {weatherAggregates.LowestTemperature.CityName} {weatherAggregates.LowestTemperature.Temperature} C " +
+          $"Highest T: {weatherAggregates.HighestTemperature.CityName} {weatherAggregates.HighestTemperature.Temperature} C. ");
+
+```
+  
+### Sample Message declaration
 ```csharp
 [ProtoContract]
-public class HelloMessage : Payload
+public class RequestWeatherHighlightsMessage: Payload
 {
-    public static readonly byte[] MessageIdentity = "HELLO".GetBytes();
+    public static byte[] Identity = "REQWHIGHLT".GetBytes();
 
     [ProtoMember(1)]
-    public string Greeting { get; set; }
+    public IEnumerable<string> Cities { get; set; }
 }
 ```
 Default serializer for all messages, other than Exception, [protobuf-net](https://github.com/mgravell/protobuf-net).
 
-## Sample Actor
+## Actor
+Here is the code for one of the actors, responsible for getting current weather in a city:
 ```csharp
-public class RevertStringActor : IActor
+public class WeatherCollector : IActor
 {
+    // Declare, which messages actor can process and bind them to handlers
     public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
     {
         yield return new MessageHandlerDefinition
-                     {
-                         Handler = StartProcess,
+        {
                          Message = new MessageDefinition
                                    {
-                                       Identity = HelloMessage.MessageIdentity,
+                                       Identity = RequestCityWeatherMessage.Identity,
                                        Version = Message.CurrentVersion
-                                   }
+                                   },
+                         Handler = Handler
                      };
     }
-
-    private async Task<IActorResult> StartProcess(IMessage message)
+    
+    // Method, which handles RequestCityWeatherMessage message
+    private async Task<IActorResult> Handler(IMessage message)
     {
-        var hello = message.GetPayload<HelloMessage>();
-
-        return new ActorResult(Message.Create(new EhlloMessage
-                              {
-                                  Ehllo = new string(hello.Greeting.Reverse().ToArray())
-                              },
-                              EhlloMessage.MessageIdentity));
+        // Get message payload
+        var request = message.GetPayload<RequestCityWeatherMessage>();
+        
+        // Request weather from external service and wait for result
+        var weather = await GetCityWeather(request.CityName);        
+        var cityWeather = new CityWeather
+                          {
+                              CityName = request.CityName,
+                              Temperature = weather?.Main?.Temp
+                          };
+                          
+        // Create CityWeatherMessage message with current weather in the city
+        // Forward TotalCityCount to the next actor
+        var response = Message.Create(new CityWeatherMessage
+                                      {
+                                          Weather = cityWeather,
+                                          TotalCityCount = request.TotalCityCount
+                                      },
+                                      CityWeatherMessage.Identity);
+                                      
+        // Create a message to be processed by a logging actor
+        var log = Message.Create(new LogCityWeatherMessage
+                                 {
+                                     Weather = cityWeather
+                                 },
+                                 LogCityWeatherMessage.Identity);
+                                 
+        // Return response messages
+        return new ActorResult(response, log);
     }
 }
 ```
 
-## Sending a message with callback
-```csharp
-// Create and start MessageRouter
-// ctor parameters are omitted for clarity
-var messageRouter = new MessageRouter(...);
-messageRouter.Start();
-// Create and start ClusterMonitor
-var clusterMonitor = new ClusterMonitor(...);
-clusterMonitor.Start();
-// Create and start MessageHub
-var messageHub = new MessageHub(...);
-messageHub.Start();
+Complete solution for Weather example could be found [here](https://github.com/iiwaasnet/weather).
 
-var request = Message.CreateFlowStartMessage(new HelloMessage(), HelloMessage.MessageIdentity);
-// Define which message type should be returned back to caller
-var callbackPoint = new CallbackPoint(EhlloMessage.MessageIdentity);
-// Send request and wait for the promise to be resolved with the expected callback message
-var promise = messageHub.EnqueueRequest(request, callbackPoint);
-var response = promise.GetResponse().Result.GetPayload<EhlloMessage>();
-```
-
-## Starting Actors
-```csharp
-// Create and start MessageRouter
-// ctor parameters are omitted for clarity
-var messageRouter = new MessageRouter(...);
-messageRouter.Start();
-// Create and start ClusterMonitor
-var clusterMonitor = new ClusterMonitor(...);
-clusterMonitor.Start();
-// Create and start ActorHost
-var actorHost = new ActorHost(...);
-actorHost.Start();
-// Resolve actors implementations and assign them to ActorHost
-foreach (IActor actor in GetAvailableActors())
-{
-    actorHost.AssignActor(actor);
-}
-```
-For basic usage, please, check [Samples](https://github.com/iiwaasnet/kino/tree/master/src/Samples) folder.
-Another [example](https://github.com/iiwaasnet/weather) of scaling out requests and grouping final result.
+Another example, which uses Rendezvous service, could be found in [Samples](https://github.com/iiwaasnet/kino/tree/master/src/Samples) folder.
 
 
-**Powered by: [NetMQ](https://github.com/zeromq/netmq)**
+
+Powered by **[NetMQ](https://github.com/zeromq/netmq)**
