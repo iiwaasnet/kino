@@ -24,8 +24,8 @@ namespace kino.Connectivity
         private Task listenningMessages;
         private Task monitorRendezvous;
         private readonly ManualResetEventSlim pingReceived;
-        private readonly ManualResetEventSlim newRendezvousLeaderSelected;
-        private readonly IRendezvousConfiguration rendezvousConfiguration;
+        private readonly ManualResetEventSlim newRendezvousConfiguration;
+        private readonly IRendezvousCluster rendezvousCluster;
         private ISocket clusterMonitorSubscriptionSocket;
         private ISocket clusterMonitorSendingSocket;
         private readonly ClusterMembershipConfiguration membershipConfiguration;
@@ -35,17 +35,17 @@ namespace kino.Connectivity
                               RouterConfiguration routerConfiguration,
                               IClusterMembership clusterMembership,
                               ClusterMembershipConfiguration membershipConfiguration,
-                              IRendezvousConfiguration rendezvousConfiguration,
+                              IRendezvousCluster rendezvousCluster,
                               ILogger logger)
         {
             this.logger = logger;
             this.membershipConfiguration = membershipConfiguration;
             pingReceived = new ManualResetEventSlim(false);
-            newRendezvousLeaderSelected = new ManualResetEventSlim(false);
+            newRendezvousConfiguration = new ManualResetEventSlim(false);
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
             this.clusterMembership = clusterMembership;
-            this.rendezvousConfiguration = rendezvousConfiguration;
+            this.rendezvousCluster = rendezvousCluster;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
         }
 
@@ -96,7 +96,7 @@ namespace kino.Connectivity
             monitorRendezvous.Wait();
             monitoringToken.Dispose();
             pingReceived.Dispose();
-            newRendezvousLeaderSelected.Dispose();
+            newRendezvousConfiguration.Dispose();
         }
 
         private void RendezvousConnectionMonitor(CancellationToken token)
@@ -110,7 +110,7 @@ namespace kino.Connectivity
                         StopProcessingClusterMessages();
                         StartProcessingClusterMessages();
 
-                        var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
+                        var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
                         logger.Info($"Reconnected to Rendezvous {rendezvousServer.MulticastUri.AbsoluteUri}");
                     }
                 }
@@ -126,17 +126,21 @@ namespace kino.Connectivity
 
         private bool PingSilence()
         {
-            const int newLeaderElected = 1;
-            var result = WaitHandle.WaitAny(new[] {pingReceived.WaitHandle, newRendezvousLeaderSelected.WaitHandle},
+            const int rendezvousConfigurationChanged = 1;
+            var result = WaitHandle.WaitAny(new[]
+                                            {
+                                                pingReceived.WaitHandle,
+                                                newRendezvousConfiguration.WaitHandle
+                                            },
                                             membershipConfiguration.PingSilenceBeforeRendezvousFailover);
             if (result == WaitHandle.WaitTimeout)
             {
-                rendezvousConfiguration.RotateRendezvousServers();
+                rendezvousCluster.RotateRendezvousServers();
                 return true;
             }
-            if (result == newLeaderElected)
+            if (result == rendezvousConfigurationChanged)
             {
-                newRendezvousLeaderSelected.Reset();
+                newRendezvousConfiguration.Reset();
                 return true;
             }
 
@@ -203,7 +207,7 @@ namespace kino.Connectivity
 
         private ISocket CreateClusterMonitorSubscriptionSocket()
         {
-            var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
+            var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateSubscriberSocket();
             socket.Connect(rendezvousServer.MulticastUri);
             socket.Subscribe();
@@ -215,7 +219,7 @@ namespace kino.Connectivity
 
         private ISocket CreateClusterMonitorSendingSocket()
         {
-            var rendezvousServer = rendezvousConfiguration.GetCurrentRendezvousServer();
+            var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateDealerSocket();
             socket.Connect(rendezvousServer.UnicastUri);
 
@@ -233,8 +237,28 @@ namespace kino.Connectivity
         private bool ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)
             => Ping(message, routerNotificationSocket)
                || Pong(message)
+               || RendezvousReconfiguration(message)
                || MessageRoutingControlMessage(message, routerNotificationSocket)
                || RendezvousNotLeader(message);
+
+        private bool RendezvousReconfiguration(IMessage message)
+        {
+            var shouldHandle = IsRendezvousReconfiguration(message);
+            if (shouldHandle)
+            {
+                var payload = message.GetPayload<RendezvousConfigurationChangedMessage>();
+                rendezvousCluster.Reconfigure(payload
+                                                  .RendezvousNodes
+                                                  .Select(rn => new RendezvousEndpoint
+                                                                {
+                                                                    UnicastUri = new Uri(rn.UnicastUri),
+                                                                    MulticastUri = new Uri(rn.MulticastUri)
+                                                                }));
+                newRendezvousConfiguration.Set();
+            }
+
+            return shouldHandle;
+        }
 
         private bool RendezvousNotLeader(IMessage message)
         {
@@ -242,15 +266,15 @@ namespace kino.Connectivity
             if (shouldHandle)
             {
                 var payload = message.GetPayload<RendezvousNotLeaderMessage>();
-                var newLeader = new RendezvousEndpoints
+                var newLeader = new RendezvousEndpoint
                                 {
-                                    MulticastUri = new Uri(payload.LeaderMulticastUri),
-                                    UnicastUri = new Uri(payload.LeaderUnicastUri)
+                                    MulticastUri = new Uri(payload.NewLeader.MulticastUri),
+                                    UnicastUri = new Uri(payload.NewLeader.UnicastUri)
                                 };
-                if (!rendezvousConfiguration.GetCurrentRendezvousServer().Equals(newLeader))
+                if (!rendezvousCluster.GetCurrentRendezvousServer().Equals(newLeader))
                 {
-                    rendezvousConfiguration.SetCurrentRendezvousServer(newLeader);
-                    newRendezvousLeaderSelected.Set();
+                    rendezvousCluster.SetCurrentRendezvousServer(newLeader);
+                    newRendezvousConfiguration.Set();
                 }
             }
 
@@ -310,7 +334,7 @@ namespace kino.Connectivity
 
             return shouldHandle;
         }
-       
+
         public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers)
         {
             var message = Message.Create(new RegisterExternalMessageRouteMessage
@@ -452,6 +476,9 @@ namespace kino.Connectivity
 
         private bool IsRendezvousNotLeader(IMessage message)
             => Unsafe.Equals(RendezvousNotLeaderMessage.MessageIdentity, message.Identity);
+
+        private bool IsRendezvousReconfiguration(IMessage message)
+            => Unsafe.Equals(RendezvousConfigurationChangedMessage.MessageIdentity, message.Identity);
 
         private bool IsRequestAllMessageRoutingMessage(IMessage message)
         {

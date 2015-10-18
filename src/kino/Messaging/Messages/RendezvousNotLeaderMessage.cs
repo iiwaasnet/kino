@@ -9,9 +9,6 @@ namespace kino.Messaging.Messages
         public static readonly byte[] MessageIdentity = "RNDZVNOTLEADER".GetBytes();
 
         [ProtoMember(1)]
-        public string LeaderMulticastUri { get; set; }
-
-        [ProtoMember(2)]
-        public string LeaderUnicastUri { get; set; }
+        public RendezvousNode NewLeader { get; set; }
     }
 }

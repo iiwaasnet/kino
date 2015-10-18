@@ -6,9 +6,9 @@ using kino.Diagnostics;
 using kino.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
+using kino.Rendezvous.Configuration;
 using kino.Rendezvous.Consensus;
 using kino.Sockets;
-using RendezvousConfiguration = kino.Rendezvous.Configuration.RendezvousConfiguration;
 
 namespace kino.Rendezvous
 {
@@ -159,8 +159,11 @@ namespace kino.Rendezvous
             {
                 return Message.Create(new RendezvousNotLeaderMessage
                                       {
-                                          LeaderMulticastUri = lease.OwnerEndpoint.MulticastUri.ToSocketAddress(),
-                                          LeaderUnicastUri = lease.OwnerEndpoint.UnicastUri.ToSocketAddress()
+                                          NewLeader = new RendezvousNode
+                                                      {
+                                                          MulticastUri = lease.OwnerEndpoint.MulticastUri.ToSocketAddress(),
+                                                          UnicastUri = lease.OwnerEndpoint.UnicastUri.ToSocketAddress()
+                                                      }
                                       },
                                       RendezvousNotLeaderMessage.MessageIdentity);
             }

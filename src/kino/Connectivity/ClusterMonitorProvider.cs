@@ -11,7 +11,7 @@ namespace kino.Connectivity
                                       RouterConfiguration routerConfiguration,
                                       IClusterMembership clusterMembership,
                                       ClusterMembershipConfiguration membershipConfiguration,
-                                      IRendezvousConfiguration rendezvousConfiguration,
+                                      IRendezvousCluster rendezvousCluster,
                                       ILogger logger)
         {
             clusterMonitor = membershipConfiguration.RunAsStandalone
@@ -20,7 +20,7 @@ namespace kino.Connectivity
                                                       routerConfiguration,
                                                       clusterMembership,
                                                       membershipConfiguration,
-                                                      rendezvousConfiguration,
+                                                      rendezvousCluster,
                                                       logger);
         }
 

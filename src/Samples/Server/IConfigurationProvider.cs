@@ -5,7 +5,7 @@ namespace Server
 {
     public interface IConfigurationProvider
     {
-        IEnumerable<RendezvousEndpoints> GetRendezvousEndpointsConfiguration();
+        IEnumerable<RendezvousEndpoint> GetRendezvousEndpointsConfiguration();
         RouterConfiguration GetRouterConfiguration();
         ClusterMembershipConfiguration GetClusterTimingConfiguration();
     }

@@ -48,8 +48,12 @@ namespace kino
                    .As<ISocketFactory>()
                    .SingleInstance();
 
-            builder.RegisterType<RendezvousConfiguration>()
-                   .As<IRendezvousConfiguration>()
+            builder.RegisterType<RendezvousCluster>()
+                   .As<IRendezvousCluster>()
+                   .SingleInstance();
+
+            builder.RegisterType<RendezvousClusterConfigurationReadonlyStorage>()
+                   .As<IConfigurationStorage<RendezvousClusterConfiguration>>()
                    .SingleInstance();
 
             builder.RegisterType<MessageTracer>()

@@ -2,9 +2,9 @@
 
 namespace kino.Connectivity
 {
-  public class RendezvousEndpoints : IEquatable<RendezvousEndpoints>
+  public class RendezvousEndpoint : IEquatable<RendezvousEndpoint>
   {
-    public bool Equals(RendezvousEndpoints other)
+    public bool Equals(RendezvousEndpoint other)
     {
       if (ReferenceEquals(null, other))
       {
@@ -33,7 +33,7 @@ namespace kino.Connectivity
         return false;
       }
 
-      return Equals((RendezvousEndpoints) obj);
+      return Equals((RendezvousEndpoint) obj);
     }
 
     public override int GetHashCode()

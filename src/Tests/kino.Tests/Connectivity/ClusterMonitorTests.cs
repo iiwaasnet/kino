@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using kino.Connectivity;
@@ -17,13 +18,13 @@ namespace kino.Tests.Connectivity
     [TestFixture]
     public class ClusterMonitorTests
     {
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
         private ClusterMonitorSocketFactory clusterMonitorSocketFactory;
         private Mock<ILogger> logger;
         private Mock<ISocketFactory> socketFactory;
         private RouterConfiguration routerConfiguration;
         private Mock<IClusterMembership> clusterMembership;
-        private Mock<IRendezvousConfiguration> rendezvousConfiguration;
+        private Mock<IRendezvousCluster> rendezvousCluster;
         private ClusterMembershipConfiguration clusterMembershipConfiguration;
 
         [SetUp]
@@ -34,18 +35,18 @@ namespace kino.Tests.Connectivity
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
-            rendezvousConfiguration = new Mock<IRendezvousConfiguration>();
+            rendezvousCluster = new Mock<IRendezvousCluster>();
             routerConfiguration = new RouterConfiguration
                                   {
                                       ScaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity()),
                                       RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
                                   };
-            var rendezvousEndpoint = new RendezvousEndpoints
+            var rendezvousEndpoint = new RendezvousEndpoint
                                      {
                                          UnicastUri = new Uri("tcp://127.0.0.1:5000"),
                                          MulticastUri = new Uri("tcp://127.0.0.1:5000")
                                      };
-            rendezvousConfiguration.Setup(m => m.GetCurrentRendezvousServer()).Returns(rendezvousEndpoint);
+            rendezvousCluster.Setup(m => m.GetCurrentRendezvousServer()).Returns(rendezvousEndpoint);
             clusterMembership = new Mock<IClusterMembership>();
             clusterMembershipConfiguration = new ClusterMembershipConfiguration
                                              {
@@ -62,7 +63,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
             try
             {
@@ -70,8 +71,8 @@ namespace kino.Tests.Connectivity
 
                 WaitLongerThanPingSilenceFailover();
 
-                rendezvousConfiguration.Verify(m => m.GetCurrentRendezvousServer(), Times.AtLeastOnce);
-                rendezvousConfiguration.Verify(m => m.RotateRendezvousServers(), Times.AtLeastOnce);
+                rendezvousCluster.Verify(m => m.GetCurrentRendezvousServer(), Times.AtLeastOnce);
+                rendezvousCluster.Verify(m => m.RotateRendezvousServers(), Times.AtLeastOnce);
             }
             finally
             {
@@ -86,7 +87,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
             try
             {
@@ -103,9 +104,9 @@ namespace kino.Tests.Connectivity
                 socket.DeliverMessage(Message.Create(ping, PingMessage.MessageIdentity));
                 Thread.Sleep(AsyncOp);
 
-                rendezvousConfiguration.Verify(m => m.SetCurrentRendezvousServer(It.IsAny<RendezvousEndpoints>()), Times.Never);
-                rendezvousConfiguration.Verify(m => m.RotateRendezvousServers(), Times.Never);
-                rendezvousConfiguration.Verify(m => m.GetCurrentRendezvousServer(), Times.Exactly(2));
+                rendezvousCluster.Verify(m => m.SetCurrentRendezvousServer(It.IsAny<RendezvousEndpoint>()), Times.Never);
+                rendezvousCluster.Verify(m => m.RotateRendezvousServers(), Times.Never);
+                rendezvousCluster.Verify(m => m.GetCurrentRendezvousServer(), Times.Exactly(2));
             }
             finally
             {
@@ -122,7 +123,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
 
             try
@@ -132,17 +133,20 @@ namespace kino.Tests.Connectivity
                 var socket = clusterMonitorSocketFactory.GetClusterMonitorSubscriptionSocket();
                 var notLeaderMessage = new RendezvousNotLeaderMessage
                                        {
-                                           LeaderMulticastUri = "tpc://127.0.0.2:6000",
-                                           LeaderUnicastUri = "tpc://127.0.0.2:6000"
+                                           NewLeader = new RendezvousNode
+                                                       {
+                                                           MulticastUri = "tpc://127.0.0.2:6000",
+                                                           UnicastUri = "tpc://127.0.0.2:6000"
+                                                       }
                                        };
                 socket.DeliverMessage(Message.Create(notLeaderMessage,
                                                      RendezvousNotLeaderMessage.MessageIdentity));
                 Thread.Sleep(AsyncOp);
 
-                rendezvousConfiguration.Verify(m => m.SetCurrentRendezvousServer(It.Is<RendezvousEndpoints>(e => SameServer(e, notLeaderMessage))),
-                                               Times.Once());
-                rendezvousConfiguration.Verify(m => m.GetCurrentRendezvousServer(), Times.AtLeastOnce);
-                rendezvousConfiguration.Verify(m => m.RotateRendezvousServers(), Times.Never);
+                rendezvousCluster.Verify(m => m.SetCurrentRendezvousServer(It.Is<RendezvousEndpoint>(e => SameServer(e, notLeaderMessage))),
+                                         Times.Once());
+                rendezvousCluster.Verify(m => m.GetCurrentRendezvousServer(), Times.AtLeastOnce);
+                rendezvousCluster.Verify(m => m.RotateRendezvousServers(), Times.Never);
             }
             finally
             {
@@ -161,7 +165,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
             try
             {
@@ -198,7 +202,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
             try
             {
@@ -292,7 +296,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
             try
             {
@@ -324,7 +328,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
             try
             {
@@ -357,7 +361,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
             try
             {
@@ -390,7 +394,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
             try
             {
@@ -417,7 +421,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
             try
             {
@@ -443,6 +447,51 @@ namespace kino.Tests.Connectivity
             }
         }
 
+        [Test]
+        public void TestIfRendezvousReconfigurationMessageArrives_RendezvousClusterIsChanged()
+        {
+            var clusterMonitor = new ClusterMonitor(socketFactory.Object,
+                                                    routerConfiguration,
+                                                    clusterMembership.Object,
+                                                    clusterMembershipConfiguration,
+                                                    rendezvousCluster.Object,
+                                                    logger.Object);
+            try
+            {
+                clusterMonitor.Start();
+
+                var newRendezouvEndpoint = new RendezvousEndpoint
+                                           {
+                                               UnicastUri = new Uri("tcp://192.0.0.1:8000"),
+                                               MulticastUri = new Uri("tcp://192.0.0.1:8001")
+                                           };
+                var message = Message.Create(new RendezvousConfigurationChangedMessage
+                                             {
+                                                 RendezvousNodes = new[]
+                                                                   {
+                                                                       new RendezvousNode
+                                                                       {
+                                                                           UnicastUri = newRendezouvEndpoint.UnicastUri.AbsoluteUri,
+                                                                           MulticastUri = newRendezouvEndpoint.MulticastUri.AbsoluteUri
+                                                                       }
+                                                                   }
+                                             },
+                                             RendezvousConfigurationChangedMessage.MessageIdentity);
+
+                var socket = clusterMonitorSocketFactory.GetClusterMonitorSubscriptionSocket();
+                socket.DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                rendezvousCluster.Verify(m => m.Reconfigure(It.Is<IEnumerable<RendezvousEndpoint>>(ep => ep.Contains(newRendezouvEndpoint))),
+                                         Times.Once);
+            }
+            finally
+            {
+                clusterMonitor.Stop();
+            }
+        }
+
         private void TestMessageIsForwardedToMessageRouter<TPayload>(TPayload payload, byte[] messageIdentity)
             where TPayload : IPayload
         {
@@ -450,7 +499,7 @@ namespace kino.Tests.Connectivity
                                                     routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMembershipConfiguration,
-                                                    rendezvousConfiguration.Object,
+                                                    rendezvousCluster.Object,
                                                     logger.Object);
             try
             {
@@ -473,10 +522,10 @@ namespace kino.Tests.Connectivity
             }
         }
 
-        private static bool SameServer(RendezvousEndpoints e, RendezvousNotLeaderMessage notLeaderMessage)
+        private static bool SameServer(RendezvousEndpoint e, RendezvousNotLeaderMessage notLeaderMessage)
         {
-            return e.MulticastUri.ToSocketAddress() == notLeaderMessage.LeaderMulticastUri
-                   && e.UnicastUri.ToSocketAddress() == notLeaderMessage.LeaderUnicastUri;
+            return e.MulticastUri.ToSocketAddress() == notLeaderMessage.NewLeader.MulticastUri
+                   && e.UnicastUri.ToSocketAddress() == notLeaderMessage.NewLeader.UnicastUri;
         }
 
         private void WaitLessThanPingSilenceFailover()

@@ -7,7 +7,7 @@ namespace Client
 {
     public interface IConfigurationProvider
     {
-        IEnumerable<RendezvousEndpoints> GetRendezvousEndpointsConfiguration();
+        IEnumerable<kino.Connectivity.RendezvousEndpoint> GetRendezvousEndpointsConfiguration();
         RouterConfiguration GetRouterConfiguration();
         ClusterMembershipConfiguration GetClusterMembershipConfiguration();
         ExpirableItemCollectionConfiguration GetExpirableItemCollectionConfiguration();

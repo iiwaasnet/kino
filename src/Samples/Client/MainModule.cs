@@ -46,7 +46,7 @@ namespace Client
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
-                   .As<IEnumerable<RendezvousEndpoints>>()
+                   .As<IEnumerable<kino.Connectivity.RendezvousEndpoint>>()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())

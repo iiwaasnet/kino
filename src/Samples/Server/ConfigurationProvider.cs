@@ -14,8 +14,8 @@ namespace Server
             this.appConfig = appConfig;
         }
 
-        public IEnumerable<RendezvousEndpoints> GetRendezvousEndpointsConfiguration()
-            => appConfig.RendezvousServers.Select(rs => new RendezvousEndpoints
+        public IEnumerable<RendezvousEndpoint> GetRendezvousEndpointsConfiguration()
+            => appConfig.RendezvousServers.Select(rs => new RendezvousEndpoint
                                                         {
                                                             MulticastUri = new Uri(rs.BroadcastUri),
                                                             UnicastUri = new Uri(rs.UnicastUri)

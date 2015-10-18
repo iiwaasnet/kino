@@ -68,7 +68,10 @@
     <Compile Include="Connectivity\ActorResult.cs" />
     <Compile Include="Connectivity\ClusterMembershipConfiguration.cs" />
     <Compile Include="Connectivity\ClusterMonitorProvider.cs" />
+    <Compile Include="Connectivity\RendezvousClusterConfigurationReadonlyStorage.cs" />
     <Compile Include="Connectivity\Node.cs" />
+    <Compile Include="Connectivity\RendezvousClusterConfiguration.cs" />
+    <Compile Include="Framework\IConfigurationStorage.cs" />
     <Compile Include="Messaging\Messages\DiscoverMessageRouteMessage.cs" />
     <Compile Include="Connectivity\ExternalRoute.cs" />
     <Compile Include="Connectivity\ExternalRoutingTable.cs" />
@@ -82,12 +85,12 @@
     <Compile Include="Connectivity\InternalRoute.cs" />
     <Compile Include="Connectivity\LoopbackClusterMonitor.cs" />
     <Compile Include="Connectivity\MessageTracer.cs" />
-    <Compile Include="Connectivity\RendezvousConfiguration.cs" />
-    <Compile Include="Connectivity\RendezvousEndpoints.cs" />
+    <Compile Include="Connectivity\RendezvousCluster.cs" />
+    <Compile Include="Connectivity\RendezvousEndpoint.cs" />
     <Compile Include="Connectivity\ClusterMembership.cs" />
     <Compile Include="Connectivity\ClusterMonitor.cs" />
     <Compile Include="Connectivity\SocketEndpoint.cs" />
-    <Compile Include="Connectivity\IRendezvousConfiguration.cs" />
+    <Compile Include="Connectivity\IRendezvousCluster.cs" />
     <Compile Include="Connectivity\IClusterMembership.cs" />
     <Compile Include="Connectivity\IClusterMonitor.cs" />
     <Compile Include="Connectivity\RouterConfiguration.cs" />
@@ -99,6 +102,8 @@
     <Compile Include="Connectivity\SocketIdentifier.cs" />
     <Compile Include="Connectivity\ClusterMemberMeta.cs" />
     <Compile Include="Messaging\Messages\KnownMessageRoutesMessage.cs" />
+    <Compile Include="Messaging\Messages\RendezvousConfigurationChangedMessage.cs" />
+    <Compile Include="Messaging\Messages\RendezvousNode.cs" />
     <Compile Include="Messaging\Messages\RequestKnownMessageRoutesMessage.cs" />
     <Compile Include="Messaging\Messages\UnregisterMessageRouteMessage.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />

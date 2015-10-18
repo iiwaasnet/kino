@@ -4,6 +4,7 @@ using kino.Actors;
 using kino.Connectivity;
 using Server.Actors;
 using TypedConfigProvider;
+using RendezvousEndpoint = kino.Connectivity.RendezvousEndpoint;
 
 namespace Server
 {
@@ -42,7 +43,7 @@ namespace Server
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
-                   .As<IEnumerable<RendezvousEndpoints>>()
+                   .As<IEnumerable<RendezvousEndpoint>>()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterTimingConfiguration())
