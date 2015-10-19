@@ -122,7 +122,7 @@ namespace kino.Actors
                                   .ToArray()
                           };
 
-            socket.SendMessage(Message.Create(payload, RegisterInternalMessageRouteMessage.MessageIdentity));
+            socket.SendMessage(Message.Create(payload));
         }
 
         private void ProcessAsyncResponses(CancellationToken token, Barrier gateway)
@@ -139,7 +139,9 @@ namespace kino.Actors
                         {
                             foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
                             {
-                                messageOut.RegisterCallbackPoint(messageContext.CallbackIdentity, messageContext.CallbackReceiverIdentity);
+                                messageOut.RegisterCallbackPoint(messageContext.CallbackIdentity,
+                                                                 messageContext.CallbackVersion,
+                                                                 messageContext.CallbackReceiverIdentity);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
                                 messageOut.CopyMessageHops(messageContext.MessageHops);
 
@@ -216,7 +218,9 @@ namespace kino.Actors
 
                 foreach (var messageOut in response.Cast<Message>())
                 {
-                    messageOut.RegisterCallbackPoint(GetTaskCallbackIdentity(task, messageIn), messageIn.CallbackReceiverIdentity);
+                    messageOut.RegisterCallbackPoint(GetTaskCallbackIdentity(task, messageIn),
+                                                     GetTaskCallbackVersion(task, messageIn),
+                                                     messageIn.CallbackReceiverIdentity);
                     messageOut.SetCorrelationId(messageIn.CorrelationId);
                     messageOut.CopyMessageHops(messageIn.GetMessageHops());
 
@@ -234,8 +238,8 @@ namespace kino.Actors
 
         private static void CallbackException(ISocket localSocket, Exception err, Message messageIn)
         {
-            var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err}, ExceptionMessage.MessageIdentity);
-            messageOut.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, messageIn.CallbackReceiverIdentity);
+            var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err});
+            messageOut.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, ExceptionMessage.MessageVersion, messageIn.CallbackReceiverIdentity);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageHops(messageIn.GetMessageHops());
 
@@ -262,6 +266,13 @@ namespace kino.Actors
                        : messageIn.CallbackIdentity;
         }
 
+        private static byte[] GetTaskCallbackVersion(Task task, IMessage messageIn)
+        {
+            return task.IsCanceled || task.IsFaulted
+                       ? ExceptionMessage.MessageVersion
+                       : messageIn.CallbackVersion;
+        }
+
         private static IActorResult CreateTaskResultMessage(Task<IActorResult> task)
         {
             if (task.IsCanceled)
@@ -269,8 +280,7 @@ namespace kino.Actors
                 return new ActorResult(Message.Create(new ExceptionMessage
                                                       {
                                                           Exception = new OperationCanceledException()
-                                                      },
-                                                      ExceptionMessage.MessageIdentity));
+                                                      }));
             }
             if (task.IsFaulted)
             {
@@ -279,8 +289,7 @@ namespace kino.Actors
                 return new ActorResult(Message.Create(new ExceptionMessage
                                                       {
                                                           Exception = err
-                                                      },
-                                                      ExceptionMessage.MessageIdentity));
+                                                      }));
             }
 
             return task.Result ?? new ActorResult(Enumerable.Empty<IMessage>().ToArray());

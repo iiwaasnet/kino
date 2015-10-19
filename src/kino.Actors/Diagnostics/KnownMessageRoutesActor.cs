@@ -23,13 +23,13 @@ namespace kino.Actors.Diagnostics
             this.routerConfiguration = routerConfiguration;
         }
 
+        [MessageHandlerDefinition(typeof(RequestKnownMessageRoutesMessage))]
         private async Task<IActorResult> Handler(IMessage message)
             => new ActorResult(Message.Create(new KnownMessageRoutesMessage
                                               {
                                                   ExternalRoutes = GetExternalRoutes(),
                                                   InternalRoutes = GetInternalRoutes()
-                                              },
-                                              KnownMessageRoutesMessage.MessageIdentity));
+                                              }));
 
         private MessageRoute GetInternalRoutes()
             => new MessageRoute
@@ -63,17 +63,17 @@ namespace kino.Actors.Diagnostics
                                                        .ToArray()
                               });
 
-        public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
-        {
-            yield return new MessageHandlerDefinition
-                         {
-                             Handler = Handler,
-                             Message = new MessageDefinition
-                                       {
-                                           Identity = RequestKnownMessageRoutesMessage.MessageIdentity,
-                                           Version = Message.CurrentVersion
-                                       }
-                         };
-        }
+        //public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
+        //{
+        //    yield return new MessageHandlerDefinition
+        //                 {
+        //                     Handler = Handler,
+        //                     Message = new MessageDefinition
+        //                               {
+        //                                   Identity = RequestKnownMessageRoutesMessage.MessageIdentity,
+        //                                   Version = Message.CurrentVersion
+        //                               }
+        //                 };
+        //}
     }
 }

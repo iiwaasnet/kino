@@ -67,7 +67,7 @@ namespace kino.Tests.Client
                 var registration = message.GetPayload<RegisterInternalMessageRouteMessage>();
                 CollectionAssert.AreEqual(receivingSocket.GetIdentity(), registration.SocketIdentity);
                 var handler = registration.MessageContracts.First();
-                CollectionAssert.AreEqual(Message.CurrentVersion, handler.Version);
+                CollectionAssert.AreEqual(IdentityExtensions.Empty, handler.Version);
                 CollectionAssert.AreEqual(receivingSocket.GetIdentity(), handler.Identity);
             }
             finally
@@ -88,8 +88,8 @@ namespace kino.Tests.Client
             {
                 messageHub.Start();
 
-                var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-                var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage>();
 
                 messageHub.EnqueueRequest(message, callback);
 
@@ -118,8 +118,8 @@ namespace kino.Tests.Client
             {
                 messageHub.Start();
 
-                var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-                var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage>();
 
                 messageHub.EnqueueRequest(message, callback);
 
@@ -150,8 +150,8 @@ namespace kino.Tests.Client
             {
                 messageHub.Start();
 
-                var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-                var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage>();
 
                 var promise = messageHub.EnqueueRequest(message, callback);
                 callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
@@ -180,13 +180,13 @@ namespace kino.Tests.Client
             {
                 messageHub.Start();
 
-                var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-                var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage>();
 
                 var promise = messageHub.EnqueueRequest(message, callback);
                 callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
                 var errorMessage = Guid.NewGuid().ToString();
-                var exception = Message.Create(new ExceptionMessage {Exception = new Exception(errorMessage)}, ExceptionMessage.MessageIdentity);
+                var exception = Message.Create(new ExceptionMessage {Exception = new Exception(errorMessage)});
                 messageHubSocketFactory.GetReceivingSocket().DeliverMessage(exception);
 
                 Assert.Throws<AggregateException>(() => { var response = promise.GetResponse().Result; }, errorMessage);
@@ -210,8 +210,8 @@ namespace kino.Tests.Client
             {
                 messageHub.Start();
 
-                var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-                var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage>();
 
                 var promise = messageHub.EnqueueRequest(message, callback);
                 callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns((IPromise) null);
@@ -229,7 +229,7 @@ namespace kino.Tests.Client
 
         private bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageIdentifier> registrations)
         {
-            return registrations.Any(h => Unsafe.Equals(h.Identity, SimpleMessage.MessageIdentity))
+            return registrations.Any(h => Unsafe.Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
                    && registrations.Any(h => Unsafe.Equals(h.Identity, ExceptionMessage.MessageIdentity));
         }
     }

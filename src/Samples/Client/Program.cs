@@ -30,9 +30,9 @@ namespace Client
             Thread.Sleep(TimeSpan.FromSeconds(5));
             WriteLine($"Client is running... {DateTime.Now}");
 
-            var request = Message.CreateFlowStartMessage(new HelloMessage {Greeting = Guid.NewGuid().ToString()}, HelloMessage.MessageIdentity);
+            var request = Message.CreateFlowStartMessage(new HelloMessage {Greeting = Guid.NewGuid().ToString()});
             request.TraceOptions = MessageTraceOptions.None;
-            var callbackPoint = new CallbackPoint(GroupCharsResponseMessage.MessageIdentity);
+            var callbackPoint = CallbackPoint.Create<GroupCharsResponseMessage>();
             var promise = messageHub.EnqueueRequest(request, callbackPoint);
             var timeout = TimeSpan.FromSeconds(4);
             if (promise.GetResponse().Wait(timeout))

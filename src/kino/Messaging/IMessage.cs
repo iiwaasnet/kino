@@ -12,6 +12,7 @@ namespace kino.Messaging
         byte[] CorrelationId { get; }
         byte[] ReceiverIdentity { get; }
         byte[] CallbackIdentity { get; }
+        byte[] CallbackVersion { get; }
         byte[] CallbackReceiverIdentity { get; }
         TimeSpan TTL { get; set; }
         MessageTraceOptions TraceOptions { get; set; }

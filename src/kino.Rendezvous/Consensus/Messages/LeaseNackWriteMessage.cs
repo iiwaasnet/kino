@@ -14,5 +14,8 @@ namespace kino.Rendezvous.Consensus.Messages
 
         [ProtoMember(2)]
         public string SenderUri { get; set; }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
     }
 }

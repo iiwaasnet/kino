@@ -11,5 +11,8 @@ namespace kino.Messaging.Messages
 
         [ProtoMember(1)]
         public IEnumerable<RendezvousNode> RendezvousNodes { get; set; }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
     }
 }

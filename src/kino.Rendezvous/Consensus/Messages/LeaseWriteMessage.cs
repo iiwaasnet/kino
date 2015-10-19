@@ -15,5 +15,8 @@ namespace kino.Rendezvous.Consensus.Messages
         public Lease Lease { get; set; }
         [ProtoMember(3)]
         public byte[] SenderIdentity { get; set; }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
     }
 }

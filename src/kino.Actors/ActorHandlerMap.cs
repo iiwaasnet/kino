@@ -1,6 +1,8 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using kino.Connectivity;
 using kino.Framework;
 
@@ -18,7 +20,7 @@ namespace kino.Actors
         public IEnumerable<MessageIdentifier> Add(IActor actor)
         {
             var tmp = new List<MessageIdentifier>();
-            foreach (var reg in GetActorRegistrations(actor))
+            foreach (var reg in GetActorRegistrationsByAttributes(actor))
             {
                 if (messageHandlers.TryAdd(reg.Key, reg.Value))
                 {
@@ -28,6 +30,11 @@ namespace kino.Actors
                 {
                     throw new DuplicatedKeyException(reg.Key.ToString());
                 }
+            }
+
+            if (!tmp.Any())
+            {
+                throw new Exception($"Actor {actor.GetType().FullName} seems to not handle any message!");
             }
 
             return tmp;
@@ -49,13 +56,36 @@ namespace kino.Actors
             return messageHandlers.Keys;
         }
 
-        private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
-            => actor
-                .GetInterfaceDefinition()
-                .Select(messageMap =>
-                        new KeyValuePair<MessageIdentifier, MessageHandler>(
-                            new MessageIdentifier(messageMap.Message.Version,
-                                                         messageMap.Message.Identity),
-                            messageMap.Handler));
+        //private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
+        //    => actor
+        //        .GetInterfaceDefinition()
+        //        .Select(messageMap =>
+        //                new KeyValuePair<MessageIdentifier, MessageHandler>(
+        //                    new MessageIdentifier(messageMap.Message.Version,
+        //                                          messageMap.Message.Identity),
+        //                    messageMap.Handler));
+
+        private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandler>> GetActorRegistrationsByAttributes(IActor actor)
+        {
+            var memberInfos = actor
+                .GetType()
+                .FindMembers(MemberTypes.Method,
+                             BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
+                             new MemberFilter(InterfaceMethodFilter), 
+                             typeof(MessageHandlerDefinitionAttribute));
+
+            foreach (var method in memberInfos.Cast<MethodInfo>())
+            {
+                var @delegate = (MessageHandler)Delegate.CreateDelegate(typeof (MessageHandler), actor, method);
+                var attr = method.GetCustomAttribute<MessageHandlerDefinitionAttribute>();
+
+                yield return new KeyValuePair<MessageIdentifier, MessageHandler>(MessageIdentifier.Create(attr.MessageType), @delegate);
+            }
+        }
+
+        private static bool InterfaceMethodFilter(MemberInfo memberInfo, object filterCriteria)
+        {
+            return memberInfo.GetCustomAttributes((Type) filterCriteria).Any();
+        }
     }
 }

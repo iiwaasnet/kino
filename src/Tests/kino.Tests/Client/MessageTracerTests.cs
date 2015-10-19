@@ -16,7 +16,7 @@ namespace kino.Tests.Client
         [SetUp]
         public void Setup()
         {
-            message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+            message = Message.Create(new SimpleMessage());
             logger = new Mock<ILogger>();
         }
 

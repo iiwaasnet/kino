@@ -346,8 +346,7 @@ namespace kino.Connectivity
                                                                                                  Version = mi.Version,
                                                                                                  Identity = mi.Identity
                                                                                              }).ToArray()
-                                         },
-                                         RegisterExternalMessageRouteMessage.MessageIdentity);
+                                         });
             outgoingMessages.Add(message);
         }
 
@@ -365,8 +364,7 @@ namespace kino.Connectivity
                                                                }
                                                  )
                                                  .ToArray()
-                                         },
-                                         UnregisterMessageRouteMessage.MessageIdentity);
+                                         });
             outgoingMessages.Add(message);
         }
 
@@ -376,8 +374,7 @@ namespace kino.Connectivity
                                          {
                                              RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
                                              RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()
-                                         },
-                                         RequestClusterMessageRoutesMessage.MessageIdentity);
+                                         });
             outgoingMessages.Add(message);
         }
 
@@ -395,8 +392,7 @@ namespace kino.Connectivity
                                                                    Version = messageIdentifier.Version,
                                                                    Identity = messageIdentifier.Identity
                                                                }
-                                         },
-                                         DiscoverMessageRouteMessage.MessageIdentity);
+                                         });
             outgoingMessages.Add(message);
         }
 
@@ -405,8 +401,7 @@ namespace kino.Connectivity
                               {
                                   Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
                                   SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
-                              },
-                              UnregisterNodeMessageRouteMessage.MessageIdentity);
+                              });
 
         private bool IsRegisterExternalRoute(IMessage message)
         {
@@ -511,8 +506,7 @@ namespace kino.Connectivity
                                              Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
                                              SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
                                              PingId = pingId
-                                         },
-                                         PongMessage.MessageIdentity);
+                                         });
             outgoingMessages.Add(message);
         }
 
@@ -540,8 +534,7 @@ namespace kino.Connectivity
                                          {
                                              TargetNodeIdentity = payload.SocketIdentity,
                                              TargetNodeUri = payload.Uri
-                                         },
-                                         RequestNodeMessageRoutesMessage.MessageIdentity);
+                                         });
             outgoingMessages.Add(request);
 
             logger.Debug("Route not found. Requesting registrations for " +
@@ -557,8 +550,7 @@ namespace kino.Connectivity
                                              {
                                                  Uri = deadNode.Uri.ToSocketAddress(),
                                                  SocketIdentity = deadNode.Identity
-                                             },
-                                             UnregisterNodeMessageRouteMessage.MessageIdentity);
+                                             });
                 clusterMembership.DeleteClusterMember(deadNode);
                 routerNotificationSocket.SendMessage(message);
             }

@@ -7,9 +7,12 @@ namespace kino.Tests.Actors.Setup
     [ProtoContract]
     public class SimpleMessage : Payload
     {
-        public static readonly byte[] MessageIdentity = "SIMPLE".GetBytes();
+        private static readonly byte[] MessageIdentity = "SIMPLE".GetBytes();
 
         [ProtoMember(1)]
-        public string Message { get; set; }
+        public string Content { get; set; }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
     }
 }

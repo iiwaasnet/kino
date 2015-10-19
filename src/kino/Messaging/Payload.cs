@@ -1,6 +1,6 @@
 namespace kino.Messaging
 {
-    public class Payload : IPayload
+    public abstract class Payload : IPayload
     {
         private static readonly IMessageSerializer DefaultSerializer = new ProtobufMessageSerializer();
         private readonly IMessageSerializer messageSerializer;
@@ -20,5 +20,8 @@ namespace kino.Messaging
 
         public virtual byte[] Serialize()
             => messageSerializer.Serialize(this);
+
+        public abstract byte[] Version { get; }
+        public abstract byte[] Identity { get; }
     }
 }

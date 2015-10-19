@@ -14,5 +14,8 @@ namespace kino.Messaging.Messages
 
         [ProtoMember(2)]
         public ulong PingId { get; set; }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
     }
 }

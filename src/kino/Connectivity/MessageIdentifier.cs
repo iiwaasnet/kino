@@ -1,5 +1,6 @@
 ﻿using System;
 using kino.Framework;
+using kino.Messaging;
 
 namespace kino.Connectivity
 {
@@ -13,6 +14,24 @@ namespace kino.Connectivity
             Identity = identity;
 
             hashCode = CalculateHashCode();
+        }
+
+        internal MessageIdentifier(byte[] identity)
+            :this(IdentityExtensions.Empty, identity)
+        {
+        }
+
+        public static MessageIdentifier Create<T>()
+            where T: IMessageIdentifier, new()
+        {
+            var message = new T();
+            return new MessageIdentifier(message.Version, message.Identity);
+        }
+
+        public static MessageIdentifier Create(Type messageType)
+        {
+            var message = (IMessageIdentifier)Activator.CreateInstance(messageType);
+            return new MessageIdentifier(message.Version, message.Identity);
         }
 
         public override bool Equals(object obj)

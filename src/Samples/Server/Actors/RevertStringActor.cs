@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using kino.Actors;
@@ -10,19 +9,16 @@ namespace Server.Actors
 {
     public class RevertStringActor : IActor
     {
-        public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
-        {
-            yield return new MessageHandlerDefinition
-                         {
-                             Handler = StartProcess,
-                             Message = new MessageDefinition
-                                       {
-                                           Identity = HelloMessage.MessageIdentity,
-                                           Version = Message.CurrentVersion
-                                       }
-                         };
-        }
+        //public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
+        //{
+        //    yield return new MessageHandlerDefinition
+        //                 {
+        //                     Handler = StartProcess,
+        //                     Message = MessageDefinition.Create<HelloMessage>()
+        //                 };
+        //}
 
+        [MessageHandlerDefinition(typeof (HelloMessage))]
         private async Task<IActorResult> StartProcess(IMessage message)
         {
             var hello = message.GetPayload<HelloMessage>();
@@ -44,11 +40,7 @@ namespace Server.Actors
 
             //WriteLine(reversedString);
 
-            return new ActorResult(Message.Create(new EhlloMessage
-                                  {
-                                      Ehllo = reversedString
-                                  },
-                                  EhlloMessage.MessageIdentity));
+            return new ActorResult(Message.Create(new EhlloMessage {Ehllo = reversedString}));
         }
     }
 }

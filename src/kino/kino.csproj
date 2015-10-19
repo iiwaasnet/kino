@@ -68,10 +68,12 @@
     <Compile Include="Connectivity\ActorResult.cs" />
     <Compile Include="Connectivity\ClusterMembershipConfiguration.cs" />
     <Compile Include="Connectivity\ClusterMonitorProvider.cs" />
+    <Compile Include="Connectivity\MessageHandlerDefinitionAttribute.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfigurationReadonlyStorage.cs" />
     <Compile Include="Connectivity\Node.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfiguration.cs" />
     <Compile Include="Framework\IConfigurationStorage.cs" />
+    <Compile Include="Messaging\IMessageIdentifier.cs" />
     <Compile Include="Messaging\Messages\DiscoverMessageRouteMessage.cs" />
     <Compile Include="Connectivity\ExternalRoute.cs" />
     <Compile Include="Connectivity\ExternalRoutingTable.cs" />

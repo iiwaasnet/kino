@@ -8,14 +8,17 @@ namespace Client.Messages
   [ProtoContract]
   public class GroupCharsResponseMessage : Payload
   {
-    public static readonly byte[] MessageIdentity = "GRPCHARSRESP".GetBytes();
+    private static readonly byte[] MessageIdentity = "GRPCHARSRESP".GetBytes();
 
     [ProtoMember(1)]
     public IEnumerable<GroupInfo> Groups { get; set; }
 
     [ProtoMember(2)]
     public string Text { get; set; }
-  }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
+    }
 
   [ProtoContract]
   public class GroupInfo

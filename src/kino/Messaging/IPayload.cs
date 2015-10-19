@@ -1,8 +1,8 @@
 namespace kino.Messaging
 {
-    public interface IPayload
+    public interface IPayload : IMessageIdentifier
     {
         T Deserialize<T>(byte[] content);
-        byte[] Serialize();
+        byte[] Serialize();        
     }
 }

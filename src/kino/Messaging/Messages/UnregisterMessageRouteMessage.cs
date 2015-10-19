@@ -16,5 +16,8 @@ namespace kino.Messaging.Messages
 
         [ProtoMember(3)]
         public MessageContract[] MessageContracts { get; set; }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
     }
 }

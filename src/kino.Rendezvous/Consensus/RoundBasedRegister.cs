@@ -68,8 +68,7 @@ namespace kino.Rendezvous.Consensus
                                           {
                                               Ballot = payload.Ballot,
                                               SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
-                                          },
-                                          LeaseNackWriteMessage.MessageIdentity);
+                                          });
             }
             else
             {
@@ -87,8 +86,7 @@ namespace kino.Rendezvous.Consensus
                                           {
                                               Ballot = payload.Ballot,
                                               SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
-                                          },
-                                          LeaseAckWriteMessage.MessageIdentity);
+                                          });
             }
             intercomMessageHub.Send(response, payload.SenderIdentity);
         }
@@ -110,8 +108,7 @@ namespace kino.Rendezvous.Consensus
                                           {
                                               Ballot = payload.Ballot,
                                               SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
-                                          },
-                                          LeaseNackReadMessage.MessageIdentity);
+                                          });
             }
             else
             {
@@ -245,8 +242,7 @@ namespace kino.Rendezvous.Consensus
                                                                       MulticastUri = lease.OwnerEndpoint.MulticastUri.ToSocketAddress()
                                                                   }
                                               }
-                                  },
-                                  LeaseWriteMessage.MessageIdentity);
+                                  });
         }
 
         private IMessage CreateReadMessage(Ballot ballot)
@@ -259,8 +255,7 @@ namespace kino.Rendezvous.Consensus
                                                    Timestamp = ballot.Timestamp.Ticks,
                                                    MessageNumber = ballot.MessageNumber
                                                }
-                                  },
-                                  LeaseReadMessage.MessageIdentity);
+                                  });
         }
 
         private IMessage CreateLeaseAckReadMessage(LeaseReadMessage payload)
@@ -287,8 +282,7 @@ namespace kino.Rendezvous.Consensus
                                                     }
                                                   : null,
                                       SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
-                                  },
-                                  LeaseAckReadMessage.MessageIdentity);
+                                  });
         }
     }
 }

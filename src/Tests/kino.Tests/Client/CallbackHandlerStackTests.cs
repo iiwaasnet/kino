@@ -39,17 +39,18 @@ namespace kino.Tests.Client
 
             var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
             var promise = new Promise();
+            var simpleMessageIdentifier = MessageIdentifier.Create<SimpleMessage>();
             var messageHandlerIdentifiers = new[]
                                             {
-                                                new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
-                                                new MessageIdentifier(Message.CurrentVersion, ExceptionMessage.MessageIdentity)
+                                                simpleMessageIdentifier,
+                                                MessageIdentifier.Create<ExceptionMessage>()
                                             };
             callbackHandlerStack.Push(correlationId, promise, messageHandlerIdentifiers);
 
             var handler = callbackHandlerStack.Pop(new CallbackHandlerKey
             {
-                Identity = SimpleMessage.MessageIdentity,
-                Version = Message.CurrentVersion,
+                Identity = simpleMessageIdentifier.Identity,
+                Version = simpleMessageIdentifier.Version,
                 Correlation = correlationId.Value
             });
 

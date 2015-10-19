@@ -1,8 +1,25 @@
-﻿namespace kino.Connectivity
+﻿using System;
+using System.Reflection;
+using kino.Messaging;
+
+namespace kino.Connectivity
 {
     public class MessageDefinition
     {
-        public byte[] Identity { get; set; }
-        public byte[] Version { get; set; }
+        public MessageDefinition(byte[] identity, byte[] version)
+        {
+            Identity = identity;
+            Version = version;
+        }
+
+        public static MessageDefinition Create<T>()
+            where T: IMessageIdentifier, new()
+        {
+            var message = new T();
+            return new MessageDefinition(message.Identity, message.Version);
+        }
+    
+        public byte[] Identity { get; }
+        public byte[] Version { get; }
     }
 }

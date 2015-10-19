@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using kino.Actors;
@@ -10,19 +9,20 @@ namespace Server.Actors
 {
     public class GroupCharsActor : IActor
     {
-        public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
-        {
-            yield return new MessageHandlerDefinition
-                         {
-                             Handler = StartProcess,
-                             Message = new MessageDefinition
-                                       {
-                                           Identity = EhlloMessage.MessageIdentity,
-                                           Version = Message.CurrentVersion
-                                       }
-                         };
-        }
+        //public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
+        //{
+        //    yield return new MessageHandlerDefinition
+        //                 {
+        //                     Handler = StartProcess,
+        //                     Message = new MessageDefinition
+        //                               {
+        //                                   Identity = EhlloMessage.MessageIdentity,
+        //                                   Version = Message.CurrentVersion
+        //                               }
+        //                 };
+        //}
 
+        [MessageHandlerDefinition(typeof (EhlloMessage))]
         private async Task<IActorResult> StartProcess(IMessage message)
         {
             var ehllo = message.GetPayload<EhlloMessage>();
@@ -31,8 +31,7 @@ namespace Server.Actors
                                             {
                                                 Groups = ehllo.Ehllo.GroupBy(c => c).Select(g => new GroupInfo {Char = g.Key, Count = g.Count()}),
                                                 Text = ehllo.Ehllo
-                                            },
-                                            GroupCharsResponseMessage.MessageIdentity);
+                                            });
 
             return new ActorResult(messageOut);
         }

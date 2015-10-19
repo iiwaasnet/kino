@@ -12,13 +12,13 @@ namespace kino.Tests
     [Test]
     public void TestTwoMessageHandlerIdentifiers_AreComparedByVersionIdentity()
     {
-      var firstIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
-      var secondIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+      var firstIdentifier = MessageIdentifier.Create<SimpleMessage>();
+      var secondIdentifier = MessageIdentifier.Create<SimpleMessage>();
 
-      Assert.AreEqual(firstIdentifier, secondIdentifier);
+            Assert.AreEqual(firstIdentifier, secondIdentifier);
       Assert.IsTrue(firstIdentifier.Equals((object) secondIdentifier));
 
-      var thirdIdentifier = new MessageIdentifier(Guid.NewGuid().ToByteArray(), SimpleMessage.MessageIdentity);
+      var thirdIdentifier = new MessageIdentifier(Guid.NewGuid().ToByteArray(), firstIdentifier.Identity);
 
       Assert.AreNotEqual(firstIdentifier, thirdIdentifier);
       Assert.IsFalse(firstIdentifier.Equals((object) thirdIdentifier));

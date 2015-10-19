@@ -12,6 +12,9 @@ namespace kino.Messaging.Messages
         public string RequestorUri { get; set; }
 
         [ProtoMember(2)]
-        public byte[] RequestorSocketIdentity { get; set; }                
+        public byte[] RequestorSocketIdentity { get; set; }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
     }
 }

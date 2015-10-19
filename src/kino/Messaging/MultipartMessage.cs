@@ -31,7 +31,7 @@ namespace kino.Messaging
         private IEnumerable<byte[]> BuildMessageParts(Message message)
         {
             yield return GetSocketIdentity(message);
-            
+
             yield return EmptyFrame;
             foreach (var hop in message.GetMessageHops())
             {
@@ -46,6 +46,7 @@ namespace kino.Messaging
             yield return GetReceiverIdentityFrame(message);
             yield return GetDistributionFrame(message);
             yield return GetCorrelationIdFrame(message);
+            yield return GetCallbackVersionFrame(message);
             yield return GetCallbackIdentityFrame(message);
             yield return GetCallbackReceiverIdentityFrame(message);
             yield return GetTTLFrame(message);
@@ -69,6 +70,9 @@ namespace kino.Messaging
 
         private byte[] GetCallbackIdentityFrame(IMessage message)
             => message.CallbackIdentity ?? EmptyFrame;
+
+        private byte[] GetCallbackVersionFrame(Message message)
+            => message.CallbackVersion ?? EmptyFrame;
 
         private byte[] GetCorrelationIdFrame(IMessage message)
             => message.CorrelationId ?? EmptyFrame;
@@ -119,6 +123,9 @@ namespace kino.Messaging
 
         internal byte[] GetCallbackIdentity()
             => frames[frames.Count - ReversedFrames.CallbackIdentity];
+
+        internal byte[] GetCallbackVersion()
+            => frames[frames.Count - ReversedFrames.CallbackVersion];
 
         internal byte[] GetCorrelationId()
             => frames[frames.Count - ReversedFrames.CorrelationId];

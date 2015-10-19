@@ -9,6 +9,7 @@ namespace kino.Messaging.Messages
     {
         private static readonly IMessageSerializer messageSerializer = new NewtonJsonMessageSerializer();
         public static readonly byte[] MessageIdentity = "EXCEPTION".GetBytes();
+        public static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         public ExceptionMessage()
             :base(messageSerializer)
@@ -17,5 +18,8 @@ namespace kino.Messaging.Messages
 
         [ProtoMember(1)]
         public Exception Exception { get; set; }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
     }
 }

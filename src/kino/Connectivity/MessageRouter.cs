@@ -291,7 +291,7 @@ namespace kino.Connectivity
                || RequestRoutesRegistration(message)
                || DiscoverMessageRoute(message)
                || UnregisterRoute(message, scaleOutBackend)
-               || UnregisterMessageRoute(message);        
+               || UnregisterMessageRoute(message);
 
         private bool UnregisterMessageRoute(IMessage message)
         {
@@ -351,14 +351,12 @@ namespace kino.Connectivity
                 var messageIdentifier = new MessageIdentifier(messageContract.Version, messageContract.Identity);
                 if (internalRoutingTable.CanRouteMessage(messageIdentifier))
                 {
-                    clusterMonitor.RegisterSelf(new [] { messageIdentifier});
+                    clusterMonitor.RegisterSelf(new[] {messageIdentifier});
                 }
             }
 
             return shouldHandle;
         }
-
-        
 
         private bool RegisterExternalRoutes(IMessage message, ISocket scaleOutBackend)
         {
@@ -405,7 +403,7 @@ namespace kino.Connectivity
             => Unsafe.Equals(UnregisterMessageRouteMessage.MessageIdentity, message.Identity);
 
         private bool IsDiscoverMessageRouteRequest(IMessage message)
-        => Unsafe.Equals(DiscoverMessageRouteMessage.MessageIdentity, message.Identity);
+            => Unsafe.Equals(DiscoverMessageRouteMessage.MessageIdentity, message.Identity);
 
         private bool RegisterInternalMessageRoutes(IMessage message)
         {
@@ -446,9 +444,8 @@ namespace kino.Connectivity
         }
 
         private static MessageIdentifier CreateMessageHandlerIdentifier(IMessage message)
-            => new MessageIdentifier(message.Version,
-                                     message.ReceiverIdentity.IsSet()
-                                         ? message.ReceiverIdentity
-                                         : message.Identity);
+            => message.ReceiverIdentity.IsSet()
+                   ? new MessageIdentifier(message.ReceiverIdentity)
+                   : new MessageIdentifier(message.Version, message.Identity);
     }
 }

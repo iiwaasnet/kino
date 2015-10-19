@@ -13,5 +13,8 @@ namespace kino.Rendezvous.Consensus.Messages
         public Ballot Ballot { get; set; }
         [ProtoMember(2)]
         public byte[] SenderIdentity { get; set; }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
     }
 }

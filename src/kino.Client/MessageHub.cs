@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using kino.Connectivity;
 using kino.Diagnostics;
+using kino.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Sockets;
@@ -85,13 +86,16 @@ namespace kino.Client
                                 var promise = callbackRegistration.Promise;
                                 var callbackPoint = callbackRegistration.CallbackPoint;
 
-                                message.RegisterCallbackPoint(callbackPoint.MessageIdentity, receivingSocketIdentity);
+                                message.RegisterCallbackPoint(callbackPoint.MessageIdentity,
+                                                              callbackPoint.MessageVersion,
+                                                              receivingSocketIdentity);
 
                                 callbackHandlers.Push(new CorrelationId(message.CorrelationId),
                                                       promise,
                                                       new[]
                                                       {
-                                                          new MessageIdentifier(message.Version, callbackPoint.MessageIdentity),
+                                                          new MessageIdentifier(callbackPoint.MessageVersion, callbackPoint.MessageIdentity),
+                                                          //TODO: Change to ExceptionMessage.Version
                                                           new MessageIdentifier(message.Version, ExceptionMessage.MessageIdentity)
                                                       });
                                 messageTracer.CallbackRegistered(message);
@@ -190,15 +194,14 @@ namespace kino.Client
                                             {
                                                 SocketIdentity = receivingSocketIdentity,
                                                 MessageContracts = new[]
-                                                                  {
-                                                                      new MessageContract
-                                                                      {
-                                                                          Version = Message.CurrentVersion,
-                                                                          Identity = receivingSocketIdentity
-                                                                      }
-                                                                  }
-                                            },
-                                            RegisterInternalMessageRouteMessage.MessageIdentity);
+                                                                   {
+                                                                       new MessageContract
+                                                                       {
+                                                                           Version = IdentityExtensions.Empty,
+                                                                           Identity = receivingSocketIdentity
+                                                                       }
+                                                                   }
+                                            });
             socket.SendMessage(rdyMessage);
 
             hubRegistered.Set();

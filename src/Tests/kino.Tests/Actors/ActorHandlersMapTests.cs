@@ -34,8 +34,8 @@ namespace kino.Tests.Actors
             var identifiers = actorHandlersMap.GetMessageHandlerIdentifiers();
 
             Assert.AreEqual(2, identifiers.Count());
-            CollectionAssert.Contains(identifiers, new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity));
-            CollectionAssert.Contains(identifiers, new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity));
+            CollectionAssert.Contains(identifiers, MessageIdentifier.Create<SimpleMessage>());
+            CollectionAssert.Contains(identifiers, MessageIdentifier.Create<AsyncMessage>());
 
         }
 

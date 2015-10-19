@@ -13,22 +13,22 @@ namespace kino.Messaging
         private readonly List<SocketEndpoint> hops;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
-        private Message(IPayload payload, byte[] messageIdentity, DistributionPattern distributionPattern)
+        private Message(IPayload payload, DistributionPattern distributionPattern)
         {
             hops = new List<SocketEndpoint>();
             Body = Serialize(payload);
-            Version = CurrentVersion;
-            Identity = messageIdentity;
+            Version = payload.Version;
+            Identity = payload.Identity;
             Distribution = distributionPattern;
             TTL = TimeSpan.Zero;
             TraceOptions = MessageTraceOptions.None;
         }
 
-        public static IMessage CreateFlowStartMessage(IPayload payload, byte[] messageIdentity)
-            => new Message(payload, messageIdentity, DistributionPattern.Unicast) {CorrelationId = GenerateCorrelationId()};
+        public static IMessage CreateFlowStartMessage(IPayload payload)
+            => new Message(payload, DistributionPattern.Unicast) {CorrelationId = GenerateCorrelationId()};
 
-        public static IMessage Create(IPayload payload, byte[] messageIdentity, DistributionPattern distributionPattern = DistributionPattern.Unicast)
-            => new Message(payload, messageIdentity, distributionPattern) {CorrelationId = EmptyCorrelationId};
+        public static IMessage Create(IPayload payload, DistributionPattern distributionPattern = DistributionPattern.Unicast)
+            => new Message(payload, distributionPattern) {CorrelationId = EmptyCorrelationId};
 
         private static byte[] GenerateCorrelationId()
             //TODO: Better implementation
@@ -43,18 +43,20 @@ namespace kino.Messaging
             TTL = multipartMessage.GetMessageTTL().GetTimeSpan();
             Distribution = multipartMessage.GetMessageDistributionPattern().GetEnumFromInt<DistributionPattern>();
             CallbackIdentity = multipartMessage.GetCallbackIdentity();
+            CallbackVersion = multipartMessage.GetCallbackVersion();
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
             CorrelationId = multipartMessage.GetCorrelationId();
             TraceOptions = multipartMessage.GetTraceOptions().GetEnumFromLong<MessageTraceOptions>();
         }
 
-        internal void RegisterCallbackPoint(byte[] callbackIdentity, byte[] callbackReceiverIdentity)
+        internal void RegisterCallbackPoint(byte[] callbackIdentity, byte[] callbackVersion, byte[] callbackReceiverIdentity)
         {
             CallbackReceiverIdentity = callbackReceiverIdentity;
             CallbackIdentity = callbackIdentity;
+            CallbackVersion = callbackVersion;
 
-            if (Unsafe.Equals(Identity, CallbackIdentity))
+            if (Unsafe.Equals(Identity, CallbackIdentity) && Unsafe.Equals(Version, CallbackVersion))
             {
                 ReceiverIdentity = CallbackReceiverIdentity;
             }
@@ -65,12 +67,12 @@ namespace kino.Messaging
 
         internal IEnumerable<SocketEndpoint> GetMessageHops()
             => hops;
-            
+
         internal void CopyMessageHops(IEnumerable<SocketEndpoint> messageHops)
         {
             hops.Clear();
             hops.AddRange(messageHops);
-        }        
+        }
 
         internal void SetCorrelationId(byte[] correlationId)
             => CorrelationId = correlationId;
@@ -100,6 +102,7 @@ namespace kino.Messaging
         public byte[] CorrelationId { get; private set; }
         public byte[] ReceiverIdentity { get; private set; }
         public byte[] CallbackIdentity { get; private set; }
+        public byte[] CallbackVersion { get; private set; }
         public byte[] CallbackReceiverIdentity { get; private set; }
         public byte[] SocketIdentity { get; private set; }
         public MessageTraceOptions TraceOptions { get; set; }

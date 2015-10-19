@@ -148,8 +148,7 @@ namespace kino.Rendezvous
                                   {
                                       PingId = pingId++,
                                       PingInterval = config.PingInterval
-                                  },
-                                  PingMessage.MessageIdentity);
+                                  });
         }
 
         private IMessage CreateNotLeaderMessage()
@@ -164,8 +163,7 @@ namespace kino.Rendezvous
                                                           MulticastUri = lease.OwnerEndpoint.MulticastUri.ToSocketAddress(),
                                                           UnicastUri = lease.OwnerEndpoint.UnicastUri.ToSocketAddress()
                                                       }
-                                      },
-                                      RendezvousNotLeaderMessage.MessageIdentity);
+                                      });
             }
 
             return null;

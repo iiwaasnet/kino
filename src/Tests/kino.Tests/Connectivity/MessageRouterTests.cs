@@ -105,8 +105,7 @@ namespace kino.Tests.Connectivity
                                                                             Version = version
                                                                         }
                                                                     }
-                                             },
-                                             RegisterInternalMessageRouteMessage.MessageIdentity);
+                                             });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOpCompletionDelay);
@@ -142,7 +141,7 @@ namespace kino.Tests.Connectivity
                 var message = (Message) SendMessageOverMessageHub();
 
                 var callbackSocketIdentity = message.CallbackReceiverIdentity;
-                var callbackIdentifier = new MessageIdentifier(Message.CurrentVersion, callbackSocketIdentity);
+                var callbackIdentifier = new MessageIdentifier(IdentityExtensions.Empty, callbackSocketIdentity);
                 internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(callbackIdentifier))))
                                     .Returns(new SocketIdentifier(callbackSocketIdentity));
 
@@ -162,7 +161,7 @@ namespace kino.Tests.Connectivity
         public void TestMessageIsRouted_BasedOnHandlerIdentities()
         {
             var actorSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
-            var actorIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+            var actorIdentifier = MessageIdentifier.Create<SimpleMessage>();
             var messageHandlerStack = new Mock<IInternalRoutingTable>();
             messageHandlerStack.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
                                .Returns(actorSocketIdentity);
@@ -178,7 +177,7 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var message = Message.Create(new SimpleMessage());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOpCompletionDelay);
@@ -209,7 +208,7 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var message = Message.Create(new SimpleMessage());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 var messageOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
@@ -236,7 +235,7 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var message = Message.Create(new SimpleMessage());
                 messageRouterSocketFactory.GetScaleoutFrontendSocket().DeliverMessage(message);
 
                 var messageOut = messageRouterSocketFactory.GetScaleoutFrontendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
@@ -263,8 +262,8 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
-                var message = (Message) Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
+                var message = (Message) Message.Create(new SimpleMessage());
                 message.PushRouterAddress(new SocketEndpoint(new Uri("tcp://127.1.1.1:9000"), SocketIdentifier.CreateIdentity()));
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
@@ -293,8 +292,8 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
-                var message = Message.Create(new SimpleMessage(), SimpleMessage.MessageIdentity);
+                var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
+                var message = Message.Create(new SimpleMessage());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
@@ -323,7 +322,7 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+                var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
                 var message = Message.Create(new DiscoverMessageRouteMessage
                                              {
                                                  MessageContract = new MessageContract
@@ -331,8 +330,7 @@ namespace kino.Tests.Connectivity
                                                                        Version = messageIdentifier.Version,
                                                                        Identity = messageIdentifier.Identity
                                                                    }
-                                             },
-                                             DiscoverMessageRouteMessage.MessageIdentity);
+                                             });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
@@ -361,7 +359,7 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+                var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
                 internalRoutingTable.AddMessageRoute(messageIdentifier, SocketIdentifier.Create());
                 var message = Message.Create(new DiscoverMessageRouteMessage
                                              {
@@ -370,8 +368,7 @@ namespace kino.Tests.Connectivity
                                                                        Version = messageIdentifier.Version,
                                                                        Identity = messageIdentifier.Identity
                                                                    }
-                                             },
-                                             DiscoverMessageRouteMessage.MessageIdentity);
+                                             });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
@@ -402,8 +399,8 @@ namespace kino.Tests.Connectivity
 
                 var messageIdentifiers = new[]
                                          {
-                                             new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
-                                             new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity)
+                                             MessageIdentifier.Create<SimpleMessage>(),
+                                             MessageIdentifier.Create<AsyncMessage>()
                                          };
                 var socketIdentity = SocketIdentifier.CreateIdentity();
                 var message = Message.Create(new RegisterExternalMessageRouteMessage
@@ -415,8 +412,7 @@ namespace kino.Tests.Connectivity
                                                                                                         Version = mi.Version,
                                                                                                         Identity = mi.Identity
                                                                                                     }).ToArray()
-                                             },
-                                             RegisterExternalMessageRouteMessage.MessageIdentity);
+                                             });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
@@ -447,8 +443,8 @@ namespace kino.Tests.Connectivity
 
                 var messageIdentifiers = new[]
                                          {
-                                             new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
-                                             new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity)
+                                             MessageIdentifier.Create<SimpleMessage>(),
+                                             MessageIdentifier.Create<AsyncMessage>()
                                          };
 
                 var socketIdentity = SocketIdentifier.Create();
@@ -463,8 +459,7 @@ namespace kino.Tests.Connectivity
                                                                                                         Version = mi.Version,
                                                                                                         Identity = mi.Identity
                                                                                                     }).ToArray()
-                                             },
-                                             UnregisterMessageRouteMessage.MessageIdentity);
+                                             });
 
                 CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -496,8 +491,8 @@ namespace kino.Tests.Connectivity
 
                 var messageIdentifiers = new[]
                                          {
-                                             new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity),
-                                             new MessageIdentifier(Message.CurrentVersion, AsyncMessage.MessageIdentity)
+                                             MessageIdentifier.Create<SimpleMessage>(),
+                                             MessageIdentifier.Create<AsyncMessage>()
                                          };
 
                 var socketIdentity = SocketIdentifier.Create();
@@ -507,8 +502,7 @@ namespace kino.Tests.Connectivity
                 {
                                                  Uri = uri.ToSocketAddress(),
                                                  SocketIdentity = socketIdentity.Identity
-                                             },
-                                             UnregisterNodeMessageRouteMessage.MessageIdentity);
+                                             });
 
                 CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -531,8 +525,8 @@ namespace kino.Tests.Connectivity
             var socket = new StubSocket();
             sockrtFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
 
-            var message = Message.CreateFlowStartMessage(new SimpleMessage(), SimpleMessage.MessageIdentity);
-            var callback = new CallbackPoint(SimpleMessage.MessageIdentity);
+            var message = Message.CreateFlowStartMessage(new SimpleMessage());
+            var callback = CallbackPoint.Create<SimpleMessage>();
 
             var messageHub = new MessageHub(sockrtFactory.Object,
                                             new CallbackHandlerStack(new ExpirableItemCollection<CorrelationId>(logger.Object)),

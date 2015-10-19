@@ -101,7 +101,7 @@ namespace kino.Tests.Connectivity
                                PingId = 1L,
                                PingInterval = TimeSpan.FromSeconds(2)
                            };
-                socket.DeliverMessage(Message.Create(ping, PingMessage.MessageIdentity));
+                socket.DeliverMessage(Message.Create(ping));
                 Thread.Sleep(AsyncOp);
 
                 rendezvousCluster.Verify(m => m.SetCurrentRendezvousServer(It.IsAny<RendezvousEndpoint>()), Times.Never);
@@ -139,8 +139,7 @@ namespace kino.Tests.Connectivity
                                                            UnicastUri = "tpc://127.0.0.2:6000"
                                                        }
                                        };
-                socket.DeliverMessage(Message.Create(notLeaderMessage,
-                                                     RendezvousNotLeaderMessage.MessageIdentity));
+                socket.DeliverMessage(Message.Create(notLeaderMessage));
                 Thread.Sleep(AsyncOp);
 
                 rendezvousCluster.Verify(m => m.SetCurrentRendezvousServer(It.Is<RendezvousEndpoint>(e => SameServer(e, notLeaderMessage))),
@@ -178,7 +177,7 @@ namespace kino.Tests.Connectivity
                                SocketIdentity = sourceNode.Identity,
                                Uri = sourceNode.Uri.ToSocketAddress()
                            };
-                socket.DeliverMessage(Message.Create(pong, PongMessage.MessageIdentity));
+                socket.DeliverMessage(Message.Create(pong));
                 Thread.Sleep(AsyncOp);
 
                 clusterMembership.Verify(m => m.KeepAlive(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == sourceNode.Uri.ToSocketAddress()
@@ -215,7 +214,7 @@ namespace kino.Tests.Connectivity
                                SocketIdentity = sourceNode.Identity,
                                Uri = sourceNode.Uri.ToSocketAddress()
                            };
-                socket.DeliverMessage(Message.Create(pong, PongMessage.MessageIdentity));
+                socket.DeliverMessage(Message.Create(pong));
                 Thread.Sleep(AsyncOp);
 
                 var routesRequestMessage = clusterMonitorSocketFactory
@@ -308,7 +307,7 @@ namespace kino.Tests.Connectivity
                                   Uri = "tcp://127.0.0.1:5000",
                                   SocketIdentity = SocketIdentifier.CreateIdentity()
                               };
-                socket.DeliverMessage(Message.Create(message, UnregisterNodeMessageRouteMessage.MessageIdentity));
+                socket.DeliverMessage(Message.Create(message));
                 Thread.Sleep(AsyncOp);
 
                 clusterMembership.Verify(m => m.DeleteClusterMember(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == message.Uri
@@ -334,7 +333,7 @@ namespace kino.Tests.Connectivity
             {
                 clusterMonitor.Start();
 
-                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+                var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
                 clusterMonitor.RegisterSelf(new[] {messageIdentifier});
 
                 var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
@@ -367,7 +366,7 @@ namespace kino.Tests.Connectivity
             {
                 clusterMonitor.Start();
 
-                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, SimpleMessage.MessageIdentity);
+                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion);
                 clusterMonitor.UnregisterSelf(new[] {messageIdentifier});
 
                 var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
@@ -475,8 +474,7 @@ namespace kino.Tests.Connectivity
                                                                            MulticastUri = newRendezouvEndpoint.MulticastUri.AbsoluteUri
                                                                        }
                                                                    }
-                                             },
-                                             RendezvousConfigurationChangedMessage.MessageIdentity);
+                                             });
 
                 var socket = clusterMonitorSocketFactory.GetClusterMonitorSubscriptionSocket();
                 socket.DeliverMessage(message);
@@ -506,7 +504,7 @@ namespace kino.Tests.Connectivity
                 clusterMonitor.Start();
 
                 var socket = clusterMonitorSocketFactory.GetClusterMonitorSubscriptionSocket();
-                socket.DeliverMessage(Message.Create(payload, messageIdentity));
+                socket.DeliverMessage(Message.Create(payload));
 
                 var messageRouterMessage = clusterMonitorSocketFactory
                     .GetRouterCommunicationSocket()

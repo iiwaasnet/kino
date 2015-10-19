@@ -13,6 +13,9 @@ namespace kino.Messaging.Messages
         public MessageRoute InternalRoutes { get; set; }
         [ProtoMember(2)]
         public IEnumerable<MessageRoute> ExternalRoutes { get; set; }
+
+        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Identity => MessageIdentity;
     }
 
     [ProtoContract]
