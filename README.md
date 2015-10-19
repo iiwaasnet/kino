@@ -71,7 +71,7 @@ In Message                        Action                                  Out Me
 ![pic]( https://cdn.rawgit.com/iiwaasnet/kino/master/img/Weather.png)
 
 Nevertheless, there are some questions to this design:
-  * how does **WeatherAggregator** actor groups all messages together for each client request?
+  * how does **WeatherAggregator** actor group all messages together for each client request?
   * how does it know, when the last message arrives?
   * if we host several instances of **WeatherAggregator** actor, which one will be responsible for grouping up final result?
 
