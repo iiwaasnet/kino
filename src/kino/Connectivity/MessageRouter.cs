@@ -156,7 +156,7 @@ namespace kino.Connectivity
                    || ProcessUnhandledMessage(message, messageHandlerIdentifier);
         }
 
-        private bool HandleMessageLocally(MessageIdentifier messageIdentifier, Message message, ISocket localSocket)
+        private bool HandleMessageLocally(IMessageIdentifier messageIdentifier, Message message, ISocket localSocket)
         {
             var handlers = ((message.Distribution == DistributionPattern.Unicast)
                                 ? new[] {internalRoutingTable.FindRoute(messageIdentifier)}
@@ -217,7 +217,7 @@ namespace kino.Connectivity
             return handlers.Any();
         }
 
-        private bool ProcessUnhandledMessage(Message message, MessageIdentifier messageIdentifier)
+        private bool ProcessUnhandledMessage(Message message, IMessageIdentifier messageIdentifier)
         {
             clusterMonitor.DiscoverMessageRoute(messageIdentifier);
 
@@ -421,10 +421,10 @@ namespace kino.Connectivity
             return shouldHandle;
         }
 
-        private IEnumerable<MessageIdentifier> UpdateLocalRoutingTable(RegisterInternalMessageRouteMessage payload,
+        private IEnumerable<IMessageIdentifier> UpdateLocalRoutingTable(RegisterInternalMessageRouteMessage payload,
                                                                        SocketIdentifier socketIdentifier)
         {
-            var handlers = new List<MessageIdentifier>();
+            var handlers = new List<IMessageIdentifier>();
 
             foreach (var registration in payload.MessageContracts)
             {

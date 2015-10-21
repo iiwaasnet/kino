@@ -5,22 +5,23 @@ using System.Linq;
 using System.Reflection;
 using kino.Connectivity;
 using kino.Framework;
+using kino.Messaging;
 
 namespace kino.Actors
 {
     public class ActorHandlerMap : IActorHandlerMap
     {
-        private readonly ConcurrentDictionary<MessageIdentifier, MessageHandler> messageHandlers;
+        private readonly ConcurrentDictionary<IMessageIdentifier, MessageHandler> messageHandlers;
 
         public ActorHandlerMap()
         {
-            messageHandlers = new ConcurrentDictionary<MessageIdentifier, MessageHandler>();
+            messageHandlers = new ConcurrentDictionary<IMessageIdentifier, MessageHandler>();
         }
 
-        public IEnumerable<MessageIdentifier> Add(IActor actor)
+        public IEnumerable<IMessageIdentifier> Add(IActor actor)
         {
-            var tmp = new List<MessageIdentifier>();
-            foreach (var reg in GetActorRegistrationsByAttributes(actor))
+            var tmp = new List<IMessageIdentifier>();
+            foreach (var reg in GetActorRegistrations(actor))
             {
                 if (messageHandlers.TryAdd(reg.Key, reg.Value))
                 {
@@ -51,37 +52,18 @@ namespace kino.Actors
             throw new KeyNotFoundException(identifier.ToString());
         }
 
-        public IEnumerable<MessageIdentifier> GetMessageHandlerIdentifiers()
+        public IEnumerable<IMessageIdentifier> GetMessageHandlerIdentifiers()
         {
             return messageHandlers.Keys;
         }
 
-        //private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
-        //    => actor
-        //        .GetInterfaceDefinition()
-        //        .Select(messageMap =>
-        //                new KeyValuePair<MessageIdentifier, MessageHandler>(
-        //                    new MessageIdentifier(messageMap.Message.Version,
-        //                                          messageMap.Message.Identity),
-        //                    messageMap.Handler));
-
-        private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandler>> GetActorRegistrationsByAttributes(IActor actor)
-        {
-            var memberInfos = actor
-                .GetType()
-                .FindMembers(MemberTypes.Method,
-                             BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
-                             new MemberFilter(InterfaceMethodFilter), 
-                             typeof(MessageHandlerDefinitionAttribute));
-
-            foreach (var method in memberInfos.Cast<MethodInfo>())
-            {
-                var @delegate = (MessageHandler)Delegate.CreateDelegate(typeof (MessageHandler), actor, method);
-                var attr = method.GetCustomAttribute<MessageHandlerDefinitionAttribute>();
-
-                yield return new KeyValuePair<MessageIdentifier, MessageHandler>(MessageIdentifier.Create(attr.MessageType), @delegate);
-            }
-        }
+        private static IEnumerable<KeyValuePair<IMessageIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
+            => actor
+                .GetInterfaceDefinition()
+                .Select(messageMap =>
+                        new KeyValuePair<IMessageIdentifier, MessageHandler>(new MessageIdentifier(messageMap.Message.Version,
+                                                                                                   messageMap.Message.Identity),
+                                                                             messageMap.Handler));
 
         private static bool InterfaceMethodFilter(MemberInfo memberInfo, object filterCriteria)
         {

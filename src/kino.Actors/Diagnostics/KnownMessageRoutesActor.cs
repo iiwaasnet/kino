@@ -8,7 +8,7 @@ using kino.Messaging.Messages;
 
 namespace kino.Actors.Diagnostics
 {
-    public class KnownMessageRoutesActor : IActor
+    public class KnownMessageRoutesActor : Actor
     {
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IInternalRoutingTable internalRoutingTable;
@@ -61,19 +61,6 @@ namespace kino.Actors.Diagnostics
                                                                         Identity = m.Identity
                                                                     })
                                                        .ToArray()
-                              });
-
-        //public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
-        //{
-        //    yield return new MessageHandlerDefinition
-        //                 {
-        //                     Handler = Handler,
-        //                     Message = new MessageDefinition
-        //                               {
-        //                                   Identity = RequestKnownMessageRoutesMessage.MessageIdentity,
-        //                                   Version = Message.CurrentVersion
-        //                               }
-        //                 };
-        //}
+                              });       
     }
 }

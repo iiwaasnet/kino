@@ -269,8 +269,8 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOp);
 
-                clusterMonitor.Verify(m => m.UnregisterSelf(It.Is<IEnumerable<MessageIdentifier>>(ids => ids.First().Equals(messageIdentifier))), Times.Once());
-                clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<MessageIdentifier>(id => id.Equals(messageIdentifier))), Times.Once());
+                clusterMonitor.Verify(m => m.UnregisterSelf(It.Is<IEnumerable<IMessageIdentifier>>(ids => ids.First().Equals(messageIdentifier))), Times.Once());
+                clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<IMessageIdentifier>(id => id.Equals(messageIdentifier))), Times.Once());
             }
             finally
             {

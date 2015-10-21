@@ -7,17 +7,8 @@ using Server.Messages;
 
 namespace Server.Actors
 {
-    public class RevertStringActor : IActor
+    public class RevertStringActor : Actor
     {
-        //public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
-        //{
-        //    yield return new MessageHandlerDefinition
-        //                 {
-        //                     Handler = StartProcess,
-        //                     Message = MessageDefinition.Create<HelloMessage>()
-        //                 };
-        //}
-
         [MessageHandlerDefinition(typeof (HelloMessage))]
         private async Task<IActorResult> StartProcess(IMessage message)
         {

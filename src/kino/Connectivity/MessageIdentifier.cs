@@ -4,7 +4,7 @@ using kino.Messaging;
 
 namespace kino.Connectivity
 {
-    public class MessageIdentifier : IEquatable<MessageIdentifier>
+    public class MessageIdentifier : IEquatable<IMessageIdentifier>, IMessageIdentifier
     {
         private readonly int hashCode;
 
@@ -21,14 +21,14 @@ namespace kino.Connectivity
         {
         }
 
-        public static MessageIdentifier Create<T>()
+        public static IMessageIdentifier Create<T>()
             where T: IMessageIdentifier, new()
         {
             var message = new T();
             return new MessageIdentifier(message.Version, message.Identity);
         }
 
-        public static MessageIdentifier Create(Type messageType)
+        public static IMessageIdentifier Create(Type messageType)
         {
             var message = (IMessageIdentifier)Activator.CreateInstance(messageType);
             return new MessageIdentifier(message.Version, message.Identity);
@@ -48,7 +48,7 @@ namespace kino.Connectivity
             {
                 return false;
             }
-            return Equals((MessageIdentifier) obj);
+            return Equals((IMessageIdentifier) obj);
         }
 
         private int CalculateHashCode()
@@ -64,7 +64,7 @@ namespace kino.Connectivity
         public override int GetHashCode()
             => hashCode;
 
-        public bool Equals(MessageIdentifier other)
+        public bool Equals(IMessageIdentifier other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -77,7 +77,7 @@ namespace kino.Connectivity
             return StructuralCompare(other);
         }
 
-        private bool StructuralCompare(MessageIdentifier other)
+        private bool StructuralCompare(IMessageIdentifier other)
             => Unsafe.Equals(Identity, other.Identity)
                && Unsafe.Equals(Version, other.Version);
 

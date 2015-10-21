@@ -7,21 +7,8 @@ using Server.Messages;
 
 namespace Server.Actors
 {
-    public class GroupCharsActor : IActor
-    {
-        //public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
-        //{
-        //    yield return new MessageHandlerDefinition
-        //                 {
-        //                     Handler = StartProcess,
-        //                     Message = new MessageDefinition
-        //                               {
-        //                                   Identity = EhlloMessage.MessageIdentity,
-        //                                   Version = Message.CurrentVersion
-        //                               }
-        //                 };
-        //}
-
+    public class GroupCharsActor : Actor
+    {       
         [MessageHandlerDefinition(typeof (EhlloMessage))]
         private async Task<IActorResult> StartProcess(IMessage message)
         {

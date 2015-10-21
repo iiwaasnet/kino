@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using kino.Messaging;
 
 namespace kino.Connectivity
 {
@@ -6,10 +7,10 @@ namespace kino.Connectivity
     {
         void Start();
         void Stop();
-        void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers);
+        void RegisterSelf(IEnumerable<IMessageIdentifier> messageHandlers);
         void RequestClusterRoutes();
-        void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers);
+        void UnregisterSelf(IEnumerable<IMessageIdentifier> messageIdentifiers);
         IEnumerable<SocketEndpoint> GetClusterMembers();
-        void DiscoverMessageRoute(MessageIdentifier messageIdentifier);
+        void DiscoverMessageRoute(IMessageIdentifier messageIdentifier);
     }
 }

@@ -7,21 +7,8 @@ using kino.Messaging.Messages;
 
 namespace kino.Actors.Diagnostics
 {
-    public class ExceptionHandlerActor : IActor
+    public class ExceptionHandlerActor : Actor
     {
-        //public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
-        //{
-        //    yield return new MessageHandlerDefinition
-        //                 {
-        //                     Message = new MessageDefinition
-        //                               {
-        //                                   Identity = ExceptionMessage.MessageIdentity,
-        //                                   Version = Message.CurrentVersion
-        //                               },
-        //                     Handler = HandleException
-        //                 };
-        //}
-
         [MessageHandlerDefinition(typeof(ExceptionMessage))]
         private Task<IActorResult> HandleException(IMessage message)
         {

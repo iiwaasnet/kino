@@ -9,28 +9,28 @@ namespace kino.Client
 {
     public class CallbackHandlerStack : ICallbackHandlerStack
     {
-        private readonly ConcurrentDictionary<CorrelationId, IDictionary<MessageIdentifier, IPromise>> handlers;
+        private readonly ConcurrentDictionary<CorrelationId, IDictionary<IMessageIdentifier, IPromise>> handlers;
         private readonly IExpirableItemCollection<CorrelationId> expirationQueue;
 
         public CallbackHandlerStack(IExpirableItemCollection<CorrelationId> expirationQueue)
         {
-            handlers =  new ConcurrentDictionary<CorrelationId, IDictionary<MessageIdentifier, IPromise>>();
+            handlers =  new ConcurrentDictionary<CorrelationId, IDictionary<IMessageIdentifier, IPromise>>();
             expirationQueue.SetExpirationHandler(RemoveExpiredCallback);
             this.expirationQueue = expirationQueue;
         }
 
         private void RemoveExpiredCallback(CorrelationId correlationId)
         {
-            IDictionary<MessageIdentifier, IPromise> value;
+            IDictionary<IMessageIdentifier, IPromise> value;
             if (handlers.TryRemove(correlationId, out value))
             {
                 ((Promise)value.Values.First()).SetExpired();
             }
         }
 
-        public void Push(CorrelationId correlation, IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers)
+        public void Push(CorrelationId correlation, IPromise promise, IEnumerable<IMessageIdentifier> messageIdentifiers)
         {
-            IDictionary<MessageIdentifier, IPromise> messageHandlers;
+            IDictionary<IMessageIdentifier, IPromise> messageHandlers;
             if (handlers.TryGetValue(correlation, out messageHandlers))
             {
                 throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
@@ -46,7 +46,7 @@ namespace kino.Client
         {
             IPromise promise = null;
             
-            IDictionary<MessageIdentifier, IPromise> messageHandlers;
+            IDictionary<IMessageIdentifier, IPromise> messageHandlers;
             if(handlers.TryRemove(new CorrelationId(callbackIdentifier.Correlation), out messageHandlers))
             {
                 var massageHandlerId = new MessageIdentifier(callbackIdentifier.Version, callbackIdentifier.Identity);

@@ -227,7 +227,7 @@ namespace kino.Tests.Client
             }
         }
 
-        private bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageIdentifier> registrations)
+        private bool ContainsMessageAndExceptionRegistrations(IEnumerable<IMessageIdentifier> registrations)
         {
             return registrations.Any(h => Unsafe.Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
                    && registrations.Any(h => Unsafe.Equals(h.Identity, ExceptionMessage.MessageIdentity));

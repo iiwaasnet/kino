@@ -8,6 +8,7 @@ namespace kino.Messaging.Messages
     public class ExceptionMessage : Payload
     {
         private static readonly IMessageSerializer messageSerializer = new NewtonJsonMessageSerializer();
+
         public static readonly byte[] MessageIdentity = "EXCEPTION".GetBytes();
         public static readonly byte[] MessageVersion = Message.CurrentVersion;
 

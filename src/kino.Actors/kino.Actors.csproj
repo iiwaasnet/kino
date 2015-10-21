@@ -53,6 +53,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Actor.cs" />
     <Compile Include="ActorHandlerMap.cs" />
     <Compile Include="ActorHost.cs" />
     <Compile Include="Diagnostics\ExceptionHandlerActor.cs" />

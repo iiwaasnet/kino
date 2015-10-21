@@ -48,26 +48,25 @@ namespace kino.Tests.Actors
                                   };
         }
 
-        //TODO: Fix
-        //[Test]
-        //public void TestAssignActor_RegistersActorHandlers()
-        //{
-        //    var actorRegistrationsQueue = new AsyncQueue<IActor>();
+        [Test]
+        public void TestAssignActor_RegistersActorHandlers()
+        {
+            var actorRegistrationsQueue = new AsyncQueue<IActor>();
 
-        //    var actorHost = new ActorHost(new SocketFactory(null),
-        //                                  actorHandlersMap,
-        //                                  new AsyncQueue<AsyncMessageContext>(),
-        //                                  actorRegistrationsQueue,
-        //                                  routerConfiguration,
-        //                                  messageTracer.Object,
-        //                                  logger);
-        //    actorHost.AssignActor(new EchoActor());
+            var actorHost = new ActorHost(new SocketFactory(null),
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          actorRegistrationsQueue,
+                                          routerConfiguration,
+                                          messageTracer.Object,
+                                          logger);
+            actorHost.AssignActor(new EchoActor());
 
-        //    var registration = actorRegistrationsQueue.GetConsumingEnumerable(CancellationToken.None).First();
-        //    var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-        //    Assert.IsTrue(registration.GetInterfaceDefinition().Any(id => id.Message.Identity == messageIdentifier.Identity));
-        //    Assert.IsTrue(registration.GetInterfaceDefinition().Any(id => id.Message.Version == messageIdentifier.Version));
-        //}
+            var actor = actorRegistrationsQueue.GetConsumingEnumerable(CancellationToken.None).First();
+            var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
+            Assert.IsTrue(actor.GetInterfaceDefinition().Any(id => id.Message.Identity == messageIdentifier.Identity));
+            Assert.IsTrue(actor.GetInterfaceDefinition().Any(id => id.Message.Version == messageIdentifier.Version));
+        }
 
         [Test]
         public void TestStartingActorHost_SendsActorRegistrationMessage()
