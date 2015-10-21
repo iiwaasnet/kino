@@ -16,7 +16,7 @@ namespace kino.Rendezvous
         public ServiceHost()
         {
             var builder = new ContainerBuilder();
-            builder.RegisterModule(new MainModule());
+            builder.RegisterModule<MainModule>();
             builder.RegisterModule(new ConfigurationSettingsReader("autofac"));
             container = builder.Build();
             logger = container.Resolve<ILogger>();

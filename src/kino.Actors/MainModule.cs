@@ -9,7 +9,7 @@ namespace kino.Actors
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterModule(new kino.MainModule());
+            builder.RegisterModule<kino.MainModule>();
 
             builder.RegisterType<ActorHost>()
                    .As<IActorHost>()

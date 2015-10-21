@@ -12,7 +12,7 @@ namespace Client
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterModule(new kino.Client.MainModule());
+            builder.RegisterModule<kino.Client.MainModule>();
 
             builder.RegisterType<ConfigProvider>()
                    .As<IConfigProvider>()

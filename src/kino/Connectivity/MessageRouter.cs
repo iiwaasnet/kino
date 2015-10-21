@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using kino.Connectivity.ServiceMessageHandlers;
 using kino.Diagnostics;
 using kino.Framework;
 using kino.Messaging;
-using kino.Messaging.Messages;
 using kino.Sockets;
 using NetMQ;
 
@@ -25,6 +25,7 @@ namespace kino.Connectivity
         private readonly RouterConfiguration routerConfiguration;
         private readonly ILogger logger;
         private readonly IMessageTracer messageTracer;
+        private readonly IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageRouter(ISocketFactory socketFactory,
@@ -33,6 +34,7 @@ namespace kino.Connectivity
                              RouterConfiguration routerConfiguration,
                              IClusterMonitor clusterMonitor,
                              IMessageTracer messageTracer,
+                             IEnumerable<IServiceMessageHandler> serviceMessageHandlers,
                              ILogger logger)
         {
             this.logger = logger;
@@ -43,6 +45,7 @@ namespace kino.Connectivity
             this.externalRoutingTable = externalRoutingTable;
             this.clusterMonitor = clusterMonitor;
             this.routerConfiguration = routerConfiguration;
+            this.serviceMessageHandlers = serviceMessageHandlers;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -156,7 +159,7 @@ namespace kino.Connectivity
                    || ProcessUnhandledMessage(message, messageHandlerIdentifier);
         }
 
-        private bool HandleMessageLocally(IMessageIdentifier messageIdentifier, Message message, ISocket localSocket)
+        private bool HandleMessageLocally(MessageIdentifier messageIdentifier, Message message, ISocket localSocket)
         {
             var handlers = ((message.Distribution == DistributionPattern.Unicast)
                                 ? new[] {internalRoutingTable.FindRoute(messageIdentifier)}
@@ -217,7 +220,7 @@ namespace kino.Connectivity
             return handlers.Any();
         }
 
-        private bool ProcessUnhandledMessage(Message message, IMessageIdentifier messageIdentifier)
+        private bool ProcessUnhandledMessage(Message message, MessageIdentifier messageIdentifier)
         {
             clusterMonitor.DiscoverMessageRoute(messageIdentifier);
 
@@ -286,161 +289,15 @@ namespace kino.Connectivity
         }
 
         private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
-            => RegisterInternalMessageRoutes(message)
-               || RegisterExternalRoutes(message, scaleOutBackend)
-               || RequestRoutesRegistration(message)
-               || DiscoverMessageRoute(message)
-               || UnregisterRoute(message, scaleOutBackend)
-               || UnregisterMessageRoute(message);
-
-        private bool UnregisterMessageRoute(IMessage message)
         {
-            var shouldHandle = IsUnregisterMessageRouting(message);
-            if (shouldHandle)
+            var handled = false;
+            var enumerator = serviceMessageHandlers.GetEnumerator();
+            while (enumerator.MoveNext() && !handled)
             {
-                var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-                externalRoutingTable.RemoveMessageRoute(payload
-                                                            .MessageContracts
-                                                            .Select(mh => new MessageIdentifier(mh.Version, mh.Identity)),
-                                                        new SocketIdentifier(payload.SocketIdentity));
+                handled = enumerator.Current.Handle(message, scaleOutBackend);
             }
 
-            return shouldHandle;
-        }
-
-        private bool UnregisterRoute(IMessage message, ISocket scaleOutBackend)
-        {
-            var shouldHandle = IsUnregisterRouting(message);
-            if (shouldHandle)
-            {
-                var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
-                externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(payload.SocketIdentity));
-                try
-                {
-                    scaleOutBackend.Disconnect(new Uri(payload.Uri));
-                }
-                catch (EndpointNotFoundException)
-                {
-                }
-            }
-
-            return shouldHandle;
-        }
-
-        private bool RequestRoutesRegistration(IMessage message)
-        {
-            var shouldHandle = IsRoutesRequest(message);
-            if (shouldHandle)
-            {
-                var messageIdentifiers = internalRoutingTable.GetMessageIdentifiers();
-                if (messageIdentifiers.Any())
-                {
-                    clusterMonitor.RegisterSelf(messageIdentifiers);
-                }
-            }
-
-            return shouldHandle;
-        }
-
-        private bool DiscoverMessageRoute(IMessage message)
-        {
-            var shouldHandle = IsDiscoverMessageRouteRequest(message);
-            if (shouldHandle)
-            {
-                var messageContract = message.GetPayload<DiscoverMessageRouteMessage>().MessageContract;
-                var messageIdentifier = new MessageIdentifier(messageContract.Version, messageContract.Identity);
-                if (internalRoutingTable.CanRouteMessage(messageIdentifier))
-                {
-                    clusterMonitor.RegisterSelf(new[] {messageIdentifier});
-                }
-            }
-
-            return shouldHandle;
-        }
-
-        private bool RegisterExternalRoutes(IMessage message, ISocket scaleOutBackend)
-        {
-            var shouldHandle = IsExternalRouteRegistration(message);
-            if (shouldHandle)
-            {
-                var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
-
-                var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
-                var uri = new Uri(payload.Uri);
-
-                foreach (var registration in payload.MessageContracts)
-                {
-                    try
-                    {
-                        var messageHandlerIdentifier = new MessageIdentifier(registration.Version, registration.Identity);
-                        externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, handlerSocketIdentifier, uri);
-                        scaleOutBackend.Connect(uri);
-                    }
-                    catch (Exception err)
-                    {
-                        logger.Error(err);
-                    }
-                }
-            }
-
-            return shouldHandle;
-        }
-
-        private static bool IsRoutesRequest(IMessage message)
-            => Unsafe.Equals(RequestClusterMessageRoutesMessage.MessageIdentity, message.Identity)
-               || Unsafe.Equals(RequestNodeMessageRoutesMessage.MessageIdentity, message.Identity);
-
-        private static bool IsExternalRouteRegistration(IMessage message)
-            => Unsafe.Equals(RegisterExternalMessageRouteMessage.MessageIdentity, message.Identity);
-
-        private static bool IsInternalMessageRoutingRegistration(IMessage message)
-            => Unsafe.Equals(RegisterInternalMessageRouteMessage.MessageIdentity, message.Identity);
-
-        private bool IsUnregisterRouting(IMessage message)
-            => Unsafe.Equals(UnregisterNodeMessageRouteMessage.MessageIdentity, message.Identity);
-
-        private bool IsUnregisterMessageRouting(IMessage message)
-            => Unsafe.Equals(UnregisterMessageRouteMessage.MessageIdentity, message.Identity);
-
-        private bool IsDiscoverMessageRouteRequest(IMessage message)
-            => Unsafe.Equals(DiscoverMessageRouteMessage.MessageIdentity, message.Identity);
-
-        private bool RegisterInternalMessageRoutes(IMessage message)
-        {
-            var shouldHandle = IsInternalMessageRoutingRegistration(message);
-            if (shouldHandle)
-            {
-                var payload = message.GetPayload<RegisterInternalMessageRouteMessage>();
-                var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
-
-                var handlers = UpdateLocalRoutingTable(payload, handlerSocketIdentifier);
-
-                clusterMonitor.RegisterSelf(handlers);
-            }
-
-            return shouldHandle;
-        }
-
-        private IEnumerable<IMessageIdentifier> UpdateLocalRoutingTable(RegisterInternalMessageRouteMessage payload,
-                                                                       SocketIdentifier socketIdentifier)
-        {
-            var handlers = new List<IMessageIdentifier>();
-
-            foreach (var registration in payload.MessageContracts)
-            {
-                try
-                {
-                    var messageIdentifier = new MessageIdentifier(registration.Version, registration.Identity);
-                    internalRoutingTable.AddMessageRoute(messageIdentifier, socketIdentifier);
-                    handlers.Add(messageIdentifier);
-                }
-                catch (Exception err)
-                {
-                    logger.Error(err);
-                }
-            }
-
-            return handlers;
+            return handled;
         }
 
         private static MessageIdentifier CreateMessageHandlerIdentifier(IMessage message)

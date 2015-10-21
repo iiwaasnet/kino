@@ -14,7 +14,7 @@ namespace kino.Connectivity
         {
         }
 
-        public void RegisterSelf(IEnumerable<IMessageIdentifier> messageHandlers)
+        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers)
         {
         }
 
@@ -22,14 +22,14 @@ namespace kino.Connectivity
         {
         }
 
-        public void UnregisterSelf(IEnumerable<IMessageIdentifier> messageIdentifiers)
+        public void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers)
         {
         }
 
         public IEnumerable<SocketEndpoint> GetClusterMembers()
             => Enumerable.Empty<SocketEndpoint>();
 
-        public void DiscoverMessageRoute(IMessageIdentifier messageIdentifier)
+        public void DiscoverMessageRoute(MessageIdentifier messageIdentifier)
         {
         }
     }

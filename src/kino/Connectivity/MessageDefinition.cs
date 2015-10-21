@@ -13,7 +13,7 @@ namespace kino.Connectivity
         }
 
         public static MessageDefinition Create<T>()
-            where T: IMessageIdentifier, new()
+            where T: MessageIdentifier, new()
         {
             var message = new T();
             return new MessageDefinition(message.Identity, message.Version);

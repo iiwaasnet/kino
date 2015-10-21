@@ -6,7 +6,7 @@ namespace kino.Client
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterModule(new kino.MainModule());
+            builder.RegisterModule<kino.MainModule>();
 
             builder.RegisterType<MessageHub>()
                    .As<IMessageHub>()

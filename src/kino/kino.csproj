@@ -72,6 +72,14 @@
     <Compile Include="Connectivity\RendezvousClusterConfigurationReadonlyStorage.cs" />
     <Compile Include="Connectivity\Node.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfiguration.cs" />
+    <Compile Include="Connectivity\ServiceMessageHandlers\ExternalMessageRouteRegistrationHandler.cs" />
+    <Compile Include="Connectivity\ServiceMessageHandlers\InternalMessageRouteRegistrationHandler.cs" />
+    <Compile Include="Connectivity\ServiceMessageHandlers\IServiceMessageHandler.cs" />
+    <Compile Include="Connectivity\ServiceMessageHandlers\MessageRouteDiscoveryHandler.cs" />
+    <Compile Include="Connectivity\ServiceMessageHandlers\MessageRouteUnregistrationHandler.cs" />
+    <Compile Include="Connectivity\ServiceMessageHandlers\RoutesRegistrationRequestHandler.cs" />
+    <Compile Include="Connectivity\ServiceMessageHandlers\RouteUnregistrationHandler.cs" />
+    <Compile Include="Connectivity\ServiceMessageHandlers\ServiceMessageHandlersModule.cs" />
     <Compile Include="Framework\IConfigurationStorage.cs" />
     <Compile Include="Messaging\IMessageIdentifier.cs" />
     <Compile Include="Messaging\Messages\DiscoverMessageRouteMessage.cs" />

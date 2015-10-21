@@ -108,7 +108,7 @@ namespace kino.Actors
             }
         }
 
-        private static void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<IMessageIdentifier> registrations)
+        private static void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<MessageIdentifier> registrations)
         {
             var payload = new RegisterInternalMessageRouteMessage
                           {

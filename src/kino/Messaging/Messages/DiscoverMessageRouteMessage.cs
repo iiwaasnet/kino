@@ -7,6 +7,7 @@ namespace kino.Messaging.Messages
     [ProtoContract]
     public class DiscoverMessageRouteMessage : Payload
     {
+        //TODO: Remove
         public static readonly byte[] MessageIdentity = "DISCOVMSGROUTE".GetBytes();
 
         [ProtoMember(1)]

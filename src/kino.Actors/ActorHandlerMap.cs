@@ -11,16 +11,16 @@ namespace kino.Actors
 {
     public class ActorHandlerMap : IActorHandlerMap
     {
-        private readonly ConcurrentDictionary<IMessageIdentifier, MessageHandler> messageHandlers;
+        private readonly ConcurrentDictionary<MessageIdentifier, MessageHandler> messageHandlers;
 
         public ActorHandlerMap()
         {
-            messageHandlers = new ConcurrentDictionary<IMessageIdentifier, MessageHandler>();
+            messageHandlers = new ConcurrentDictionary<MessageIdentifier, MessageHandler>();
         }
 
-        public IEnumerable<IMessageIdentifier> Add(IActor actor)
+        public IEnumerable<MessageIdentifier> Add(IActor actor)
         {
-            var tmp = new List<IMessageIdentifier>();
+            var tmp = new List<MessageIdentifier>();
             foreach (var reg in GetActorRegistrations(actor))
             {
                 if (messageHandlers.TryAdd(reg.Key, reg.Value))
@@ -52,16 +52,16 @@ namespace kino.Actors
             throw new KeyNotFoundException(identifier.ToString());
         }
 
-        public IEnumerable<IMessageIdentifier> GetMessageHandlerIdentifiers()
+        public IEnumerable<MessageIdentifier> GetMessageHandlerIdentifiers()
         {
             return messageHandlers.Keys;
         }
 
-        private static IEnumerable<KeyValuePair<IMessageIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
+        private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
             => actor
                 .GetInterfaceDefinition()
                 .Select(messageMap =>
-                        new KeyValuePair<IMessageIdentifier, MessageHandler>(new MessageIdentifier(messageMap.Message.Version,
+                        new KeyValuePair<MessageIdentifier, MessageHandler>(new MessageIdentifier(messageMap.Message.Version,
                                                                                                    messageMap.Message.Identity),
                                                                              messageMap.Handler));
 

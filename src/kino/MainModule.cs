@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using kino.Connectivity;
+using kino.Connectivity.ServiceMessageHandlers;
 using kino.Diagnostics;
 using kino.Framework;
 using kino.Messaging;
@@ -13,6 +14,8 @@ namespace kino
 
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterModule<ServiceMessageHandlersModule>();
+
             builder.RegisterType<MessageRouter>()
                    .As<IMessageRouter>()
                    .SingleInstance();
@@ -58,7 +61,7 @@ namespace kino
 
             builder.RegisterType<MessageTracer>()
                    .As<IMessageTracer>()
-                   .SingleInstance();
+                   .SingleInstance();            
         }
     }
 }

@@ -6,8 +6,8 @@ namespace kino.Actors
 {
     public interface IActorHandlerMap
     {
-        IEnumerable<IMessageIdentifier> Add(IActor actor);
+        IEnumerable<MessageIdentifier> Add(IActor actor);
         MessageHandler Get(MessageIdentifier identifier);
-        IEnumerable<IMessageIdentifier> GetMessageHandlerIdentifiers();
+        IEnumerable<MessageIdentifier> GetMessageHandlerIdentifiers();
     }
 }

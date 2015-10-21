@@ -10,8 +10,8 @@ namespace kino.Rendezvous
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterModule(new kino.MainModule());
-            builder.RegisterModule(new ConsensusModule());
+            builder.RegisterModule<kino.MainModule>();
+            builder.RegisterModule<ConsensusModule>();
 
             builder.RegisterType<ConfigProvider>()
                    .As<IConfigProvider>()

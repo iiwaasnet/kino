@@ -335,7 +335,7 @@ namespace kino.Connectivity
             return shouldHandle;
         }
 
-        public void RegisterSelf(IEnumerable<IMessageIdentifier> messageHandlers)
+        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers)
         {
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
@@ -350,7 +350,7 @@ namespace kino.Connectivity
             outgoingMessages.Add(message);
         }
 
-        public void UnregisterSelf(IEnumerable<IMessageIdentifier> messageIdentifiers)
+        public void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers)
         {
             var message = Message.Create(new UnregisterMessageRouteMessage
                                          {
@@ -381,7 +381,7 @@ namespace kino.Connectivity
         public IEnumerable<SocketEndpoint> GetClusterMembers()
             => clusterMembership.GetClusterMembers();
 
-        public void DiscoverMessageRoute(IMessageIdentifier messageIdentifier)
+        public void DiscoverMessageRoute(MessageIdentifier messageIdentifier)
         {
             var message = Message.Create(new DiscoverMessageRouteMessage
                                          {
