@@ -6,7 +6,8 @@ namespace kino.Messaging.Messages
     [ProtoContract]
     public class UnregisterMessageRouteMessage : Payload
     {
-        public static readonly byte[] MessageIdentity = "UNREGMSGROUTE".GetBytes();
+        private static readonly byte[] MessageIdentity = "UNREGMSGROUTE".GetBytes();
+        private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
         public string Uri { get; set; }
@@ -17,7 +18,7 @@ namespace kino.Messaging.Messages
         [ProtoMember(3)]
         public MessageContract[] MessageContracts { get; set; }
 
-        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Version => MessageVersion;
         public override byte[] Identity => MessageIdentity;
     }
 }

@@ -6,9 +6,9 @@ namespace kino.Messaging.Messages
 {
     [ProtoContract]
     public class DiscoverMessageRouteMessage : Payload
-    {
-        //TODO: Remove
-        public static readonly byte[] MessageIdentity = "DISCOVMSGROUTE".GetBytes();
+    {        
+        private static readonly byte[] MessageIdentity = "DISCOVMSGROUTE".GetBytes();
+        private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
         public byte[] RequestorSocketIdentity { get; set; }
@@ -19,7 +19,7 @@ namespace kino.Messaging.Messages
         [ProtoMember(3)]
         public MessageContract MessageContract { get; set; }
 
-        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Version => MessageVersion;
         public override byte[] Identity => MessageIdentity;
     }
 }

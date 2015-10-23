@@ -12,7 +12,7 @@ namespace kino.Tests.Helpers
     {
         private readonly ConcurrentBag<SocketMeta> sockets;
         private readonly TimeSpan socketWaitTimeout;
-        private readonly int socketWaitRetries = 5;
+        private readonly int socketWaitRetries;
         private const string CreateClusterMonitorSubscriptionSocketMethod = "CreateClusterMonitorSubscriptionSocket";
         private const string CreateClusterMonitorSendingSocketMethod = "CreateClusterMonitorSendingSocket";
         private const string CreateRouterCommunicationSocketMethod = "CreateRouterCommunicationSocket";
@@ -20,7 +20,8 @@ namespace kino.Tests.Helpers
         public ClusterMonitorSocketFactory()
         {
             sockets = new ConcurrentBag<SocketMeta>();
-            socketWaitTimeout = TimeSpan.FromSeconds(5);
+            socketWaitTimeout = TimeSpan.FromMilliseconds(50);
+            socketWaitRetries = 500;
         }
 
         public ISocket CreateSocket()

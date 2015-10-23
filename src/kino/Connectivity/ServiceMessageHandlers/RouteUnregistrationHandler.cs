@@ -11,13 +11,14 @@ namespace kino.Connectivity.ServiceMessageHandlers
     public class RouteUnregistrationHandler : IServiceMessageHandler
     {
         private readonly IExternalRoutingTable externalRoutingTable;
+        private static readonly MessageIdentifier UnregisterNodeMessageRouteMessageIdentifier = MessageIdentifier.Create<UnregisterNodeMessageRouteMessage>();
 
         public RouteUnregistrationHandler(IExternalRoutingTable externalRoutingTable)
         {
             this.externalRoutingTable = externalRoutingTable;
         }
 
-        public bool Handle(IMessage message, ISocket scaleOutBackendSocket)
+        public bool Handle(IMessage message, ISocket forwardingSocket)
         {
             var shouldHandle = IsUnregisterRouting(message);
             if (shouldHandle)
@@ -26,7 +27,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
                 externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(payload.SocketIdentity));
                 try
                 {
-                    scaleOutBackendSocket.Disconnect(new Uri(payload.Uri));
+                    forwardingSocket.Disconnect(new Uri(payload.Uri));
                 }
                 catch (EndpointNotFoundException)
                 {
@@ -36,7 +37,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
             return shouldHandle;
         }
 
-        private bool IsUnregisterRouting(IMessage message)
-            => Unsafe.Equals(UnregisterNodeMessageRouteMessage.MessageIdentity, message.Identity);
+        private static bool IsUnregisterRouting(IMessage message)
+            => Unsafe.Equals(UnregisterNodeMessageRouteMessageIdentifier.Identity, message.Identity);
     }
 }

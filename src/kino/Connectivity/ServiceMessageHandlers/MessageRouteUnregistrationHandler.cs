@@ -9,13 +9,14 @@ namespace kino.Connectivity.ServiceMessageHandlers
     public class MessageRouteUnregistrationHandler : IServiceMessageHandler
     {
         private readonly IExternalRoutingTable externalRoutingTable;
+        private static readonly MessageIdentifier UnregisterMessageRouteMessageIdentifier = MessageIdentifier.Create<UnregisterMessageRouteMessage>();
 
         public MessageRouteUnregistrationHandler(IExternalRoutingTable externalRoutingTable)
         {
             this.externalRoutingTable = externalRoutingTable;
         }
 
-        public bool Handle(IMessage message, ISocket scaleOutBackendSocket)
+        public bool Handle(IMessage message, ISocket forwardingSocket)
         {
             var shouldHandle = IsUnregisterMessageRouting(message);
             if (shouldHandle)
@@ -31,6 +32,6 @@ namespace kino.Connectivity.ServiceMessageHandlers
         }
 
         private bool IsUnregisterMessageRouting(IMessage message)
-            => Unsafe.Equals(UnregisterMessageRouteMessage.MessageIdentity, message.Identity);
+            => Unsafe.Equals(UnregisterMessageRouteMessageIdentifier.Identity, message.Identity);
     }
 }

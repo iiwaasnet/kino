@@ -9,6 +9,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
     {
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly IClusterMonitor clusterMonitor;
+        private static readonly MessageIdentifier DiscoverMessageRouteMessageIdentifier = MessageIdentifier.Create<DiscoverMessageRouteMessage>();
 
         public MessageRouteDiscoveryHandler(IInternalRoutingTable internalRoutingTable, IClusterMonitor clusterMonitor)
         {
@@ -16,7 +17,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
             this.clusterMonitor = clusterMonitor;
         }
 
-        public bool Handle(IMessage message, ISocket scaleOutBackendSocket)
+        public bool Handle(IMessage message, ISocket forwardingSocket)
         {
             var shouldHandle = IsDiscoverMessageRouteRequest(message);
             if (shouldHandle)
@@ -33,6 +34,6 @@ namespace kino.Connectivity.ServiceMessageHandlers
         }
 
         private bool IsDiscoverMessageRouteRequest(IMessage message)
-           => Unsafe.Equals(DiscoverMessageRouteMessage.MessageIdentity, message.Identity);
+           => Unsafe.Equals(DiscoverMessageRouteMessageIdentifier.Identity, message.Identity);
     }
 }

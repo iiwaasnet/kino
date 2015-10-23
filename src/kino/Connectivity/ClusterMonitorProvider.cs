@@ -1,27 +1,21 @@
-﻿using kino.Diagnostics;
-using kino.Sockets;
-
-namespace kino.Connectivity
+﻿namespace kino.Connectivity
 {
     public class ClusterMonitorProvider : IClusterMonitorProvider
     {
         private readonly IClusterMonitor clusterMonitor;
 
-        public ClusterMonitorProvider(ISocketFactory socketFactory,
+        public ClusterMonitorProvider(ClusterMembershipConfiguration membershipConfiguration,
                                       RouterConfiguration routerConfiguration,
                                       IClusterMembership clusterMembership,
-                                      ClusterMembershipConfiguration membershipConfiguration,
-                                      IRendezvousCluster rendezvousCluster,
-                                      ILogger logger)
+                                      IClusterMessageSender clusterMessageSender,
+                                      IClusterMessageListener clusterMessageListener)
         {
             clusterMonitor = membershipConfiguration.RunAsStandalone
                                  ? (IClusterMonitor) new LoopbackClusterMonitor()
-                                 : new ClusterMonitor(socketFactory,
-                                                      routerConfiguration,
+                                 : new ClusterMonitor(routerConfiguration,
                                                       clusterMembership,
-                                                      membershipConfiguration,
-                                                      rendezvousCluster,
-                                                      logger);
+                                                      clusterMessageSender,
+                                                      clusterMessageListener);
         }
 
         public IClusterMonitor GetClusterMonitor()

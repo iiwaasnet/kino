@@ -67,7 +67,11 @@
   <ItemGroup>
     <Compile Include="Connectivity\ActorResult.cs" />
     <Compile Include="Connectivity\ClusterMembershipConfiguration.cs" />
+    <Compile Include="Connectivity\ClusterMessageListener.cs" />
+    <Compile Include="Connectivity\ClusterMessageSender.cs" />
     <Compile Include="Connectivity\ClusterMonitorProvider.cs" />
+    <Compile Include="Connectivity\IClusterMessageListener.cs" />
+    <Compile Include="Connectivity\IClusterMessageSender.cs" />
     <Compile Include="Connectivity\MessageHandlerDefinitionAttribute.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfigurationReadonlyStorage.cs" />
     <Compile Include="Connectivity\Node.cs" />
@@ -112,6 +116,7 @@
     <Compile Include="Connectivity\SocketIdentifier.cs" />
     <Compile Include="Connectivity\ClusterMemberMeta.cs" />
     <Compile Include="Messaging\Messages\KnownMessageRoutesMessage.cs" />
+    <Compile Include="Messaging\Messages\MessageIdentifiers.cs" />
     <Compile Include="Messaging\Messages\RendezvousConfigurationChangedMessage.cs" />
     <Compile Include="Messaging\Messages\RendezvousNode.cs" />
     <Compile Include="Messaging\Messages\RequestKnownMessageRoutesMessage.cs" />

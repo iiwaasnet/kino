@@ -13,6 +13,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
         private readonly IClusterMonitor clusterMonitor;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ILogger logger;
+        private static readonly MessageIdentifier RegisterInternalMessageRouteMessageIdentifier = MessageIdentifier.Create<RegisterInternalMessageRouteMessage>();
 
         public InternalMessageRouteRegistrationHandler(IClusterMonitor clusterMonitor,
                                                        IInternalRoutingTable internalRoutingTable,
@@ -23,7 +24,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
             this.logger = logger;
         }
 
-        public bool Handle(IMessage message, ISocket scaleOutBackendSocket)
+        public bool Handle(IMessage message, ISocket forwardingSocket)
         {
             var shouldHandle = IsInternalMessageRoutingRegistration(message);
             if (shouldHandle)
@@ -40,7 +41,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
         }
 
         private static bool IsInternalMessageRoutingRegistration(IMessage message)
-            => Unsafe.Equals(RegisterInternalMessageRouteMessage.MessageIdentity, message.Identity);
+            => Unsafe.Equals(RegisterInternalMessageRouteMessageIdentifier.Identity, message.Identity);
 
         private IEnumerable<MessageIdentifier> UpdateLocalRoutingTable(RegisterInternalMessageRouteMessage payload,
                                                                         SocketIdentifier socketIdentifier)

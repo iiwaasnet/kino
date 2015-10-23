@@ -11,6 +11,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
     {
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ILogger logger;
+        private static readonly MessageIdentifier RegisterExternalMessageRouteMessageIdentifier = MessageIdentifier.Create<RegisterExternalMessageRouteMessage>();
 
         public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable, ILogger logger)
         {
@@ -18,7 +19,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
             this.logger = logger;
         }
 
-        public bool Handle(IMessage message, ISocket scaleOutBackendSocket)
+        public bool Handle(IMessage message, ISocket forwardingSocket)
         {
             var shouldHandle = IsExternalRouteRegistration(message);
             if (shouldHandle)
@@ -34,7 +35,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
                     {
                         var messageHandlerIdentifier = new MessageIdentifier(registration.Version, registration.Identity);
                         externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, handlerSocketIdentifier, uri);
-                        scaleOutBackendSocket.Connect(uri);
+                        forwardingSocket.Connect(uri);
                     }
                     catch (Exception err)
                     {
@@ -47,6 +48,6 @@ namespace kino.Connectivity.ServiceMessageHandlers
         }
 
         private static bool IsExternalRouteRegistration(IMessage message)
-            => Unsafe.Equals(RegisterExternalMessageRouteMessage.MessageIdentity, message.Identity);
+            => Unsafe.Equals(RegisterExternalMessageRouteMessageIdentifier.Identity, message.Identity);
     }
 }

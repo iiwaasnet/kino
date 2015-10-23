@@ -61,7 +61,15 @@ namespace kino
 
             builder.RegisterType<MessageTracer>()
                    .As<IMessageTracer>()
-                   .SingleInstance();            
+                   .SingleInstance();
+
+            builder.RegisterType<ClusterMessageSender>()
+                   .As<IClusterMessageSender>()
+                   .SingleInstance();
+
+            builder.RegisterType<ClusterMessageListener>()
+                   .As<IClusterMessageListener>()
+                   .SingleInstance();
         }
     }
 }

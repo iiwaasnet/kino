@@ -10,6 +10,8 @@ namespace kino.Connectivity.ServiceMessageHandlers
     {
         private readonly IClusterMonitor clusterMonitor;
         private readonly IInternalRoutingTable internalRoutingTable;
+        private static readonly MessageIdentifier RequestClusterMessageRoutesMessageIdentifier = MessageIdentifier.Create<RequestClusterMessageRoutesMessage>();
+        private static readonly MessageIdentifier RequestNodeMessageRoutesMessageIdentifier = MessageIdentifier.Create<RequestNodeMessageRoutesMessage>();
 
         public RoutesRegistrationRequestHandler(IClusterMonitor clusterMonitor, IInternalRoutingTable internalRoutingTable)
         {
@@ -17,7 +19,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
             this.internalRoutingTable = internalRoutingTable;
         }
 
-        public bool Handle(IMessage message, ISocket scaleOutBackendSocket)
+        public bool Handle(IMessage message, ISocket forwardingSocket)
         {
             var shouldHandle = IsRoutesRequest(message);
             if (shouldHandle)
@@ -33,7 +35,7 @@ namespace kino.Connectivity.ServiceMessageHandlers
         }
 
         private static bool IsRoutesRequest(IMessage message)
-            => Unsafe.Equals(RequestClusterMessageRoutesMessage.MessageIdentity, message.Identity)
-               || Unsafe.Equals(RequestNodeMessageRoutesMessage.MessageIdentity, message.Identity);
+            => Unsafe.Equals(RequestClusterMessageRoutesMessageIdentifier.Identity, message.Identity)
+               || Unsafe.Equals(RequestNodeMessageRoutesMessageIdentifier.Identity, message.Identity);
     }
 }
