@@ -239,7 +239,7 @@ namespace kino.Actors
         private static void CallbackException(ISocket localSocket, Exception err, Message messageIn)
         {
             var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err});
-            messageOut.RegisterCallbackPoint(ExceptionMessage.MessageIdentity, ExceptionMessage.MessageVersion, messageIn.CallbackReceiverIdentity);
+            messageOut.RegisterCallbackPoint(KinoMessages.Exception.Identity, KinoMessages.Exception.Version, messageIn.CallbackReceiverIdentity);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageHops(messageIn.GetMessageHops());
 
@@ -262,14 +262,14 @@ namespace kino.Actors
         private static byte[] GetTaskCallbackIdentity(Task task, IMessage messageIn)
         {
             return task.IsCanceled || task.IsFaulted
-                       ? ExceptionMessage.MessageIdentity
+                       ? KinoMessages.Exception.Identity
                        : messageIn.CallbackIdentity;
         }
 
         private static byte[] GetTaskCallbackVersion(Task task, IMessage messageIn)
         {
             return task.IsCanceled || task.IsFaulted
-                       ? ExceptionMessage.MessageVersion
+                       ? KinoMessages.Exception.Version
                        : messageIn.CallbackVersion;
         }
 

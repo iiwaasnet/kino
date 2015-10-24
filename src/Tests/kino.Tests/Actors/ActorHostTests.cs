@@ -262,7 +262,7 @@ namespace kino.Tests.Actors
 
                 var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
-                CollectionAssert.AreEqual(ExceptionMessage.MessageIdentity.GetString(), messageOut.Identity.GetString());
+                CollectionAssert.AreEqual(KinoMessages.Exception.Identity.GetString(), messageOut.Identity.GetString());
                 CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
             }
             finally

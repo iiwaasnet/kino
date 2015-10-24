@@ -58,8 +58,8 @@ namespace kino.Tests.Client
 
             handler = callbackHandlerStack.Pop(new CallbackHandlerKey
             {
-                Identity = ExceptionMessage.MessageIdentity,
-                Version = Message.CurrentVersion,
+                Identity = KinoMessages.Exception.Identity,
+                Version = KinoMessages.Exception.Version,
                 Correlation = correlationId.Value
             });
             Assert.IsNull(handler);

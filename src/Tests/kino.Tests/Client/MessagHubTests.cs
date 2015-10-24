@@ -230,7 +230,7 @@ namespace kino.Tests.Client
         private bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageIdentifier> registrations)
         {
             return registrations.Any(h => Unsafe.Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
-                   && registrations.Any(h => Unsafe.Equals(h.Identity, ExceptionMessage.MessageIdentity));
+                   && registrations.Any(h => Unsafe.Equals(h.Identity, KinoMessages.Exception.Identity));
         }
     }
 }

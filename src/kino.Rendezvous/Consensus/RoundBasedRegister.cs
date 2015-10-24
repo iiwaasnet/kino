@@ -41,15 +41,15 @@ namespace kino.Rendezvous.Consensus
 
             listener = intercomMessageHub.Subscribe();
 
-            listener.Where(m => Unsafe.Equals(m.Identity, LeaseReadMessage.MessageIdentity))
+            listener.Where(m => Unsafe.Equals(m.Identity, RndzvMessages.LeaseRead.Identity))
                     .Subscribe(OnReadReceived);
-            listener.Where(m => Unsafe.Equals(m.Identity, LeaseWriteMessage.MessageIdentity))
+            listener.Where(m => Unsafe.Equals(m.Identity, RndzvMessages.LeaseWrite.Identity))
                     .Subscribe(OnWriteReceived);
 
-            ackReadStream = listener.Where(m => Unsafe.Equals(m.Identity, LeaseAckReadMessage.MessageIdentity));
-            nackReadStream = listener.Where(m => Unsafe.Equals(m.Identity, LeaseNackReadMessage.MessageIdentity));
-            ackWriteStream = listener.Where(m => Unsafe.Equals(m.Identity, LeaseAckWriteMessage.MessageIdentity));
-            nackWriteStream = listener.Where(m => Unsafe.Equals(m.Identity, LeaseNackWriteMessage.MessageIdentity));
+            ackReadStream = listener.Where(m => Unsafe.Equals(m.Identity, RndzvMessages.LeaseAckRead.Identity));
+            nackReadStream = listener.Where(m => Unsafe.Equals(m.Identity, RndzvMessages.LeaseNackRead.Identity));
+            ackWriteStream = listener.Where(m => Unsafe.Equals(m.Identity, RndzvMessages.LeaseAckWrite.Identity));
+            nackWriteStream = listener.Where(m => Unsafe.Equals(m.Identity, RndzvMessages.LeaseNackWrite.Identity));
         }
 
         private void OnWriteReceived(IMessage message)

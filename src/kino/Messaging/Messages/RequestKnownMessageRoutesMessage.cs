@@ -6,9 +6,10 @@ namespace kino.Messaging.Messages
     [ProtoContract]
     public class RequestKnownMessageRoutesMessage : Payload
     {
-        public static readonly byte[] MessageIdentity = "REQKNOWNMSGROUTES".GetBytes();
+        private static readonly byte[] MessageIdentity = "REQKNOWNMSGROUTES".GetBytes();
+        private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
-        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Version => MessageVersion;
         public override byte[] Identity => MessageIdentity;
     }
 }

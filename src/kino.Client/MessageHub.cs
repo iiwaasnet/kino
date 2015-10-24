@@ -96,7 +96,7 @@ namespace kino.Client
                                                       {
                                                           new MessageIdentifier(callbackPoint.MessageVersion, callbackPoint.MessageIdentity),
                                                           //TODO: Change to ExceptionMessage.Version
-                                                          new MessageIdentifier(message.Version, ExceptionMessage.MessageIdentity)
+                                                          new MessageIdentifier(KinoMessages.Exception.Version, KinoMessages.Exception.Identity)
                                                       });
                                 messageTracer.CallbackRegistered(message);
                             }

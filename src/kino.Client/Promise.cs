@@ -30,7 +30,7 @@ namespace kino.Client
         {
             expirableItem?.ExpireNow();
 
-            if (Unsafe.Equals(message.Identity, ExceptionMessage.MessageIdentity))
+            if (Unsafe.Equals(message.Identity, KinoMessages.Exception.Identity))
             {
                 var error = message.GetPayload<ExceptionMessage>().Exception;
                 result.SetException(error);

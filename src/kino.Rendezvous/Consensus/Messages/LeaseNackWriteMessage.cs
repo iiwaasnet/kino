@@ -7,7 +7,8 @@ namespace kino.Rendezvous.Consensus.Messages
     [ProtoContract]
     public class LeaseNackWriteMessage : Payload, ILeaseMessage
     {
-        public static readonly byte[] MessageIdentity = "NACKWRITELEASE".GetBytes();
+        private static readonly byte[] MessageIdentity = "NACKWRITELEASE".GetBytes();
+        private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
         public Ballot Ballot { get; set; }
@@ -15,7 +16,7 @@ namespace kino.Rendezvous.Consensus.Messages
         [ProtoMember(2)]
         public string SenderUri { get; set; }
 
-        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Version => MessageVersion;
         public override byte[] Identity => MessageIdentity;
     }
 }

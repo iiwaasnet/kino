@@ -304,7 +304,7 @@ namespace kino.Tests.Connectivity
         public void TestRequestClusterMessageRoutesMessage_IsForwardedToMessageRouter()
         {
             var payload = new RequestClusterMessageRoutesMessage();
-            TestMessageIsForwardedToMessageRouter(payload, MessageIdentifiers.RequestClusterMessageRoutes.Identity);
+            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.RequestClusterMessageRoutes.Identity);
         }
 
         [Test]
@@ -315,7 +315,7 @@ namespace kino.Tests.Connectivity
                               Uri = "tcp://127.1.1.1:5000",
                               SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, MessageIdentifiers.UnregisterMessageRoute.Identity);
+            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterMessageRoute.Identity);
         }
 
         [Test]
@@ -326,7 +326,7 @@ namespace kino.Tests.Connectivity
                               Uri = "tcp://127.0.0.3:6000",
                               SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, MessageIdentifiers.UnregisterNodeMessageRoute.Identity);
+            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterNodeMessageRoute.Identity);
         }
 
         [Test]
@@ -337,7 +337,7 @@ namespace kino.Tests.Connectivity
                               RequestorUri = "tcp://127.0.0.3:6000",
                               RequestorSocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, MessageIdentifiers.DiscoverMessageRoute.Identity);
+            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.DiscoverMessageRoute.Identity);
         }
 
         [Test]
@@ -348,7 +348,7 @@ namespace kino.Tests.Connectivity
                               Uri = "tcp://127.0.0.3:6000",
                               SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, MessageIdentifiers.RegisterExternalMessageRoute.Identity);
+            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.RegisterExternalMessageRoute.Identity);
         }
 
         private void TestMessageIsForwardedToMessageRouter<TPayload>(TPayload payload, byte[] messageIdentity)

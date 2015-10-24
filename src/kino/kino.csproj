@@ -116,7 +116,8 @@
     <Compile Include="Connectivity\SocketIdentifier.cs" />
     <Compile Include="Connectivity\ClusterMemberMeta.cs" />
     <Compile Include="Messaging\Messages\KnownMessageRoutesMessage.cs" />
-    <Compile Include="Messaging\Messages\MessageIdentifiers.cs" />
+    <Compile Include="Messaging\Messages\KinoMessages.cs" />
+    <Compile Include="Messaging\Messages\MessageRoute.cs" />
     <Compile Include="Messaging\Messages\RendezvousConfigurationChangedMessage.cs" />
     <Compile Include="Messaging\Messages\RendezvousNode.cs" />
     <Compile Include="Messaging\Messages\RequestKnownMessageRoutesMessage.cs" />

@@ -7,7 +7,8 @@ namespace kino.Messaging.Messages
     [ProtoContract]
     public class PingMessage : Payload
     {
-        public static readonly byte[] MessageIdentity = "PING".GetBytes();
+        private static readonly byte[] MessageIdentity = "PING".GetBytes();
+        private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
         public TimeSpan PingInterval { get; set; }
@@ -15,7 +16,7 @@ namespace kino.Messaging.Messages
         [ProtoMember(2)]
         public ulong PingId { get; set; }
 
-        public override byte[] Version => Message.CurrentVersion;
+        public override byte[] Version => MessageVersion;
         public override byte[] Identity => MessageIdentity;
     }
 }
