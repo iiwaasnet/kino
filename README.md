@@ -96,12 +96,11 @@ var cities = (await GetCityList()).Select(c => c.Name);
 var message = Message.CreateFlowStartMessage(new RequestWeatherHighlightsMessage
                                              {
                                                  Cities = cities
-                                             },
-                                             RequestWeatherHighlightsMessage.Identity);
+                                             });
 message.TraceOptions = MessageTraceOptions.Routing;
 
 // Define callback with result message
-var callback = new CallbackPoint(WeatherHighlightsMessage.Identity);
+var callback = CallbackPoint.Create<WeatherHighlightsMessage>();
 
 // Send message into actors network and specify wait timeout
 var promise = messageHub.EnqueueRequest(message, callback, TimeSpan.FromMinutes(1));
@@ -120,10 +119,14 @@ WriteLine($"Lowest T: {weatherAggregates.LowestTemperature.CityName} {weatherAgg
 [ProtoContract]
 public class RequestWeatherHighlightsMessage: Payload
 {
-    public static byte[] Identity = "REQWHIGHLT".GetBytes();
+    private static byte[] MessageIdentity = "REQWHIGHLT".GetBytes();
+    private static byte[] MessageVersion = "1.0".GetBytes();
 
     [ProtoMember(1)]
     public IEnumerable<string> Cities { get; set; }
+
+    public override byte[] Version => MessageVersion;
+    public override byte[] Identity => MessageIdentity;
 }
 ```
 Default serializer for all messages, other than Exception, [protobuf-net](https://github.com/mgravell/protobuf-net).
@@ -133,21 +136,8 @@ Here is the code for one of the actors, responsible for getting current weather 
 ```csharp
 public class WeatherCollector : IActor
 {
-    // Declare, which messages actor can process and bind them to handlers
-    public IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
-    {
-        yield return new MessageHandlerDefinition
-        {
-                         Message = new MessageDefinition
-                                   {
-                                       Identity = RequestCityWeatherMessage.Identity,
-                                       Version = Message.CurrentVersion
-                                   },
-                         Handler = Handler
-                     };
-    }
-    
     // Method, which handles RequestCityWeatherMessage message
+    [MessageHandlerDefinition(typeof (RequestCityWeatherMessage))]
     private async Task<IActorResult> Handler(IMessage message)
     {
         // Get message payload
@@ -167,15 +157,13 @@ public class WeatherCollector : IActor
                                       {
                                           Weather = cityWeather,
                                           TotalCityCount = request.TotalCityCount
-                                      },
-                                      CityWeatherMessage.Identity);
+                                      });
                                       
         // Create a message to be processed by a logging actor
         var log = Message.Create(new LogCityWeatherMessage
                                  {
                                      Weather = cityWeather
-                                 },
-                                 LogCityWeatherMessage.Identity);
+                                 });
                                  
         // Return response messages
         return new ActorResult(response, log);
