@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using kino.Actors;
+using kino.Client;
 using kino.Connectivity;
 using kino.Diagnostics;
 using kino.Framework;
@@ -157,7 +158,7 @@ namespace kino.Tests.Actors
 
                 var messageOut = socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
 
-                CollectionAssert.AreEqual(messageIn.Identity.GetString(), messageOut.Identity.GetString());
+                CollectionAssert.AreEqual(messageIn.Identity, messageOut.Identity);
                 CollectionAssert.AreEqual(messageIn.Body, messageOut.Body);
                 CollectionAssert.AreEqual(messageIn.CorrelationId, messageOut.CorrelationId);
             }
@@ -262,7 +263,7 @@ namespace kino.Tests.Actors
 
                 var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
-                CollectionAssert.AreEqual(KinoMessages.Exception.Identity.GetString(), messageOut.Identity.GetString());
+                CollectionAssert.AreEqual(KinoMessages.Exception.Identity, messageOut.Identity);
                 CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
             }
             finally
@@ -308,10 +309,162 @@ namespace kino.Tests.Actors
             }
         }
 
-        private static bool IsAsyncMessage(AsyncMessageContext amc)
-        {           
-            return Unsafe.Equals(amc.OutMessages.First().Identity, MessageIdentifier.Create<AsyncMessage>().Identity);
+        [Test]
+        public void TestCallbackReceiverIdentities_AreCopiedFromIncomingMessageProcessedSync()
+        {
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IActor>(),
+                                          routerConfiguration,
+                                          messageTracer.Object,
+                                          logger);
+            actorHost.AssignActor(new EchoActor());
+            try
+            {
+                StartActorHost(actorHost);
+
+                var messageIn = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+                var callbackPoint = CallbackPoint.Create<SimpleMessage>();
+                var callbackReceiver = Guid.NewGuid().ToByteArray();
+                messageIn.RegisterCallbackPoint(callbackPoint.MessageIdentity, callbackPoint.MessageVersion, callbackReceiver);
+
+                var socket = actorHostSocketFactory.GetRoutableSocket();
+                socket.DeliverMessage(messageIn);
+
+                var messageOut = socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
+
+                CollectionAssert.AreEqual(messageIn.CallbackIdentity, messageOut.CallbackIdentity);
+                CollectionAssert.AreEqual(messageIn.CallbackVersion, messageOut.CallbackVersion);
+                CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
         }
+
+        [Test]
+        public void TestCallbackReceiverIdentities_AreCopiedFromIncomingMessageProcessedAsync()
+        {
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IActor>(),
+                                          routerConfiguration,
+                                          messageTracer.Object,
+                                          logger);
+            actorHost.AssignActor(new EchoActor());
+            try
+            {
+                StartActorHost(actorHost);
+
+                var delay = AsyncOp;
+                var asyncMessage = new AsyncMessage {Delay = delay};
+                var messageIn = (Message) Message.CreateFlowStartMessage(asyncMessage);
+                var callbackPoint = CallbackPoint.Create<SimpleMessage>();
+                var callbackReceiver = Guid.NewGuid().ToByteArray();
+                messageIn.RegisterCallbackPoint(callbackPoint.MessageIdentity, callbackPoint.MessageVersion, callbackReceiver);
+
+                actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
+
+                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
+
+                var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+
+                CollectionAssert.AreEqual(messageIn.CallbackIdentity, messageOut.CallbackIdentity);
+                CollectionAssert.AreEqual(messageIn.CallbackVersion, messageOut.CallbackVersion);
+                CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
+        }
+
+        [Test]
+        public void TestIfCallbackIsRegistered_SyncExceptionMessageIsDeliveredToCallbackReceiver()
+        {
+            var errorMessage = Guid.NewGuid().ToString();
+
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IActor>(),
+                                          routerConfiguration,
+                                          messageTracer.Object,
+                                          logger);
+            actorHost.AssignActor(new ExceptionActor());
+            try
+            {
+                StartActorHost(actorHost);
+
+                var messageIn = (Message) Message.CreateFlowStartMessage(new SimpleMessage {Content = errorMessage});
+                var callbackPoint = CallbackPoint.Create<SimpleMessage>();
+                var callbackReceiver = Guid.NewGuid().ToByteArray();
+                messageIn.RegisterCallbackPoint(callbackPoint.MessageIdentity, callbackPoint.MessageVersion, callbackReceiver);
+
+                var socket = actorHostSocketFactory.GetRoutableSocket();
+                socket.DeliverMessage(messageIn);
+
+                var messageOut = socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+
+                Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
+                CollectionAssert.AreEqual(KinoMessages.Exception.Identity, messageOut.Identity);
+                CollectionAssert.AreEqual(KinoMessages.Exception.Version, messageOut.CallbackVersion);
+                CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
+        }
+
+        [Test]
+        public void TestIfCallbackIsRegistered_AsyncExceptionMessageIsDeliveredToCallbackReceiver()
+        {
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IActor>(),
+                                          routerConfiguration,
+                                          messageTracer.Object,
+                                          logger);
+            actorHost.AssignActor(new ExceptionActor());
+            try
+            {
+                StartActorHost(actorHost);
+
+                var error = Guid.NewGuid().ToString();
+                var asyncMessage = new AsyncExceptionMessage
+                                   {
+                                       Delay = AsyncOp,
+                                       ErrorMessage = error
+                                   };
+                var messageIn = (Message) Message.CreateFlowStartMessage(asyncMessage);
+                var callbackPoint = CallbackPoint.Create<SimpleMessage>();
+                var callbackReceiver = Guid.NewGuid().ToByteArray();
+                messageIn.RegisterCallbackPoint(callbackPoint.MessageIdentity, callbackPoint.MessageVersion, callbackReceiver);
+
+                actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
+
+                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
+
+                var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+
+                Assert.AreEqual(error, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
+                CollectionAssert.AreEqual(KinoMessages.Exception.Identity, messageOut.Identity);
+                CollectionAssert.AreEqual(KinoMessages.Exception.Version, messageOut.CallbackVersion);
+                CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
+        }
+
+        private static bool IsAsyncMessage(AsyncMessageContext amc)
+            => Unsafe.Equals(amc.OutMessages.First().Identity, MessageIdentifier.Create<AsyncMessage>().Identity);
 
         private static void StartActorHost(IActorHost actorHost)
         {
