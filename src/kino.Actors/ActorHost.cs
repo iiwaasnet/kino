@@ -252,6 +252,7 @@ namespace kino.Actors
                                       {
                                           OutMessages = CreateTaskResultMessage(task).Messages,
                                           CallbackIdentity = GetTaskCallbackIdentity(task, messageIn),
+                                          CallbackVersion = GetTaskCallbackVersion(task, messageIn),
                                           CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
                                           CorrelationId = messageIn.CorrelationId,
                                           MessageHops = messageIn.GetMessageHops()

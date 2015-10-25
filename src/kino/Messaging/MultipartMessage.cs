@@ -40,16 +40,16 @@ namespace kino.Messaging
             }
             yield return EmptyFrame;
 
-            yield return GetTraceOptionsFrame(message);
-            yield return GetVersionFrame(message);
-            yield return GetMessageIdentityFrame(message);
-            yield return GetReceiverIdentityFrame(message);
-            yield return GetDistributionFrame(message);
-            yield return GetCorrelationIdFrame(message);
-            yield return GetCallbackVersionFrame(message);
-            yield return GetCallbackIdentityFrame(message);
-            yield return GetCallbackReceiverIdentityFrame(message);
-            yield return GetTTLFrame(message);
+            yield return GetTraceOptionsFrame(message);             // 12
+            yield return GetVersionFrame(message);                  // 11
+            yield return GetMessageIdentityFrame(message);          // 10
+            yield return GetReceiverIdentityFrame(message);         // 9
+            yield return GetDistributionFrame(message);             // 8
+            yield return GetCorrelationIdFrame(message);            // 7
+            yield return GetCallbackVersionFrame(message);          // 6
+            yield return GetCallbackIdentityFrame(message);         // 5
+            yield return GetCallbackReceiverIdentityFrame(message); // 4
+            yield return GetTTLFrame(message);                      // 3
 
             yield return EmptyFrame;
 
