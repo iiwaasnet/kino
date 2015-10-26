@@ -172,7 +172,6 @@ public class WeatherCollector : IActor
 ```
 
 Complete solution for Weather example could be found [here](https://github.com/iiwaasnet/weather).
-
 Another example, which uses Rendezvous service, could be found in [Samples](https://github.com/iiwaasnet/kino/tree/master/src/Samples) folder.
 
 
