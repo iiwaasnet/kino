@@ -3,8 +3,6 @@
 [![NuGet kino.Actors](https://badge.fury.io/nu/kino.Actors.svg)](http://badge.fury.io/nu/kino.Actors)
 [![NuGet kino.Rendezvous](https://badge.fury.io/nu/kino.Rendezvous.svg)](http://badge.fury.io/nu/kino.Rendezvous)
 
-[![Join Gitter Chat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iiwaasnet/kino)
-
 # Kino - framework for building Actor-like networks
 *(Project is in development)*
 
