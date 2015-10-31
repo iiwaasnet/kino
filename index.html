@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Kino by iiwaasnet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Kino</h1>
+      <h2 class="project-tagline">Kino - framework for building Actors networks</h2>
+      <a href="https://github.com/iiwaasnet/kino" class="btn">View on GitHub</a>
+      <a href="https://github.com/iiwaasnet/kino/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/iiwaasnet/kino/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p><a href="https://ci.appveyor.com/project/iiwaasnet/kino"><img src="https://ci.appveyor.com/api/projects/status/khn5imataa5uw4oj?svg=true" alt="Build status"></a>
+<a href="http://badge.fury.io/nu/kino.Client"><img src="https://badge.fury.io/nu/kino.Client.svg" alt="NuGet kino.Client"></a>
+<a href="http://badge.fury.io/nu/kino.Actors"><img src="https://badge.fury.io/nu/kino.Actors.svg" alt="NuGet kino.Actors"></a>
+<a href="http://badge.fury.io/nu/kino.Rendezvous"><img src="https://badge.fury.io/nu/kino.Rendezvous.svg" alt="NuGet kino.Rendezvous"></a></p>
+
+<h1>
+<a id="kino---framework-for-building-actor-like-networks" class="anchor" href="#kino---framework-for-building-actor-like-networks" aria-hidden="true"><span class="octicon octicon-link"></span></a>Kino - framework for building Actor-like networks</h1>
+
+<p><a href="https://gitter.im/iiwaasnet/kino?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/Join%20Chat.svg" alt="Join the chat at https://gitter.im/iiwaasnet/kino"></a>
+<em>(Project is in development)</em></p>
+
+<p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png" alt="Actors"></p>
+
+<p><strong>kino</strong> is an <em><a href="https://en.wikipedia.org/wiki/Actor_model">Actor</a>-like</em> framework, built to allow scaling of Actors over the network with low efforts for configuration management. A <em>kino</em> <strong>Actor</strong> registers itself by declaring message type(s) it can process. There is no hierarchy of Actors, as well as no logical addresses assigned to them.
+Actor's message handling method receives one input message and may send one or more output messages, either synchronously or asynchronously. It may produce no output as well.
+Actors are hosted by an ActorHost.</p>
+
+<p><strong>ActorHost</strong> receives messages and calls corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same <strong>ActorHost</strong>, share same receiving thread. This means that until previously fetched message is processed by an Actor, the next one will be waiting in the queue. ActorHost is a unit of in-proc scaling.</p>
+
+<p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png" alt="ActorHost"></p>
+
+<p>Every ActorHost connects to a MessageRouter.</p>
+
+<p><strong>MessageRouter</strong> is responsible for:</p>
+
+<ul>
+<li>registering all Actors, which are hosted by connected ActorHosts;</li>
+<li>type-based message routing to locally connected Actors;</li>
+<li>typed-based message routing to external, i.e. out-of-proc Actors, if no locally registered Actors are able to process the message.</li>
+</ul>
+
+<p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png" alt="MessageRouter"></p>
+
+<p>In order to be able to discover other Actors, MessageRouter connects to Rendezvous server.</p>
+
+<p><strong>Rendezvous</strong> server is a well-known point, where all MessageRouters connect, building up an Actors network. Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build up a <em>fault-tolerant cluster</em>. In this case, MessageRouter should be configured with endpoints of all Rendezvous servers from the cluster. On startup, Rendezvous synod <a href="http://www.xtreemfs.org/publications/flease_paper_ipdps.pdf">elects</a> a Leader, which than starts to broadcast:</p>
+
+<ul>
+<li>MessageRouters' registration messages, announcing which type of messages locally registered Actors are able to process;</li>
+<li>Ping message, to check nodes availability;</li>
+<li>Pong response from all the registered nodes to all registered nodes.</li>
+</ul>
+
+<p>In case Rendezvous Leader changes, MessageRouter do a round-robin search among all configured endpoints to connect to a new Leader.  Dynamic reconfiguration of Rendezvous cluster is not supported. Nevertheless, the cluster can be stopped. In this case, although Actors will still exchange messages, configuration changes will not be propagated to all nodes of the network.</p>
+
+<p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/Rendezvous.png" alt="Rendezvous"></p>
+
+<p><strong>MessageHub</strong> is one of the ways to send messages into Actors network. It is a <em>starting point of the flow</em>. First message sent from MessageHub gets CorrelationId assigned, which is then copied to any other message, created during the message flow. It is possible to create a <em>callback point</em>, which is defined by message type and caller address. 
+Whenever an Actor responds with the message, which type corresponds to the one registered in the callback, it is immediately routed back to the address in the callback point.
+Thus, clients may emulate synchronous calls, waiting for the callback to be resolved. Callback may return back a message or an exception, whatever happens first.</p>
+
+<p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/Callback.png" alt="Callback"></p>
+
+<h2>
+<a id="example" class="anchor" href="#example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example</h2>
+
+<p>We've got a very important task to find out the cities with highest and lowest temperature.</p>
+
+<p>How we are going to do that:</p>
+
+<ul>
+<li>get list of all cities</li>
+<li>retrieve current weather for each city from the list</li>
+<li>collect all weather data and find cities with highest and lowest temperature</li>
+</ul>
+
+<p>Let's define logical flow of the messages for this task:</p>
+
+<pre><code>In Message                        Action                                  Out Message
+
+                                   Send                                -&gt; {List of Cities}
+{List of Cities}                -&gt; For each City Send                  -&gt; {Weather Request for a City}
+{Weather Request for a City}    -&gt; Get Current Weather for a City      -&gt; [{City Weather}, {Log City Weather}]
+{Log City Weather}              -&gt; Log City Weather
+{City Weather}                  -&gt; Aggregate City Weather              -&gt; {Cities with Highest and Lowest Temperature}
+</code></pre>
+
+<p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/Weather.png" alt="pic"></p>
+
+<p>Nevertheless, there are some questions to this design:</p>
+
+<ul>
+<li>how does <strong>WeatherAggregator</strong> actor group all messages together for each client request?</li>
+<li>how does it know, when the last message arrives?</li>
+<li>if we host several instances of <strong>WeatherAggregator</strong> actor, which one will be responsible for grouping up final result?</li>
+</ul>
+
+<p>The first problem is solved by using <strong>CorrelationId</strong>, which is generated once for initial message and then copied onto every other message within the same flow. Additionally, in every <strong>CityWeather</strong> message we provide the <strong>Total Number</strong> of all messages to be expected. 
+Now, we can use combination of <strong>CorrelationId</strong> and <strong>Total Number</strong> properties to aggregate all the messages of current flow.
+To solve the last problem, we use some central storage, where all instances of <strong>CityWeather</strong> actor save intermediate results:</p>
+
+<ul>
+<li>what are the currently known highest and lowest temperatures;</li>
+<li>how many messages from the <strong>Total Number</strong> of expected messages are already processed.</li>
+</ul>
+
+<p>Instance, which updates the shared storage with the last message of the flow, will send the resulting message for the client.</p>
+
+<p>Now, some code. </p>
+
+<h3>
+<a id="client" class="anchor" href="#client" aria-hidden="true"><span class="octicon octicon-link"></span></a>Client</h3>
+
+<p><a href="https://github.com/iiwaasnet/weather/blob/master/src/weather.stat/Scheduler/WeatherRequestScheduler.cs">WeatherRequestScheduler.cs</a></p>
+
+<div class="highlight highlight-source-cs"><pre><span class="pl-c">// Read list of cities</span>
+<span class="pl-k">var</span> cities = (<span class="pl-k">await</span> GetCityList()).Select(c =&gt; c.Name);
+
+<span class="pl-c">// Create initial message with CorrelationId assigned to it</span>
+<span class="pl-k">var</span> message = Message.CreateFlowStartMessage(<span class="pl-k">new</span> RequestWeatherHighlightsMessage
+                                             {
+                                                 Cities = cities
+                                             });
+message.TraceOptions = MessageTraceOptions.Routing;
+
+<span class="pl-c">// Define callback with result message</span>
+<span class="pl-k">var</span> callback = CallbackPoint.Create&lt;WeatherHighlightsMessage&gt;();
+
+<span class="pl-c">// Send message into actors network and specify wait timeout</span>
+<span class="pl-k">var</span> promise = messageHub.EnqueueRequest(message, callback, TimeSpan.FromMinutes(<span class="pl-c1">1</span>));
+
+<span class="pl-c">// Wait for result</span>
+<span class="pl-k">var</span> weatherAggregates = (<span class="pl-k">await</span> promise.GetResponse()).GetPayload&lt;WeatherHighlightsMessage&gt;();
+
+<span class="pl-c">// Print result</span>
+WriteLine($<span class="pl-s"><span class="pl-pds">"</span>Lowest T: {weatherAggregates.LowestTemperature.CityName} {weatherAggregates.LowestTemperature.Temperature} C <span class="pl-pds">"</span></span> +
+          $<span class="pl-s"><span class="pl-pds">"</span>Highest T: {weatherAggregates.HighestTemperature.CityName} {weatherAggregates.HighestTemperature.Temperature} C. <span class="pl-pds">"</span></span>);
+</pre></div>
+
+<h3>
+<a id="sample-message-declaration" class="anchor" href="#sample-message-declaration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sample Message declaration</h3>
+
+<div class="highlight highlight-source-cs"><pre>[ProtoContract]
+<span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-en">RequestWeatherHighlightsMessage</span>: <span class="pl-k">Payload</span>
+{
+    <span class="pl-k">private</span> <span class="pl-k">static</span> <span class="pl-k">byte</span>[] MessageIdentity = <span class="pl-s"><span class="pl-pds">"</span>REQWHIGHLT<span class="pl-pds">"</span></span>.GetBytes();
+    <span class="pl-k">private</span> <span class="pl-k">static</span> <span class="pl-k">byte</span>[] MessageVersion = <span class="pl-s"><span class="pl-pds">"</span>1.0<span class="pl-pds">"</span></span>.GetBytes();
+
+    [ProtoMember(<span class="pl-c1">1</span>)]
+    <span class="pl-k">public</span> IEnumerable&lt;<span class="pl-k">string</span>&gt; <span class="pl-en">Cities</span> { <span class="pl-k">get</span>; <span class="pl-k">set</span>; }
+
+    <span class="pl-k">public</span> <span class="pl-k">override</span> <span class="pl-k">byte</span>[] Version =&gt; MessageVersion;
+    <span class="pl-k">public</span> <span class="pl-k">override</span> <span class="pl-k">byte</span>[] Identity =&gt; MessageIdentity;
+}</pre></div>
+
+<p>Default serializer for all messages, other than Exception, <a href="https://github.com/mgravell/protobuf-net">protobuf-net</a>.</p>
+
+<h2>
+<a id="actor" class="anchor" href="#actor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Actor</h2>
+
+<p>Here is the code for one of the actors, responsible for getting current weather in a city:</p>
+
+<div class="highlight highlight-source-cs"><pre><span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-en">WeatherCollector</span> : <span class="pl-k">IActor</span>
+{
+    <span class="pl-c">// Method, which handles RequestCityWeatherMessage message</span>
+    [MessageHandlerDefinition(typeof (RequestCityWeatherMessage))]
+    <span class="pl-k">private</span> <span class="pl-k">async</span> Task&lt;IActorResult&gt; <span class="pl-en">Handler</span>(<span class="pl-k">IMessage</span> <span class="pl-smi">message</span>)
+    {
+        <span class="pl-c">// Get message payload</span>
+        <span class="pl-k">var</span> request = message.GetPayload&lt;RequestCityWeatherMessage&gt;();
+
+        <span class="pl-c">// Request weather from external service and wait for result</span>
+        <span class="pl-k">var</span> weather = <span class="pl-k">await</span> GetCityWeather(request.CityName);        
+        <span class="pl-k">var</span> cityWeather = <span class="pl-k">new</span> CityWeather
+                          {
+                              CityName = request.CityName,
+                              Temperature = weather?.Main?.Temp
+                          };
+
+        <span class="pl-c">// Create CityWeatherMessage message with current weather in the city</span>
+        <span class="pl-c">// Forward TotalCityCount to the next actor</span>
+        <span class="pl-k">var</span> response = Message.Create(<span class="pl-k">new</span> CityWeatherMessage
+                                      {
+                                          Weather = cityWeather,
+                                          TotalCityCount = request.TotalCityCount
+                                      });
+
+        <span class="pl-c">// Create a message to be processed by a logging actor</span>
+        <span class="pl-k">var</span> log = Message.Create(<span class="pl-k">new</span> LogCityWeatherMessage
+                                 {
+                                     Weather = cityWeather
+                                 });
+
+        <span class="pl-c">// Return response messages</span>
+        <span class="pl-k">return</span> <span class="pl-k">new</span> ActorResult(response, log);
+    }
+}</pre></div>
+
+<p>Complete solution for Weather example could be found <a href="https://github.com/iiwaasnet/weather">here</a>.
+Another example, which uses Rendezvous service, could be found in <a href="https://github.com/iiwaasnet/kino/tree/master/src/Samples">Samples</a> folder.</p>
+
+<p>Powered by <strong><a href="https://github.com/zeromq/netmq">NetMQ</a></strong></p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/iiwaasnet/kino">Kino</a> is maintained by <a href="https://github.com/iiwaasnet">iiwaasnet</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
