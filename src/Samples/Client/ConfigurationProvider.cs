@@ -17,11 +17,8 @@ namespace Client
         }
 
         public IEnumerable<kino.Connectivity.RendezvousEndpoint> GetRendezvousEndpointsConfiguration()
-            => appConfig.RendezvousServers.Select(rs => new kino.Connectivity.RendezvousEndpoint
-                                                        {
-                                                            MulticastUri = new Uri(rs.BroadcastUri),
-                                                            UnicastUri = new Uri(rs.UnicastUri)
-                                                        });
+            => appConfig.RendezvousServers.Select(rs => new kino.Connectivity.RendezvousEndpoint(new Uri(rs.UnicastUri),
+                                                                                                 new Uri(rs.BroadcastUri)));
 
         public RouterConfiguration GetRouterConfiguration()
             => new RouterConfiguration

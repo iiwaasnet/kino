@@ -20,7 +20,7 @@ namespace kino.Connectivity
         private readonly ManualResetEventSlim pingReceived;
         private readonly ManualResetEventSlim newRendezvousConfiguration;
         private readonly IClusterMembership clusterMembership;
-        private readonly ClusterMembershipConfiguration membershipConfiguration;        
+        private readonly ClusterMembershipConfiguration membershipConfiguration;
 
         public ClusterMessageListener(IRendezvousCluster rendezvousCluster,
                                       ISocketFactory socketFactory,
@@ -163,11 +163,8 @@ namespace kino.Connectivity
                 var payload = message.GetPayload<RendezvousConfigurationChangedMessage>();
                 rendezvousCluster.Reconfigure(payload
                                                   .RendezvousNodes
-                                                  .Select(rn => new RendezvousEndpoint
-                                                                {
-                                                                    UnicastUri = new Uri(rn.UnicastUri),
-                                                                    MulticastUri = new Uri(rn.MulticastUri)
-                                                                }));
+                                                  .Select(rn => new RendezvousEndpoint(new Uri(rn.UnicastUri),
+                                                                                       new Uri(rn.MulticastUri))));
                 newRendezvousConfiguration.Set();
             }
 
@@ -180,11 +177,8 @@ namespace kino.Connectivity
             if (shouldHandle)
             {
                 var payload = message.GetPayload<RendezvousNotLeaderMessage>();
-                var newLeader = new RendezvousEndpoint
-                                {
-                                    MulticastUri = new Uri(payload.NewLeader.MulticastUri),
-                                    UnicastUri = new Uri(payload.NewLeader.UnicastUri)
-                                };
+                var newLeader = new RendezvousEndpoint(new Uri(payload.NewLeader.UnicastUri),
+                                                       new Uri(payload.NewLeader.MulticastUri));
                 if (!rendezvousCluster.GetCurrentRendezvousServer().Equals(newLeader))
                 {
                     rendezvousCluster.SetCurrentRendezvousServer(newLeader);

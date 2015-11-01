@@ -16,7 +16,7 @@ namespace kino.Connectivity
         }
 
         public Node(string uri, byte[] socketIdentity)
-            :this(new Uri(uri), socketIdentity)
+            : this(new Uri(uri), socketIdentity)
         {
         }
 
@@ -61,7 +61,7 @@ namespace kino.Connectivity
         {
             unchecked
             {
-                return (Uri.GetHashCode() * 397) ^ SocketIdentity[0];
+                return (Uri.GetHashCode() * 397) ^ SocketIdentity.ComputeHash();
             }
         }
 

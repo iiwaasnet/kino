@@ -56,7 +56,7 @@ namespace kino.Connectivity
         {
             unchecked
             {
-                return (Uri.GetHashCode() * 397) ^ Identity.Length;
+                return (Uri.GetHashCode() * 397) ^ Identity.ComputeHash();
             }
         }
 

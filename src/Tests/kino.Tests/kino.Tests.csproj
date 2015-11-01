@@ -34,6 +34,10 @@
       <HintPath>..\..\packages\AsyncIO.0.1.18.0\lib\net40\AsyncIO.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="C5, Version=2.3.5280.26713, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\C5.2.3.0.1\lib\net40\C5.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="JetBrains.Annotations, Version=9.2.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\..\packages\JetBrains.Annotations.9.2.0\lib\net20\JetBrains.Annotations.dll</HintPath>
       <Private>True</Private>
@@ -66,6 +70,7 @@
   <ItemGroup>
     <Compile Include="Actors\ActorHandlersMapTests.cs" />
     <Compile Include="Actors\ActorHostTests.cs" />
+    <Compile Include="CallbackHandlerStackPerformanceTests.cs" />
     <Compile Include="Connectivity\ClusterMessageListenetTests.cs" />
     <Compile Include="Connectivity\MessageRouterTests.cs" />
     <Compile Include="Client\MessageTracerTests.cs" />
@@ -90,7 +95,6 @@
     <Compile Include="Actors\Setup\EchoActor.cs" />
     <Compile Include="Actors\Setup\SimpleMessage.cs" />
     <Compile Include="Actors\Setup\StubSocket.cs" />
-    <Compile Include="Client\CallbackHandlerKeyTests.cs" />
     <Compile Include="Client\CallbackHandlerStackTests.cs" />
     <Compile Include="Client\MessagHubTests.cs" />
     <Compile Include="Helpers\BlockingCollectionExtensions.cs" />

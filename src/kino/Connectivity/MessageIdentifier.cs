@@ -17,12 +17,12 @@ namespace kino.Connectivity
         }
 
         internal MessageIdentifier(byte[] identity)
-            :this(IdentityExtensions.Empty, identity)
+            : this(IdentityExtensions.Empty, identity)
         {
         }
 
         public static MessageIdentifier Create<T>()
-            where T: IMessageIdentifier, new()
+            where T : IMessageIdentifier, new()
         {
             var message = new T();
             return new MessageIdentifier(message.Version, message.Identity);
@@ -30,7 +30,7 @@ namespace kino.Connectivity
 
         public static MessageIdentifier Create(Type messageType)
         {
-            var message = (IMessageIdentifier)Activator.CreateInstance(messageType);
+            var message = (IMessageIdentifier) Activator.CreateInstance(messageType);
             return new MessageIdentifier(message.Version, message.Identity);
         }
 
@@ -55,9 +55,7 @@ namespace kino.Connectivity
         {
             unchecked
             {
-                var hashCode = Version.Length;
-                hashCode = (hashCode * 397) ^ Identity.Length;
-                return hashCode;
+                return (Identity.ComputeHash() * 397) ^ Version.ComputeHash();
             }
         }
 

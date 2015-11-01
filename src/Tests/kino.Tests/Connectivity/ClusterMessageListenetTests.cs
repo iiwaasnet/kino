@@ -43,11 +43,8 @@ namespace kino.Tests.Connectivity
                                       ScaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity()),
                                       RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
                                   };
-            var rendezvousEndpoint = new RendezvousEndpoint
-                                     {
-                                         UnicastUri = new Uri("tcp://127.0.0.1:5000"),
-                                         MulticastUri = new Uri("tcp://127.0.0.1:5000")
-                                     };
+            var rendezvousEndpoint = new RendezvousEndpoint(new Uri("tcp://127.0.0.1:5000"),
+                                                            new Uri("tcp://127.0.0.1:5000"));
             rendezvousCluster.Setup(m => m.GetCurrentRendezvousServer()).Returns(rendezvousEndpoint);
             clusterMembership = new Mock<IClusterMembership>();
             clusterMembershipConfiguration = new ClusterMembershipConfiguration
@@ -272,11 +269,8 @@ namespace kino.Tests.Connectivity
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
 
-            var newRendezouvEndpoint = new RendezvousEndpoint
-                                       {
-                                           UnicastUri = new Uri("tcp://192.0.0.1:8000"),
-                                           MulticastUri = new Uri("tcp://192.0.0.1:8001")
-                                       };
+            var newRendezouvEndpoint = new RendezvousEndpoint(new Uri("tcp://192.0.0.1:8000"),
+                                                              new Uri("tcp://192.0.0.1:8001"));
             var message = Message.Create(new RendezvousConfigurationChangedMessage
                                          {
                                              RendezvousNodes = new[]

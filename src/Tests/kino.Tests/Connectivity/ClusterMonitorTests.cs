@@ -41,11 +41,8 @@ namespace kino.Tests.Connectivity
                                       ScaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity()),
                                       RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
                                   };
-            var rendezvousEndpoint = new RendezvousEndpoint
-                                     {
-                                         UnicastUri = new Uri("tcp://127.0.0.1:5000"),
-                                         MulticastUri = new Uri("tcp://127.0.0.1:5000")
-                                     };
+            var rendezvousEndpoint = new RendezvousEndpoint(new Uri("tcp://127.0.0.1:5000"),
+                                                            new Uri("tcp://127.0.0.1:5000"));
             rendezvousCluster.Setup(m => m.GetCurrentRendezvousServer()).Returns(rendezvousEndpoint);
             clusterMembership = new Mock<IClusterMembership>();
             clusterMembershipConfiguration = new ClusterMembershipConfiguration

@@ -6,10 +6,13 @@ namespace kino.Messaging
     public class CorrelationId : IEquatable<CorrelationId>
     {
         public static readonly byte[] Infrastructural = {0, 0, 0};
+        private readonly int hashCode;
 
         public CorrelationId(byte[] id)
         {
             Value = id;
+
+            hashCode = CalculateHashCode();
         }
 
         public override bool Equals(object obj)
@@ -30,14 +33,10 @@ namespace kino.Messaging
         }
 
         public override int GetHashCode()
-        {
-            unchecked
-            {
-                var hashCode = (Value?.Length ?? 0);
+            => hashCode;
 
-                return hashCode;
-            }
-        }
+        private int CalculateHashCode()
+            => Value.ComputeHash();
 
         public bool Equals(CorrelationId other)
         {

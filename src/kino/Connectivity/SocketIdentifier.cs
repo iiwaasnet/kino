@@ -5,9 +5,13 @@ namespace kino.Connectivity
 {
     public class SocketIdentifier : IEquatable<SocketIdentifier>
     {
+        private readonly int hashCode;
+
         public SocketIdentifier(byte[] identity)
         {
             Identity = identity;
+
+            hashCode = CalculateHashCode();
         }
 
         public static byte[] CreateIdentity()
@@ -31,9 +35,10 @@ namespace kino.Connectivity
         }
 
         public override int GetHashCode()
-        {
-            return Identity?.Length * 397 ?? 0;
-        }
+            => hashCode;
+
+        private int CalculateHashCode()
+            => Identity.ComputeHash();
 
         public bool Equals(SocketIdentifier other)
         {

@@ -30,16 +30,13 @@ namespace kino.Client
 
         public void Push(CorrelationId correlation, IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers)
         {
-            IDictionary<MessageIdentifier, IPromise> messageHandlers;
-            if (handlers.TryGetValue(correlation, out messageHandlers))
-            {
-                throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
-            }
-
             var delayedItem = expirationQueue.Delay(correlation, promise.ExpireAfter);
             ((Promise)promise).SetExpiration(delayedItem);
 
-            handlers[correlation] = messageIdentifiers.ToDictionary(mp => mp, mp => promise);
+            if (!handlers.TryAdd(correlation, messageIdentifiers.ToDictionary(mp => mp, mp => promise)))
+            {
+                throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
+            }
         }
 
         public IPromise Pop(CallbackHandlerKey callbackIdentifier)
