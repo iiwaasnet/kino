@@ -70,7 +70,6 @@
   <ItemGroup>
     <Compile Include="Actors\ActorHandlersMapTests.cs" />
     <Compile Include="Actors\ActorHostTests.cs" />
-    <Compile Include="CallbackHandlerStackPerformanceTests.cs" />
     <Compile Include="Connectivity\ClusterMessageListenetTests.cs" />
     <Compile Include="Connectivity\MessageRouterTests.cs" />
     <Compile Include="Client\MessageTracerTests.cs" />

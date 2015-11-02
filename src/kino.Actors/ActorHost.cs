@@ -144,6 +144,7 @@ namespace kino.Actors
                                                                  messageContext.CallbackReceiverIdentity);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
                                 messageOut.CopyMessageHops(messageContext.MessageHops);
+                                messageOut.TraceOptions = messageContext.TraceOptions;
 
                                 localSocket.SendMessage(messageOut);
 
@@ -223,6 +224,7 @@ namespace kino.Actors
                                                      messageIn.CallbackReceiverIdentity);
                     messageOut.SetCorrelationId(messageIn.CorrelationId);
                     messageOut.CopyMessageHops(messageIn.GetMessageHops());
+                    messageOut.TraceOptions = messageIn.TraceOptions;
 
                     localSocket.SendMessage(messageOut);
 
@@ -242,6 +244,7 @@ namespace kino.Actors
             messageOut.RegisterCallbackPoint(KinoMessages.Exception.Identity, KinoMessages.Exception.Version, messageIn.CallbackReceiverIdentity);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageHops(messageIn.GetMessageHops());
+            messageOut.TraceOptions = messageIn.TraceOptions;
 
             localSocket.SendMessage(messageOut);
         }
@@ -255,7 +258,8 @@ namespace kino.Actors
                                           CallbackVersion = GetTaskCallbackVersion(task, messageIn),
                                           CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
                                           CorrelationId = messageIn.CorrelationId,
-                                          MessageHops = messageIn.GetMessageHops()
+                                          MessageHops = messageIn.GetMessageHops(),
+                                          TraceOptions = messageIn.TraceOptions
                                       };
             asyncQueue.Enqueue(asyncMessageContext, token);
         }

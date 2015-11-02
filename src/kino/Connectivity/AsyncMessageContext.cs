@@ -11,5 +11,6 @@ namespace kino.Connectivity
         public byte[] CallbackVersion { get; internal set; }
         public byte[] CallbackReceiverIdentity { get; internal set; }
         public IEnumerable<SocketEndpoint> MessageHops { get; internal set; }
+        public MessageTraceOptions TraceOptions { get; set; }
     }
 }

@@ -4,24 +4,7 @@
     {
         public static int ComputeHash(this byte[] data)
         {
-            unchecked
-            {
-                const int p = 16777619;
-                var hash = (int) 2166136261;
-                var length = data.Length;
-
-                for (var i = 0; i < length; i++)
-                {
-                    hash = (hash ^ data[i]) * p;
-                }
-
-                hash += hash << 13;
-                hash ^= hash >> 7;
-                hash += hash << 3;
-                hash ^= hash >> 17;
-                hash += hash << 5;
-                return hash;
-            }
+            return data?.Length ?? 0;
         }
 
         public static unsafe bool Equals(byte[] a1, byte[] a2)
