@@ -103,9 +103,17 @@ namespace kino.Tests.Actors
                                                     })
                                       .ToArray()
                               };
-                var regMessage = Message.Create(payload);
+                var regMessage = registration.GetPayload<RegisterInternalMessageRouteMessage>();
 
-                CollectionAssert.AreEqual(registration.Body, regMessage.Body);
+                CollectionAssert.AreEqual(payload.Identity, regMessage.Identity);
+                CollectionAssert.AreEqual(payload.Version, regMessage.Version);
+                CollectionAssert.AreEqual(payload.SocketIdentity, regMessage.SocketIdentity);
+                Assert.AreEqual(payload.MessageContracts.Length, regMessage.MessageContracts.Length);
+                Assert.AreEqual(payload.MessageContracts.Length,
+                                payload.MessageContracts
+                                       .Select(mc => new MessageIdentifier(mc.Version, mc.Identity))
+                                       .Intersect(regMessage.MessageContracts
+                                                            .Select(mc => new MessageIdentifier(mc.Version, mc.Identity))).Count());
             }
             finally
             {
