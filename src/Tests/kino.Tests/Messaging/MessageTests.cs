@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using kino.Connectivity;
 using kino.Messaging;
 using kino.Tests.Actors.Setup;
@@ -48,6 +49,7 @@ namespace kino.Tests.Messaging
         public void TestPushRouterAddress_AddsOneMessageHop()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            message.TraceOptions = MessageTraceOptions.Routing;
             var socketEnpoints = new[]
                                  {
                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
@@ -62,9 +64,36 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
+        [TestCase(MessageTraceOptions.Routing, true)]
+        [TestCase(MessageTraceOptions.None, false)]
+        public void TestRouterAddressAddeToMessageHops_OnlyIfRouteTracingIsEnabled(MessageTraceOptions traceOptions, bool hopsAdded)
+        {
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            message.TraceOptions = traceOptions;
+            var socketEnpoints = new[]
+                                 {
+                                     new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
+                                     new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray())
+                                 };
+            foreach (var socketEndpoint in socketEnpoints)
+            {
+                message.PushRouterAddress(socketEndpoint);
+            }
+            if (hopsAdded)
+            {
+                CollectionAssert.AreEqual(socketEnpoints, message.GetMessageHops());
+            }
+            else
+            {
+                CollectionAssert.AreEqual(Enumerable.Empty<SocketEndpoint>(), message.GetMessageHops());
+            }
+        }
+
+        [Test]
         public void TestMessageHops_AreConsistentlyTransferredViaMultipartMessage()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            message.TraceOptions = MessageTraceOptions.Routing;
             var socketEnpoints = new[]
                                  {
                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),

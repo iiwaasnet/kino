@@ -64,7 +64,12 @@ namespace kino.Messaging
         }
 
         internal void PushRouterAddress(SocketEndpoint scaleOutAddress)
-            => messageHops.Add(scaleOutAddress);
+        {
+            if (TraceOptions == MessageTraceOptions.Routing)
+            {
+                messageHops.Add(scaleOutAddress);
+            }
+        }
 
         internal IEnumerable<SocketEndpoint> GetMessageHops()
             => messageHops.Hops;
