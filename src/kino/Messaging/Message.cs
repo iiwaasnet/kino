@@ -11,12 +11,13 @@ namespace kino.Messaging
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
 
         private object payload;
-        private readonly MessageHops messageHops;
+        private readonly List<SocketEndpoint> hops;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
         private Message(IPayload payload, DistributionPattern distributionPattern)
         {
-            messageHops = new MessageHops();
+            hops = new List<SocketEndpoint>();
+            CallbackPoint = Enumerable.Empty<MessageIdentifier>();
             Body = Serialize(payload);
             Version = payload.Version;
             Identity = payload.Identity;
@@ -37,27 +38,30 @@ namespace kino.Messaging
 
         internal Message(MultipartMessage multipartMessage)
         {
-            messageHops = new MessageHops(multipartMessage.GetMessageRoute());
+            hops = new List<SocketEndpoint>(multipartMessage.GetMessageHops());
             Body = multipartMessage.GetMessageBody();
             Identity = multipartMessage.GetMessageIdentity();
             Version = multipartMessage.GetMessageVersion();
             TTL = multipartMessage.GetMessageTTL().GetTimeSpan();
             Distribution = multipartMessage.GetMessageDistributionPattern().GetEnumFromInt<DistributionPattern>();
-            CallbackIdentity = multipartMessage.GetCallbackIdentity();
-            CallbackVersion = multipartMessage.GetCallbackVersion();
+            CallbackPoint = multipartMessage.GetCallbackPoints();
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
             CorrelationId = multipartMessage.GetCorrelationId();
             TraceOptions = multipartMessage.GetTraceOptions().GetEnumFromLong<MessageTraceOptions>();
         }
 
-        internal void RegisterCallbackPoint(byte[] callbackIdentity, byte[] callbackVersion, byte[] callbackReceiverIdentity)
+        internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, MessageIdentifier callbackMessageIdentifier)
+        {
+            RegisterCallbackPoint(callbackReceiverIdentity, new[] {callbackMessageIdentifier});
+        }
+
+        internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, IEnumerable<MessageIdentifier> callbackMessageIdentifiers)
         {
             CallbackReceiverIdentity = callbackReceiverIdentity;
-            CallbackIdentity = callbackIdentity;
-            CallbackVersion = callbackVersion;
+            CallbackPoint = callbackMessageIdentifiers;
 
-            if (Unsafe.Equals(Identity, CallbackIdentity) && Unsafe.Equals(Version, CallbackVersion))
+            if (CallbackPoint.Any(identifier => Unsafe.Equals(Identity, identifier.Identity) && Unsafe.Equals(Version, identifier.Version)))
             {
                 ReceiverIdentity = CallbackReceiverIdentity;
             }
@@ -67,20 +71,17 @@ namespace kino.Messaging
         {
             if (TraceOptions == MessageTraceOptions.Routing)
             {
-                messageHops.Add(scaleOutAddress);
+                hops.Add(scaleOutAddress);
             }
-        }
+        } 
 
         internal IEnumerable<SocketEndpoint> GetMessageHops()
-            => messageHops.Hops;
-
-        internal byte[] GetMessageHopsBytes()
-            => messageHops.GetBytes();
+            => hops;
 
         internal void CopyMessageHops(IEnumerable<SocketEndpoint> messageHops)
         {
-            this.messageHops.Clear();
-            this.messageHops.AddRange(messageHops);
+            hops.Clear();
+            hops.AddRange(messageHops);
         }
 
         internal void SetCorrelationId(byte[] correlationId)
@@ -110,8 +111,7 @@ namespace kino.Messaging
         public DistributionPattern Distribution { get; }
         public byte[] CorrelationId { get; private set; }
         public byte[] ReceiverIdentity { get; private set; }
-        public byte[] CallbackIdentity { get; private set; }
-        public byte[] CallbackVersion { get; private set; }
+        public IEnumerable<MessageIdentifier> CallbackPoint { get; private set; }
         public byte[] CallbackReceiverIdentity { get; private set; }
         public byte[] SocketIdentity { get; private set; }
         public MessageTraceOptions TraceOptions { get; set; }

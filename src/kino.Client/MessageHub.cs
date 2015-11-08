@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Connectivity;
@@ -25,6 +26,7 @@ namespace kino.Client
         private readonly ILogger logger;
         private readonly IMessageTracer messageTracer;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
+        private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception.Version, KinoMessages.Exception.Identity);
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
@@ -86,18 +88,12 @@ namespace kino.Client
                                 var promise = callbackRegistration.Promise;
                                 var callbackPoint = callbackRegistration.CallbackPoint;
 
-                                message.RegisterCallbackPoint(callbackPoint.MessageIdentity,
-                                                              callbackPoint.MessageVersion,
-                                                              receivingSocketIdentity);
+                                message.RegisterCallbackPoint(receivingSocketIdentity, callbackPoint.MessageIdentifiers);
 
                                 callbackHandlers.Push(new CorrelationId(message.CorrelationId),
                                                       promise,
-                                                      new[]
-                                                      {
-                                                          new MessageIdentifier(callbackPoint.MessageVersion, callbackPoint.MessageIdentity),
-                                                          //TODO: Change to ExceptionMessage.Version
-                                                          new MessageIdentifier(KinoMessages.Exception.Version, KinoMessages.Exception.Identity)
-                                                      });
+                                                      callbackPoint.MessageIdentifiers
+                                                                   .Concat(new[] {ExceptionMessageIdentifier}));
                                 messageTracer.CallbackRegistered(message);
                             }
                             socket.SendMessage(message);

@@ -139,9 +139,7 @@ namespace kino.Actors
                         {
                             foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
                             {
-                                messageOut.RegisterCallbackPoint(messageContext.CallbackIdentity,
-                                                                 messageContext.CallbackVersion,
-                                                                 messageContext.CallbackReceiverIdentity);
+                                messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverIdentity, messageContext.CallbackPoint);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
                                 messageOut.CopyMessageHops(messageContext.MessageHops);
                                 messageOut.TraceOptions = messageContext.TraceOptions;
@@ -219,9 +217,7 @@ namespace kino.Actors
 
                 foreach (var messageOut in response.Cast<Message>())
                 {
-                    messageOut.RegisterCallbackPoint(GetTaskCallbackIdentity(task, messageIn),
-                                                     GetTaskCallbackVersion(task, messageIn),
-                                                     messageIn.CallbackReceiverIdentity);
+                    messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
                     messageOut.SetCorrelationId(messageIn.CorrelationId);
                     messageOut.CopyMessageHops(messageIn.GetMessageHops());
                     messageOut.TraceOptions = messageIn.TraceOptions;
@@ -241,7 +237,7 @@ namespace kino.Actors
         private static void CallbackException(ISocket localSocket, Exception err, Message messageIn)
         {
             var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err});
-            messageOut.RegisterCallbackPoint(KinoMessages.Exception.Identity, KinoMessages.Exception.Version, messageIn.CallbackReceiverIdentity);
+            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageHops(messageIn.GetMessageHops());
             messageOut.TraceOptions = messageIn.TraceOptions;
@@ -254,8 +250,7 @@ namespace kino.Actors
             var asyncMessageContext = new AsyncMessageContext
                                       {
                                           OutMessages = CreateTaskResultMessage(task).Messages,
-                                          CallbackIdentity = GetTaskCallbackIdentity(task, messageIn),
-                                          CallbackVersion = GetTaskCallbackVersion(task, messageIn),
+                                          CallbackPoint = messageIn.CallbackPoint,
                                           CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
                                           CorrelationId = messageIn.CorrelationId,
                                           MessageHops = messageIn.GetMessageHops(),
@@ -264,19 +259,19 @@ namespace kino.Actors
             asyncQueue.Enqueue(asyncMessageContext, token);
         }
 
-        private static byte[] GetTaskCallbackIdentity(Task task, IMessage messageIn)
-        {
-            return task.IsCanceled || task.IsFaulted
-                       ? KinoMessages.Exception.Identity
-                       : messageIn.CallbackIdentity;
-        }
+        //private static IEnumerable<MessageIdentifier> GetTaskCallback(Task task, IMessage messageIn)
+        //{
+        //    return task.IsCanceled || task.IsFaulted
+        //               ? KinoMessages.Exception.Identity
+        //               : messageIn.CallbackIdentity;
+        //}
 
-        private static byte[] GetTaskCallbackVersion(Task task, IMessage messageIn)
-        {
-            return task.IsCanceled || task.IsFaulted
-                       ? KinoMessages.Exception.Version
-                       : messageIn.CallbackVersion;
-        }
+        //private static byte[] GetTaskCallbackVersion(Task task, IMessage messageIn)
+        //{
+        //    return task.IsCanceled || task.IsFaulted
+        //               ? KinoMessages.Exception.Version
+        //               : messageIn.CallbackVersion;
+        //}
 
         private static IActorResult CreateTaskResultMessage(Task<IActorResult> task)
         {

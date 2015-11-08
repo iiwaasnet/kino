@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using kino.Connectivity;
 using kino.Framework;
 using NetMQ;
 
@@ -32,16 +34,26 @@ namespace kino.Messaging
             yield return GetSocketIdentity(message);
 
             yield return EmptyFrame;
-
-            yield return GetMessageRouteFrame(message); // 13
+            foreach (var hop in message.GetMessageHops())
+            {
+                yield return hop.Uri.ToSocketAddress().GetBytes();
+                yield return hop.Identity;
+            }
+            foreach (var callback in message.CallbackPoint)
+            {
+                yield return callback.Version;
+                yield return callback.Identity;
+            }
+            yield return GetRoutingEntryCountFrame(message); // 14
+            yield return GetRoutingStartFrame(message); // 13
             yield return GetTraceOptionsFrame(message); // 12
             yield return GetVersionFrame(message); // 11
             yield return GetMessageIdentityFrame(message); // 10
             yield return GetReceiverIdentityFrame(message); // 9
             yield return GetDistributionFrame(message); // 8
             yield return GetCorrelationIdFrame(message); // 7
-            yield return GetCallbackVersionFrame(message); // 6
-            yield return GetCallbackIdentityFrame(message); // 5
+            yield return GetCallbackEntryCountFrame(message); // 6
+            yield return GetCallbacksStartFrame(message); // 5
             yield return GetCallbackReceiverIdentityFrame(message); // 4
             yield return GetTTLFrame(message); // 3
 
@@ -50,8 +62,29 @@ namespace kino.Messaging
             yield return GetMessageBodyFrame(message);
         }
 
-        private byte[] GetMessageRouteFrame(Message message)
-            => message.GetMessageHopsBytes();
+        private byte[] GetRoutingEntryCountFrame(Message message)
+        {
+            var count = message.GetMessageHops().Count();
+            return (count > 0)
+                       ? count.GetBytes()
+                       : EmptyFrame;
+        }
+
+        private byte[] GetRoutingStartFrame(Message message)
+        {
+            var count = message.GetMessageHops().Count();
+            return (count > 0)
+                       ? GetRoutingStartFrameIndex(message).GetBytes()
+                       : EmptyFrame;
+        }
+
+        private int GetRoutingStartFrameIndex(IMessage message)
+        {
+            var callbacksFrameCount = message.CallbackPoint.Count() * 2;
+            var callbacksStartFrameIndex = ReversedFrames.MessageRoutingEntryCount + 1;
+
+            return callbacksStartFrameIndex + callbacksFrameCount;
+        }
 
         private byte[] GetTraceOptionsFrame(IMessage message)
             => ((long) message.TraceOptions).GetBytes();
@@ -65,11 +98,18 @@ namespace kino.Messaging
         private byte[] GetCallbackReceiverIdentityFrame(IMessage message)
             => message.CallbackReceiverIdentity ?? EmptyFrame;
 
-        private byte[] GetCallbackIdentityFrame(IMessage message)
-            => message.CallbackIdentity ?? EmptyFrame;
+        private byte[] GetCallbacksStartFrame(IMessage message)
+            => message.CallbackPoint.Any()
+                   ? (ReversedFrames.MessageRoutingEntryCount + 1).GetBytes()
+                   : EmptyFrame;
 
-        private byte[] GetCallbackVersionFrame(Message message)
-            => message.CallbackVersion ?? EmptyFrame;
+        private byte[] GetCallbackEntryCountFrame(IMessage message)
+        {
+            var count = message.CallbackPoint.Count();
+            return (count > 0)
+                       ? count.GetBytes()
+                       : EmptyFrame;
+        }
 
         private byte[] GetCorrelationIdFrame(IMessage message)
             => message.CorrelationId ?? EmptyFrame;
@@ -118,21 +158,64 @@ namespace kino.Messaging
         internal byte[] GetCallbackReceiverIdentity()
             => frames[frames.Count - ReversedFrames.CallbackReceiverIdentity];
 
-        internal byte[] GetCallbackIdentity()
-            => frames[frames.Count - ReversedFrames.CallbackIdentity];
-
-        internal byte[] GetCallbackVersion()
-            => frames[frames.Count - ReversedFrames.CallbackVersion];
-
         internal byte[] GetCorrelationId()
             => frames[frames.Count - ReversedFrames.CorrelationId];
 
         internal byte[] GetReceiverIdentity()
             => frames[frames.Count - ReversedFrames.ReceiverIdentity];
 
-        internal byte[] GetMessageRoute()
-            => frames[frames.Count - ReversedFrames.MessageRoute];
-
         internal IEnumerable<byte[]> Frames => frames;
+
+        internal IEnumerable<MessageIdentifier> GetCallbackPoints()
+        {
+            var callbackFrameCount = GetEntryCount(ReversedFrames.CallbackEntryCount) * 2;
+            var callbacks = new List<MessageIdentifier>();
+            if (callbackFrameCount > 0)
+            {
+                var startIndex = frames.Count
+                                 - frames[frames.Count - ReversedFrames.CallbackStartFrame].GetInt();
+                var endIndex = startIndex - callbackFrameCount;
+                while (startIndex > endIndex)
+                {
+                    var identity = frames[startIndex];
+                    var version = frames[--startIndex];
+                    callbacks.Add(new MessageIdentifier(version, identity));
+
+                    --startIndex;
+                }
+            }
+
+            return callbacks;
+        }
+
+        internal IEnumerable<SocketEndpoint> GetMessageHops()
+        {
+            var hopFrameCount = GetEntryCount(ReversedFrames.MessageRoutingEntryCount) * 2;
+            var hops = new List<SocketEndpoint>();
+            if (hopFrameCount > 0)
+            {
+                var startIndex = frames.Count
+                                 - frames[frames.Count - ReversedFrames.MessageRoutingStartFrame].GetInt();
+                var endIndex = startIndex - hopFrameCount;
+                while (startIndex> endIndex)
+                {
+                    var identity = frames[startIndex];
+                    var uri = new Uri(frames[--startIndex].GetString());
+                    hops.Add(new SocketEndpoint(uri, identity));
+
+                    --startIndex;
+                }
+            }
+
+            return hops;
+        }
+
+        private int GetEntryCount(int entryCountOffset)
+        {
+            var countFrame = frames[frames.Count - entryCountOffset];
+            return (Unsafe.Equals(countFrame, EmptyFrame))
+                       ? 0
+                       : countFrame.GetInt();
+        }
     }
 }

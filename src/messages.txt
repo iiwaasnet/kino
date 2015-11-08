@@ -3,22 +3,39 @@ Message format
 FRAME			OPT	CONTENT							DESCRIPTION
 (of n total)	
 ======================================================================
-..					Sender socket ID				ID of the sending socket
+..					Sender socket ID				        ID of the sending socket
 					[0]
 ..
-n-13				[Route]                         ROUTER socket IDs and URIs added by every ROUTER, forwarding the message
-n-12                TraceOptions                    Type of tracing to record for the message
-n-11				Version							Message version
-n-10			    Message ID						Message ID, which is used to find the Worker
-n-9					Receiver ID						ID of the receiver of the message. Empty frame, for the non-specific receiver
-n-8					Distribution pattern			One of the following distribution patterns {Unicast, Broadcast}
-n-7					Correlation ID					Unique identifier, copied on to spawned all messages from the initial one
-n-6                 Callback Version                Version of the Callback Message
-n-5					Callback Message ID			    Message ID, which designates and of the flow.
-n-4					Callback Receiver ID			Value from this field will be copied to Receiver ID when Message ID becomes equal to Callback Message ID
-n-3					TTL								Message Time-to-Live in (msec)
+                    .... more ......
+                    ROUTER URI
+                    ROUTER ID                               Message routing
+..
+                    .... more ......
+                    Callback Version
+                    Callback Message ID                     Callbacks
+..
+n-14				Message Routing Entries Count           Number of message route entries
+                                                            ROUTER socket IDs and URIs added by every ROUTER, forwarding the message
+                                                            Each entry takes 2 frames: 1 - URI, 2 - socket ID
+n-13				Routing Start Frame Offset              Offset of the first message route frame
+n-12                TraceOptions                            Type of tracing to record for the message
+n-11				Version							        Message version
+n-10			    Message ID						        Message ID, which is used to find the Worker
+n-9					Receiver ID						        ID of the receiver of the message. Empty frame, for the non-specific receiver
+n-8					Distribution pattern			        One of the following distribution patterns {Unicast, Broadcast}
+n-7					Correlation ID					        Unique identifier, copied on to spawned all messages from the initial one
+
+n-6                 Callback Version                        Version of the Callback Message
+n-5					Callback Message ID			            Message ID, which designates and of the flow.
+
+n-6                 Callback Entries Count                  Number of callback entries:
+                                                            Frames: 1 - Callback Message ID, 2 - Callback Version
+n-5                 Callback Start Frame Offset             Offset of the first callback messages frames
+n-4					Callback Receiver ID			        Value from this field will be copied to Receiver ID when Message ID becomes equal to Callback Message ID
+
+n-3					TTL								        Message Time-to-Live in (msec)
 n-2					[0]
-n-1					Body							Message content
+n-1					Body							        Message content
 
 Actor Hosting component is responsible for:
 - setting of Receiver ID to the value of Callback Receiver ID, when for the current message 
@@ -32,5 +49,3 @@ then
 	Version && Receiver ID
 else
 	Version && Message ID
-	
-	

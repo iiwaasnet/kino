@@ -1,23 +1,46 @@
-﻿using kino.Messaging;
+﻿using System.Collections.Generic;
+using kino.Connectivity;
+using kino.Messaging;
 
 namespace kino.Client
 {
     public class CallbackPoint : ICallbackPoint
     {
-        public CallbackPoint(byte[] messageIdentity, byte[] messageVersion)
+        public CallbackPoint(params MessageIdentifier[] messageIdentifiers)
         {
-            MessageIdentity = messageIdentity;
-            MessageVersion = messageVersion;
+            MessageIdentifiers = messageIdentifiers;
         }
 
         public static ICallbackPoint Create<T>()
             where T : IMessageIdentifier, new()
         {
             var message = new T();
-            return new CallbackPoint(message.Identity, message.Version);
+            return new CallbackPoint(new MessageIdentifier(message.Version, message.Identity));
         }
 
-        public byte[] MessageIdentity { get; }
-        public byte[] MessageVersion { get; }
+        public static ICallbackPoint Create<T1, T2>()
+            where T1 : IMessageIdentifier, new()
+            where T2 : IMessageIdentifier, new()
+        {
+            var message1 = new T1();
+            var message2 = new T2();
+            return new CallbackPoint(new MessageIdentifier(message1.Version, message1.Identity),
+                                     new MessageIdentifier(message2.Version, message2.Identity));
+        }
+
+        public static ICallbackPoint Create<T1, T2, T3>()
+            where T1 : IMessageIdentifier, new()
+            where T2 : IMessageIdentifier, new()
+            where T3 : IMessageIdentifier, new()
+        {
+            var message1 = new T1();
+            var message2 = new T2();
+            var message3 = new T3();
+            return new CallbackPoint(new MessageIdentifier(message1.Version, message1.Identity),
+                                     new MessageIdentifier(message2.Version, message2.Identity),
+                                     new MessageIdentifier(message3.Version, message3.Identity));
+        }
+
+        public IEnumerable<MessageIdentifier> MessageIdentifiers { get; }
     }
 }

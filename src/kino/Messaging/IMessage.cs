@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using kino.Connectivity;
 
 namespace kino.Messaging
 {
@@ -11,9 +13,8 @@ namespace kino.Messaging
         byte[] Identity { get; }
         byte[] CorrelationId { get; }
         byte[] ReceiverIdentity { get; }
-        byte[] CallbackIdentity { get; }
-        byte[] CallbackVersion { get; }
         byte[] CallbackReceiverIdentity { get; }
+        IEnumerable<MessageIdentifier> CallbackPoint { get; }
         TimeSpan TTL { get; set; }
         MessageTraceOptions TraceOptions { get; set; }
         byte[] Body { get; }

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using kino.Actors;
-using kino.Client;
 using kino.Connectivity;
 using kino.Diagnostics;
 using kino.Framework;
@@ -333,17 +332,15 @@ namespace kino.Tests.Actors
                 StartActorHost(actorHost);
 
                 var messageIn = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
-                var callbackPoint = CallbackPoint.Create<SimpleMessage>();
                 var callbackReceiver = Guid.NewGuid().ToByteArray();
-                messageIn.RegisterCallbackPoint(callbackPoint.MessageIdentity, callbackPoint.MessageVersion, callbackReceiver);
+                messageIn.RegisterCallbackPoint(callbackReceiver, MessageIdentifier.Create<SimpleMessage>());
 
                 var socket = actorHostSocketFactory.GetRoutableSocket();
                 socket.DeliverMessage(messageIn);
 
                 var messageOut = socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
 
-                CollectionAssert.AreEqual(messageIn.CallbackIdentity, messageOut.CallbackIdentity);
-                CollectionAssert.AreEqual(messageIn.CallbackVersion, messageOut.CallbackVersion);
+                CollectionAssert.AreEqual(messageIn.CallbackPoint, messageOut.CallbackPoint);
                 CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
             }
             finally
@@ -370,9 +367,8 @@ namespace kino.Tests.Actors
                 var delay = AsyncOp;
                 var asyncMessage = new AsyncMessage {Delay = delay};
                 var messageIn = (Message) Message.CreateFlowStartMessage(asyncMessage);
-                var callbackPoint = CallbackPoint.Create<SimpleMessage>();
                 var callbackReceiver = Guid.NewGuid().ToByteArray();
-                messageIn.RegisterCallbackPoint(callbackPoint.MessageIdentity, callbackPoint.MessageVersion, callbackReceiver);
+                messageIn.RegisterCallbackPoint(callbackReceiver, MessageIdentifier.Create<SimpleMessage>());
 
                 actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
 
@@ -380,8 +376,7 @@ namespace kino.Tests.Actors
 
                 var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
-                CollectionAssert.AreEqual(messageIn.CallbackIdentity, messageOut.CallbackIdentity);
-                CollectionAssert.AreEqual(messageIn.CallbackVersion, messageOut.CallbackVersion);
+                CollectionAssert.AreEqual(messageIn.CallbackPoint, messageOut.CallbackPoint);
                 CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
             }
             finally
@@ -408,9 +403,9 @@ namespace kino.Tests.Actors
                 StartActorHost(actorHost);
 
                 var messageIn = (Message) Message.CreateFlowStartMessage(new SimpleMessage {Content = errorMessage});
-                var callbackPoint = CallbackPoint.Create<SimpleMessage>();
                 var callbackReceiver = Guid.NewGuid().ToByteArray();
-                messageIn.RegisterCallbackPoint(callbackPoint.MessageIdentity, callbackPoint.MessageVersion, callbackReceiver);
+                var callbackPoints = new[] { MessageIdentifier.Create<SimpleMessage>(), KinoMessages.Exception };
+                messageIn.RegisterCallbackPoint(callbackReceiver, callbackPoints);
 
                 var socket = actorHostSocketFactory.GetRoutableSocket();
                 socket.DeliverMessage(messageIn);
@@ -419,7 +414,7 @@ namespace kino.Tests.Actors
 
                 Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
                 CollectionAssert.AreEqual(KinoMessages.Exception.Identity, messageOut.Identity);
-                CollectionAssert.AreEqual(KinoMessages.Exception.Version, messageOut.CallbackVersion);
+                CollectionAssert.Contains(messageOut.CallbackPoint, KinoMessages.Exception);
                 CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
             }
             finally
@@ -450,9 +445,9 @@ namespace kino.Tests.Actors
                                        ErrorMessage = error
                                    };
                 var messageIn = (Message) Message.CreateFlowStartMessage(asyncMessage);
-                var callbackPoint = CallbackPoint.Create<SimpleMessage>();
                 var callbackReceiver = Guid.NewGuid().ToByteArray();
-                messageIn.RegisterCallbackPoint(callbackPoint.MessageIdentity, callbackPoint.MessageVersion, callbackReceiver);
+                var callbackPoints = new[] {MessageIdentifier.Create<SimpleMessage>(), KinoMessages.Exception};
+                messageIn.RegisterCallbackPoint(callbackReceiver, callbackPoints);
 
                 actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
 
@@ -462,7 +457,7 @@ namespace kino.Tests.Actors
 
                 Assert.AreEqual(error, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
                 CollectionAssert.AreEqual(KinoMessages.Exception.Identity, messageOut.Identity);
-                CollectionAssert.AreEqual(KinoMessages.Exception.Version, messageOut.CallbackVersion);
+                CollectionAssert.Contains(messageOut.CallbackPoint, KinoMessages.Exception);
                 CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
             }
             finally

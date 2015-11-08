@@ -1,8 +1,10 @@
-﻿namespace kino.Client
+﻿using System.Collections.Generic;
+using kino.Connectivity;
+
+namespace kino.Client
 {
     public interface ICallbackPoint
     {
-        byte[] MessageIdentity { get; }
-        byte[] MessageVersion { get; }
+        IEnumerable<MessageIdentifier> MessageIdentifiers { get; }
     }
 }

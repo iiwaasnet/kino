@@ -16,8 +16,9 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
+                //TODO: Fix commented code below
                 logger.Trace($"Callback registered for Message {message.Identity.GetString()}: " +
-                             $"{nameof(message.CallbackIdentity)}:{message.CallbackIdentity.GetString()} " +
+                             //$"{nameof(message.CallbackIdentity)}:{message.CallbackIdentity.GetString()} " +
                              $"{nameof(message.Version)}:{message.Version.GetString()} " +
                              $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetString()} " +
                              $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");

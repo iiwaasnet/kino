@@ -130,7 +130,7 @@ namespace kino.Tests.Client
 
                 Assert.IsNotNull(messageOut);
                 CollectionAssert.AreEqual(receivingSocket.GetIdentity(), messageOut.CallbackReceiverIdentity);
-                CollectionAssert.AreEqual(callback.MessageIdentity, messageOut.CallbackIdentity);
+                CollectionAssert.AreEqual(callback.MessageIdentifiers, messageOut.CallbackPoint);
             }
             finally
             {

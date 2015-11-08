@@ -60,7 +60,7 @@ namespace kino.Tests.Messaging
                 message.PushRouterAddress(socketEndpoint);
             }
 
-            CollectionAssert.AreEqual(socketEnpoints, message.GetMessageHops());
+            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageHops());
         }
 
         [Test]
@@ -81,7 +81,7 @@ namespace kino.Tests.Messaging
             }
             if (hopsAdded)
             {
-                CollectionAssert.AreEqual(socketEnpoints, message.GetMessageHops());
+                CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageHops());
             }
             else
             {
@@ -107,7 +107,7 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            CollectionAssert.AreEqual(socketEnpoints, message.GetMessageHops());
+            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageHops());
         }
 
         [Test]
@@ -144,14 +144,13 @@ namespace kino.Tests.Messaging
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
 
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
-            var callbackIdentity = Guid.NewGuid().ToByteArray();
-            var callbackVersion = Guid.NewGuid().ToByteArray();
-            message.RegisterCallbackPoint(callbackIdentity, callbackVersion, callbackReceiverIdentity);
+            var callbackMessageIdentifiers = new MessageIdentifier(Guid.NewGuid().ToByteArray(), Guid.NewGuid().ToByteArray());
+            message.RegisterCallbackPoint( callbackReceiverIdentity, callbackMessageIdentifiers);
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            CollectionAssert.AreEqual(callbackIdentity, message.CallbackIdentity);
+            CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifiers);
             CollectionAssert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
             CollectionAssert.IsEmpty(message.ReceiverIdentity);
         }
@@ -164,12 +163,12 @@ namespace kino.Tests.Messaging
 
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
             var callbackIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            message.RegisterCallbackPoint(callbackIdentifier.Identity, callbackIdentifier.Version, callbackReceiverIdentity);
+            message.RegisterCallbackPoint(callbackReceiverIdentity, callbackIdentifier);
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            CollectionAssert.AreEqual(callbackIdentifier.Identity, message.CallbackIdentity);
+            CollectionAssert.Contains(message.CallbackPoint, callbackIdentifier);
             CollectionAssert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
             CollectionAssert.AreEqual(callbackReceiverIdentity, message.ReceiverIdentity);
         }
