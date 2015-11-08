@@ -15,7 +15,7 @@
             internal const int Identity = 10;
             internal const int Version = 11;
             internal const int TraceOptions = 12;
-            internal const int NextRouterInsertPosition = 13;
+            internal const int MessageRoute = 13;
         }
 
         private class ForwardFrames

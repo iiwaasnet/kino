@@ -89,6 +89,9 @@
     <Compile Include="Connectivity\ServiceMessageHandlers\RouteUnregistrationHandler.cs" />
     <Compile Include="Connectivity\ServiceMessageHandlers\ServiceMessageHandlersModule.cs" />
     <Compile Include="Framework\IConfigurationStorage.cs" />
+    <Compile Include="Messaging\Hop.cs" />
+    <Compile Include="Messaging\HopsList.cs" />
+    <Compile Include="Messaging\MessageHops.cs" />
     <Compile Include="Messaging\IMessageIdentifier.cs" />
     <Compile Include="Messaging\Messages\DiscoverMessageRouteMessage.cs" />
     <Compile Include="Connectivity\ExternalRoute.cs" />

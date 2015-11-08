@@ -6,8 +6,7 @@ FRAME			OPT	CONTENT							DESCRIPTION
 ..					Sender socket ID				ID of the sending socket
 					[0]
 ..
-n-14			*	Router ID						0-n ROUTER socket IDs added by every ROUTER, forwarding the message
-n-13				[0]                             Next hop insert position
+n-13				[Route]                         ROUTER socket IDs and URIs added by every ROUTER, forwarding the message
 n-12                TraceOptions                    Type of tracing to record for the message
 n-11				Version							Message version
 n-10			    Message ID						Message ID, which is used to find the Worker

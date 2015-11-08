@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using kino.Connectivity;
 using kino.Framework;
 
@@ -10,12 +11,12 @@ namespace kino.Messaging
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
 
         private object payload;
-        private readonly List<SocketEndpoint> hops;
+        private readonly MessageHops messageHops;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
         private Message(IPayload payload, DistributionPattern distributionPattern)
         {
-            hops = new List<SocketEndpoint>();
+            messageHops = new MessageHops();
             Body = Serialize(payload);
             Version = payload.Version;
             Identity = payload.Identity;
@@ -36,7 +37,7 @@ namespace kino.Messaging
 
         internal Message(MultipartMessage multipartMessage)
         {
-            hops = new List<SocketEndpoint>(multipartMessage.GetMessageHops());
+            messageHops = new MessageHops(multipartMessage.GetMessageRoute());
             Body = multipartMessage.GetMessageBody();
             Identity = multipartMessage.GetMessageIdentity();
             Version = multipartMessage.GetMessageVersion();
@@ -63,15 +64,18 @@ namespace kino.Messaging
         }
 
         internal void PushRouterAddress(SocketEndpoint scaleOutAddress)
-            => hops.Add(scaleOutAddress);
+            => messageHops.Add(scaleOutAddress);
 
         internal IEnumerable<SocketEndpoint> GetMessageHops()
-            => hops;
+            => messageHops.Hops;
+
+        internal byte[] GetMessageHopsBytes()
+            => messageHops.GetBytes();
 
         internal void CopyMessageHops(IEnumerable<SocketEndpoint> messageHops)
         {
-            hops.Clear();
-            hops.AddRange(messageHops);
+            this.messageHops.Clear();
+            this.messageHops.AddRange(messageHops);
         }
 
         internal void SetCorrelationId(byte[] correlationId)

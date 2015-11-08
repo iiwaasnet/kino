@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Connectivity;
 using kino.Framework;
 using NetMQ;
 
@@ -33,28 +32,26 @@ namespace kino.Messaging
             yield return GetSocketIdentity(message);
 
             yield return EmptyFrame;
-            foreach (var hop in message.GetMessageHops())
-            {
-                yield return hop.Uri.ToSocketAddress().GetBytes();
-                yield return hop.Identity;
-            }
-            yield return EmptyFrame;
 
-            yield return GetTraceOptionsFrame(message);             // 12
-            yield return GetVersionFrame(message);                  // 11
-            yield return GetMessageIdentityFrame(message);          // 10
-            yield return GetReceiverIdentityFrame(message);         // 9
-            yield return GetDistributionFrame(message);             // 8
-            yield return GetCorrelationIdFrame(message);            // 7
-            yield return GetCallbackVersionFrame(message);          // 6
-            yield return GetCallbackIdentityFrame(message);         // 5
+            yield return GetMessageRouteFrame(message); // 13
+            yield return GetTraceOptionsFrame(message); // 12
+            yield return GetVersionFrame(message); // 11
+            yield return GetMessageIdentityFrame(message); // 10
+            yield return GetReceiverIdentityFrame(message); // 9
+            yield return GetDistributionFrame(message); // 8
+            yield return GetCorrelationIdFrame(message); // 7
+            yield return GetCallbackVersionFrame(message); // 6
+            yield return GetCallbackIdentityFrame(message); // 5
             yield return GetCallbackReceiverIdentityFrame(message); // 4
-            yield return GetTTLFrame(message);                      // 3
+            yield return GetTTLFrame(message); // 3
 
             yield return EmptyFrame;
 
             yield return GetMessageBodyFrame(message);
         }
+
+        private byte[] GetMessageRouteFrame(Message message)
+            => message.GetMessageHopsBytes();
 
         private byte[] GetTraceOptionsFrame(IMessage message)
             => ((long) message.TraceOptions).GetBytes();
@@ -133,32 +130,9 @@ namespace kino.Messaging
         internal byte[] GetReceiverIdentity()
             => frames[frames.Count - ReversedFrames.ReceiverIdentity];
 
+        internal byte[] GetMessageRoute()
+            => frames[frames.Count - ReversedFrames.MessageRoute];
+
         internal IEnumerable<byte[]> Frames => frames;
-
-        internal IEnumerable<SocketEndpoint> GetMessageHops()
-        {
-            var hops = new List<SocketEndpoint>();
-            var firstHopEntry = GetFirstHopEntryIndex();
-            var lastHopEntry = frames.Count - ReversedFrames.NextRouterInsertPosition;
-
-            for (var i = firstHopEntry; i < lastHopEntry; i++)
-            {
-                hops.Add(new SocketEndpoint(new Uri(frames[i].GetString()),
-                                            frames[++i]));
-            }
-
-            return hops;
-        }
-
-        private int GetFirstHopEntryIndex()
-        {
-            var index = frames.Count - ReversedFrames.NextRouterInsertPosition - 1;
-            while (!Unsafe.Equals(frames[index], EmptyFrame) && 0 <= index)
-            {
-                index--;
-            }
-
-            return ++index;
-        }
     }
 }
