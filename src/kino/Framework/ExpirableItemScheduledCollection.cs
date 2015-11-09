@@ -13,6 +13,8 @@ namespace kino.Framework
         private readonly List<ExpirableItem<T>> delayedItems;
         private readonly Task delayItems;
         private readonly CancellationTokenSource tokenSource;
+        private const int MaxAddCycles = 10000;
+        private const int MaxDeleteCycles = 10000;
         private Action<T> handler;
         private readonly ILogger logger;
 
@@ -79,7 +81,8 @@ namespace kino.Framework
         private void DeleteExpiredItems()
         {
             var now = DateTime.UtcNow;
-            while (delayedItems.Count > 0 && delayedItems[0].IsExpired(now))
+            var iterations = MaxDeleteCycles;
+            while (delayedItems.Count > 0 && delayedItems[0].IsExpired(now) && iterations-- > 0)
             {
                 if (handler != null)
                 {
@@ -93,7 +96,8 @@ namespace kino.Framework
         {
             var itemsAdded = false;
             ExpirableItem<T> item;
-            while (additionQueue.TryTake(out item))
+            var iterations = MaxAddCycles;
+            while (additionQueue.TryTake(out item) && iterations-- > 0)
             {
                 delayedItems.Add(item);
                 itemsAdded = true;

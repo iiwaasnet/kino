@@ -16,9 +16,11 @@ namespace kino.Framework
         private readonly BlockingCollection<ExpirableItem<T>> additionQueue;
         private readonly Task checkExpirableItems;
         private readonly IntervalHeap<ExpirableItem<T>> expirableItems;
-        private readonly AutoResetEvent itemAdded;
+        private readonly ManualResetEventSlim itemAdded;
         private readonly CancellationTokenSource tokenSource;
         private Action<T> handler;
+        private const int MaxAddCycles = 10000;
+        private const int MaxDeleteCycles = 10000;
         private readonly ILogger logger;
 
         public ExpirableItemCollection(ILogger logger)
@@ -26,7 +28,7 @@ namespace kino.Framework
             this.logger = logger;
             expirableItems = new IntervalHeap<ExpirableItem<T>>();
             tokenSource = new CancellationTokenSource();
-            itemAdded = new AutoResetEvent(false);
+            itemAdded = new ManualResetEventSlim(false);
             additionQueue = new BlockingCollection<ExpirableItem<T>>(new ConcurrentQueue<ExpirableItem<T>>());
             checkExpirableItems = Task.Factory.StartNew(_ => EvaluateDelays(tokenSource.Token), tokenSource.Token, TaskCreationOptions.LongRunning);
         }
@@ -66,7 +68,7 @@ namespace kino.Framework
                         var smallestDelay = (expirableItems.Any())
                                                 ? expirableItems.FindMin().ExpireAfter
                                                 : Timeout.Infinite;
-                        var reason = WaitHandle.WaitAny(new[] {itemAdded, token.WaitHandle}, smallestDelay);
+                        var reason = WaitHandle.WaitAny(new[] {itemAdded.WaitHandle, token.WaitHandle}, smallestDelay);
                         if (reason != ProcessTerminated)
                         {
                             if (reason == ItemAdded)
@@ -94,11 +96,13 @@ namespace kino.Framework
         private void DeleteExpiredItems()
         {
             var now = DateTime.UtcNow;
-            while (expirableItems.Any() && expirableItems.FindMin().IsExpired(now))
+            var iterations = MaxDeleteCycles;
+            while (expirableItems.Any() && expirableItems.FindMin().IsExpired(now) && iterations-- > 0)
             {
+                var item = expirableItems.DeleteMin().Item;
                 if (handler != null)
                 {
-                    SafeNotifySubscriber(expirableItems.DeleteMin().Item);
+                    SafeNotifySubscriber(item);
                 }
             }
         }
@@ -106,9 +110,14 @@ namespace kino.Framework
         private void AddEnqueuedItems()
         {
             ExpirableItem<T> item;
-            while (additionQueue.TryTake(out item))
+            var iterations = MaxAddCycles;
+            while (additionQueue.TryTake(out item) && iterations-- > 0)
             {
                 expirableItems.Add(item);
+            }
+            if (!additionQueue.Any())
+            {
+                itemAdded.Reset();
             }
         }
 
