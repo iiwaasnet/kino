@@ -212,5 +212,29 @@ namespace kino.Tests.Messaging
 
             Assert.AreEqual(ttl, message.TTL);
         }
+
+        [Test]
+        public void TestCallbackTriggeresForEveryMessageInCallbackPoint()
+        {
+            var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
+            var callbackMessageIdentifier = new[]
+                                            {
+                                                MessageIdentifier.Create<SimpleMessage>(), 
+                                                MessageIdentifier.Create<AsyncExceptionMessage>(), 
+                                                MessageIdentifier.Create<AsyncMessage>()
+                                            };
+            var messages = new[]
+                           {
+                               Message.Create(new SimpleMessage()),
+                               Message.Create(new AsyncExceptionMessage()),
+                               Message.Create(new AsyncMessage()),
+                           };
+
+            foreach (Message message in messages)
+            {
+                message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifier);
+                CollectionAssert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
+            }
+        }
     }
 }

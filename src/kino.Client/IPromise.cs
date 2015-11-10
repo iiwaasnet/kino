@@ -7,5 +7,7 @@ namespace kino.Client
     public interface IPromise : IDisposable
     {
         Task<IMessage> GetResponse();
+
+        CorrelationId CorrelationId { get; }
     }
 }

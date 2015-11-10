@@ -38,10 +38,6 @@ namespace Client
                    .As<RouterConfiguration>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetExpirableItemCollectionConfiguration())
-                   .As<ExpirableItemCollectionConfiguration>()
-                   .SingleInstance();
-
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
                    .As<IEnumerable<kino.Connectivity.RendezvousEndpoint>>()
                    .SingleInstance();

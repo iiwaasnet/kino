@@ -10,7 +10,6 @@ namespace kino.Client
     {
         private readonly TaskCompletionSource<IMessage> result;
         private volatile Action<CorrelationId> removeCallbackHandler;
-        private CorrelationId correlationId;
         private volatile bool isDisposed;
 
         internal Promise()
@@ -60,14 +59,16 @@ namespace kino.Client
             if (tmp != null)
             {
                 removeCallbackHandler = null;
-                tmp(correlationId);
+                tmp(CorrelationId);
             }
         }
 
         internal void SetRemoveCallbackHandler(CorrelationId correlationId, Action<CorrelationId> removeCallbackHandler)
         {
-            this.correlationId = correlationId;
+            CorrelationId = correlationId;
             this.removeCallbackHandler = removeCallbackHandler;
         }
+
+        public CorrelationId CorrelationId { get; private set; }
     }
 }

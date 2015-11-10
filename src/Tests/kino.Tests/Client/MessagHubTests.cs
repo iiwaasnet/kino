@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using kino.Client;
+using kino.Connectivity;
 using kino.Diagnostics;
 using kino.Framework;
 using kino.Messaging;
@@ -13,7 +14,6 @@ using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
 using IMessageTracer = kino.Client.IMessageTracer;
-using MessageIdentifier = kino.Connectivity.MessageIdentifier;
 
 namespace kino.Tests.Client
 {
@@ -161,6 +161,75 @@ namespace kino.Tests.Client
 
                 Assert.IsNotNull(response);
                 Assert.AreEqual(message, response);
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
+
+        [Test]
+        public void TestWhenPromiseIsDisposed_ItsCallbackIsRemoved()
+        {
+            var callbackHandlerStack = new CallbackHandlerStack();
+            var messageHub = new MessageHub(socketFactory.Object,
+                                            callbackHandlerStack,
+                                            config,
+                                            messageTracer.Object,
+                                            logger);
+            try
+            {
+                messageHub.Start();
+
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage>();
+
+                var promise = messageHub.EnqueueRequest(message, callback);
+                Thread.Sleep(AsyncOpCompletionDelay);
+
+                messageHubSocketFactory.GetReceivingSocket().DeliverMessage(message);
+
+                Assert.IsNull(callbackHandlerStack.Pop(new CallbackHandlerKey
+                                                       {
+                                                           Version = callback.MessageIdentifiers.Single().Version,
+                                                           Identity = callback.MessageIdentifiers.Single().Identity,
+                                                           Correlation = promise.CorrelationId.Value
+                                                       }));
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
+
+
+        [Test]
+        public void TestWhenPromiseResultIsSet_ItsCallbackIsRemoved()
+        {
+            var callbackHandlerStack = new CallbackHandlerStack();
+            var messageHub = new MessageHub(socketFactory.Object,
+                                            callbackHandlerStack,
+                                            config,
+                                            messageTracer.Object,
+                                            logger);
+            try
+            {
+                messageHub.Start();
+
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage>();
+
+                var promise = messageHub.EnqueueRequest(message, callback);
+                Thread.Sleep(AsyncOpCompletionDelay);
+
+                promise.Dispose();
+
+                Assert.IsNull(callbackHandlerStack.Pop(new CallbackHandlerKey
+                                                       {
+                                                           Version = callback.MessageIdentifiers.Single().Version,
+                                                           Identity = callback.MessageIdentifiers.Single().Identity,
+                                                           Correlation = promise.CorrelationId.Value
+                                                       }));
             }
             finally
             {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using kino.Connectivity;
 using kino.Messaging;
@@ -9,7 +8,7 @@ namespace kino.Actors.Diagnostics
 {
     public class ExceptionHandlerActor : Actor
     {
-        [MessageHandlerDefinition(typeof(ExceptionMessage))]
+        [MessageHandlerDefinition(typeof (ExceptionMessage))]
         private Task<IActorResult> HandleException(IMessage message)
         {
             var payload = message.GetPayload<ExceptionMessage>();

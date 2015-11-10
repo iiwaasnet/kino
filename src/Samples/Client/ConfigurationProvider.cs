@@ -35,9 +35,6 @@ namespace Client
                    RunAsStandalone = appConfig.RunAsStandalone
                };
 
-        public ExpirableItemCollectionConfiguration GetExpirableItemCollectionConfiguration()
-            => new ExpirableItemCollectionConfiguration {EvaluationInterval = appConfig.PromiseExpirationEvaluationInterval};
-
         public MessageHubConfiguration GetMessageHubConfiguration()
             => new MessageHubConfiguration {RouterUri = new Uri(appConfig.RouterUri)};
     }
