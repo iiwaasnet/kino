@@ -18,14 +18,14 @@ namespace kino.Client
 
         public void Push(CorrelationId correlation, IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers)
         {
-            if (handlers.ContainsKey(correlation))
+            if (handlers.TryAdd(correlation, messageIdentifiers.ToDictionary(mp => mp, mp => promise)))
+            {
+                ((Promise) promise).SetRemoveCallbackHandler(correlation, RemoveCallback);
+            }
+            else
             {
                 throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
             }
-
-            ((Promise) promise).SetRemoveCallbackHandler(correlation, RemoveCallback);
-
-            handlers[correlation] = messageIdentifiers.ToDictionary(mp => mp, mp => promise);
         }
 
         public IPromise Pop(CallbackHandlerKey callbackIdentifier)
