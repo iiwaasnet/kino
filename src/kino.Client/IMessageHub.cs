@@ -7,7 +7,6 @@ namespace kino.Client
     {
         void SendOneWay(IMessage message);
         IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint);
-        IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint, TimeSpan expireAfter);
         void Start();
         void Stop();
     }

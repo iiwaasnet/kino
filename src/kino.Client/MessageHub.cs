@@ -92,8 +92,7 @@ namespace kino.Client
 
                                 callbackHandlers.Push(new CorrelationId(message.CorrelationId),
                                                       promise,
-                                                      callbackPoint.MessageIdentifiers
-                                                                   .Concat(new[] {ExceptionMessageIdentifier}));
+                                                      callbackPoint.MessageIdentifiers.Concat(new[] {ExceptionMessageIdentifier}));
                                 messageTracer.CallbackRegistered(message);
                             }
                             socket.SendMessage(message);
@@ -208,24 +207,16 @@ namespace kino.Client
             return InternalEnqueueRequest(message, callbackPoint);
         }
 
-        public IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint, TimeSpan expireAfter)
-        {
-            return InternalEnqueueRequest(message, callbackPoint, expireAfter);
-        }
-
         public void SendOneWay(IMessage message)
         {
             registrationsQueue.Add(new CallbackRegistration {Message = message});
         }
 
-        private IPromise InternalEnqueueRequest(IMessage message, ICallbackPoint callbackPoint, TimeSpan? expireAfter = null)
+        private IPromise InternalEnqueueRequest(IMessage message, ICallbackPoint callbackPoint)
         {
             hubRegistered.Wait();
 
-            var promise = (expireAfter != null)
-                              ? new Promise(expireAfter.Value)
-                              : new Promise();
-
+            var promise = new Promise();
             registrationsQueue.Add(new CallbackRegistration
                                    {
                                        Message = message,

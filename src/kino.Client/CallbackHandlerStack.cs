@@ -10,22 +10,10 @@ namespace kino.Client
     public class CallbackHandlerStack : ICallbackHandlerStack
     {
         private readonly ConcurrentDictionary<CorrelationId, IDictionary<MessageIdentifier, IPromise>> handlers;
-        private readonly IExpirableItemCollection<CorrelationId> expirationQueue;
 
-        public CallbackHandlerStack(IExpirableItemCollection<CorrelationId> expirationQueue)
+        public CallbackHandlerStack()
         {
             handlers = new ConcurrentDictionary<CorrelationId, IDictionary<MessageIdentifier, IPromise>>();
-            expirationQueue.SetExpirationHandler(RemoveExpiredCallback);
-            this.expirationQueue = expirationQueue;
-        }
-
-        private void RemoveExpiredCallback(CorrelationId correlationId)
-        {
-            IDictionary<MessageIdentifier, IPromise> value;
-            if (handlers.TryRemove(correlationId, out value))
-            {
-                ((Promise) value.Values.First()).SetExpired();
-            }
         }
 
         public void Push(CorrelationId correlation, IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers)
@@ -35,8 +23,7 @@ namespace kino.Client
                 throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
             }
 
-            var delayedItem = expirationQueue.Delay(correlation, promise.ExpireAfter);
-            ((Promise) promise).SetExpiration(delayedItem);
+            ((Promise) promise).SetRemoveCallbackHandler(correlation, RemoveCallback);
 
             handlers[correlation] = messageIdentifiers.ToDictionary(mp => mp, mp => promise);
         }
@@ -53,6 +40,12 @@ namespace kino.Client
             }
 
             return promise;
+        }
+
+        private void RemoveCallback(CorrelationId correlationId)
+        {
+            IDictionary<MessageIdentifier, IPromise> _;
+            handlers.TryRemove(correlationId, out _);
         }
     }
 }

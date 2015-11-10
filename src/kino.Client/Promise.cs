@@ -9,44 +9,65 @@ namespace kino.Client
     internal class Promise : IPromise
     {
         private readonly TaskCompletionSource<IMessage> result;
-        private static readonly TimeSpan DefaultPromiseExpiration = TimeSpan.FromSeconds(20);
-        private IExpirableItem expirableItem;
-
-        internal Promise(TimeSpan expiresAfter)
-        {
-            result = new TaskCompletionSource<IMessage>();
-            ExpireAfter = expiresAfter;
-        }
+        private volatile Action<CorrelationId> removeCallbackHandler;
+        private CorrelationId correlationId;
+        private volatile bool isDisposed;
 
         internal Promise()
-            : this(DefaultPromiseExpiration)
         {
+            isDisposed = false;
+            result = new TaskCompletionSource<IMessage>();
         }
 
         public Task<IMessage> GetResponse()
-            => result.Task;
+        {
+            if (!isDisposed)
+            {
+                return result.Task;
+            }
+
+            throw new ObjectDisposedException("Promise");
+        }
 
         internal void SetResult(IMessage message)
         {
-            expirableItem?.ExpireNow();
+            RemoveCallbackHander();
 
-            if (Unsafe.Equals(message.Identity, KinoMessages.Exception.Identity))
+            if (Unsafe.Equals(message.Identity, KinoMessages.Exception.Identity)
+                && Unsafe.Equals(message.Version, KinoMessages.Exception.Version))
             {
                 var error = message.GetPayload<ExceptionMessage>().Exception;
-                result.SetException(error);
+                result.TrySetException(error);
             }
             else
             {
-                result.SetResult(message);
+                result.TrySetResult(message);
             }
         }
 
-        internal void SetExpiration(IExpirableItem expirableItem)
-            => this.expirableItem = expirableItem;
+        public void Dispose()
+        {
+            if (!isDisposed)
+            {
+                isDisposed = true;
+                RemoveCallbackHander();
+            }
+        }
 
-        internal void SetExpired()
-            => result.SetException(new TimeoutException());
+        private void RemoveCallbackHander()
+        {
+            var tmp = removeCallbackHandler;
+            if (tmp != null)
+            {
+                removeCallbackHandler = null;
+                tmp(correlationId);
+            }
+        }
 
-        public TimeSpan ExpireAfter { get; }
+        internal void SetRemoveCallbackHandler(CorrelationId correlationId, Action<CorrelationId> removeCallbackHandler)
+        {
+            this.correlationId = correlationId;
+            this.removeCallbackHandler = removeCallbackHandler;
+        }
     }
 }

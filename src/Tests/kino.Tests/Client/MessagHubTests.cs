@@ -190,7 +190,6 @@ namespace kino.Tests.Client
                 messageHubSocketFactory.GetReceivingSocket().DeliverMessage(exception);
 
                 Assert.Throws<AggregateException>(() => { var response = promise.GetResponse().Result; }, errorMessage);
-                Assert.DoesNotThrow(() => { var response = promise.GetResponse(); });
             }
             finally
             {

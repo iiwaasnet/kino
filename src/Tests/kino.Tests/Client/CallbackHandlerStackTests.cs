@@ -19,7 +19,7 @@ namespace kino.Tests.Client
         public void TestAddingHandlersForExistingCorrelation_ThrowsDuplicatedKeyException()
         {
             var logger = new Mock<ILogger>();
-            var callbackHandlerStack = new CallbackHandlerStack(new ExpirableItemCollection<CorrelationId>(logger.Object));
+            var callbackHandlerStack = new CallbackHandlerStack();
 
             var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
             var promise = new Promise();
@@ -35,7 +35,7 @@ namespace kino.Tests.Client
         public void TestPopCallBackHandlerForSpecificMessage_RemovesAllOtherHandlersForThisCorrelationId()
         {
             var logger = new Mock<ILogger>();
-            var callbackHandlerStack = new CallbackHandlerStack(new ExpirableItemCollection<CorrelationId>(logger.Object));
+            var callbackHandlerStack = new CallbackHandlerStack();
 
             var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
             var promise = new Promise();

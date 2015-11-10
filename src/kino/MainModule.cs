@@ -28,9 +28,6 @@ namespace kino
                    .As<ILogger>()
                    .SingleInstance();
 
-            builder.RegisterType<ExpirableItemScheduledCollection<CorrelationId>>()
-                   .As<IExpirableItemCollection<CorrelationId>>();
-
             builder.RegisterType<ExternalRoutingTable>()
                    .As<IExternalRoutingTable>()
                    .SingleInstance();

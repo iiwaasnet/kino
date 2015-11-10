@@ -4,9 +4,8 @@ using kino.Messaging;
 
 namespace kino.Client
 {
-    public interface IPromise
+    public interface IPromise : IDisposable
     {
         Task<IMessage> GetResponse();
-        TimeSpan ExpireAfter { get; }
     }
 }

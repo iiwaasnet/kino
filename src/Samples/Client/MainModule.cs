@@ -26,9 +26,6 @@ namespace Client
                    .As<ApplicationConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterType<ExpirableItemCollection<CorrelationId>>()
-                   .As<IExpirableItemCollection<CorrelationId>>();
-
             builder.RegisterType<ConfigurationProvider>()
                    .As<IConfigurationProvider>()
                    .SingleInstance();

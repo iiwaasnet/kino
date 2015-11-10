@@ -555,7 +555,7 @@ namespace kino.Tests.Connectivity
             var callback = CallbackPoint.Create<SimpleMessage>();
 
             var messageHub = new MessageHub(sockrtFactory.Object,
-                                            new CallbackHandlerStack(new ExpirableItemCollection<CorrelationId>(logger.Object)),
+                                            new CallbackHandlerStack(),
                                             new MessageHubConfiguration(),
                                             messageTracer.Object,
                                             logger.Object);
