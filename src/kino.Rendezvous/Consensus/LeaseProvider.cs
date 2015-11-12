@@ -3,7 +3,6 @@ using System.Threading;
 using kino.Connectivity;
 using kino.Diagnostics;
 using kino.Framework;
-using RendezvousConfiguration = kino.Rendezvous.Configuration.RendezvousConfiguration;
 
 namespace kino.Rendezvous.Consensus
 {
@@ -11,7 +10,6 @@ namespace kino.Rendezvous.Consensus
     {
         private readonly IBallotGenerator ballotGenerator;
         private readonly LeaseConfiguration config;
-        private readonly RendezvousConfiguration rendezvousConfig;
         private readonly Timer leaseTimer;
         private readonly ILogger logger;
         private readonly Node localNode;
@@ -19,12 +17,12 @@ namespace kino.Rendezvous.Consensus
         private readonly SemaphoreSlim renewGateway;
         private volatile Lease lastKnownLease;
         private readonly TimeSpan leaseRenewWaitTimeout;
+        private byte[] ownerPayload;
 
         public LeaseProvider(IRoundBasedRegister register,
                              IBallotGenerator ballotGenerator,
                              LeaseConfiguration config,
                              ISynodConfiguration synodConfig,
-                             RendezvousConfiguration rendezvousConfig,
                              ILogger logger)
         {
             ValidateConfiguration(config);
@@ -34,7 +32,6 @@ namespace kino.Rendezvous.Consensus
             localNode = synodConfig.LocalNode;
             this.logger = logger;
             this.config = config;
-            this.rendezvousConfig = rendezvousConfig;
             this.ballotGenerator = ballotGenerator;
             this.register = register;
             leaseRenewWaitTimeout = TimeSpan.FromMilliseconds(10);
@@ -44,6 +41,13 @@ namespace kino.Rendezvous.Consensus
 
         public Lease GetLease()
         {
+            return GetLease(new byte[0]);
+        }
+
+        public Lease GetLease(byte[] ownerPayload)
+        {
+            Interlocked.Exchange(ref this.ownerPayload, ownerPayload);
+
             return GetLastKnownLease();
         }
 
@@ -167,8 +171,7 @@ namespace kino.Rendezvous.Consensus
                 if (LeaseNullOrExpired(lease, now) || IsLeaseOwner(lease))
                 {
                     LogLeaseProlonged(lease);
-                    var ownerEndpoint = new OwnerEndpoint {UnicastUri = rendezvousConfig.UnicastUri, MulticastUri = rendezvousConfig.MulticastUri};
-                    lease = new Lease(localNode.SocketIdentity, ownerEndpoint, now + config.MaxLeaseTimeSpan);
+                    lease = new Lease(localNode.SocketIdentity, now + config.MaxLeaseTimeSpan, Interlocked.Exchange(ref ownerPayload, ownerPayload));
                 }
 
                 var write = register.Write(ballot, lease);

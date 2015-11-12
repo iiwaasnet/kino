@@ -75,12 +75,7 @@ namespace kino.Rendezvous.Consensus
                 LogAckWrite(ballot);
 
                 writeBallot = ballot;
-                var ownerEndpoint = new OwnerEndpoint
-                                    {
-                                        UnicastUri = new Uri(payload.Lease.OwnerEndpoint.UnicastUri),
-                                        MulticastUri = new Uri(payload.Lease.OwnerEndpoint.MulticastUri)
-                                    };
-                lease = new Lease(payload.Lease.Identity, ownerEndpoint, new DateTime(payload.Lease.ExpiresAt, DateTimeKind.Utc));
+                lease = new Lease(payload.Lease.Identity, new DateTime(payload.Lease.ExpiresAt, DateTimeKind.Utc), payload.Lease.OwnerPayload);
 
                 response = Message.Create(new LeaseAckWriteMessage
                                           {
@@ -165,12 +160,8 @@ namespace kino.Rendezvous.Consensus
             return new LastWrittenLease(new Ballot(p.KnownWriteBallot.Timestamp, p.KnownWriteBallot.MessageNumber, p.KnownWriteBallot.Identity),
                                         (p.Lease != null)
                                             ? new Lease(p.Lease.Identity,
-                                                        new OwnerEndpoint
-                                                        {
-                                                            UnicastUri = new Uri(p.Lease.OwnerEndpoint.UnicastUri),
-                                                            MulticastUri = new Uri(p.Lease.OwnerEndpoint.MulticastUri)
-                                                        },
-                                                        p.Lease.ExpiresAt)
+                                                        p.Lease.ExpiresAt,
+                                                        p.Lease.OwnerPayload)
                                             : null);
         }
 
@@ -236,12 +227,8 @@ namespace kino.Rendezvous.Consensus
                                               {
                                                   Identity = lease.OwnerIdentity,
                                                   ExpiresAt = lease.ExpiresAt.Ticks,
-                                                  OwnerEndpoint = new Messages.OwnerEndpoint
-                                                                  {
-                                                                      UnicastUri = lease.OwnerEndpoint.UnicastUri.ToSocketAddress(),
-                                                                      MulticastUri = lease.OwnerEndpoint.MulticastUri.ToSocketAddress()
-                                                                  }
-                                              }
+                                                  OwnerPayload = lease.OwnerPayload
+                                      }
                                   });
         }
 
@@ -274,11 +261,7 @@ namespace kino.Rendezvous.Consensus
                                                     {
                                                         Identity = lease.OwnerIdentity,
                                                         ExpiresAt = lease.ExpiresAt.Ticks,
-                                                        OwnerEndpoint = new Messages.OwnerEndpoint
-                                                                        {
-                                                                            UnicastUri = lease.OwnerEndpoint.UnicastUri.ToSocketAddress(),
-                                                                            MulticastUri = lease.OwnerEndpoint.MulticastUri.ToSocketAddress()
-                                                                        }
+                                                        OwnerPayload = lease.OwnerPayload
                                                     }
                                                   : null,
                                       SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()

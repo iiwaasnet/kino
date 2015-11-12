@@ -12,6 +12,6 @@ namespace kino.Rendezvous.Consensus.Messages
         public long ExpiresAt { get; set; }
 
         [ProtoMember(3)]
-        public OwnerEndpoint OwnerEndpoint { get; set; }
+        public byte[] OwnerPayload { get; set; }
     }
 }

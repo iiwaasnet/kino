@@ -1322,7 +1322,7 @@
         </xs:attribute>
         <xs:attribute name="includeEventProperties" type="xs:boolean">
           <xs:annotation>
-            <xs:documentation>Indicates whether to include per-event properties in the payload sent to the server.</xs:documentation>
+            <xs:documentation>Indicates whether to include per-event properties in the OwnerEndpoint sent to the server.</xs:documentation>
           </xs:annotation>
         </xs:attribute>
         <xs:attribute name="useBinaryEncoding" type="xs:boolean">

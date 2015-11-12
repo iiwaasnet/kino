@@ -4,20 +4,20 @@ namespace kino.Rendezvous.Consensus
 {
     public class Lease
     {
-        public Lease(byte[] ownerIdentity, OwnerEndpoint ownerEndpoint, DateTime expiresAt)
+        public Lease(byte[] ownerIdentity, DateTime expiresAt, byte[] ownerPayload)
         {
             OwnerIdentity = ownerIdentity;
-            OwnerEndpoint = ownerEndpoint;
+            OwnerPayload = ownerPayload;
             ExpiresAt = expiresAt;
         }
 
-        public Lease(byte[] ownerIdentity, OwnerEndpoint ownerEndpoint, long expiresAt)
-            : this(ownerIdentity, ownerEndpoint, new DateTime(expiresAt, DateTimeKind.Utc))
+        public Lease(byte[] ownerIdentity, long expiresAt, byte[] ownerPayload)
+            : this(ownerIdentity, new DateTime(expiresAt, DateTimeKind.Utc), ownerPayload)
         {
         }
 
         public byte[] OwnerIdentity { get; }
         public DateTime ExpiresAt { get; }
-        public OwnerEndpoint OwnerEndpoint { get; }
+        public byte[] OwnerPayload { get; }
     }
 }

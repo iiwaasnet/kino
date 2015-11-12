@@ -11,16 +11,12 @@ namespace kino.Tests.Consensus
 and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
     public class RoundBasedRegisterTests_LemmaR4
     {
-        private OwnerEndpoint ownerEndpoint;
+        private byte[] ownerPayload;
 
         [SetUp]
         public void Setup()
         {
-            ownerEndpoint = new OwnerEndpoint
-                            {
-                                MulticastUri = new Uri("tcp://127.0.0.1"),
-                                UnicastUri = new Uri("tcp://127.0.0.1")
-                            };
+            ownerPayload = Guid.NewGuid().ToByteArray();
         }
 
         [Test]
@@ -37,7 +33,7 @@ and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
                         var roundBasedRegister = testSetup.RoundBasedRegister;
 
                         var ballot0 = ballotGenerator.New(localNode.SocketIdentity);
-                        var lease = new Lease(localNode.SocketIdentity, ownerEndpoint, DateTime.UtcNow);
+                        var lease = new Lease(localNode.SocketIdentity, DateTime.UtcNow, ownerPayload);
                         var txResult = roundBasedRegister.Write(ballot0, lease);
                         Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
 
@@ -47,8 +43,7 @@ and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
 
                         Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
                         Assert.AreEqual(lease.ExpiresAt, txResult.Lease.ExpiresAt);
-                        Assert.AreEqual(lease.OwnerEndpoint.MulticastUri, txResult.Lease.OwnerEndpoint.MulticastUri);
-                        Assert.AreEqual(lease.OwnerEndpoint.UnicastUri, txResult.Lease.OwnerEndpoint.UnicastUri);
+                        CollectionAssert.AreEqual(lease.OwnerPayload, txResult.Lease.OwnerPayload);
                         Assert.IsTrue(Unsafe.Equals(lease.OwnerIdentity, txResult.Lease.OwnerIdentity));
                     }
                 }

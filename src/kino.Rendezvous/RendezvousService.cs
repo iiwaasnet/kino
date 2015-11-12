@@ -21,20 +21,29 @@ namespace kino.Rendezvous
         private Task messageProcessing;
         private Task pinging;
         private readonly RendezvousConfiguration config;
+        private readonly IMessageSerializer serializer;
         private readonly ILogger logger;
+        private readonly byte[] leaderPayload;
 
         public RendezvousService(ILeaseProvider leaseProvider,
                                  ISynodConfiguration synodConfig,
                                  ISocketFactory socketFactory,
+                                 IMessageSerializer serializer,
                                  RendezvousConfiguration config,
                                  ILogger logger)
         {
             this.socketFactory = socketFactory;
             this.logger = logger;
+            this.serializer = serializer;
             localNode = synodConfig.LocalNode;
             this.leaseProvider = leaseProvider;
             this.config = config;
             cancellationTokenSource = new CancellationTokenSource();
+            leaderPayload = serializer.Serialize(new RendezvousNode
+            {
+                                                     MulticastUri = config.MulticastUri.ToSocketAddress(),
+                                                     UnicastUri = config.UnicastUri.ToSocketAddress()
+                                                 });
         }
 
         public void Start()
@@ -99,7 +108,7 @@ namespace kino.Rendezvous
 
         private bool NodeIsLeader()
         {
-            var lease = leaseProvider.GetLease();
+            var lease = leaseProvider.GetLease(leaderPayload);
             return lease != null && Unsafe.Equals(lease.OwnerIdentity, localNode.SocketIdentity);
         }
 
@@ -153,16 +162,12 @@ namespace kino.Rendezvous
 
         private IMessage CreateNotLeaderMessage()
         {
-            var lease = leaseProvider.GetLease();
+            var lease = leaseProvider.GetLease(leaderPayload);
             if (lease != null)
             {
                 return Message.Create(new RendezvousNotLeaderMessage
                                       {
-                                          NewLeader = new RendezvousNode
-                                                      {
-                                                          MulticastUri = lease.OwnerEndpoint.MulticastUri.ToSocketAddress(),
-                                                          UnicastUri = lease.OwnerEndpoint.UnicastUri.ToSocketAddress()
-                                                      }
+                                          NewLeader = serializer.Deserialize<RendezvousNode>(lease.OwnerPayload)
                                       });
             }
 

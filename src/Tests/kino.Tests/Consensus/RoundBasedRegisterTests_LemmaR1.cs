@@ -11,16 +11,12 @@ namespace kino.Tests.Consensus
 operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
     public class RoundBasedRegisterTests_LemmaR1
     {
-        private OwnerEndpoint ownerEndpoint;
+        private byte[] ownerPayload;
 
         [SetUp]
         public void Setup()
         {
-            ownerEndpoint = new OwnerEndpoint
-                            {
-                                MulticastUri = new Uri("tcp://127.0.0.1"),
-                                UnicastUri = new Uri("tcp://127.0.0.1")
-                            };
+            ownerPayload = Guid.NewGuid().ToByteArray();
         }
 
         [Test]
@@ -87,7 +83,7 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
                         var roundBasedRegister = testSetup.RoundBasedRegister;
 
                         var ballot0 = ballotGenerator.New(localNode.SocketIdentity);
-                        var lease = new Lease(localNode.SocketIdentity, ownerEndpoint, DateTime.UtcNow);
+                        var lease = new Lease(localNode.SocketIdentity, DateTime.UtcNow, ownerPayload);
                         var txResult = roundBasedRegister.Write(ballot0, lease);
                         Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
 
@@ -112,7 +108,7 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
                         var roundBasedRegister = testSetup.RoundBasedRegister;
 
                         var ballot0 = ballotGenerator.New(localNode.SocketIdentity);
-                        var lease = new Lease(localNode.SocketIdentity, ownerEndpoint, DateTime.UtcNow);
+                        var lease = new Lease(localNode.SocketIdentity, DateTime.UtcNow, ownerPayload);
                         var txResult = roundBasedRegister.Write(ballot0, lease);
                         Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
 
