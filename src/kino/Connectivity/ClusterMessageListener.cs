@@ -88,9 +88,6 @@ namespace kino.Connectivity
                 {
                     if (PingSilence())
                     {
-                        var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
-                        logger.Info($"Disconnecting from Rendezvous {rendezvousServer.MulticastUri.AbsoluteUri}");
-
                         restartRequestHandler();
                     }
                 }
@@ -115,6 +112,9 @@ namespace kino.Connectivity
                                             membershipConfiguration.PingSilenceBeforeRendezvousFailover);
             if (result == WaitHandle.WaitTimeout)
             {
+                var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
+                logger.Info($"Ping timeout Rendezvous {rendezvousServer.MulticastUri.AbsoluteUri}");
+
                 rendezvousCluster.RotateRendezvousServers();
                 return true;
             }
@@ -160,6 +160,10 @@ namespace kino.Connectivity
             var shouldHandle = IsRendezvousReconfiguration(message);
             if (shouldHandle)
             {
+                var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
+                logger.Info($"New Rendezvous cluster configuration. " +
+                            $"Disconnecting {rendezvousServer.MulticastUri.AbsoluteUri}");
+
                 var payload = message.GetPayload<RendezvousConfigurationChangedMessage>();
                 rendezvousCluster.Reconfigure(payload
                                                   .RendezvousNodes
@@ -179,8 +183,12 @@ namespace kino.Connectivity
                 var payload = message.GetPayload<RendezvousNotLeaderMessage>();
                 var newLeader = new RendezvousEndpoint(new Uri(payload.NewLeader.UnicastUri),
                                                        new Uri(payload.NewLeader.MulticastUri));
-                if (!rendezvousCluster.GetCurrentRendezvousServer().Equals(newLeader))
+                var currentLeader = rendezvousCluster.GetCurrentRendezvousServer();
+                if (!currentLeader.Equals(newLeader))
                 {
+                    logger.Info($"New Rendezvous leader: {newLeader.MulticastUri.AbsoluteUri}. " +
+                                $"Disconnecting {currentLeader.MulticastUri.AbsoluteUri}");
+
                     rendezvousCluster.SetCurrentRendezvousServer(newLeader);
                     newRendezvousConfiguration.Set();
                 }
