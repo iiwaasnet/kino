@@ -117,6 +117,10 @@
       <Project>{2c69ba32-dadc-4e4e-8d91-055fb9d35bff}</Project>
       <Name>kino.Client</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\kino.Consensus\kino.Consensus.csproj">
+      <Project>{1143ea92-6006-4fa1-b844-1e7078d5cbda}</Project>
+      <Name>kino.Consensus</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\kino.Rendezvous\kino.Rendezvous.csproj">
       <Project>{4680d77e-3310-4ff1-adbf-d728c3e1c317}</Project>
       <Name>kino.Rendezvous</Name>

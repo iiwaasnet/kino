@@ -1,4 +1,5 @@
-﻿using kino.Rendezvous.Consensus;
+﻿using kino.Consensus;
+using kino.Consensus.Configuration;
 
 namespace kino.Rendezvous.Configuration
 {

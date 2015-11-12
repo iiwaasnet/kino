@@ -1,7 +1,7 @@
 ﻿using Autofac;
+using kino.Consensus;
+using kino.Consensus.Configuration;
 using kino.Rendezvous.Configuration;
-using kino.Rendezvous.Consensus;
-using kino.Sockets;
 using TypedConfigProvider;
 
 namespace kino.Rendezvous
@@ -11,7 +11,7 @@ namespace kino.Rendezvous
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterModule<kino.MainModule>();
-            builder.RegisterModule<ConsensusModule>();
+            builder.RegisterModule<Consensus.MainModule>();
 
             builder.RegisterType<ConfigProvider>()
                    .As<IConfigProvider>()

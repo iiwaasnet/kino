@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Rendezvous.Consensus;
+using kino.Consensus.Configuration;
 
 namespace kino.Rendezvous.Configuration
 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
-using kino.Rendezvous.Consensus;
+using kino.Consensus;
+using kino.Consensus.Configuration;
 using NUnit.Framework;
 
 namespace kino.Tests.Consensus
@@ -21,7 +22,7 @@ be unique within an interval.")]
                               };
             var ballotGenerator = new BallotGenerator(leaseConfig);
             var ballot1 = ballotGenerator.New(identity);
-            Thread.Sleep((int)leaseConfig.ClockDrift.TotalMilliseconds / 10);
+            Thread.Sleep((int) leaseConfig.ClockDrift.TotalMilliseconds / 10);
             var ballot2 = ballotGenerator.New(identity);
 
             Assert.GreaterOrEqual(leaseConfig.ClockDrift, ballot2.Timestamp - ballot1.Timestamp);

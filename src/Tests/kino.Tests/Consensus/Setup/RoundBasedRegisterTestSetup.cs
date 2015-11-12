@@ -1,6 +1,6 @@
 using System;
 using kino.Connectivity;
-using kino.Rendezvous.Consensus;
+using kino.Consensus;
 
 namespace kino.Tests.Consensus.Setup
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
+using kino.Consensus;
 using kino.Framework;
-using kino.Rendezvous.Consensus;
 using NUnit.Framework;
 using static kino.Tests.Consensus.Setup.RoundBasedRegisterTestsHelper;
 

@@ -29,8 +29,6 @@ namespace kino.Rendezvous
 
         private void CreateServiceConfiguration(HostConfigurator x)
         {
-            
-
             var config = container.Resolve<RendezvousConfiguration>();
 
             x.Service<IRendezvousService>(s =>
