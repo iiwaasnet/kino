@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using kino.Connectivity;
-using kino.Messaging;
+using kino.Core.Connectivity;
+using kino.Core.Messaging;
 
 namespace kino.Client
 {

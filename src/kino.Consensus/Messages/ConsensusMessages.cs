@@ -1,4 +1,4 @@
-﻿using kino.Connectivity;
+﻿using kino.Core.Connectivity;
 
 namespace kino.Consensus.Messages
 {

@@ -1,4 +1,4 @@
-﻿using kino.Messaging;
+﻿using kino.Core.Messaging;
 
 namespace kino.Actors
 {

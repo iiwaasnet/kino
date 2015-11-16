@@ -1,6 +1,5 @@
 ﻿using System;
-using kino.Connectivity;
-using kino.Messaging;
+using kino.Core.Connectivity;
 using kino.Tests.Actors.Setup;
 using NUnit.Framework;
 

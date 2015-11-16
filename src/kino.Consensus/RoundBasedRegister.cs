@@ -4,9 +4,9 @@ using System.Reactive.Linq;
 using System.Threading;
 using kino.Consensus.Configuration;
 using kino.Consensus.Messages;
-using kino.Diagnostics;
-using kino.Framework;
-using kino.Messaging;
+using kino.Core.Diagnostics;
+using kino.Core.Framework;
+using kino.Core.Messaging;
 
 namespace kino.Consensus
 {

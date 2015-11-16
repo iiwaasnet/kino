@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using kino.Diagnostics;
-using kino.Messaging;
+using kino.Core.Diagnostics;
+using kino.Core.Messaging;
 
 namespace kino.Consensus
 {

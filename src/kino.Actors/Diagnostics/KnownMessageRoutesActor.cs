@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using kino.Connectivity;
-using kino.Framework;
-using kino.Messaging;
-using kino.Messaging.Messages;
+using kino.Core.Connectivity;
+using kino.Core.Framework;
+using kino.Core.Messaging;
+using kino.Core.Messaging.Messages;
 
 namespace kino.Actors.Diagnostics
 {

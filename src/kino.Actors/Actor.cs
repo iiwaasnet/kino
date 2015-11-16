@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using kino.Connectivity;
+using kino.Core.Connectivity;
 
 namespace kino.Actors
 {

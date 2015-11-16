@@ -121,13 +121,13 @@
       <Project>{1143ea92-6006-4fa1-b844-1e7078d5cbda}</Project>
       <Name>kino.Consensus</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\kino.Core\kino.Core.csproj">
+      <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
+      <Name>kino.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\kino.Rendezvous\kino.Rendezvous.csproj">
       <Project>{4680d77e-3310-4ff1-adbf-d728c3e1c317}</Project>
       <Name>kino.Rendezvous</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino\kino.csproj">
-      <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
-      <Name>kino</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

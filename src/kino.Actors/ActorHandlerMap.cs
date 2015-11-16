@@ -3,9 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using kino.Connectivity;
-using kino.Framework;
-using kino.Messaging;
+using kino.Core.Connectivity;
+using kino.Core.Framework;
 
 namespace kino.Actors
 {

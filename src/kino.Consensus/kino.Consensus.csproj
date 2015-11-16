@@ -30,10 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="protobuf-net, Version=2.0.0.668, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
       <HintPath>..\packages\protobuf-net.2.0.0.668\lib\net40\protobuf-net.dll</HintPath>
       <Private>True</Private>
@@ -64,7 +60,6 @@
     <Compile Include="Ballot.cs" />
     <Compile Include="BallotGenerator.cs" />
     <Compile Include="BallotTimestamp.cs" />
-    <Compile Include="MainModule.cs" />
     <Compile Include="IBallotGenerator.cs" />
     <Compile Include="IIntercomMessageHub.cs" />
     <Compile Include="ILeaseProvider.cs" />
@@ -100,14 +95,14 @@
     <Compile Include="TxOutcome.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\kino\kino.csproj">
-      <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
-      <Name>kino</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\kino.Core\kino.Core.csproj">
+      <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
+      <Name>kino.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using kino.Framework;
-using kino.Messaging;
-using kino.Messaging.Messages;
+using kino.Core.Framework;
+using kino.Core.Messaging;
+using kino.Core.Messaging.Messages;
 
 namespace kino.Client
 {

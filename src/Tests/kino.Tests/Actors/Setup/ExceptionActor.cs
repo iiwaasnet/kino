@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using kino.Actors;
-using kino.Connectivity;
-using kino.Messaging;
+using kino.Core.Connectivity;
+using kino.Core.Messaging;
 
 namespace kino.Tests.Actors.Setup
 {

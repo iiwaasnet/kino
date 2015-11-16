@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using kino.Client;
-using kino.Connectivity;
-using kino.Connectivity.ServiceMessageHandlers;
-using kino.Diagnostics;
-using kino.Framework;
-using kino.Messaging;
-using kino.Messaging.Messages;
-using kino.Sockets;
+using kino.Core.Connectivity;
+using kino.Core.Connectivity.ServiceMessageHandlers;
+using kino.Core.Diagnostics;
+using kino.Core.Framework;
+using kino.Core.Messaging;
+using kino.Core.Messaging.Messages;
+using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
-using IMessageTracer = kino.Connectivity.IMessageTracer;
+using IMessageTracer = kino.Core.Connectivity.IMessageTracer;
 
 namespace kino.Tests.Connectivity
 {
@@ -52,7 +52,7 @@ namespace kino.Tests.Connectivity
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(messageRouterSocketFactory.CreateSocket);
             loggerMock = new Mock<ILogger>();
             messageTracer = new Mock<IMessageTracer>();
-            logger = new Logger("default");
+            logger = new Mock<ILogger>().Object;
             serviceMessageHandlers = Enumerable.Empty<IServiceMessageHandler>();
         }
 

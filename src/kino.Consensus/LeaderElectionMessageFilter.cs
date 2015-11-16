@@ -1,8 +1,8 @@
 ﻿using System;
 using kino.Consensus.Configuration;
 using kino.Consensus.Messages;
-using kino.Framework;
-using kino.Messaging;
+using kino.Core.Framework;
+using kino.Core.Messaging;
 
 namespace kino.Consensus
 {

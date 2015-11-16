@@ -1,4 +1,4 @@
-﻿using kino.Framework;
+﻿using kino.Core.Framework;
 
 namespace kino.Consensus
 {

@@ -1,7 +1,6 @@
 ﻿using System;
-using kino.Connectivity;
-using kino.Diagnostics;
-using kino.Messaging;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
 using kino.Tests.Actors.Setup;
 using Moq;
 using NUnit.Framework;

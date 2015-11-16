@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq;
 using kino.Client;
-using kino.Diagnostics;
-using kino.Framework;
-using kino.Messaging;
-using kino.Messaging.Messages;
+using kino.Core.Diagnostics;
+using kino.Core.Framework;
+using kino.Core.Messaging;
+using kino.Core.Messaging.Messages;
 using kino.Tests.Actors.Setup;
 using Moq;
 using NUnit.Framework;
-using MessageIdentifier = kino.Connectivity.MessageIdentifier;
+using MessageIdentifier = kino.Core.Connectivity.MessageIdentifier;
 
 namespace kino.Tests.Client
 {

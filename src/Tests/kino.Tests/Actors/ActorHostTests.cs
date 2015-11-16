@@ -3,12 +3,12 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using kino.Actors;
-using kino.Connectivity;
-using kino.Diagnostics;
-using kino.Framework;
-using kino.Messaging;
-using kino.Messaging.Messages;
-using kino.Sockets;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
+using kino.Core.Framework;
+using kino.Core.Messaging;
+using kino.Core.Messaging.Messages;
+using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
@@ -36,7 +36,7 @@ namespace kino.Tests.Actors
         {
             messageTracer = new Mock<IMessageTracer>();
             loggerMock = new Mock<ILogger>();
-            logger = new Logger("default");
+            logger = new Mock<ILogger>().Object;
             actorHandlersMap = new ActorHandlerMap();
             actorHostSocketFactory = new ActorHostSocketFactory();
             socketFactory = new Mock<ISocketFactory>();

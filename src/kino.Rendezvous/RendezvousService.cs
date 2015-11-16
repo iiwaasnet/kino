@@ -1,15 +1,15 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
-using kino.Diagnostics;
-using kino.Framework;
-using kino.Messaging;
-using kino.Messaging.Messages;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
+using kino.Core.Framework;
+using kino.Core.Messaging;
+using kino.Core.Messaging.Messages;
+using kino.Core.Sockets;
 using kino.Rendezvous.Configuration;
-using kino.Sockets;
 
 namespace kino.Rendezvous
 {

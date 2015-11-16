@@ -78,13 +78,13 @@
     <Compile Include="ApplicationConfiguration.cs" />
     <Compile Include="ConfigurationProvider.cs" />
     <Compile Include="IConfigurationProvider.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Messages\GroupCharsResponseMessage.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="Messages\EhlloMessage.cs" />
     <Compile Include="Messages\HelloMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RendezvousEndpoint.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -107,8 +107,12 @@
       <Project>{2c69ba32-dadc-4e4e-8d91-055fb9d35bff}</Project>
       <Name>kino.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\kino\kino.csproj">
+    <ProjectReference Include="..\..\kino.Core\kino.Core.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
+      <Name>kino.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino\kino.csproj">
+      <Project>{dd0c07ed-15db-4a33-b796-2ad4058e7433}</Project>
       <Name>kino</Name>
     </ProjectReference>
   </ItemGroup>

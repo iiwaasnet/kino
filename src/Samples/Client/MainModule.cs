@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using Autofac;
 using kino.Client;
-using kino.Connectivity;
-using kino.Framework;
-using kino.Messaging;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
 using TypedConfigProvider;
 
 namespace Client
@@ -12,7 +11,9 @@ namespace Client
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterModule<kino.Client.MainModule>();
+            builder.Register(c => new Logger("default"))
+                   .As<ILogger>()
+                   .SingleInstance();
 
             builder.RegisterType<ConfigProvider>()
                    .As<IConfigProvider>()
@@ -39,7 +40,7 @@ namespace Client
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
-                   .As<IEnumerable<kino.Connectivity.RendezvousEndpoint>>()
+                   .As<IEnumerable<RendezvousEndpoint>>()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())

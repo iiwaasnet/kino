@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using Autofac;
 using kino.Actors;
-using kino.Connectivity;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
 using Server.Actors;
 using TypedConfigProvider;
-using RendezvousEndpoint = kino.Connectivity.RendezvousEndpoint;
 
 namespace Server
 {
@@ -12,15 +12,17 @@ namespace Server
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterModule(new kino.Actors.MainModule());
+            builder.Register(c => new Logger("default"))
+                   .As<ILogger>()
+                   .SingleInstance();
 
-          builder.RegisterType<RevertStringActor>()
-            .As<IActor>()
-            .SingleInstance();
+            builder.RegisterType<RevertStringActor>()
+                   .As<IActor>()
+                   .SingleInstance();
 
-      builder.RegisterType<GroupCharsActor>()
-            .As<IActor>()
-            .SingleInstance();
+            builder.RegisterType<GroupCharsActor>()
+                   .As<IActor>()
+                   .SingleInstance();
 
             builder.RegisterType<ConfigProvider>()
                    .As<IConfigProvider>()

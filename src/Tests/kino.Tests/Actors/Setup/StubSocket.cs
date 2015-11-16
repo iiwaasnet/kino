@@ -2,8 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using kino.Messaging;
-using kino.Sockets;
+using kino.Core.Messaging;
+using kino.Core.Sockets;
 
 namespace kino.Tests.Actors.Setup
 {

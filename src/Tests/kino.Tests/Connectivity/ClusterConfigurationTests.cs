@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
-using kino.Connectivity;
-using kino.Diagnostics;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
 using Moq;
 using NUnit.Framework;
 

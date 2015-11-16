@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using kino.Client;
-using kino.Connectivity;
-using kino.Diagnostics;
-using kino.Framework;
-using kino.Messaging;
-using kino.Messaging.Messages;
-using kino.Sockets;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
+using kino.Core.Framework;
+using kino.Core.Messaging;
+using kino.Core.Messaging.Messages;
+using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
@@ -36,7 +36,7 @@ namespace kino.Tests.Client
         {
             callbackHandlerStack = new Mock<ICallbackHandlerStack>();
             loggerMock = new Mock<ILogger>();
-            logger = new Logger("default");
+            logger = new Mock<ILogger>().Object;
             messageHubSocketFactory = new MessageHubSocketFactory();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(messageHubSocketFactory.CreateSocket);

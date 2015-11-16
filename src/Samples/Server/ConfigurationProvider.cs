@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using kino.Connectivity;
+using kino.Core.Connectivity;
 
 namespace Server
 {
@@ -15,8 +14,7 @@ namespace Server
         }
 
         public IEnumerable<RendezvousEndpoint> GetRendezvousEndpointsConfiguration()
-            => appConfig.RendezvousServers.Select(rs => new RendezvousEndpoint(new Uri(rs.UnicastUri),
-                                                                               new Uri(rs.BroadcastUri)));
+            => appConfig.RendezvousServers;
 
         public RouterConfiguration GetRouterConfiguration()
             => new RouterConfiguration

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using kino.Connectivity;
-using kino.Messaging;
+using kino.Core.Connectivity;
+using kino.Core.Messaging;
 using kino.Tests.Actors.Setup;
 using NUnit.Framework;
 

@@ -41,10 +41,6 @@
       <HintPath>..\..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Autofac.Configuration, Version=3.3.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Autofac.Configuration.3.3.0\lib\net40\Autofac.Configuration.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="C5, Version=2.3.5280.26713, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
       <HintPath>..\..\packages\C5.2.3.0.1\lib\net40\C5.dll</HintPath>
       <Private>True</Private>
@@ -95,8 +91,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigurationProvider.cs" />
+    <Compile Include="IConfigurationProvider.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RendezvousModule.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
@@ -117,6 +117,14 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\kino.Consensus\kino.Consensus.csproj">
+      <Project>{1143ea92-6006-4fa1-b844-1e7078d5cbda}</Project>
+      <Name>kino.Consensus</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Core\kino.Core.csproj">
+      <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
+      <Name>kino.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\kino.Rendezvous\kino.Rendezvous.csproj">
       <Project>{4680d77e-3310-4ff1-adbf-d728c3e1c317}</Project>
       <Name>kino.Rendezvous</Name>

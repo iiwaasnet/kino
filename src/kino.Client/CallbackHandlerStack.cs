@@ -1,9 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Connectivity;
-using kino.Framework;
-using kino.Messaging;
+using kino.Core.Connectivity;
+using kino.Core.Framework;
+using kino.Core.Messaging;
 
 namespace kino.Client
 {

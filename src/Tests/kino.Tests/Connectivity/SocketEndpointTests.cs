@@ -1,5 +1,5 @@
 ﻿using System;
-using kino.Connectivity;
+using kino.Core.Connectivity;
 using NUnit.Framework;
 
 namespace kino.Tests.Connectivity

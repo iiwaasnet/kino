@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Consensus.Configuration;
-using kino.Diagnostics;
-using kino.Messaging;
-using kino.Sockets;
+using kino.Core.Diagnostics;
+using kino.Core.Messaging;
+using kino.Core.Sockets;
 
 namespace kino.Consensus
 {

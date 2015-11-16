@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
-using kino.Connectivity;
 using kino.Consensus.Configuration;
-using kino.Diagnostics;
-using kino.Framework;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
+using kino.Core.Framework;
 
 namespace kino.Consensus
 {

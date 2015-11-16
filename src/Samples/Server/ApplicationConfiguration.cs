@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using kino.Actors;
+using kino.Core.Connectivity;
 
 namespace Server
 {

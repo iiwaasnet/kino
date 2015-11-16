@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Autofac;
 using Client.Messages;
+using kino;
 using kino.Client;
-using kino.Connectivity;
-using kino.Messaging;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
+using kino.Core.Messaging;
+using kino.Core.Sockets;
 using static System.Console;
 
 namespace Client
@@ -17,14 +22,18 @@ namespace Client
             builder.RegisterModule(new MainModule());
             var container = builder.Build();
 
-            var messageRouter = container.Resolve<IMessageRouter>();
+            var componentResolver = new ComponentsResolver(container.ResolveOptional<SocketConfiguration>());
+
+            var messageRouter = componentResolver.CreateMessageRouter(container.Resolve<RouterConfiguration>(),
+                                                                      container.Resolve<ClusterMembershipConfiguration>(),
+                                                                      container.Resolve<IEnumerable<RendezvousEndpoint>>(),
+                                                                      container.Resolve<ILogger>());
             messageRouter.Start();
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
             Thread.Sleep(TimeSpan.FromMilliseconds(30));
 
-            var ccMon = container.Resolve<IClusterMonitor>();
-            ccMon.Start();
-            var messageHub = container.Resolve<IMessageHub>();
+            var messageHub = componentResolver.CreateMessageHub(container.Resolve<MessageHubConfiguration>(),
+                                                                container.Resolve<ILogger>());
             messageHub.Start();
 
             Thread.Sleep(TimeSpan.FromSeconds(5));
@@ -34,8 +43,7 @@ namespace Client
             request.TraceOptions = MessageTraceOptions.None;
             var callbackPoint = CallbackPoint.Create<GroupCharsResponseMessage>();
             var promise = messageHub.EnqueueRequest(request, callbackPoint);
-            var timeout = TimeSpan.FromSeconds(4);
-            if (promise.GetResponse().Wait(timeout))
+            if (promise.GetResponse().Wait(TimeSpan.FromSeconds(4)))
             {
                 var response = promise.GetResponse().Result.GetPayload<GroupCharsResponseMessage>();
 
@@ -47,13 +55,12 @@ namespace Client
             }
             else
             {
-                WriteLine($"Call timed out after {timeout.TotalSeconds} sec.");
+                WriteLine($"Call timed out after {TimeSpan.FromSeconds(4).TotalSeconds} sec.");
             }
 
             ReadLine();
             messageHub.Stop();
             messageRouter.Stop();
-            ccMon.Stop();
             container.Dispose();
 
             WriteLine("Client stopped.");

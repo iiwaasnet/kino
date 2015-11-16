@@ -1,8 +1,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using kino.Actors;
-using kino.Connectivity;
-using kino.Messaging;
+using kino.Core.Connectivity;
+using kino.Core.Messaging;
 using Server.Messages;
 
 namespace Server.Actors

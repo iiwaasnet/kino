@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq;
-using kino.Connectivity;
-using kino.Diagnostics;
-using kino.Framework;
-using kino.Messaging;
-using kino.Messaging.Messages;
-using kino.Sockets;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
+using kino.Core.Framework;
+using kino.Core.Messaging;
+using kino.Core.Messaging.Messages;
+using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;

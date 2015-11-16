@@ -2,7 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
-using kino.Sockets;
+using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
 
 namespace kino.Tests.Helpers

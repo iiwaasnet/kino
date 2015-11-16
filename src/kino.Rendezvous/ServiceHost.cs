@@ -1,7 +1,7 @@
 ﻿using System;
-using Autofac;
-using Autofac.Configuration;
-using kino.Diagnostics;
+using kino.Consensus.Configuration;
+using kino.Core.Diagnostics;
+using kino.Core.Sockets;
 using kino.Rendezvous.Configuration;
 using Topshelf;
 using Topshelf.HostConfigurators;
@@ -10,18 +10,30 @@ namespace kino.Rendezvous
 {
     public class ServiceHost
     {
-        private readonly IContainer container;
+        private readonly IRendezvousService rendezvousService;
+        private readonly RendezvousConfiguration config;
         private readonly ILogger logger;
 
-        public ServiceHost()
+        public ServiceHost(IRendezvousService rendezvousService, RendezvousConfiguration config, ILogger logger)
         {
-            var builder = new ContainerBuilder();
-            builder.RegisterModule<MainModule>();
-            builder.RegisterModule(new ConfigurationSettingsReader("autofac"));
-            container = builder.Build();
-            logger = container.Resolve<ILogger>();
+            this.logger = logger;
+            this.config = config;
+            this.rendezvousService = rendezvousService;
+        }
 
-            AssertLoggerIsSet(logger);
+        public ServiceHost(LeaseConfiguration leaseConfiguration,
+                           SocketConfiguration socketConfiguration,
+                           RendezvousConfiguration rendezvousConfiguration,
+                           ApplicationConfiguration applicationConfiguration,
+                           ILogger logger)
+        {
+            this.logger = logger;
+            config = rendezvousConfiguration;
+            rendezvousService = new RendezvousServiceBuilder().Build(leaseConfiguration,
+                                                                     socketConfiguration,
+                                                                     rendezvousConfiguration,
+                                                                     applicationConfiguration,
+                                                                     logger);
         }
 
         public void Run()
@@ -29,8 +41,6 @@ namespace kino.Rendezvous
 
         private void CreateServiceConfiguration(HostConfigurator x)
         {
-            var config = container.Resolve<RendezvousConfiguration>();
-
             x.Service<IRendezvousService>(s =>
                                           {
                                               s.ConstructUsing(_ => CreateServiceInstance());
@@ -48,7 +58,6 @@ namespace kino.Rendezvous
             try
             {
                 rs.Stop();
-                container.Dispose();
             }
             catch (Exception err)
             {
@@ -57,7 +66,7 @@ namespace kino.Rendezvous
         }
 
         private IRendezvousService CreateServiceInstance()
-            => container.Resolve<IRendezvousService>();
+            => rendezvousService;
 
         private void AssertLoggerIsSet(ILogger logger)
         {

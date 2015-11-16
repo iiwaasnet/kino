@@ -9,15 +9,15 @@
 
     "rendezvousServers": [
       {
-        "broadcastUri": "tcp://127.0.0.31:5000",
+        "multicastUri": "tcp://127.0.0.31:5000",
         "unicastUri": "tcp://127.0.0.31:5001"
       },
       {
-        "broadcastUri": "tcp://127.0.0.32:5000",
+        "multicastUri": "tcp://127.0.0.32:5000",
         "unicastUri": "tcp://127.0.0.32:5001"
       },
       {
-        "broadcastUri": "tcp://127.0.0.33:5000",
+        "multicastUri": "tcp://127.0.0.33:5000",
         "unicastUri": "tcp://127.0.0.33:5001"
       }
     ]

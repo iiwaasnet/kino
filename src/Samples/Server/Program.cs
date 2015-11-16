@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Threading;
 using Autofac;
+using kino;
 using kino.Actors;
-using kino.Connectivity;
+using kino.Core.Connectivity;
+using kino.Core.Diagnostics;
+using kino.Core.Sockets;
 using static System.Console;
 
 namespace Server
@@ -16,15 +19,18 @@ namespace Server
             builder.RegisterModule(new MainModule());
             var container = builder.Build();
 
-            var messageRouter = container.Resolve<IMessageRouter>();
+            var componentResolver = new ComponentsResolver(container.ResolveOptional<SocketConfiguration>());
+
+            var messageRouter = componentResolver.CreateMessageRouter(container.Resolve<RouterConfiguration>(),
+                                                                      container.Resolve<ClusterMembershipConfiguration>(),
+                                                                      container.Resolve<IEnumerable<RendezvousEndpoint>>(),
+                                                                      container.Resolve<ILogger>());
             messageRouter.Start();
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
             Thread.Sleep(TimeSpan.FromMilliseconds(30));
 
-            var ccMon = container.Resolve<IClusterMonitor>();
-            ccMon.Start();
-
-            var actorHost = container.Resolve<IActorHost>();
+            var actorHost = componentResolver.CreateActorHost(container.Resolve<RouterConfiguration>(),
+                                                              container.Resolve<ILogger>());
             actorHost.Start();
             foreach (var actor in container.Resolve<IEnumerable<IActor>>())
             {
@@ -36,7 +42,6 @@ namespace Server
 
             actorHost.Stop();
             messageRouter.Stop();
-            ccMon.Stop();
             container.Dispose();
 
             WriteLine("ActorHost stopped.");

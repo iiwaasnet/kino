@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("ac984f96-6d8f-466b-b6a7-b241a7c5dec1")]
+[assembly: Guid("dd0c07ed-15db-4a33-b796-2ad4058e7433")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -34,8 +34,3 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: InternalsVisibleTo("kino.Client", AllInternalsVisible = true)]
-[assembly: InternalsVisibleTo("kino.Actors", AllInternalsVisible = true)]
-[assembly: InternalsVisibleTo("kino.Rendezvous", AllInternalsVisible = true)]
-[assembly: InternalsVisibleTo("kino.Consensus", AllInternalsVisible = true)]
-[assembly: InternalsVisibleTo("kino.Tests", AllInternalsVisible = true)]
