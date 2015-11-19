@@ -4,8 +4,6 @@ using C5;
 
 namespace kino.Core.Connectivity
 {
-    //TODO: Add TTL for registrations, so that never consumed handlers are not staying forever
-
     public class InternalRoutingTable : IInternalRoutingTable
     {
         private readonly System.Collections.Generic.IDictionary<MessageIdentifier, HashedLinkedList<SocketIdentifier>> messageToSocketMap;

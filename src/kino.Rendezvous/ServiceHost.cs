@@ -29,7 +29,7 @@ namespace kino.Rendezvous
         {
             this.logger = logger;
             config = rendezvousConfiguration;
-            rendezvousService = new RendezvousServiceBuilder().Build(leaseConfiguration,
+            rendezvousService = new Composer().BuildRendezvousService(leaseConfiguration,
                                                                      socketConfiguration,
                                                                      rendezvousConfiguration,
                                                                      applicationConfiguration,

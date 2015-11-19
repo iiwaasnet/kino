@@ -2,7 +2,6 @@
 
 namespace Rendezvous
 {
-    //TODO: Remove logger implementation and NLog package
     public class Logger : ILogger
     {
         private readonly NLog.Logger logger;

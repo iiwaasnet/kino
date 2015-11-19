@@ -8,14 +8,13 @@ using SynodConfiguration = kino.Consensus.Configuration.SynodConfiguration;
 
 namespace kino.Rendezvous
 {
-    public class RendezvousServiceBuilder
+    public class Composer
     {
-
-        public IRendezvousService Build(LeaseConfiguration leaseConfiguration,
-                                        SocketConfiguration socketConfiguration,
-                                        RendezvousConfiguration rendezvousConfiguration,
-                                        ApplicationConfiguration applicationConfiguration,
-                                        ILogger logger)
+        public IRendezvousService BuildRendezvousService(LeaseConfiguration leaseConfiguration,
+                                                         SocketConfiguration socketConfiguration,
+                                                         RendezvousConfiguration rendezvousConfiguration,
+                                                         ApplicationConfiguration applicationConfiguration,
+                                                         ILogger logger)
         {
             var socketFactory = new SocketFactory(socketConfiguration);
             var ballotGenerator = new BallotGenerator(leaseConfiguration);

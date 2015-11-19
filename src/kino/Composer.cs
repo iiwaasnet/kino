@@ -10,16 +10,16 @@ using MessageTracer = kino.Core.Connectivity.MessageTracer;
 
 namespace kino
 {
-    public class ComponentsResolver : IComponentsResolver
+    public class Composer
     {
         private readonly SocketFactory socketFactory;
 
-        public ComponentsResolver(SocketConfiguration socketConfiguration)
+        public Composer(SocketConfiguration socketConfiguration)
         {
             socketFactory = new SocketFactory(socketConfiguration);
         }
 
-        public IMessageRouter CreateMessageRouter(RouterConfiguration routerConfiguration,
+        public IMessageRouter BuildMessageRouter(RouterConfiguration routerConfiguration,
                                                   ClusterMembershipConfiguration clusterMembershipConfiguration,
                                                   IEnumerable<RendezvousEndpoint> rendezvousEndpoints,
                                                   ILogger logger)
@@ -62,7 +62,7 @@ namespace kino
                                      logger);
         }
 
-        public IMessageHub CreateMessageHub(MessageHubConfiguration messageHubConfiguration,
+        public IMessageHub BuildMessageHub(MessageHubConfiguration messageHubConfiguration,
                                             ILogger logger)
         {
             var messageTracer = new Client.MessageTracer(logger);
@@ -75,7 +75,7 @@ namespace kino
                                   logger);
         }
 
-        public IActorHost CreateActorHost(RouterConfiguration routerConfiguration,
+        public IActorHost BuildActorHost(RouterConfiguration routerConfiguration,
                                           ILogger logger)
         {
             var messageTracer = new Actors.MessageTracer(logger);

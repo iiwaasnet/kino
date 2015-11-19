@@ -19,9 +19,9 @@ namespace Server
             builder.RegisterModule(new MainModule());
             var container = builder.Build();
 
-            var componentResolver = new ComponentsResolver(container.ResolveOptional<SocketConfiguration>());
+            var componentResolver = new Composer(container.ResolveOptional<SocketConfiguration>());
 
-            var messageRouter = componentResolver.CreateMessageRouter(container.Resolve<RouterConfiguration>(),
+            var messageRouter = componentResolver.BuildMessageRouter(container.Resolve<RouterConfiguration>(),
                                                                       container.Resolve<ClusterMembershipConfiguration>(),
                                                                       container.Resolve<IEnumerable<RendezvousEndpoint>>(),
                                                                       container.Resolve<ILogger>());
@@ -29,7 +29,7 @@ namespace Server
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
             Thread.Sleep(TimeSpan.FromMilliseconds(30));
 
-            var actorHost = componentResolver.CreateActorHost(container.Resolve<RouterConfiguration>(),
+            var actorHost = componentResolver.BuildActorHost(container.Resolve<RouterConfiguration>(),
                                                               container.Resolve<ILogger>());
             actorHost.Start();
             foreach (var actor in container.Resolve<IEnumerable<IActor>>())

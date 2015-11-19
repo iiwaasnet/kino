@@ -1,6 +1,5 @@
 ﻿namespace kino.Core.Connectivity
 {
-    //TODO: Use IClusterMonitorProvider instead of direct instantiation of IClusterMonitor
     public class ClusterMonitorProvider : IClusterMonitorProvider
     {
         private readonly IClusterMonitor clusterMonitor;
