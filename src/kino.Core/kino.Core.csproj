@@ -69,6 +69,7 @@
     <Compile Include="Connectivity\IClusterMessageListener.cs" />
     <Compile Include="Connectivity\IClusterMessageSender.cs" />
     <Compile Include="Connectivity\MessageHandlerDefinitionAttribute.cs" />
+    <Compile Include="Connectivity\MessageRouter.Tracing.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfigurationReadonlyStorage.cs" />
     <Compile Include="Connectivity\Node.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfiguration.cs" />
@@ -90,10 +91,8 @@
     <Compile Include="Connectivity\IInternalRoutingTable.cs" />
     <Compile Include="Connectivity\AsyncMessageContext.cs" />
     <Compile Include="Connectivity\IMessageRouter.cs" />
-    <Compile Include="Connectivity\IMessageTracer.cs" />
     <Compile Include="Connectivity\InternalRoute.cs" />
     <Compile Include="Connectivity\LoopbackClusterMonitor.cs" />
-    <Compile Include="Connectivity\MessageTracer.cs" />
     <Compile Include="Connectivity\RendezvousCluster.cs" />
     <Compile Include="Connectivity\RendezvousEndpoint.cs" />
     <Compile Include="Connectivity\ClusterMembership.cs" />
@@ -157,6 +156,7 @@
     <Compile Include="Sockets\Socket.cs" />
     <Compile Include="Sockets\SocketConfiguration.cs" />
     <Compile Include="Sockets\SocketFactory.cs" />
+    <Compile Include="Sockets\SocketHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

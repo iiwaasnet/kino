@@ -1,20 +1,12 @@
 ﻿using System.Linq;
-using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 
 namespace kino.Core.Connectivity
 {
-    public class MessageTracer : IMessageTracer
+    public partial class MessageRouter
     {
-        private readonly ILogger logger;
-
-        public MessageTracer(ILogger logger)
-        {
-            this.logger = logger;
-        }
-
-        public void RoutedToLocalActor(Message message)
+        private void RoutedToLocalActor(Message message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
@@ -26,7 +18,7 @@ namespace kino.Core.Connectivity
             }
         }
 
-        public void ForwardedToOtherNode(Message message)
+        private void ForwardedToOtherNode(Message message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
@@ -38,7 +30,7 @@ namespace kino.Core.Connectivity
             }
         }
 
-        public void ReceivedFromOtherNode(Message message)
+        private void ReceivedFromOtherNode(Message message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {

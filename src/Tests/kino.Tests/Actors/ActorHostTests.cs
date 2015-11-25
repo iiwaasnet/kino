@@ -13,7 +13,6 @@ using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
-using IMessageTracer = kino.Actors.IMessageTracer;
 
 namespace kino.Tests.Actors
 {
@@ -29,12 +28,10 @@ namespace kino.Tests.Actors
         private ActorHandlerMap actorHandlersMap;
         private Mock<ISocketFactory> socketFactory;
         private ActorHostSocketFactory actorHostSocketFactory;
-        private Mock<IMessageTracer> messageTracer;
 
         [SetUp]
         public void Setup()
         {
-            messageTracer = new Mock<IMessageTracer>();
             loggerMock = new Mock<ILogger>();
             logger = new Mock<ILogger>().Object;
             actorHandlersMap = new ActorHandlerMap();
@@ -58,7 +55,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           actorRegistrationsQueue,
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
 
@@ -76,7 +72,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
             try
@@ -129,7 +124,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger.Object);
             try
             {
@@ -152,7 +146,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
             try
@@ -185,7 +178,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
             try
@@ -215,7 +207,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
             try
@@ -250,7 +241,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
             try
@@ -291,7 +281,6 @@ namespace kino.Tests.Actors
                                           messageCompletionQueue.Object,
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
             try
@@ -324,7 +313,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
             try
@@ -357,7 +345,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new EchoActor());
             try
@@ -395,7 +382,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
             try
@@ -431,7 +417,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IActor>(),
                                           routerConfiguration,
-                                          messageTracer.Object,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
             try

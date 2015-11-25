@@ -12,7 +12,7 @@ using kino.Core.Sockets;
 
 namespace kino.Client
 {
-    public class MessageHub : IMessageHub
+    public partial class MessageHub : IMessageHub
     {
         private readonly ICallbackHandlerStack callbackHandlers;
         private readonly ISocketFactory socketFactory;
@@ -24,18 +24,15 @@ namespace kino.Client
         private readonly ManualResetEventSlim hubRegistered;
         private readonly MessageHubConfiguration config;
         private readonly ILogger logger;
-        private readonly IMessageTracer messageTracer;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception.Version, KinoMessages.Exception.Identity);
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
                           MessageHubConfiguration config,
-                          IMessageTracer messageTracer,
                           ILogger logger)
         {
             this.logger = logger;
-            this.messageTracer = messageTracer;
             this.socketFactory = socketFactory;
             this.config = config;
             receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
@@ -93,10 +90,10 @@ namespace kino.Client
                                 callbackHandlers.Push(new CorrelationId(message.CorrelationId),
                                                       promise,
                                                       callbackPoint.MessageIdentifiers.Concat(new[] {ExceptionMessageIdentifier}));
-                                messageTracer.CallbackRegistered(message);
+                                CallbackRegistered(message);
                             }
                             socket.SendMessage(message);
-                            messageTracer.SentToRouter(message);
+                            SentToRouter(message);
                         }
                         catch (Exception err)
                         {
@@ -145,11 +142,11 @@ namespace kino.Client
                                 if (callback != null)
                                 {
                                     callback.SetResult(message);
-                                    messageTracer.CallbackResultSet(message);
+                                    CallbackResultSet(message);
                                 }
                                 else
                                 {
-                                    messageTracer.CallbackNotFound(message);
+                                    CallbackNotFound(message);
                                 }
                             }
                         }
@@ -169,7 +166,7 @@ namespace kino.Client
         private ISocket CreateOneWaySocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(config.RouterUri);
+            SocketHelper.SafeConnect(() => socket.Connect(config.RouterUri));
 
             return socket;
         }
@@ -178,7 +175,7 @@ namespace kino.Client
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(SocketIdentifier.CreateIdentity());
-            socket.Connect(config.RouterUri);
+            SocketHelper.SafeConnect(() => socket.Connect(config.RouterUri));
 
             return socket;
         }

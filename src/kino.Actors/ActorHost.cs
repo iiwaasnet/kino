@@ -12,7 +12,7 @@ using kino.Core.Sockets;
 
 namespace kino.Actors
 {
-    public class ActorHost : IActorHost
+    public partial class ActorHost : IActorHost
     {
         private readonly IActorHandlerMap actorHandlerMap;
         private Task syncProcessing;
@@ -25,7 +25,6 @@ namespace kino.Actors
         private readonly IAsyncQueue<IActor> actorRegistrationsQueue;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly ILogger logger;
-        private readonly IMessageTracer messageTracer;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public ActorHost(ISocketFactory socketFactory,
@@ -33,11 +32,9 @@ namespace kino.Actors
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
                          IAsyncQueue<IActor> actorRegistrationsQueue,
                          RouterConfiguration routerConfiguration,
-                         IMessageTracer messageTracer,
                          ILogger logger)
         {
             this.logger = logger;
-            this.messageTracer = messageTracer;
             this.actorHandlerMap = actorHandlerMap;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.socketFactory = socketFactory;
@@ -146,7 +143,7 @@ namespace kino.Actors
 
                                 localSocket.SendMessage(messageOut);
 
-                                messageTracer.ResponseSent(messageOut, false);
+                                ResponseSent(messageOut, false);
                             }
                         }
                         catch (Exception err)
@@ -188,7 +185,7 @@ namespace kino.Actors
                                 }
                                 else
                                 {
-                                    messageTracer.HandlerNotFound(message);
+                                    HandlerNotFound(message);
                                 }
                             }
                             catch (Exception err)
@@ -213,7 +210,7 @@ namespace kino.Actors
             {
                 var response = CreateTaskResultMessage(task).Messages;
 
-                messageTracer.MessageProcessed(messageIn, response.Count());
+                MessageProcessed(messageIn, response.Count());
 
                 foreach (var messageOut in response.Cast<Message>())
                 {
@@ -224,7 +221,7 @@ namespace kino.Actors
 
                     localSocket.SendMessage(messageOut);
 
-                    messageTracer.ResponseSent(messageOut, true);
+                    ResponseSent(messageOut, true);
                 }
             }
             else
@@ -259,20 +256,6 @@ namespace kino.Actors
             asyncQueue.Enqueue(asyncMessageContext, token);
         }
 
-        //private static IEnumerable<MessageIdentifier> GetTaskCallback(Task task, IMessage messageIn)
-        //{
-        //    return task.IsCanceled || task.IsFaulted
-        //               ? KinoMessages.Exception.Identity
-        //               : messageIn.CallbackIdentity;
-        //}
-
-        //private static byte[] GetTaskCallbackVersion(Task task, IMessage messageIn)
-        //{
-        //    return task.IsCanceled || task.IsFaulted
-        //               ? KinoMessages.Exception.Version
-        //               : messageIn.CallbackVersion;
-        //}
-
         private static IActorResult CreateTaskResultMessage(Task<IActorResult> task)
         {
             if (task.IsCanceled)
@@ -298,7 +281,7 @@ namespace kino.Actors
         private ISocket CreateOneWaySocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(routerConfiguration.RouterAddress.Uri);
+            SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
 
             return socket;
         }
@@ -307,7 +290,7 @@ namespace kino.Actors
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(SocketIdentifier.CreateIdentity());
-            socket.Connect(routerConfiguration.RouterAddress.Uri);
+            SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
 
             return socket;
         }

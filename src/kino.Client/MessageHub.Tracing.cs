@@ -1,33 +1,26 @@
-using kino.Core.Diagnostics;
-using kino.Core.Framework;
+﻿using kino.Core.Framework;
 using kino.Core.Messaging;
 
 namespace kino.Client
 {
-    public class MessageTracer : IMessageTracer
+    public partial class MessageHub
     {
-        private readonly ILogger logger;
-        public MessageTracer(ILogger logger)
-        {
-            this.logger = logger;
-        }
-
-        public void CallbackRegistered(IMessage message)
+        private void CallbackRegistered(IMessage message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
                 foreach (var messageIdentifier in message.CallbackPoint)
                 {
                     logger.Trace($"Callback registered for Message {message.Identity.GetString()}: " +
-                             $"{nameof(message.CallbackPoint)}:{messageIdentifier.Identity}-{messageIdentifier.Version}" +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetString()} " +
-                             $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
+                                 $"{nameof(message.CallbackPoint)}:{messageIdentifier.Identity}-{messageIdentifier.Version}" +
+                                 $"{nameof(message.Version)}:{message.Version.GetString()} " +
+                                 $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetString()} " +
+                                 $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
                 }
             }
         }
 
-        public void SentToRouter(IMessage message)
+        private void SentToRouter(IMessage message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
@@ -35,7 +28,7 @@ namespace kino.Client
             }
         }
 
-        public void CallbackResultSet(IMessage message)
+        private void CallbackResultSet(IMessage message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
@@ -46,7 +39,7 @@ namespace kino.Client
             }
         }
 
-        public void CallbackNotFound(IMessage message)
+        private void CallbackNotFound(IMessage message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {

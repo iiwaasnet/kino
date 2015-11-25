@@ -12,7 +12,7 @@ using NetMQ;
 
 namespace kino.Core.Connectivity
 {
-    public class MessageRouter : IMessageRouter
+    public partial class MessageRouter : IMessageRouter
     {
         private readonly CancellationTokenSource cancellationTokenSource;
         private Task localRouting;
@@ -24,8 +24,8 @@ namespace kino.Core.Connectivity
         private readonly IClusterMonitor clusterMonitor;
         private readonly RouterConfiguration routerConfiguration;
         private readonly ILogger logger;
-        private readonly IMessageTracer messageTracer;
         private readonly IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
+        private readonly ClusterMembershipConfiguration membershipConfiguration;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageRouter(ISocketFactory socketFactory,
@@ -33,12 +33,11 @@ namespace kino.Core.Connectivity
                              IExternalRoutingTable externalRoutingTable,
                              RouterConfiguration routerConfiguration,
                              IClusterMonitor clusterMonitor,
-                             IMessageTracer messageTracer,
                              IEnumerable<IServiceMessageHandler> serviceMessageHandlers,
+                             ClusterMembershipConfiguration membershipConfiguration,
                              ILogger logger)
         {
             this.logger = logger;
-            this.messageTracer = messageTracer;
             this.socketFactory = socketFactory;
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.internalRoutingTable = internalRoutingTable;
@@ -46,39 +45,25 @@ namespace kino.Core.Connectivity
             this.clusterMonitor = clusterMonitor;
             this.routerConfiguration = routerConfiguration;
             this.serviceMessageHandlers = serviceMessageHandlers;
+            this.membershipConfiguration = membershipConfiguration;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void Start()
         {
-            const int participantCount = 3;
+            var participantCount = membershipConfiguration.RunAsStandalone ? 2 : 3;
+
             using (var gateway = new Barrier(participantCount))
             {
                 localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, gateway),
                                                      TaskCreationOptions.LongRunning);
-                scaleOutRouting = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, gateway),
-                                                        TaskCreationOptions.LongRunning);
-                SafeStartClusterMonitor();
+                scaleOutRouting = membershipConfiguration.RunAsStandalone
+                                      ? Task.CompletedTask
+                                      : Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, gateway),
+                                                              TaskCreationOptions.LongRunning);
+                SocketHelper.SafeConnect(clusterMonitor.Start);
 
                 gateway.SignalAndWait(cancellationTokenSource.Token);
-            }
-        }
-
-        private void SafeStartClusterMonitor()
-        {
-            var retries = 3;
-            while (retries > 0)
-            {
-                try
-                {
-                    clusterMonitor.Start();
-                    retries = 0;
-                }
-                catch (EndpointNotFoundException)
-                {
-                    retries--;
-                    Thread.Sleep(TimeSpan.FromMilliseconds(100));
-                }
             }
         }
 
@@ -110,7 +95,7 @@ namespace kino.Core.Connectivity
                                 message.SetSocketIdentity(localSocketIdentity);
                                 scaleOutFrontend.SendMessage(message);
 
-                                messageTracer.ReceivedFromOtherNode(message);
+                                ReceivedFromOtherNode(message);
                             }
                         }
                         catch (Exception err)
@@ -193,7 +178,7 @@ namespace kino.Core.Connectivity
                 try
                 {
                     localSocket.SendMessage(message);
-                    messageTracer.RoutedToLocalActor(message);
+                    RoutedToLocalActor(message);
                 }
                 catch (HostUnreachableException err)
                 {
@@ -227,7 +212,7 @@ namespace kino.Core.Connectivity
                     message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
                     scaleOutBackend.SendMessage(message);
 
-                    messageTracer.ForwardedToOtherNode(message);
+                    ForwardedToOtherNode(message);
                 }
                 catch (HostUnreachableException err)
                 {
@@ -292,7 +277,7 @@ namespace kino.Core.Connectivity
             var socket = socketFactory.CreateRouterSocket();
             socket.SetIdentity(routerConfiguration.ScaleOutAddress.Identity);
             socket.SetMandatoryRouting();
-            socket.Connect(routerConfiguration.RouterAddress.Uri);
+            SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
             socket.Bind(routerConfiguration.ScaleOutAddress.Uri);
 
             return socket;
@@ -323,6 +308,6 @@ namespace kino.Core.Connectivity
         private static MessageIdentifier CreateMessageHandlerIdentifier(IMessage message)
             => message.ReceiverIdentity.IsSet()
                    ? new MessageIdentifier(message.ReceiverIdentity)
-                   : new MessageIdentifier(message.Version, message.Identity);
+                   : new MessageIdentifier(message.Version, message.Identity);       
     }
 }

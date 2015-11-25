@@ -6,7 +6,6 @@ using kino.Core.Connectivity.ServiceMessageHandlers;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Core.Sockets;
-using MessageTracer = kino.Core.Connectivity.MessageTracer;
 
 namespace kino
 {
@@ -20,9 +19,9 @@ namespace kino
         }
 
         public IMessageRouter BuildMessageRouter(RouterConfiguration routerConfiguration,
-                                                  ClusterMembershipConfiguration clusterMembershipConfiguration,
-                                                  IEnumerable<RendezvousEndpoint> rendezvousEndpoints,
-                                                  ILogger logger)
+                                                 ClusterMembershipConfiguration clusterMembershipConfiguration,
+                                                 IEnumerable<RendezvousEndpoint> rendezvousEndpoints,
+                                                 ILogger logger)
         {
             var rendezvousClusterConfigurationReadonlyStorage = new RendezvousClusterConfigurationReadonlyStorage(rendezvousEndpoints);
             var rendezvousCluster = new RendezvousCluster(rendezvousClusterConfigurationReadonlyStorage);
@@ -51,34 +50,29 @@ namespace kino
                                              new RoutesRegistrationRequestHandler(clusterMonitor, internalRoutingTable),
                                              new RouteUnregistrationHandler(externalRoutingTable)
                                          };
-            var messageTracer = new MessageTracer(logger);
             return new MessageRouter(socketFactory,
                                      internalRoutingTable,
                                      externalRoutingTable,
                                      routerConfiguration,
                                      clusterMonitor,
-                                     messageTracer,
                                      serviceMessageHandlers,
+                                     clusterMembershipConfiguration,
                                      logger);
         }
 
-        public IMessageHub BuildMessageHub(MessageHubConfiguration messageHubConfiguration,
-                                            ILogger logger)
+        public IMessageHub BuildMessageHub(MessageHubConfiguration messageHubConfiguration, ILogger logger)
         {
-            var messageTracer = new Client.MessageTracer(logger);
             var callbackHandlerStack = new CallbackHandlerStack();
 
             return new MessageHub(socketFactory,
                                   callbackHandlerStack,
                                   messageHubConfiguration,
-                                  messageTracer,
                                   logger);
         }
 
         public IActorHost BuildActorHost(RouterConfiguration routerConfiguration,
-                                          ILogger logger)
+                                         ILogger logger)
         {
-            var messageTracer = new Actors.MessageTracer(logger);
             var actorRegistrationsQueue = new AsyncQueue<IActor>();
             var asyncQueue = new AsyncQueue<AsyncMessageContext>();
             var actorHandlerMap = new ActorHandlerMap();
@@ -88,7 +82,6 @@ namespace kino
                                  asyncQueue,
                                  actorRegistrationsQueue,
                                  routerConfiguration,
-                                 messageTracer,
                                  logger);
         }
     }

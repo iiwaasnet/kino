@@ -72,7 +72,6 @@
     <Compile Include="Actors\ActorHostTests.cs" />
     <Compile Include="Connectivity\ClusterMessageListenetTests.cs" />
     <Compile Include="Connectivity\MessageRouterTests.cs" />
-    <Compile Include="Client\MessageTracerTests.cs" />
     <Compile Include="Connectivity\ClusterConfigurationTests.cs" />
     <Compile Include="Connectivity\ClusterMonitorTests.cs" />
     <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />

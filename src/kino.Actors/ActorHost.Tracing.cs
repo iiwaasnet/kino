@@ -1,19 +1,11 @@
-﻿using kino.Core.Diagnostics;
-using kino.Core.Framework;
+﻿using kino.Core.Framework;
 using kino.Core.Messaging;
 
 namespace kino.Actors
 {
-    public class MessageTracer : IMessageTracer
+    public partial class ActorHost
     {
-        private readonly ILogger logger;
-
-        public MessageTracer(ILogger logger)
-        {
-            this.logger = logger;
-        }
-
-        public void HandlerNotFound(IMessage message)
+        private void HandlerNotFound(IMessage message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
@@ -23,7 +15,7 @@ namespace kino.Actors
             }
         }
 
-        public void MessageProcessed(IMessage message, int responseCount)
+        private void MessageProcessed(IMessage message, int responseCount)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
@@ -34,7 +26,7 @@ namespace kino.Actors
             }
         }
 
-        public void ResponseSent(IMessage message, bool sentSync)
+        private void ResponseSent(IMessage message, bool sentSync)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {

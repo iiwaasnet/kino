@@ -131,7 +131,7 @@ namespace kino.Core.Connectivity
         private ISocket CreateRouterCommunicationSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.Connect(routerConfiguration.RouterAddress.Uri);
+            SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
 
             return socket;
         }

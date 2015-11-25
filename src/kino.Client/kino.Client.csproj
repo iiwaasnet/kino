@@ -52,11 +52,10 @@
     <Compile Include="ICallbackHandlerStack.cs" />
     <Compile Include="ICallbackPoint.cs" />
     <Compile Include="IMessageHub.cs" />
-    <Compile Include="IMessageTracer.cs" />
     <Compile Include="IPromise.cs" />
+    <Compile Include="MessageHub.Tracing.cs" />
     <Compile Include="MessageHub.cs" />
     <Compile Include="MessageHubConfiguration.cs" />
-    <Compile Include="MessageTracer.cs" />
     <Compile Include="Promise.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
