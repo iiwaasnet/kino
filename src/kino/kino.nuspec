@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>kino</id>
-        <version>0.0.1.7-preview</version>
+        <version>0.0.1.8</version>
         <title>kino</title>
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
@@ -11,8 +11,7 @@
         <projectUrl>https://github.com/iiwaasnet/kino</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>kino is a framework for building actors networks.</description>
-        <releaseNotes>This is a preview version of the framework!
-	Features:
+        <releaseNotes>Features:
 		* Creating and hosting Actors
 		* Sync- and asynchronous sending of the messages into actors network
 		* Unicast and broadcast message sending
