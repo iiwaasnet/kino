@@ -18,7 +18,7 @@ namespace kino.Actors
             var methods = this.GetType()
                               .FindMembers(MemberTypes.Method,
                                            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
-                                           new MemberFilter(InterfaceMethodFilter),
+                                           InterfaceMethodFilter,
                                            typeof (MessageHandlerDefinitionAttribute))
                               .Cast<MethodInfo>();
 
