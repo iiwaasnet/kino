@@ -23,23 +23,23 @@ Although, the framework does not implement classical Actor Model, we will still 
 
 So, an **Actor** contains implementation, i.e. methods, which others can invoke by sending corresponding **Message**.
 You don't have to know address of an actor, the only thing needed - is the message itself. Message **Identity** (or type) and **Version** are used to find concrete actor and 
-invoke it's method. That's it. You send a message *somewhere* and it is magically routed to a proper actor's method for you.
+invoke its method. That's it. You send a message *somewhere* and it is magically routed to a proper actor's method for you.
 
 
 ![Actors](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png)
 
 
 For this magic to work we need someone, who will create the mapping between messages and actors' methods.
-In **kino** this is done by the **ActorHost**.  When actor is *registered* at ActorHost, it *queries* actor's interface, list of methods and
+In **kino** this is done by the **ActorHost**.  When actor is registered at ActorHost, it queries actor's interface, list of methods and
 message types they can accept, and builds the **ActorHandlerMap** table. This mapping table is then later used to find corresponding method for each message
 in the incoming messages queue.
 
 ![ActorHost](https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png)
 
 
-Earlier, it was written that with **kino** you can build networks of components. But until now, we saw just an ActorHost which holds *local references* to methods.
-How do we build up a network of actors? With the help of **MessageRouter**. ActorHost contains registration information, necessary to perform *in-proc* routing
-of the messages. MessageRouter, in it's turn, makes this registration information available for *out-of-proc* message routing.
+Earlier, it was written that with **kino** you can build networks of components. But, until now, we saw just ActorHost that holds *local references* to methods.
+How do we build up a network of actors? We do it with the help of **MessageRouter**. ActorHost contains registration information, necessary to perform *in-proc* routing
+of the messages. MessageRouter, in its turn, makes this registration information available for *out-of-proc* message routing.
 Let's take a look how this is achieved.
 
 ![MessageRouter](https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png)
@@ -49,18 +49,18 @@ Message passing between core **kino** components (ActorHosts, MessageRouters and
 Along with URL, every *receiving* socket has globally unique socket **Identity** assigned. This socket identity together with message identity and message version
 are used for message routing.
 
-During actor registration process, after ActorHost has added corresponding entries with message identities and method references to it's mapping table,
-it sends the same registration information to MessageRouter, replacing methods references with the identity of it's *receiving* socket.
-MessageRouter stores this registration into it's **InternalRoutingTable**. MessageRouter as well can connect to other MessageRouter(s) over
-the **scale out socket**s (for simplicity, receiving and sending scale out sockets shown as one) and exchange information about the registrations,
-they have in their InternalRoutingTables. But this time, MessageRouter replaces socket identities of ActorHosts with it's own identity of the *scale out socket*.
+During actor registration process, after ActorHost has added corresponding entries with message identities and method references to ActorHandlerMap table,
+it sends the same registration information to MessageRouter, replacing method references with the identity of it's *receiving* socket.
+MessageRouter stores this registration into **InternalRoutingTable**. Further on, MessageRouter can connect to other MessageRouter(s) over
+the **scale out socket** (for simplicity, receiving and sending scale out sockets shown as one) and exchange information about the registrations,
+they have in their InternalRoutingTables. But this time, MessageRouter replaces socket identities of ActorHosts with its own identity of the *scale out socket*.
 When other MessageRouter receives such a registration information, it stores it into it's **ExternalRoutingTable**. This is how in **kino** network everyone knows everything.
 
 Now, when MessageRouter receives a message, either via local or scale out socket, it looks up by *message identity* it's InternalRoutingTable to find a
 *socket identity* of an ActorHost, which is able to process the message. If there is an entry, incoming message is routed to ActorHost socket. 
 ActorHost picks up the message, does a lookup in it's *ActorHandlerMap* for a handling method and passes the message to corresponding actor.
 
-If, nevertheless, MessageRouter doesn't find any entry in it's InternalRoutingTable, it does a lookup in *ExternalRoutingTable*. The socket identity, if found,
+If, nevertheless, MessageRouter doesn't find any entry in its InternalRoutingTable, it does a lookup in *ExternalRoutingTable*. The socket identity, if found,
 in this case points to another MessageRouter, to which then the message is finally forwarded for processing.
 
 Now, we know how actors are registered within ActorHosts and how MessageRouters can exchange registrations and forward messages to each other.
@@ -75,13 +75,24 @@ to the same **kino** network. No need to share or configure any other URLs.
 Rendezvous Service is that glue, which keeps all parts together: it forwards registration information from newly connected routers to all
 members of the network, sends PINGs and broadcasts PONGs as a part of health check process. Since it's so important, the Rendezvous service
 is usually deployed on a *cluster* of servers, so that it can survive hardware failures. Nevertheless, even if the Rendezvous
-cluster dies (or stopped because of deployment), **kino** network still continues to operate, except that network configuration changes will
+cluster dies (or stops because of deployment), **kino** network still continues to operate, except that network configuration changes will
 not be propagated until the cluster is online again.
 
+Actor's method, that was invoked by ActorHost to process incoming message, may responde with a new message. This new message will be traveling over the network until
+it reaches other actor and so on. If actor can create only a response message, how can we create a request message, i.e. initial one?
+**MessageHub** is used to send a message into **kino** network. Depending on your needs, you may send either one-way message,
+or specify a *callback point*. To explain what the callback point is, let's talk a bit about message flows.
 
-**MessageHub** is one of the ways to send messages into Actors network. It is a *starting point of the flow*. First message sent from MessageHub gets CorrelationId assigned, which is then copied to any other message, created during the message flow. It is possible to create a *callback point*, which is defined by message type and caller address. 
-Whenever an Actor responds with the message, which type corresponds to the one registered in the callback, it is immediately routed back to the address in the callback point.
-Thus, clients may emulate synchronous calls, waiting for the callback to be resolved. Callback may return back a message or an exception, whatever happens first.
+When we build applications, we try to group relevant code into some components. These components have well-defined interface and responsibilities.
+At high level, code of the application looks like a sequence of calls to some components with expected type of return value.
+If we replace components with actors, which are sendig and receiving messages, we may say that we have a message flow, which implements desired behaviour
+of the application. Return value of expected type - this is a callback point in message flow. When building application with **kino**, we design a message flow,
+which we expect to finish at some point in time with predefined result - message. So, callback point, is nothing else than identity of the message, which should be routed
+back to initiator of the flow, i.e. return value.
+
+In nutshell, caller sends initial flow message via MessageHub into **kino** network and defines a callback point. Dozens of new messages may be created during this flow,
+traveling over different nodes, but as soon as somewhere someone create a message with the identity, defined in the callback, this message will be immediatelly routed
+back to the caller. Voila, you've got your return value!
 
 ![Callback](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Callback.png)
 
