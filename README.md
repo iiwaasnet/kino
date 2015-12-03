@@ -7,21 +7,20 @@
 [![Join the chat at https://gitter.im/iiwaasnet/kino](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iiwaasnet/kino?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 *(Project is in development)*
 
-
-Building a Web service is one of the ways to implement component, accessible over the network. 
+Building a Web service is one of the ways to implement a component, accessible over the network. 
 Following good design principles, we will create reusable, granular and relevant interface for our service. To be able to survive failures,
 we would deploy it redundantly and make it accessible over the load-balancer at some well-known URL.
 
 But what if the functionality we would like to expose is too small for a stand-alone service? What if we would like to scale out or extract for better reusability
-just some parts of already existing service?  Do we want to end up with dozens of new services, URLs and a lot of network configurations?
+just some parts of existing service?  At some point we might find ourselves managing dozens of new services, URLs and a lot of network configurations.
 This still might be a proper design choice, but let's try something else...
 
 **Kino** - is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)-like* framework for implementing and hosting components,
-accessible over the network. In other words, **kino** allows to build networks of components.
+accessible over the network. In other words, **kino** allows to build *networks* of components.
 Although, the framework does not implement classical Actor Model, we will still call our components as actors.
 
-So, an **Actor** contains implementation, i.e. methods, which others can invoke by sending corresponding **Message**.
-You don't have to know address of an actor, the only thing needed - is the message itself. Message **Identity** (or type) and **Version** are used to find concrete actor and 
+An **Actor** contains implementation, some methods, which others can invoke by sending corresponding **Message**.
+You don't have to know address of an actor to send a message. The only thing needed - is the message itself. Message **Identity** (or type) and **Version** are used to find concrete actor and 
 invoke its method. That's it. You send a message *somewhere* and it is magically routed to a proper actor's method for you.
 
 
@@ -29,24 +28,24 @@ invoke its method. That's it. You send a message *somewhere* and it is magically
 
 
 For this magic to work we need someone, who will create the mapping between messages and actors' methods.
-In **kino** this is done by the **ActorHost**.  When actor is registered at ActorHost, it queries actor's interface, list of methods and
-message types they can accept, and builds the **ActorHandlerMap** table. This mapping table is then later used to find corresponding method for each message
-in the incoming messages queue.
+In **kino** this is done by the **ActorHost**.  During registration ActorHost queries actor's interface, tuples of method and
+message type, and builds the **ActorHandlerMap** table. This mapping table is then used to find corresponding handling method for each message
+from the incoming message queue.
 
 ![ActorHost](https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png)
 
 
-Earlier, it was written that with **kino** you can build networks of components. But, until now, we saw just ActorHost that holds *local references* to methods.
-How do we build up a network of actors? We do it with the help of **MessageRouter**. ActorHost contains registration information, necessary to perform *in-proc* routing
-of the messages. MessageRouter, in its turn, makes this registration information available for *out-of-proc* message routing.
-Let's take a look how this is achieved.
-
-![MessageRouter](https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png)
-
+This looks good but still far from being a network of actors. We need to scale in terms of number of actors and physical nodes.
+We do it with the help of **MessageRouter**. ActorHost contains registration information, necessary to perform *in-proc* routing
+of the messages. MessageRouter, in its turn, makes this registration information available for *out-of-proc* message routing. Let's take a look how this is achieved.
 
 Message passing between core **kino** components (ActorHosts, MessageRouters and some others) is done over the **sockets**.
 Along with URL, every *receiving* socket has globally unique socket **Identity** assigned. This socket identity together with message identity and message version
 are used for message routing.
+
+
+![MessageRouter](https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png)
+
 
 During actor registration process, after ActorHost has added corresponding entries with message identities and method references to ActorHandlerMap table,
 it sends the same registration information to MessageRouter, replacing method references with the identity of it's *receiving* socket.
@@ -77,23 +76,24 @@ is usually deployed on a *cluster* of servers, so that it can survive hardware f
 cluster dies (or stops because of deployment), **kino** network still continues to operate, except that network configuration changes will
 not be propagated until the cluster is online again.
 
-Actor's method, that was invoked by ActorHost to process incoming message, may responde with a new message. This new message will be traveling over the network until
+Actor's method, that was invoked by ActorHost to process incoming message, may respond with a new message. This new message will be traveling over the network until
 it reaches other actor and so on. If actor can create only a response message, how can we create a request message, i.e. initial one?
 **MessageHub** is used to send a message into **kino** network. Depending on your needs, you may send either one-way message,
 or specify a *callback point*. To explain what the callback point is, let's talk a bit about message flows.
 
-When we build applications, we try to group relevant code into some components. These components have well-defined interface and responsibilities.
+When we build an application, we try to group relevant code into some components. These components have well-defined interface and responsibilities.
 At high level, code of the application looks like a sequence of calls to some components with expected type of return value.
-If we replace components with actors, which are sendig and receiving messages, we may say that we have a message flow, which implements desired behaviour
+If we replace components with actors, which are sending and receiving messages, we may say that we have a message flow, which implements desired behavior
 of the application. Return value of expected type - this is a callback point in message flow. When building application with **kino**, we design a message flow,
 which we expect to finish at some point in time with predefined result - message. So, callback point, is nothing else than identity of the message, which should be routed
 back to initiator of the flow, i.e. return value.
 
 In nutshell, caller sends initial flow message via MessageHub into **kino** network and defines a callback point. Dozens of new messages may be created during this flow,
-traveling over different nodes, but as soon as somewhere someone create a message with the identity, defined in the callback, this message will be immediatelly routed
+traveling over different nodes, but as soon as somewhere someone create a message with the identity, defined in the callback, this message will be immediately routed
 back to the caller. Voila, you've got your return value!
 
 ![Callback](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Callback.png)
+
 
 ## Example
 We've got a very important task to find out the cities with highest and lowest temperature.
