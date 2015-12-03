@@ -9,40 +9,74 @@
 *(Project is in development)*
 
 
+Building a Web service is one of the ways to implement component, accessible over the network. 
+Following good design principles, we will create reusable, granular and relevant interface for our service. To be able to survive failures,
+we would deploy it redundantly and make it accessible over the load-balancer at some well-known URL.
+
+But what if the functionality we would like to expose is too small for a stand-alone service? What if we would like to scale out or extract for better reusability
+just some parts of already existing service?  Do we want to end up with dozens of new services, URLs and a lot of network configurations?
+This still might be a proper design choice, but let's try something else...
+
+**Kino** - is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)-like* framework for implementing and hosting components,
+accessible over the network. In other words, **kino** allows to build networks of components.
+Although, the framework does not implement classical Actor Model, we will still call our components as actors.
+
+So, an **Actor** contains implementation, i.e. methods, which others can invoke by sending corresponding **Message**.
+You don't have to know address of an actor, the only thing needed - is the message itself. Message **Identity** (or type) and **Version** are used to find concrete actor and 
+invoke it's method. That's it. You send a message *somewhere* and it is magically routed to a proper actor's method for you.
+
+
 ![Actors](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png)
 
-**kino** is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)-like* framework, built to allow scaling of Actors over the network with low efforts for configuration management. A *kino* **Actor** registers itself by declaring message type(s) it can process. There is no hierarchy of Actors, as well as no logical addresses assigned to them.
-Actor's message handling method receives one input message and may send one or more output messages, either synchronously or asynchronously. It may produce no output as well.
-Actors are hosted by an ActorHost.
 
-
-
-**ActorHost** receives messages and calls corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same **ActorHost**, share same receiving thread. This means that until previously fetched message is processed by an Actor, the next one will be waiting in the queue. ActorHost is a unit of in-proc scaling.
+For this magic to work we need someone, who will create the mapping between messages and actors' methods.
+In **kino** this is done by the **ActorHost**.  When actor is *registered* at ActorHost, it *queries* actor's interface, list of methods and
+message types they can accept, and builds the **ActorHandlerMap** table. This mapping table is then later used to find corresponding method for each message
+in the incoming messages queue.
 
 ![ActorHost](https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png)
 
-Every ActorHost connects to a MessageRouter.
 
-
-**MessageRouter** is responsible for:
-  * registering all Actors, which are hosted by connected ActorHosts;
-  * type-based message routing to locally connected Actors;
-  * typed-based message routing to external, i.e. out-of-proc Actors, if no locally registered Actors are able to process the message.
+Earlier, it was written that with **kino** you can build networks of components. But until now, we saw just an ActorHost which holds *local references* to methods.
+How do we build up a network of actors? With the help of **MessageRouter**. ActorHost contains registration information, necessary to perform *in-proc* routing
+of the messages. MessageRouter, in it's turn, makes this registration information available for *out-of-proc* message routing.
+Let's take a look how this is achieved.
 
 ![MessageRouter](https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png)
 
-In order to be able to discover other Actors, MessageRouter connects to Rendezvous server.
 
+Message passing between core **kino** components (ActorHosts, MessageRouters and some others) is done over the **sockets**.
+Along with URL, every *receiving* socket has globally unique socket **Identity** assigned. This socket identity together with message identity and message version
+are used for message routing.
 
+During actor registration process, after ActorHost has added corresponding entries with message identities and method references to it's mapping table,
+it sends the same registration information to MessageRouter, replacing methods references with the identity of it's *receiving* socket.
+MessageRouter stores this registration into it's **InternalRoutingTable**. MessageRouter as well can connect to other MessageRouter(s) over
+the **scale out socket**s (for simplicity, receiving and sending scale out sockets shown as one) and exchange information about the registrations,
+they have in their InternalRoutingTables. But this time, MessageRouter replaces socket identities of ActorHosts with it's own identity of the *scale out socket*.
+When other MessageRouter receives such a registration information, it stores it into it's **ExternalRoutingTable**. This is how in **kino** network everyone knows everything.
 
-**Rendezvous** server is a well-known point, where all MessageRouters connect, building up an Actors network. Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build up a *fault-tolerant cluster*. In this case, MessageRouter should be configured with endpoints of all Rendezvous servers from the cluster. On startup, Rendezvous synod [elects](http://www.xtreemfs.org/publications/flease_paper_ipdps.pdf) a Leader, which than starts to broadcast:
-  * MessageRouters' registration messages, announcing which type of messages locally registered Actors are able to process;
-  * Ping message, to check nodes availability;
-  * Pong response from all the registered nodes to all registered nodes.
+Now, when MessageRouter receives a message, either via local or scale out socket, it looks up by *message identity* it's InternalRoutingTable to find a
+*socket identity* of an ActorHost, which is able to process the message. If there is an entry, incoming message is routed to ActorHost socket. 
+ActorHost picks up the message, does a lookup in it's *ActorHandlerMap* for a handling method and passes the message to corresponding actor.
 
-In case Rendezvous Leader changes, MessageRouter do a round-robin search among all configured endpoints to connect to a new Leader.  Dynamic reconfiguration of Rendezvous cluster is not supported. Nevertheless, the cluster can be stopped. In this case, although Actors will still exchange messages, configuration changes will not be propagated to all nodes of the network.
+If, nevertheless, MessageRouter doesn't find any entry in it's InternalRoutingTable, it does a lookup in *ExternalRoutingTable*. The socket identity, if found,
+in this case points to another MessageRouter, to which then the message is finally forwarded for processing.
+
+Now, we know how actors are registered within ActorHosts and how MessageRouters can exchange registrations and forward messages to each other.
+Let's take a look how MessageRouters, eventually deployed on different nodes, can find each other in this big world. **kino** provides a **Rendezvous** Service
+for sole MessageRouters. *Rendezvous* Service endpoint is the **single** well-known endpoint, which should be configured on every MessageRouter connected
+to the same **kino** network. No need to share or configure any other URLs.
+
 
 ![Rendezvous](https://cdn.rawgit.com/iiwaasnet/kino/master/img/Rendezvous.png)
+
+
+Rendezvous Service is that glue, which keeps all parts together: it forwards registration information from newly connected routers to all
+members of the network, sends PINGs and broadcasts PONGs as a part of health check process. Since it's so important, the Rendezvous service
+is usually deployed on a *cluster* of servers, so that it can survive hardware failures. Nevertheless, even if the Rendezvous
+cluster dies (or stopped because of deployment), **kino** network still continues to operate, except that network configuration changes will
+not be propagated until the cluster is online again.
 
 
 **MessageHub** is one of the ways to send messages into Actors network. It is a *starting point of the flow*. First message sent from MessageHub gets CorrelationId assigned, which is then copied to any other message, created during the message flow. It is possible to create a *callback point*, which is defined by message type and caller address. 
