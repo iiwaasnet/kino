@@ -29,41 +29,40 @@
 <p><a href="https://gitter.im/iiwaasnet/kino?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/Join%20Chat.svg" alt="Join the chat at https://gitter.im/iiwaasnet/kino"></a>
 <em>(Project is in development)</em></p>
 
-<p>Building a Web service is one of the ways to implement component, accessible over the network. 
+<p>Building a Web service is one of the ways to implement a component, accessible over the network. 
 Following good design principles, we will create reusable, granular and relevant interface for our service. To be able to survive failures,
 we would deploy it redundantly and make it accessible over the load-balancer at some well-known URL.</p>
 
 <p>But what if the functionality we would like to expose is too small for a stand-alone service? What if we would like to scale out or extract for better reusability
-just some parts of already existing service?  Do we want to end up with dozens of new services, URLs and a lot of network configurations?
+just some parts of existing service?  At some point we might find ourselves managing dozens of new services, URLs and a lot of network configurations.
 This still might be a proper design choice, but let's try something else...</p>
 
 <p><strong>Kino</strong> - is an <em><a href="https://en.wikipedia.org/wiki/Actor_model">Actor</a>-like</em> framework for implementing and hosting components,
-accessible over the network. In other words, <strong>kino</strong> allows to build networks of components.
+accessible over the network. In other words, <strong>kino</strong> allows to build <em>networks</em> of components.
 Although, the framework does not implement classical Actor Model, we will still call our components as actors.</p>
 
-<p>So, an <strong>Actor</strong> contains implementation, i.e. methods, which others can invoke by sending corresponding <strong>Message</strong>.
-You don't have to know address of an actor, the only thing needed - is the message itself. Message <strong>Identity</strong> (or type) and <strong>Version</strong> are used to find concrete actor and 
+<p>An <strong>Actor</strong> contains implementation, some methods, which others can invoke by sending corresponding <strong>Message</strong>.
+You don't have to know address of an actor to send a message. The only thing needed - is the message itself. Message <strong>Identity</strong> (or type) and <strong>Version</strong> are used to find concrete actor and 
 invoke its method. That's it. You send a message <em>somewhere</em> and it is magically routed to a proper actor's method for you.</p>
 
 <p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png" alt="Actors"></p>
 
 <p>For this magic to work we need someone, who will create the mapping between messages and actors' methods.
-In <strong>kino</strong> this is done by the <strong>ActorHost</strong>.  When actor is registered at ActorHost, it queries actor's interface, list of methods and
-message types they can accept, and builds the <strong>ActorHandlerMap</strong> table. This mapping table is then later used to find corresponding method for each message
-in the incoming messages queue.</p>
+In <strong>kino</strong> this is done by the <strong>ActorHost</strong>.  During registration ActorHost queries actor's interface, tuples of method and
+message type, and builds the <strong>ActorHandlerMap</strong> table. This mapping table is then used to find corresponding handling method for each message
+from the incoming message queue.</p>
 
 <p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png" alt="ActorHost"></p>
 
-<p>Earlier, it was written that with <strong>kino</strong> you can build networks of components. But, until now, we saw just ActorHost that holds <em>local references</em> to methods.
-How do we build up a network of actors? We do it with the help of <strong>MessageRouter</strong>. ActorHost contains registration information, necessary to perform <em>in-proc</em> routing
-of the messages. MessageRouter, in its turn, makes this registration information available for <em>out-of-proc</em> message routing.
-Let's take a look how this is achieved.</p>
-
-<p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png" alt="MessageRouter"></p>
+<p>This looks good but still far from being a network of actors. We need to scale in terms of number of actors and physical nodes.
+We do it with the help of <strong>MessageRouter</strong>. ActorHost contains registration information, necessary to perform <em>in-proc</em> routing
+of the messages. MessageRouter, in its turn, makes this registration information available for <em>out-of-proc</em> message routing. Let's take a look how this is achieved.</p>
 
 <p>Message passing between core <strong>kino</strong> components (ActorHosts, MessageRouters and some others) is done over the <strong>sockets</strong>.
 Along with URL, every <em>receiving</em> socket has globally unique socket <strong>Identity</strong> assigned. This socket identity together with message identity and message version
 are used for message routing.</p>
+
+<p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png" alt="MessageRouter"></p>
 
 <p>During actor registration process, after ActorHost has added corresponding entries with message identities and method references to ActorHandlerMap table,
 it sends the same registration information to MessageRouter, replacing method references with the identity of it's <em>receiving</em> socket.
@@ -92,20 +91,20 @@ is usually deployed on a <em>cluster</em> of servers, so that it can survive har
 cluster dies (or stops because of deployment), <strong>kino</strong> network still continues to operate, except that network configuration changes will
 not be propagated until the cluster is online again.</p>
 
-<p>Actor's method, that was invoked by ActorHost to process incoming message, may responde with a new message. This new message will be traveling over the network until
+<p>Actor's method, that was invoked by ActorHost to process incoming message, may respond with a new message. This new message will be traveling over the network until
 it reaches other actor and so on. If actor can create only a response message, how can we create a request message, i.e. initial one?
 <strong>MessageHub</strong> is used to send a message into <strong>kino</strong> network. Depending on your needs, you may send either one-way message,
 or specify a <em>callback point</em>. To explain what the callback point is, let's talk a bit about message flows.</p>
 
-<p>When we build applications, we try to group relevant code into some components. These components have well-defined interface and responsibilities.
+<p>When we build an application, we try to group relevant code into some components. These components have well-defined interface and responsibilities.
 At high level, code of the application looks like a sequence of calls to some components with expected type of return value.
-If we replace components with actors, which are sendig and receiving messages, we may say that we have a message flow, which implements desired behaviour
+If we replace components with actors, which are sending and receiving messages, we may say that we have a message flow, which implements desired behavior
 of the application. Return value of expected type - this is a callback point in message flow. When building application with <strong>kino</strong>, we design a message flow,
 which we expect to finish at some point in time with predefined result - message. So, callback point, is nothing else than identity of the message, which should be routed
 back to initiator of the flow, i.e. return value.</p>
 
 <p>In nutshell, caller sends initial flow message via MessageHub into <strong>kino</strong> network and defines a callback point. Dozens of new messages may be created during this flow,
-traveling over different nodes, but as soon as somewhere someone create a message with the identity, defined in the callback, this message will be immediatelly routed
+traveling over different nodes, but as soon as somewhere someone create a message with the identity, defined in the callback, this message will be immediately routed
 back to the caller. Voila, you've got your return value!</p>
 
 <p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/Callback.png" alt="Callback"></p>
