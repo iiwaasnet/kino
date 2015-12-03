@@ -1,28 +1,46 @@
-<!DOCTYPE html>
-<html lang="en-us">
+<!doctype html>
+<html>
   <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Kino by iiwaasnet</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
-    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
-    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
   </head>
   <body>
-    <section class="page-header">
-      <h1 class="project-name">Kino</h1>
-      <h2 class="project-tagline">Kino - framework for building Actors networks</h2>
-      <a href="https://github.com/iiwaasnet/kino" class="btn">View on GitHub</a>
-      <a href="https://github.com/iiwaasnet/kino/zipball/master" class="btn">Download .zip</a>
-      <a href="https://github.com/iiwaasnet/kino/tarball/master" class="btn">Download .tar.gz</a>
-    </section>
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/iiwaasnet/kino">View On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/iiwaasnet/kino/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/iiwaasnet/kino/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
 
-    <section class="main-content">
-      <p><a href="https://ci.appveyor.com/project/iiwaasnet/kino"><img src="https://ci.appveyor.com/api/projects/status/khn5imataa5uw4oj?svg=true" alt="Build status"></a>
-<a href="http://badge.fury.io/nu/kino.Client"><img src="https://badge.fury.io/nu/kino.Client.svg" alt="NuGet kino.Client"></a>
-<a href="http://badge.fury.io/nu/kino.Actors"><img src="https://badge.fury.io/nu/kino.Actors.svg" alt="NuGet kino.Actors"></a>
-<a href="http://badge.fury.io/nu/kino.Rendezvous"><img src="https://badge.fury.io/nu/kino.Rendezvous.svg" alt="NuGet kino.Rendezvous"></a></p>
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Kino</h1>
+          <p>Kino - framework for building Actors networks</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/iiwaasnet">iiwaasnet</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></span>
+        </div>
+
+        <p><a href="https://ci.appveyor.com/project/iiwaasnet/kino"><img src="https://ci.appveyor.com/api/projects/status/khn5imataa5uw4oj?svg=true" alt="Build status"></a>
+<a href="https://badge.fury.io/nu/kino"><img src="https://badge.fury.io/nu/kino.svg" alt="NuGet version"></a>
+<a href="https://badge.fury.io/nu/kino.Rendezvous"><img src="https://badge.fury.io/nu/kino.Rendezvous.svg" alt="NuGet version"></a></p>
 
 <h1>
 <a id="kino---framework-for-building-actor-like-networks" class="anchor" href="#kino---framework-for-building-actor-like-networks" aria-hidden="true"><span class="octicon octicon-link"></span></a>Kino - framework for building Actor-like networks</h1>
@@ -30,45 +48,84 @@
 <p><a href="https://gitter.im/iiwaasnet/kino?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge&amp;utm_content=badge"><img src="https://badges.gitter.im/Join%20Chat.svg" alt="Join the chat at https://gitter.im/iiwaasnet/kino"></a>
 <em>(Project is in development)</em></p>
 
+<p>Building a Web service is one of the ways to implement component, accessible over the network. 
+Following good design principles, we will create reusable, granular and relevant interface for our service. To be able to survive failures,
+we would deploy it redundantly and make it accessible over the load-balancer at some well-known URL.</p>
+
+<p>But what if the functionality we would like to expose is too small for a stand-alone service? What if we would like to scale out or extract for better reusability
+just some parts of already existing service?  Do we want to end up with dozens of new services, URLs and a lot of network configurations?
+This still might be a proper design choice, but let's try something else...</p>
+
+<p><strong>Kino</strong> - is an <em><a href="https://en.wikipedia.org/wiki/Actor_model">Actor</a>-like</em> framework for implementing and hosting components,
+accessible over the network. In other words, <strong>kino</strong> allows to build networks of components.
+Although, the framework does not implement classical Actor Model, we will still call our components as actors.</p>
+
+<p>So, an <strong>Actor</strong> contains implementation, i.e. methods, which others can invoke by sending corresponding <strong>Message</strong>.
+You don't have to know address of an actor, the only thing needed - is the message itself. Message <strong>Identity</strong> (or type) and <strong>Version</strong> are used to find concrete actor and 
+invoke its method. That's it. You send a message <em>somewhere</em> and it is magically routed to a proper actor's method for you.</p>
+
 <p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/Actors.png" alt="Actors"></p>
 
-<p><strong>kino</strong> is an <em><a href="https://en.wikipedia.org/wiki/Actor_model">Actor</a>-like</em> framework, built to allow scaling of Actors over the network with low efforts for configuration management. A <em>kino</em> <strong>Actor</strong> registers itself by declaring message type(s) it can process. There is no hierarchy of Actors, as well as no logical addresses assigned to them.
-Actor's message handling method receives one input message and may send one or more output messages, either synchronously or asynchronously. It may produce no output as well.
-Actors are hosted by an ActorHost.</p>
-
-<p><strong>ActorHost</strong> receives messages and calls corresponding Actor's handler based on the message type (and version). All Actors, hosted by the same <strong>ActorHost</strong>, share same receiving thread. This means that until previously fetched message is processed by an Actor, the next one will be waiting in the queue. ActorHost is a unit of in-proc scaling.</p>
+<p>For this magic to work we need someone, who will create the mapping between messages and actors' methods.
+In <strong>kino</strong> this is done by the <strong>ActorHost</strong>.  When actor is registered at ActorHost, it queries actor's interface, list of methods and
+message types they can accept, and builds the <strong>ActorHandlerMap</strong> table. This mapping table is then later used to find corresponding method for each message
+in the incoming messages queue.</p>
 
 <p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/ActorHost.png" alt="ActorHost"></p>
 
-<p>Every ActorHost connects to a MessageRouter.</p>
-
-<p><strong>MessageRouter</strong> is responsible for:</p>
-
-<ul>
-<li>registering all Actors, which are hosted by connected ActorHosts;</li>
-<li>type-based message routing to locally connected Actors;</li>
-<li>typed-based message routing to external, i.e. out-of-proc Actors, if no locally registered Actors are able to process the message.</li>
-</ul>
+<p>Earlier, it was written that with <strong>kino</strong> you can build networks of components. But, until now, we saw just ActorHost that holds <em>local references</em> to methods.
+How do we build up a network of actors? We do it with the help of <strong>MessageRouter</strong>. ActorHost contains registration information, necessary to perform <em>in-proc</em> routing
+of the messages. MessageRouter, in its turn, makes this registration information available for <em>out-of-proc</em> message routing.
+Let's take a look how this is achieved.</p>
 
 <p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/MessageRouter.png" alt="MessageRouter"></p>
 
-<p>In order to be able to discover other Actors, MessageRouter connects to Rendezvous server.</p>
+<p>Message passing between core <strong>kino</strong> components (ActorHosts, MessageRouters and some others) is done over the <strong>sockets</strong>.
+Along with URL, every <em>receiving</em> socket has globally unique socket <strong>Identity</strong> assigned. This socket identity together with message identity and message version
+are used for message routing.</p>
 
-<p><strong>Rendezvous</strong> server is a well-known point, where all MessageRouters connect, building up an Actors network. Since Rendezvous server is a single point of failure, it is recommended to start several instances of the service on different nodes to build up a <em>fault-tolerant cluster</em>. In this case, MessageRouter should be configured with endpoints of all Rendezvous servers from the cluster. On startup, Rendezvous synod <a href="http://www.xtreemfs.org/publications/flease_paper_ipdps.pdf">elects</a> a Leader, which than starts to broadcast:</p>
+<p>During actor registration process, after ActorHost has added corresponding entries with message identities and method references to ActorHandlerMap table,
+it sends the same registration information to MessageRouter, replacing method references with the identity of it's <em>receiving</em> socket.
+MessageRouter stores this registration into <strong>InternalRoutingTable</strong>. Further on, MessageRouter can connect to other MessageRouter(s) over
+the <strong>scale out socket</strong> (for simplicity, receiving and sending scale out sockets shown as one) and exchange information about the registrations,
+they have in their InternalRoutingTables. But this time, MessageRouter replaces socket identities of ActorHosts with its own identity of the <em>scale out socket</em>.
+When other MessageRouter receives such a registration information, it stores it into it's <strong>ExternalRoutingTable</strong>. This is how in <strong>kino</strong> network everyone knows everything.</p>
 
-<ul>
-<li>MessageRouters' registration messages, announcing which type of messages locally registered Actors are able to process;</li>
-<li>Ping message, to check nodes availability;</li>
-<li>Pong response from all the registered nodes to all registered nodes.</li>
-</ul>
+<p>Now, when MessageRouter receives a message, either via local or scale out socket, it looks up by <em>message identity</em> it's InternalRoutingTable to find a
+<em>socket identity</em> of an ActorHost, which is able to process the message. If there is an entry, incoming message is routed to ActorHost socket. 
+ActorHost picks up the message, does a lookup in it's <em>ActorHandlerMap</em> for a handling method and passes the message to corresponding actor.</p>
 
-<p>In case Rendezvous Leader changes, MessageRouter do a round-robin search among all configured endpoints to connect to a new Leader.  Dynamic reconfiguration of Rendezvous cluster is not supported. Nevertheless, the cluster can be stopped. In this case, although Actors will still exchange messages, configuration changes will not be propagated to all nodes of the network.</p>
+<p>If, nevertheless, MessageRouter doesn't find any entry in its InternalRoutingTable, it does a lookup in <em>ExternalRoutingTable</em>. The socket identity, if found,
+in this case points to another MessageRouter, to which then the message is finally forwarded for processing.</p>
+
+<p>Now, we know how actors are registered within ActorHosts and how MessageRouters can exchange registrations and forward messages to each other.
+Let's take a look how MessageRouters, eventually deployed on different nodes, can find each other in this big world. <strong>kino</strong> provides a <strong>Rendezvous</strong> Service
+for sole MessageRouters. <em>Rendezvous</em> Service endpoint is the <strong>single</strong> well-known endpoint, which should be configured on every MessageRouter connected
+to the same <strong>kino</strong> network. No need to share or configure any other URLs.</p>
 
 <p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/Rendezvous.png" alt="Rendezvous"></p>
 
-<p><strong>MessageHub</strong> is one of the ways to send messages into Actors network. It is a <em>starting point of the flow</em>. First message sent from MessageHub gets CorrelationId assigned, which is then copied to any other message, created during the message flow. It is possible to create a <em>callback point</em>, which is defined by message type and caller address. 
-Whenever an Actor responds with the message, which type corresponds to the one registered in the callback, it is immediately routed back to the address in the callback point.
-Thus, clients may emulate synchronous calls, waiting for the callback to be resolved. Callback may return back a message or an exception, whatever happens first.</p>
+<p>Rendezvous Service is that glue, which keeps all parts together: it forwards registration information from newly connected routers to all
+members of the network, sends PINGs and broadcasts PONGs as a part of health check process. Since it's so important, the Rendezvous service
+is usually deployed on a <em>cluster</em> of servers, so that it can survive hardware failures. Nevertheless, even if the Rendezvous
+cluster dies (or stops because of deployment), <strong>kino</strong> network still continues to operate, except that network configuration changes will
+not be propagated until the cluster is online again.</p>
+
+<p>Actor's method, that was invoked by ActorHost to process incoming message, may responde with a new message. This new message will be traveling over the network until
+it reaches other actor and so on. If actor can create only a response message, how can we create a request message, i.e. initial one?
+<strong>MessageHub</strong> is used to send a message into <strong>kino</strong> network. Depending on your needs, you may send either one-way message,
+or specify a <em>callback point</em>. To explain what the callback point is, let's talk a bit about message flows.</p>
+
+<p>When we build applications, we try to group relevant code into some components. These components have well-defined interface and responsibilities.
+At high level, code of the application looks like a sequence of calls to some components with expected type of return value.
+If we replace components with actors, which are sendig and receiving messages, we may say that we have a message flow, which implements desired behaviour
+of the application. Return value of expected type - this is a callback point in message flow. When building application with <strong>kino</strong>, we design a message flow,
+which we expect to finish at some point in time with predefined result - message. So, callback point, is nothing else than identity of the message, which should be routed
+back to initiator of the flow, i.e. return value.</p>
+
+<p>In nutshell, caller sends initial flow message via MessageHub into <strong>kino</strong> network and defines a callback point. Dozens of new messages may be created during this flow,
+traveling over different nodes, but as soon as somewhere someone create a message with the identity, defined in the callback, this message will be immediatelly routed
+back to the caller. Voila, you've got your return value!</p>
 
 <p><img src="https://cdn.rawgit.com/iiwaasnet/kino/master/img/Callback.png" alt="Callback"></p>
 
@@ -211,15 +268,10 @@ WriteLine($<span class="pl-s"><span class="pl-pds">"</span>Lowest T: {weatherAgg
 Another example, which uses Rendezvous service, could be found in <a href="https://github.com/iiwaasnet/kino/tree/master/src/Samples">Samples</a> folder.</p>
 
 <p>Powered by <strong><a href="https://github.com/zeromq/netmq">NetMQ</a></strong></p>
+      </section>
 
-      <footer class="site-footer">
-        <span class="site-footer-owner"><a href="https://github.com/iiwaasnet/kino">Kino</a> is maintained by <a href="https://github.com/iiwaasnet">iiwaasnet</a>.</span>
-
-        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
-      </footer>
-
-    </section>
-
-  
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
   </body>
 </html>
