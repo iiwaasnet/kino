@@ -4,7 +4,6 @@ using kino.Client;
 using kino.Core.Connectivity;
 using kino.Core.Connectivity.ServiceMessageHandlers;
 using kino.Core.Diagnostics;
-using kino.Core.Framework;
 using kino.Core.Sockets;
 
 namespace kino
@@ -70,19 +69,12 @@ namespace kino
                                   logger);
         }
 
-        public IActorHost BuildActorHost(RouterConfiguration routerConfiguration,
-                                         ILogger logger)
+        public IActorHostManager BuildActorHostManager(RouterConfiguration routerConfiguration,
+                                                       ILogger logger)
         {
-            var actorRegistrationsQueue = new AsyncQueue<IActor>();
-            var asyncQueue = new AsyncQueue<AsyncMessageContext>();
-            var actorHandlerMap = new ActorHandlerMap();
-
-            return new ActorHost(socketFactory,
-                                 actorHandlerMap,
-                                 asyncQueue,
-                                 actorRegistrationsQueue,
-                                 routerConfiguration,
-                                 logger);
+            return new ActorHostManager(socketFactory,
+                                        routerConfiguration,
+                                        logger);
         }
     }
 }

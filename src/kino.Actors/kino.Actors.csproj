@@ -49,11 +49,14 @@
     <Compile Include="ActorHandlerMap.cs" />
     <Compile Include="ActorHost.Tracing.cs" />
     <Compile Include="ActorHost.cs" />
+    <Compile Include="ActorHostInstancePolicy.cs" />
+    <Compile Include="ActorHostManager.cs" />
     <Compile Include="Diagnostics\ExceptionHandlerActor.cs" />
     <Compile Include="Diagnostics\KnownMessageRoutesActor.cs" />
     <Compile Include="IActor.cs" />
     <Compile Include="IActorHandlerMap.cs" />
     <Compile Include="IActorHost.cs" />
+    <Compile Include="IActorHostManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

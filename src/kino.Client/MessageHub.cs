@@ -44,18 +44,12 @@ namespace kino.Client
 
         public void Start()
         {
-            const int participantCount = 3;
-            using (var gateway = new Barrier(participantCount))
-            {
-                receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token, gateway),
-                                                  cancellationTokenSource.Token,
-                                                  TaskCreationOptions.LongRunning);
-                sending = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token, gateway),
-                                                cancellationTokenSource.Token,
-                                                TaskCreationOptions.LongRunning);
-
-                gateway.SignalAndWait(cancellationTokenSource.Token);
-            }
+            receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token),
+                                              cancellationTokenSource.Token,
+                                              TaskCreationOptions.LongRunning);
+            sending = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token),
+                                            cancellationTokenSource.Token,
+                                            TaskCreationOptions.LongRunning);
         }
 
         public void Stop()
@@ -65,7 +59,7 @@ namespace kino.Client
             receiving.Wait(TerminationWaitTimeout);
         }
 
-        private void SendClientRequests(CancellationToken token, Barrier gateway)
+        private void SendClientRequests(CancellationToken token)
         {
             try
             {
@@ -73,7 +67,6 @@ namespace kino.Client
                 {
                     var receivingSocketIdentity = receivingSocketIdentityPromise.Task.Result;
                     RegisterMessageHub(socket, receivingSocketIdentity);
-                    gateway.SignalAndWait(token);
 
                     foreach (var callbackRegistration in registrationsQueue.GetConsumingEnumerable(token))
                     {
@@ -117,14 +110,13 @@ namespace kino.Client
             return callbackRegistration.Promise != null && callbackRegistration.CallbackPoint != null;
         }
 
-        private void ReadReplies(CancellationToken token, Barrier gateway)
+        private void ReadReplies(CancellationToken token)
         {
             try
             {
                 using (var socket = CreateRoutableSocket())
                 {
                     receivingSocketIdentityPromise.SetResult(socket.GetIdentity());
-                    gateway.SignalAndWait(token);
 
                     while (!token.IsCancellationRequested)
                     {

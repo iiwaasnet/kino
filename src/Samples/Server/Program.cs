@@ -29,18 +29,17 @@ namespace Server
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
             Thread.Sleep(TimeSpan.FromMilliseconds(30));
 
-            var actorHost = componentResolver.BuildActorHost(container.Resolve<RouterConfiguration>(),
+            var actorHostManager = componentResolver.BuildActorHostManager(container.Resolve<RouterConfiguration>(),
                                                               container.Resolve<ILogger>());
-            actorHost.Start();
             foreach (var actor in container.Resolve<IEnumerable<IActor>>())
             {
-                actorHost.AssignActor(actor);
+                actorHostManager.AssignActor(actor);
             }
 
             WriteLine("ActorHost started...");
             ReadLine();
 
-            actorHost.Stop();
+            actorHostManager.Dispose();
             messageRouter.Stop();
             container.Dispose();
 

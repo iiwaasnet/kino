@@ -51,21 +51,15 @@ namespace kino.Actors
 
         public void Start()
         {
-            const int participantCount = 4;
-            using (var gateway = new Barrier(participantCount))
-            {
-                registrationsProcessing = Task.Factory.StartNew(_ => SafeExecute(() => RegisterActors(cancellationTokenSource.Token, gateway)),
-                                                                cancellationTokenSource.Token,
-                                                                TaskCreationOptions.LongRunning);
-                syncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessRequests(cancellationTokenSource.Token, gateway)),
-                                                       cancellationTokenSource.Token,
-                                                       TaskCreationOptions.LongRunning);
-                asyncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessAsyncResponses(cancellationTokenSource.Token, gateway)),
-                                                        cancellationTokenSource.Token,
-                                                        TaskCreationOptions.LongRunning);
-
-                gateway.SignalAndWait(cancellationTokenSource.Token);
-            }
+            registrationsProcessing = Task.Factory.StartNew(_ => SafeExecute(() => RegisterActors(cancellationTokenSource.Token)),
+                                                            cancellationTokenSource.Token,
+                                                            TaskCreationOptions.LongRunning);
+            syncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessRequests(cancellationTokenSource.Token)),
+                                                   cancellationTokenSource.Token,
+                                                   TaskCreationOptions.LongRunning);
+            asyncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessAsyncResponses(cancellationTokenSource.Token)),
+                                                    cancellationTokenSource.Token,
+                                                    TaskCreationOptions.LongRunning);
         }
 
         public void Stop()
@@ -76,14 +70,18 @@ namespace kino.Actors
             asyncProcessing.Wait(TerminationWaitTimeout);
         }
 
-        private void RegisterActors(CancellationToken token, Barrier gateway)
+        public bool CanAssignActor(IActor actor)
+        {
+            return actorHandlerMap.CanAdd(actor);
+        }
+
+        private void RegisterActors(CancellationToken token)
         {
             try
             {
                 using (var socket = CreateOneWaySocket())
                 {
                     var localSocketIdentity = localSocketIdentityPromise.Task.Result;
-                    gateway.SignalAndWait(token);
 
                     foreach (var actor in actorRegistrationsQueue.GetConsumingEnumerable(token))
                     {
@@ -122,14 +120,12 @@ namespace kino.Actors
             socket.SendMessage(Message.Create(payload));
         }
 
-        private void ProcessAsyncResponses(CancellationToken token, Barrier gateway)
+        private void ProcessAsyncResponses(CancellationToken token)
         {
             try
             {
                 using (var localSocket = CreateOneWaySocket())
                 {
-                    gateway.SignalAndWait(token);
-
                     foreach (var messageContext in asyncQueue.GetConsumingEnumerable(token))
                     {
                         try
@@ -159,12 +155,11 @@ namespace kino.Actors
             }
         }
 
-        private void ProcessRequests(CancellationToken token, Barrier gateway)
+        private void ProcessRequests(CancellationToken token)
         {
             using (var localSocket = CreateRoutableSocket())
             {
                 localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
-                gateway.SignalAndWait(token);
 
                 while (!token.IsCancellationRequested)
                 {

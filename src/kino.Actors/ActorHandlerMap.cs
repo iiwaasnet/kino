@@ -40,6 +40,9 @@ namespace kino.Actors
             return tmp;
         }
 
+        public bool CanAdd(IActor actor)
+            => GetActorRegistrations(actor).All(reg => !messageHandlers.ContainsKey(reg.Key));
+
         public MessageHandler Get(MessageIdentifier identifier)
         {
             MessageHandler value;
@@ -61,8 +64,8 @@ namespace kino.Actors
                 .GetInterfaceDefinition()
                 .Select(messageMap =>
                         new KeyValuePair<MessageIdentifier, MessageHandler>(new MessageIdentifier(messageMap.Message.Version,
-                                                                                                   messageMap.Message.Identity),
-                                                                             messageMap.Handler));
+                                                                                                  messageMap.Message.Identity),
+                                                                            messageMap.Handler));
 
         private static bool InterfaceMethodFilter(MemberInfo memberInfo, object filterCriteria)
         {

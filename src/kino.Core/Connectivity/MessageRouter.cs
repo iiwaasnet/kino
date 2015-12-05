@@ -51,20 +51,13 @@ namespace kino.Core.Connectivity
 
         public void Start()
         {
-            var participantCount = membershipConfiguration.RunAsStandalone ? 2 : 3;
-
-            using (var gateway = new Barrier(participantCount))
-            {
-                localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, gateway),
-                                                     TaskCreationOptions.LongRunning);
-                scaleOutRouting = membershipConfiguration.RunAsStandalone
-                                      ? Task.CompletedTask
-                                      : Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, gateway),
-                                                              TaskCreationOptions.LongRunning);
-                SocketHelper.SafeConnect(clusterMonitor.Start);
-
-                gateway.SignalAndWait(cancellationTokenSource.Token);
-            }
+            localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token),
+                                                 TaskCreationOptions.LongRunning);
+            scaleOutRouting = membershipConfiguration.RunAsStandalone
+                                  ? Task.CompletedTask
+                                  : Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token),
+                                                          TaskCreationOptions.LongRunning);
+            SocketHelper.SafeConnect(clusterMonitor.Start);
         }
 
         public void Stop()
@@ -76,14 +69,13 @@ namespace kino.Core.Connectivity
             clusterMonitor.Stop();
         }
 
-        private void RoutePeerMessages(CancellationToken token, Barrier gateway)
+        private void RoutePeerMessages(CancellationToken token)
         {
             try
             {
                 using (var scaleOutFrontend = CreateScaleOutFrontendSocket())
                 {
                     var localSocketIdentity = localSocketIdentityPromise.Task.Result;
-                    gateway.SignalAndWait(token);
 
                     while (!token.IsCancellationRequested)
                     {
@@ -111,7 +103,7 @@ namespace kino.Core.Connectivity
             }
         }
 
-        private void RouteLocalMessages(CancellationToken token, Barrier gateway)
+        private void RouteLocalMessages(CancellationToken token)
         {
             try
             {
@@ -122,8 +114,6 @@ namespace kino.Core.Connectivity
 
                     using (var scaleOutBackend = CreateScaleOutBackendSocket())
                     {
-                        gateway.SignalAndWait(token);
-
                         while (!token.IsCancellationRequested)
                         {
                             try
@@ -308,6 +298,6 @@ namespace kino.Core.Connectivity
         private static MessageIdentifier CreateMessageHandlerIdentifier(IMessage message)
             => message.ReceiverIdentity.IsSet()
                    ? new MessageIdentifier(message.ReceiverIdentity)
-                   : new MessageIdentifier(message.Version, message.Identity);       
+                   : new MessageIdentifier(message.Version, message.Identity);
     }
 }
