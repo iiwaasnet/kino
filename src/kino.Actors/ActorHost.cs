@@ -236,7 +236,7 @@ namespace kino.Actors
 
         private static void CallbackException(ISocket localSocket, Exception err, Message messageIn)
         {
-            var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err});
+            var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err, StackTrace = err.StackTrace});
             messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageHops(messageIn.GetMessageHops());
@@ -274,7 +274,8 @@ namespace kino.Actors
 
                 return new ActorResult(Message.Create(new ExceptionMessage
                                                       {
-                                                          Exception = err
+                                                          Exception = err,
+                                                          StackTrace = err.StackTrace
                                                       }));
             }
 

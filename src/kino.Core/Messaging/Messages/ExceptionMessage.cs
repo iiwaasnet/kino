@@ -10,17 +10,20 @@ namespace kino.Core.Messaging.Messages
         private static readonly IMessageSerializer messageSerializer = new NewtonJsonMessageSerializer();
 
         private static readonly byte[] MessageIdentity = "EXCEPTION".GetBytes();
-        private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         public ExceptionMessage()
-            :base(messageSerializer)
+            : base(messageSerializer)
         {
         }
 
         [ProtoMember(1)]
         public Exception Exception { get; set; }
 
+        [ProtoMember(2)]
+        public string StackTrace { get; set; }
+
         public override byte[] Version => Message.CurrentVersion;
+
         public override byte[] Identity => MessageIdentity;
     }
 }
