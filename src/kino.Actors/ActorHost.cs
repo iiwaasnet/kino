@@ -206,28 +206,31 @@ namespace kino.Actors
 
         private void HandleTaskResult(CancellationToken token, Task<IActorResult> task, Message messageIn, ISocket localSocket)
         {
-            if (task.IsCompleted)
+            if (task != null)
             {
-                var response = CreateTaskResultMessage(task).Messages;
-
-                MessageProcessed(messageIn, response.Count());
-
-                foreach (var messageOut in response.Cast<Message>())
+                if (task.IsCompleted)
                 {
-                    messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
-                    messageOut.SetCorrelationId(messageIn.CorrelationId);
-                    messageOut.CopyMessageHops(messageIn.GetMessageHops());
-                    messageOut.TraceOptions = messageIn.TraceOptions;
+                    var response = CreateTaskResultMessage(task).Messages;
 
-                    localSocket.SendMessage(messageOut);
+                    MessageProcessed(messageIn, response.Count());
 
-                    ResponseSent(messageOut, true);
+                    foreach (var messageOut in response.Cast<Message>())
+                    {
+                        messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
+                        messageOut.SetCorrelationId(messageIn.CorrelationId);
+                        messageOut.CopyMessageHops(messageIn.GetMessageHops());
+                        messageOut.TraceOptions = messageIn.TraceOptions;
+
+                        localSocket.SendMessage(messageOut);
+
+                        ResponseSent(messageOut, true);
+                    }
                 }
-            }
-            else
-            {
-                task.ContinueWith(completed => SafeExecute(() => EnqueueTaskForCompletion(token, completed, messageIn)), token)
-                    .ConfigureAwait(false);
+                else
+                {
+                    task.ContinueWith(completed => SafeExecute(() => EnqueueTaskForCompletion(token, completed, messageIn)), token)
+                        .ConfigureAwait(false);
+                }
             }
         }
 
