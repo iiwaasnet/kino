@@ -22,7 +22,7 @@ namespace kino.Actors
         private readonly IAsyncQueue<AsyncMessageContext> asyncQueue;
         private readonly ISocketFactory socketFactory;
         private readonly RouterConfiguration routerConfiguration;
-        private readonly IAsyncQueue<IActor> actorRegistrationsQueue;
+        private readonly IAsyncQueue<IEnumerable<MessageIdentifier>> actorRegistrationsQueue;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
@@ -30,7 +30,7 @@ namespace kino.Actors
         public ActorHost(ISocketFactory socketFactory,
                          IActorHandlerMap actorHandlerMap,
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
-                         IAsyncQueue<IActor> actorRegistrationsQueue,
+                         IAsyncQueue<IEnumerable<MessageIdentifier>> actorRegistrationsQueue,
                          RouterConfiguration routerConfiguration,
                          ILogger logger)
         {
@@ -46,7 +46,13 @@ namespace kino.Actors
 
         public void AssignActor(IActor actor)
         {
-            actorRegistrationsQueue.Enqueue(actor, cancellationTokenSource.Token);
+            var registrations = actorHandlerMap.Add(actor);
+            actorRegistrationsQueue.Enqueue(registrations, cancellationTokenSource.Token);
+        }
+
+        public bool CanAssignActor(IActor actor)
+        {
+            return actorHandlerMap.CanAdd(actor);
         }
 
         public void Start()
@@ -70,11 +76,6 @@ namespace kino.Actors
             asyncProcessing.Wait(TerminationWaitTimeout);
         }
 
-        public bool CanAssignActor(IActor actor)
-        {
-            return actorHandlerMap.CanAdd(actor);
-        }
-
         private void RegisterActors(CancellationToken token)
         {
             try
@@ -83,11 +84,10 @@ namespace kino.Actors
                 {
                     var localSocketIdentity = localSocketIdentityPromise.Task.Result;
 
-                    foreach (var actor in actorRegistrationsQueue.GetConsumingEnumerable(token))
+                    foreach (var registrations in actorRegistrationsQueue.GetConsumingEnumerable(token))
                     {
                         try
                         {
-                            var registrations = actorHandlerMap.Add(actor);
                             SendActorRegistrationMessage(socket, localSocketIdentity, registrations);
                         }
                         catch (Exception err)

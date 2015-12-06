@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using kino.Actors;
@@ -48,7 +49,7 @@ namespace kino.Tests.Actors
         [Test]
         public void TestAssignActor_RegistersActorHandlers()
         {
-            var actorRegistrationsQueue = new AsyncQueue<IActor>();
+            var actorRegistrationsQueue = new AsyncQueue<IEnumerable<MessageIdentifier>>();
 
             var actorHost = new ActorHost(new SocketFactory(null),
                                           actorHandlersMap,
@@ -58,10 +59,10 @@ namespace kino.Tests.Actors
                                           logger);
             actorHost.AssignActor(new EchoActor());
 
-            var actor = actorRegistrationsQueue.GetConsumingEnumerable(CancellationToken.None).First();
+            var registrations = actorRegistrationsQueue.GetConsumingEnumerable(CancellationToken.None).First();
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            Assert.IsTrue(actor.GetInterfaceDefinition().Any(id => id.Message.Identity == messageIdentifier.Identity));
-            Assert.IsTrue(actor.GetInterfaceDefinition().Any(id => id.Message.Version == messageIdentifier.Version));
+            Assert.IsTrue(registrations.Any(id => id.Identity == messageIdentifier.Identity));
+            Assert.IsTrue(registrations.Any(id => id.Version == messageIdentifier.Version));
         }
 
         [Test]
@@ -70,7 +71,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -122,7 +123,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger.Object);
             try
@@ -144,7 +145,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -176,7 +177,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
@@ -205,7 +206,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -239,7 +240,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
@@ -279,7 +280,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           messageCompletionQueue.Object,
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -311,7 +312,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -343,7 +344,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -380,7 +381,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
@@ -390,7 +391,7 @@ namespace kino.Tests.Actors
 
                 var messageIn = (Message) Message.CreateFlowStartMessage(new SimpleMessage {Content = errorMessage});
                 var callbackReceiver = Guid.NewGuid().ToByteArray();
-                var callbackPoints = new[] { MessageIdentifier.Create<SimpleMessage>(), KinoMessages.Exception };
+                var callbackPoints = new[] {MessageIdentifier.Create<SimpleMessage>(), KinoMessages.Exception};
                 messageIn.RegisterCallbackPoint(callbackReceiver, callbackPoints);
 
                 var socket = actorHostSocketFactory.GetRoutableSocket();
@@ -415,7 +416,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IActor>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());

@@ -8,7 +8,7 @@ namespace kino.Tests.Actors.Setup
 {
     public class ExceptionActor : Actor
     {
-        [MessageHandlerDefinition(typeof (SimpleMessage))]
+        [MessageHandlerDefinition(typeof(SimpleMessage))]
         private async Task<IActorResult> Process(IMessage messageIn)
         {
             var message = messageIn.GetPayload<SimpleMessage>().Content;

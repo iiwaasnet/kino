@@ -24,6 +24,26 @@ namespace kino.Tests.Actors
         }
 
         [Test]
+        public void TestCanAddReturnsFalse_IfActorAlreadyAdded()
+        {
+            var actorHandlersMap = new ActorHandlerMap();
+            var actor = new EchoActor();
+
+            actorHandlersMap.Add(actor);
+
+            Assert.IsFalse(actorHandlersMap.CanAdd(actor));
+        }
+
+        [Test]
+        public void TestCanAddReturnsTrue_IfActorIsNotYetAadded()
+        {
+            var actorHandlersMap = new ActorHandlerMap();
+            var actor = new EchoActor();
+
+            Assert.IsTrue(actorHandlersMap.CanAdd(actor));
+        }
+
+        [Test]
         public void TestGetRegisteredIdentifiers_ReturnsAllRegisteredMessageHandlers()
         {
             var actorHandlersMap = new ActorHandlerMap();
