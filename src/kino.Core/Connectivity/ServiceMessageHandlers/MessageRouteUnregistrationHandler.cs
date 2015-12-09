@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+﻿using System;
 using System.Linq;
 using kino.Core.Framework;
 using kino.Core.Messaging;
@@ -23,11 +23,14 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             if (shouldHandle)
             {
                 var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-                //TODO: Add return value to check if the remote node should be disconnected
-                externalRoutingTable.RemoveMessageRoute(payload
+                var connectionAction = externalRoutingTable.RemoveMessageRoute(payload
                                                             .MessageContracts
                                                             .Select(mh => new MessageIdentifier(mh.Version, mh.Identity)),
                                                         new SocketIdentifier(payload.SocketIdentity));
+                if (connectionAction == PeerConnectionAction.Disconnect)
+                {
+                    forwardingSocket.SafeDisconnect(new Uri(payload.Uri));
+                }
             }
 
             return shouldHandle;

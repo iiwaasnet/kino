@@ -200,7 +200,7 @@ namespace kino.Tests.Connectivity
         {
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
             externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>()))
-                                .Returns(new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()));
+                                .Returns(new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()) });
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
@@ -434,8 +434,8 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOp);
 
-                Assert.IsTrue(Unsafe.Equals(socketIdentity, externalRoutingTable.FindRoute(messageIdentifiers.First()).SocketIdentity));
-                Assert.IsTrue(Unsafe.Equals(socketIdentity, externalRoutingTable.FindRoute(messageIdentifiers.Second()).SocketIdentity));
+                Assert.IsTrue(Unsafe.Equals(socketIdentity, externalRoutingTable.FindRoute(messageIdentifiers.First()).Node.SocketIdentity));
+                Assert.IsTrue(Unsafe.Equals(socketIdentity, externalRoutingTable.FindRoute(messageIdentifiers.Second()).Node.SocketIdentity));
             }
             finally
             {

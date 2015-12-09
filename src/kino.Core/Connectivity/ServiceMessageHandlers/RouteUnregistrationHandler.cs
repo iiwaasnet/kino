@@ -3,7 +3,6 @@ using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
 using kino.Core.Sockets;
-using NetMQ;
 
 namespace kino.Core.Connectivity.ServiceMessageHandlers
 {
@@ -23,15 +22,10 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             if (shouldHandle)
             {
                 var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
-                externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(payload.SocketIdentity));
-                try
+                var connectionAction = externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(payload.SocketIdentity));
+                if (connectionAction == PeerConnectionAction.Disconnect)
                 {
-                    // TODO: Disconnect only if the node was connected
-                    // Check if exception is thrown if disconencting from the node to which previously no connection was done
-                    forwardingSocket.Disconnect(new Uri(payload.Uri));
-                }
-                catch (EndpointNotFoundException)
-                {
+                    forwardingSocket.SafeDisconnect(new Uri(payload.Uri));
                 }
             }
 

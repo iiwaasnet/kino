@@ -7,8 +7,8 @@ namespace kino.Core.Connectivity
     {
         void AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri);
         PeerConnection FindRoute(MessageIdentifier messageIdentifier);
-        void RemoveNodeRoute(SocketIdentifier socketIdentifier);
-        void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier);
+        PeerConnectionAction RemoveNodeRoute(SocketIdentifier socketIdentifier);
+        PeerConnectionAction RemoveMessageRoute(IEnumerable<MessageIdentifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier);
         IEnumerable<PeerConnection> FindAllRoutes(MessageIdentifier messageIdentifier);
         IEnumerable<ExternalRoute> GetAllRoutes();
     }

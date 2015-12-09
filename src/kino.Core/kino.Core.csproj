@@ -75,6 +75,7 @@
     <Compile Include="Connectivity\MessageHandlerDefinitionAttribute.cs" />
     <Compile Include="Connectivity\MessageRouter.Tracing.cs" />
     <Compile Include="Connectivity\PeerConnection.cs" />
+    <Compile Include="Connectivity\PeerConnectionAction.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfigurationReadonlyStorage.cs" />
     <Compile Include="Connectivity\Node.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfiguration.cs" />
@@ -160,6 +161,7 @@
     <Compile Include="Sockets\ISocketFactory.cs" />
     <Compile Include="Sockets\Socket.cs" />
     <Compile Include="Sockets\SocketConfiguration.cs" />
+    <Compile Include="Sockets\SocketExtensions.cs" />
     <Compile Include="Sockets\SocketFactory.cs" />
     <Compile Include="Sockets\SocketHelper.cs" />
   </ItemGroup>

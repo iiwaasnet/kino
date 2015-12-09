@@ -214,7 +214,7 @@ namespace kino.Core.Connectivity
                     externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(route.Node.SocketIdentity));
                     if (route.Connected)
                     {
-                        scaleOutBackend.Disconnect(route.Node.Uri);
+                        scaleOutBackend.SafeDisconnect(route.Node.Uri);
                     }
                     logger.Error(err);
                 }

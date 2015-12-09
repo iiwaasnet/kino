@@ -11,7 +11,7 @@ namespace kino.Core.Connectivity
     {
         private readonly C5.IDictionary<MessageIdentifier, HashedLinkedList<SocketIdentifier>> messageToSocketMap;
         private readonly C5.IDictionary<SocketIdentifier, C5.HashSet<MessageIdentifier>> socketToMessageMap;
-        private readonly C5.IDictionary<SocketIdentifier, PeerConnection> socketToUriMap;
+        private readonly C5.IDictionary<SocketIdentifier, PeerConnection> socketToConnectionMap;
         private readonly ILogger logger;
 
         public ExternalRoutingTable(ILogger logger)
@@ -19,7 +19,7 @@ namespace kino.Core.Connectivity
             this.logger = logger;
             messageToSocketMap = new HashDictionary<MessageIdentifier, HashedLinkedList<SocketIdentifier>>();
             socketToMessageMap = new HashDictionary<SocketIdentifier, C5.HashSet<MessageIdentifier>>();
-            socketToUriMap = new HashDictionary<SocketIdentifier, PeerConnection>();
+            socketToConnectionMap = new HashDictionary<SocketIdentifier, PeerConnection>();
         }
 
         public void AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri)
@@ -28,11 +28,11 @@ namespace kino.Core.Connectivity
 
             if (mapped)
             {
-                socketToUriMap[socketIdentifier] = new PeerConnection
-                                                   {
-                                                       Node = new Node(uri, socketIdentifier.Identity),
-                                                       Connected = false
-                                                   };
+                socketToConnectionMap[socketIdentifier] = new PeerConnection
+                                                          {
+                                                              Node = new Node(uri, socketIdentifier.Identity),
+                                                              Connected = false
+                                                          };
 
                 MapSocketToMessage(messageIdentifier, socketIdentifier);
 
@@ -78,7 +78,7 @@ namespace kino.Core.Connectivity
             if (messageToSocketMap.Find(ref messageIdentifier, out collection))
             {
                 var socketIdentifier = Get(collection);
-                return socketToUriMap[socketIdentifier];
+                return socketToConnectionMap[socketIdentifier];
             }
 
             return null;
@@ -88,7 +88,7 @@ namespace kino.Core.Connectivity
         {
             HashedLinkedList<SocketIdentifier> collection;
             return messageToSocketMap.Find(ref messageIdentifier, out collection)
-                       ? collection.Select(el => socketToUriMap[el])
+                       ? collection.Select(el => socketToConnectionMap[el])
                        : Enumerable.Empty<PeerConnection>();
         }
 
@@ -104,10 +104,10 @@ namespace kino.Core.Connectivity
             return default(T);
         }
 
-        public void RemoveNodeRoute(SocketIdentifier socketIdentifier)
+        public PeerConnectionAction RemoveNodeRoute(SocketIdentifier socketIdentifier)
         {
-            Uri uri;
-            socketToUriMap.Remove(socketIdentifier, out uri);
+            PeerConnection connection;
+            socketToConnectionMap.Remove(socketIdentifier, out connection);
 
             C5.HashSet<MessageIdentifier> messageIdentifiers;
             if (socketToMessageMap.Find(ref socketIdentifier, out messageIdentifiers))
@@ -116,15 +116,19 @@ namespace kino.Core.Connectivity
 
                 socketToMessageMap.Remove(socketIdentifier);
 
-                logger.Debug($"External route removed Uri:{uri.AbsoluteUri} " +
+                logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
                              $"Socket:{socketIdentifier.Identity.GetString()}");
             }
+
+            return (connection != null && connection.Connected)
+                       ? PeerConnectionAction.Disconnect
+                       : PeerConnectionAction.None;
         }
 
-        //TODO: Add a return valeu to indicate that it was the last message hanled by the socketIdentifier 
-        // and it should be disconnected
-        public void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageIdentifiers, SocketIdentifier socketIdentifier)
+        public PeerConnectionAction RemoveMessageRoute(IEnumerable<MessageIdentifier> messageIdentifiers, SocketIdentifier socketIdentifier)
         {
+            var connectionAction = PeerConnectionAction.None;
+
             RemoveMessageRoutesForSocketIdentifier(socketIdentifier, messageIdentifiers);
 
             C5.HashSet<MessageIdentifier> allSocketMessageIdentifiers;
@@ -137,10 +141,11 @@ namespace kino.Core.Connectivity
                 if (!allSocketMessageIdentifiers.Any())
                 {
                     socketToMessageMap.Remove(socketIdentifier);
-                    Uri uri;
-                    socketToUriMap.Remove(socketIdentifier, out uri);
+                    PeerConnection connection;
+                    socketToConnectionMap.Remove(socketIdentifier, out connection);
+                    connectionAction = connection.Connected ? PeerConnectionAction.Disconnect : connectionAction;
 
-                    logger.Debug($"External route removed Uri:{uri.AbsoluteUri} " +
+                    logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
                                  $"Socket:{socketIdentifier.Identity.GetString()}");
                 }
             }
@@ -148,6 +153,8 @@ namespace kino.Core.Connectivity
             logger.Debug($"External message route removed " +
                          $"Socket:{socketIdentifier.Identity.GetString()} " +
                          $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageIdentifiers))}]");
+
+            return connectionAction;
         }
 
         private void RemoveMessageRoutesForSocketIdentifier(SocketIdentifier socketIdentifier, IEnumerable<MessageIdentifier> messageIdentifiers)
@@ -171,10 +178,21 @@ namespace kino.Core.Connectivity
             => messageHandlerIdentifiers.Select(mh => $"{mh.Identity.GetString()}:{mh.Version.GetString()}");
 
         public IEnumerable<ExternalRoute> GetAllRoutes()
-            => socketToMessageMap.Select(sm => new ExternalRoute
-                                               {
-                                                   Node = new Node(socketToUriMap[sm.Key], sm.Key.Identity),
-                                                   Messages = sm.Value
-                                               });
+            => socketToMessageMap.Select(CreateExternalRoute);
+
+        private ExternalRoute CreateExternalRoute(C5.KeyValuePair<SocketIdentifier, C5.HashSet<MessageIdentifier>> socketMessagePair)
+        {
+            var connection = socketToConnectionMap[socketMessagePair.Key];
+
+            return new ExternalRoute
+                   {
+                       Connection = new PeerConnection
+                                    {
+                                        Node = connection.Node,
+                                        Connected = connection.Connected
+                                    },
+                       Messages = socketMessagePair.Value
+                   };
+        }
     }
 }
