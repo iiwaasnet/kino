@@ -11,7 +11,7 @@ namespace kino.Core.Connectivity
     {
         private readonly C5.IDictionary<MessageIdentifier, HashedLinkedList<SocketIdentifier>> messageToSocketMap;
         private readonly C5.IDictionary<SocketIdentifier, C5.HashSet<MessageIdentifier>> socketToMessageMap;
-        private readonly C5.IDictionary<SocketIdentifier, Uri> socketToUriMap;
+        private readonly C5.IDictionary<SocketIdentifier, PeerConnection> socketToUriMap;
         private readonly ILogger logger;
 
         public ExternalRoutingTable(ILogger logger)
@@ -19,7 +19,7 @@ namespace kino.Core.Connectivity
             this.logger = logger;
             messageToSocketMap = new HashDictionary<MessageIdentifier, HashedLinkedList<SocketIdentifier>>();
             socketToMessageMap = new HashDictionary<SocketIdentifier, C5.HashSet<MessageIdentifier>>();
-            socketToUriMap = new HashDictionary<SocketIdentifier, Uri>();
+            socketToUriMap = new HashDictionary<SocketIdentifier, PeerConnection>();
         }
 
         public void AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri)
@@ -28,7 +28,11 @@ namespace kino.Core.Connectivity
 
             if (mapped)
             {
-                socketToUriMap[socketIdentifier] = uri;
+                socketToUriMap[socketIdentifier] = new PeerConnection
+                                                   {
+                                                       Node = new Node(uri, socketIdentifier.Identity),
+                                                       Connected = false
+                                                   };
 
                 MapSocketToMessage(messageIdentifier, socketIdentifier);
 
@@ -68,24 +72,24 @@ namespace kino.Core.Connectivity
             hashSet.Add(messageIdentifier);
         }
 
-        public Node FindRoute(MessageIdentifier messageIdentifier)
+        public PeerConnection FindRoute(MessageIdentifier messageIdentifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
             if (messageToSocketMap.Find(ref messageIdentifier, out collection))
             {
                 var socketIdentifier = Get(collection);
-                return new Node(socketToUriMap[socketIdentifier], socketIdentifier.Identity);
+                return socketToUriMap[socketIdentifier];
             }
 
             return null;
         }
 
-        public IEnumerable<Node> FindAllRoutes(MessageIdentifier messageIdentifier)
+        public IEnumerable<PeerConnection> FindAllRoutes(MessageIdentifier messageIdentifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
             return messageToSocketMap.Find(ref messageIdentifier, out collection)
-                       ? collection.Select(el => new Node(socketToUriMap[el], el.Identity))
-                       : Enumerable.Empty<Node>();
+                       ? collection.Select(el => socketToUriMap[el])
+                       : Enumerable.Empty<PeerConnection>();
         }
 
         private static T Get<T>(HashedLinkedList<T> hashSet)
@@ -117,12 +121,12 @@ namespace kino.Core.Connectivity
             }
         }
 
-        
-
+        //TODO: Add a return valeu to indicate that it was the last message hanled by the socketIdentifier 
+        // and it should be disconnected
         public void RemoveMessageRoute(IEnumerable<MessageIdentifier> messageIdentifiers, SocketIdentifier socketIdentifier)
         {
             RemoveMessageRoutesForSocketIdentifier(socketIdentifier, messageIdentifiers);
-            
+
             C5.HashSet<MessageIdentifier> allSocketMessageIdentifiers;
             if (socketToMessageMap.Find(ref socketIdentifier, out allSocketMessageIdentifiers))
             {
@@ -137,14 +141,13 @@ namespace kino.Core.Connectivity
                     socketToUriMap.Remove(socketIdentifier, out uri);
 
                     logger.Debug($"External route removed Uri:{uri.AbsoluteUri} " +
-                             $"Socket:{socketIdentifier.Identity.GetString()}");
+                                 $"Socket:{socketIdentifier.Identity.GetString()}");
                 }
             }
 
             logger.Debug($"External message route removed " +
-                                 $"Socket:{socketIdentifier.Identity.GetString()} " +
-                                 $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageIdentifiers))}]");
-
+                         $"Socket:{socketIdentifier.Identity.GetString()} " +
+                         $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageIdentifiers))}]");
         }
 
         private void RemoveMessageRoutesForSocketIdentifier(SocketIdentifier socketIdentifier, IEnumerable<MessageIdentifier> messageIdentifiers)

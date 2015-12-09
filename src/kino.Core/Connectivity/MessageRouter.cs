@@ -186,33 +186,41 @@ namespace kino.Core.Connectivity
 
         private bool ForwardMessageAway(MessageIdentifier messageIdentifier, Message message, ISocket scaleOutBackend)
         {
-            var handlers = ((message.Distribution == DistributionPattern.Unicast)
-                                ? new[] {externalRoutingTable.FindRoute(messageIdentifier)}
-                                : (MessageCameFromLocalActor(message)
-                                       ? externalRoutingTable.FindAllRoutes(messageIdentifier)
-                                       : Enumerable.Empty<Node>()))
+            var routes = ((message.Distribution == DistributionPattern.Unicast)
+                              ? new[] {externalRoutingTable.FindRoute(messageIdentifier)}
+                              : (MessageCameFromLocalActor(message)
+                                     ? externalRoutingTable.FindAllRoutes(messageIdentifier)
+                                     : Enumerable.Empty<PeerConnection>()))
                 .Where(h => h != null)
                 .ToList();
 
-            foreach (var handler in handlers)
+            foreach (var route in routes)
             {
                 try
                 {
-                    message.SetSocketIdentity(handler.SocketIdentity);
+                    message.SetSocketIdentity(route.Node.SocketIdentity);
                     message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
+                    if (!route.Connected)
+                    {
+                        scaleOutBackend.Connect(route.Node.Uri);
+                        route.Connected = true;
+                    }
                     scaleOutBackend.SendMessage(message);
 
                     ForwardedToOtherNode(message);
                 }
                 catch (HostUnreachableException err)
                 {
-                    externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(handler.SocketIdentity));
-                    scaleOutBackend.Disconnect(handler.Uri);
+                    externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(route.Node.SocketIdentity));
+                    if (route.Connected)
+                    {
+                        scaleOutBackend.Disconnect(route.Node.Uri);
+                    }
                     logger.Error(err);
                 }
             }
 
-            return handlers.Any();
+            return routes.Any();
         }
 
         private bool ProcessUnhandledMessage(Message message, MessageIdentifier messageIdentifier)

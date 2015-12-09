@@ -74,6 +74,7 @@
     <Compile Include="Connectivity\IClusterMessageSender.cs" />
     <Compile Include="Connectivity\MessageHandlerDefinitionAttribute.cs" />
     <Compile Include="Connectivity\MessageRouter.Tracing.cs" />
+    <Compile Include="Connectivity\PeerConnection.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfigurationReadonlyStorage.cs" />
     <Compile Include="Connectivity\Node.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfiguration.cs" />

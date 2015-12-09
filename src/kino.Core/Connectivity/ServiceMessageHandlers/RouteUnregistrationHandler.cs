@@ -26,6 +26,8 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                 externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(payload.SocketIdentity));
                 try
                 {
+                    // TODO: Disconnect only if the node was connected
+                    // Check if exception is thrown if disconencting from the node to which previously no connection was done
                     forwardingSocket.Disconnect(new Uri(payload.Uri));
                 }
                 catch (EndpointNotFoundException)

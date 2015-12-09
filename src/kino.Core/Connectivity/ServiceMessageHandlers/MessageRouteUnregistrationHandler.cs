@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.ComponentModel;
+using System.Linq;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -22,6 +23,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             if (shouldHandle)
             {
                 var payload = message.GetPayload<UnregisterMessageRouteMessage>();
+                //TODO: Add return value to check if the remote node should be disconnected
                 externalRoutingTable.RemoveMessageRoute(payload
                                                             .MessageContracts
                                                             .Select(mh => new MessageIdentifier(mh.Version, mh.Identity)),
