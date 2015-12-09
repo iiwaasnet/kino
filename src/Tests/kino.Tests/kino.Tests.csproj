@@ -74,10 +74,12 @@
     <Compile Include="Actors\Setup\NullActor.cs" />
     <Compile Include="Actors\Setup\NullMessage.cs" />
     <Compile Include="Connectivity\ClusterMessageListenetTests.cs" />
+    <Compile Include="Connectivity\ExternalMessageRouteRegistrationHandlerTests.cs" />
     <Compile Include="Connectivity\MessageRouterTests.cs" />
     <Compile Include="Connectivity\ClusterConfigurationTests.cs" />
     <Compile Include="Connectivity\ClusterMonitorTests.cs" />
     <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
+    <Compile Include="Connectivity\RouteUnregistrationHandlerTests.cs" />
     <Compile Include="Connectivity\SocketEndpointTests.cs" />
     <Compile Include="Consensus\BallotGeneratorTests.cs" />
     <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR4.cs" />

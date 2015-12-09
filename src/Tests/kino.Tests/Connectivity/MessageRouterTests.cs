@@ -24,7 +24,6 @@ namespace kino.Tests.Connectivity
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(4);
         private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
-        private Mock<ILogger> loggerMock;
         private ILogger logger;
         private Mock<ISocketFactory> socketFactory;
         private Mock<IClusterMonitor> clusterMonitor;
@@ -48,7 +47,6 @@ namespace kino.Tests.Connectivity
             clusterMonitor = new Mock<IClusterMonitor>();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(messageRouterSocketFactory.CreateSocket);
-            loggerMock = new Mock<ILogger>();
             logger = new Mock<ILogger>().Object;
             serviceMessageHandlers = Enumerable.Empty<IServiceMessageHandler>();
         }
@@ -219,6 +217,40 @@ namespace kino.Tests.Connectivity
 
                 var messageOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
+                Assert.AreEqual(message, messageOut);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void TestPeerNodeIsConnected_WhenMessageIsForwardedToIt()
+        {
+            var externalRoutingTable = new Mock<IExternalRoutingTable>();
+            var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()), Connected = false};
+            externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>())).Returns(peerConnection);
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           externalRoutingTable.Object,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+                Assert.IsFalse(peerConnection.Connected);
+
+                var message = Message.Create(new SimpleMessage());
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                var messageOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+
+                Assert.IsTrue(peerConnection.Connected);
                 Assert.AreEqual(message, messageOut);
             }
             finally
