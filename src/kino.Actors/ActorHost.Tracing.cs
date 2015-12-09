@@ -31,7 +31,7 @@ namespace kino.Actors
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
                 logger.Trace("Response: " +
-                             $"{nameof(sentSync)}:{sentSync}" +
+                             $"{nameof(sentSync)}:{sentSync} " +
                              $"{nameof(message.Version)}:{message.Version.GetString()} " +
                              $"{nameof(message.Identity)}:{message.Identity.GetString()}");
             }

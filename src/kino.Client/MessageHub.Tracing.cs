@@ -12,7 +12,7 @@ namespace kino.Client
                 foreach (var messageIdentifier in message.CallbackPoint)
                 {
                     logger.Trace($"Callback registered for Message {message.Identity.GetString()}: " +
-                                 $"{nameof(message.CallbackPoint)}:{messageIdentifier.Identity}-{messageIdentifier.Version}" +
+                                 $"{nameof(message.CallbackPoint)}:{messageIdentifier.Identity.GetString()}-{messageIdentifier.Version.GetString()}" +
                                  $"{nameof(message.Version)}:{message.Version.GetString()} " +
                                  $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetString()} " +
                                  $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
