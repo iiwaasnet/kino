@@ -37,7 +37,7 @@ namespace kino.Tests.Connectivity
                                                                     }
                                                                 },
                                              SocketIdentity = peerSocketIdentity
-            });
+                                         });
 
             registrationHandler.Handle(message, socket.Object);
             socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never());
@@ -74,7 +74,7 @@ namespace kino.Tests.Connectivity
                                                                     }
                                                                 },
                                              SocketIdentity = peerSocketIdentity
-            });
+                                         });
 
             registrationHandler.Handle(message, socket.Object);
             var peerConnection = externalRoutingTable.FindRoute(new MessageIdentifier(messageVersion, messageIdentifier));
