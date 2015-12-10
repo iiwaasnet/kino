@@ -43,12 +43,13 @@ namespace kino.Core.Connectivity
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
             this.clusterMonitor = clusterMonitor;
-            this.routerConfiguration = routerConfiguration;
+            this.routerConfiguration = SetDefaultsForMissingMembers(routerConfiguration);
             this.serviceMessageHandlers = serviceMessageHandlers;
             this.membershipConfiguration = membershipConfiguration;
             cancellationTokenSource = new CancellationTokenSource();
+            
         }
-
+        
         public void Start()
         {
             localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token),
@@ -204,6 +205,7 @@ namespace kino.Core.Connectivity
                     {
                         scaleOutBackend.Connect(route.Node.Uri);
                         route.Connected = true;
+                        Thread.Sleep(routerConfiguration.ConnectionEstablishWaitTime);
                     }
                     scaleOutBackend.SendMessage(message);
 
@@ -307,5 +309,13 @@ namespace kino.Core.Connectivity
             => message.ReceiverIdentity.IsSet()
                    ? new MessageIdentifier(message.ReceiverIdentity)
                    : new MessageIdentifier(message.Version, message.Identity);
+
+        private RouterConfiguration SetDefaultsForMissingMembers(RouterConfiguration routerConfiguration)
+        {
+            routerConfiguration.ConnectionEstablishWaitTime = (routerConfiguration.ConnectionEstablishWaitTime <= TimeSpan.Zero)
+                                                                  ? TimeSpan.FromMilliseconds(200)
+                                                                  : routerConfiguration.ConnectionEstablishWaitTime;
+            return routerConfiguration;
+        }
     }
 }
