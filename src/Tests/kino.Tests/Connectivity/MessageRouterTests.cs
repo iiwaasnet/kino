@@ -226,11 +226,50 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
+        public void TestBroadcastMessage_IsRoutedToAllLocalAndRemoteActors()
+        {
+            var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
+            var externalRoutingTable = new Mock<IExternalRoutingTable>();
+            externalRoutingTable.Setup(m => m.FindAllRoutes(It.Is<MessageIdentifier>(mi => mi.Equals(messageIdentifier))))
+                                .Returns(new [] { new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()) }});
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            internalRoutingTable.Setup(m => m.FindAllRoutes(It.Is<MessageIdentifier>(mi => mi.Equals(messageIdentifier))))
+                                .Returns(new [] { new SocketIdentifier(Guid.NewGuid().ToByteArray())});
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           internalRoutingTable.Object,
+                                           externalRoutingTable.Object,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var message = Message.Create(new SimpleMessage(), DistributionPattern.Broadcast);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                var messageScaleOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+                var messageLocalOut = messageRouterSocketFactory.GetRouterSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+
+                Assert.AreEqual(message, messageScaleOut);
+                Assert.AreEqual(message, messageLocalOut);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
         public void TestPeerNodeIsConnected_WhenMessageIsForwardedToIt()
         {
+            var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()), Connected = false};
-            externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>())).Returns(peerConnection);
+            externalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => mi.Equals(messageIdentifier)))).Returns(peerConnection);
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
@@ -244,13 +283,15 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
                 Assert.IsFalse(peerConnection.Connected);
-
+                var socket = messageRouterSocketFactory.GetScaleoutBackendSocket();
+                Assert.IsFalse(socket.IsConnected());
                 var message = Message.Create(new SimpleMessage());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 var messageOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.IsTrue(peerConnection.Connected);
+                Assert.IsTrue(socket.IsConnected());
                 Assert.AreEqual(message, messageOut);
             }
             finally

@@ -47,9 +47,8 @@ namespace kino.Core.Connectivity
             this.serviceMessageHandlers = serviceMessageHandlers;
             this.membershipConfiguration = membershipConfiguration;
             cancellationTokenSource = new CancellationTokenSource();
-            
         }
-        
+
         public void Start()
         {
             localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token),
@@ -182,8 +181,11 @@ namespace kino.Core.Connectivity
                 }
             }
 
-            return handlers.Any();
+            return UnicastMessageProcessedLocally(message, handlers);
         }
+
+        private static bool UnicastMessageProcessedLocally(IMessage message, IEnumerable<SocketIdentifier> handlers)
+            => handlers.Any() && message.Distribution == DistributionPattern.Unicast;
 
         private bool ForwardMessageAway(MessageIdentifier messageIdentifier, Message message, ISocket scaleOutBackend)
         {
