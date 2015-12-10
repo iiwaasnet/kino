@@ -526,6 +526,110 @@ namespace kino.Tests.Connectivity
             }
         }
 
+
+        [Test]
+        public void TestIfAllMessageRoutesUnregisteredForNode_SocketIsDisconnected()
+        {
+            var externalRoutingTable = new ExternalRoutingTable(logger);
+            serviceMessageHandlers = new[] {new MessageRouteUnregistrationHandler(externalRoutingTable)};
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           externalRoutingTable,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentifiers = new[]
+                                         {
+                                             MessageIdentifier.Create<SimpleMessage>(),
+                                             MessageIdentifier.Create<AsyncMessage>()
+                                         };
+
+                var socketIdentity = SocketIdentifier.Create();
+                var uri = new Uri("tcp://127.0.0.1:8000");
+                messageIdentifiers.ForEach(mi => externalRoutingTable.AddMessageRoute(mi, socketIdentity, uri));
+                var peerConnection = externalRoutingTable.FindRoute(messageIdentifiers.First());
+                peerConnection.Connected = true;
+                var backEndScoket = messageRouterSocketFactory.GetScaleoutBackendSocket();
+                backEndScoket.Connect(uri);
+                Assert.IsTrue(backEndScoket.IsConnected());
+                var message = Message.Create(new UnregisterMessageRouteMessage
+                                             {
+                                                 Uri = uri.ToSocketAddress(),
+                                                 SocketIdentity = socketIdentity.Identity,
+                                                 MessageContracts = messageIdentifiers.Select(mi => new MessageContract
+                                                                                                    {
+                                                                                                        Version = mi.Version,
+                                                                                                        Identity = mi.Identity
+                                                                                                    }).ToArray()
+                                             });
+
+                CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                Assert.IsFalse(backEndScoket.IsConnected());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void TestIfUnregisterNodeMessageRouteMessageAndConnectionWasEstablished_SocketIsDisconnected()
+        {
+            var externalRoutingTable = new ExternalRoutingTable(logger);
+            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable)};
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           externalRoutingTable,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
+                var socketIdentity = SocketIdentifier.Create();
+                var uri = new Uri("tcp://127.0.0.1:8000");
+                externalRoutingTable.AddMessageRoute(messageIdentifier, socketIdentity, uri);
+                var peerConnection = externalRoutingTable.FindRoute(messageIdentifier);
+                peerConnection.Connected = true;
+                var backEndScoket = messageRouterSocketFactory.GetScaleoutBackendSocket();
+                backEndScoket.Connect(uri);
+                Assert.IsTrue(backEndScoket.IsConnected());
+                var message = Message.Create(new UnregisterNodeMessageRouteMessage
+                                             {
+                                                 Uri = uri.ToSocketAddress(),
+                                                 SocketIdentity = socketIdentity.Identity
+                                             });
+
+                CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                Assert.IsFalse(backEndScoket.IsConnected());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+
         [Test]
         public void TestIfUnregisterNodeMessageRouteMessage_AllRoutesAreRemovedFromExternalRoutingTable()
         {

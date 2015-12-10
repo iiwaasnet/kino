@@ -12,11 +12,13 @@ namespace kino.Tests.Actors.Setup
         private byte[] identity;
         private readonly BlockingCollection<IMessage> sentMessages;
         private readonly BlockingCollection<IMessage> receivedMessages;
+        private bool connected;
 
         public StubSocket()
         {
             sentMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             receivedMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
+            connected = false;
         }
 
         public void SendMessage(IMessage message)
@@ -56,10 +58,12 @@ namespace kino.Tests.Actors.Setup
 
         public void Connect(Uri address)
         {
+            connected = true;
         }
 
         public void Disconnect(Uri address)
         {
+            connected = false;
         }
 
         public void Bind(Uri address)
@@ -85,5 +89,8 @@ namespace kino.Tests.Actors.Setup
 
         internal void DeliverMessage(IMessage message)
             => receivedMessages.Add(message);
+
+        internal bool IsConnected()
+            => connected;
     }
 }
