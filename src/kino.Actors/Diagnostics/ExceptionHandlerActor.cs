@@ -17,7 +17,7 @@ namespace kino.Actors.Diagnostics
         }
 
         [MessageHandlerDefinition(typeof (ExceptionMessage))]
-        public async Task<IActorResult> HandleException(IMessage message)
+        public Task<IActorResult> HandleException(IMessage message)
         {
             var payload = message.GetPayload<ExceptionMessage>();
 
