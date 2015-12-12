@@ -27,5 +27,5 @@ Explain it!
 -------------------------------------
 If you are interested in the project, please, read [wiki](https://github.com/iiwaasnet/kino/wiki/Introduction) for details about the framework, ask related questions or suggest features in chat [![Join the chat at https://gitter.im/iiwaasnet/kino](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/iiwaasnet/kino?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
--------------------------------------
+
 Powered by **[NetMQ](https://github.com/zeromq/netmq)**
