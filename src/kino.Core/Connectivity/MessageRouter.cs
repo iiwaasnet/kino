@@ -149,9 +149,13 @@ namespace kino.Core.Connectivity
         {
             var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
 
-            return HandleMessageLocally(messageHandlerIdentifier, message, localSocket)
-                   || ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend)
-                   || ProcessUnhandledMessage(message, messageHandlerIdentifier);
+            var handled = HandleMessageLocally(messageHandlerIdentifier, message, localSocket);
+            if (!handled || message.Distribution == DistributionPattern.Broadcast)
+            {
+                handled = ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend) || handled;
+            }
+
+            return handled || ProcessUnhandledMessage(message, messageHandlerIdentifier);
         }
 
         private bool HandleMessageLocally(MessageIdentifier messageIdentifier, Message message, ISocket localSocket)
@@ -181,11 +185,8 @@ namespace kino.Core.Connectivity
                 }
             }
 
-            return ProcessedLocallyOrMessageIsUnicast(message, handlers);
+            return handlers.Any();
         }
-
-        private static bool ProcessedLocallyOrMessageIsUnicast(IMessage message, IEnumerable<SocketIdentifier> handlers)
-            => handlers.Any() && message.Distribution == DistributionPattern.Unicast;
 
         private bool ForwardMessageAway(MessageIdentifier messageIdentifier, Message message, ISocket scaleOutBackend)
         {
