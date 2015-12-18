@@ -94,10 +94,14 @@ namespace kino.Core.Connectivity
 
         private static T Get<T>(HashedLinkedList<T> hashSet)
         {
-            if (hashSet.Any())
+            var count = hashSet.Count;
+            if (count > 0)
             {
-                var first = hashSet.RemoveFirst();
-                hashSet.InsertLast(first);
+                var first = (count > 1) ? hashSet.RemoveFirst() : hashSet.First;
+                if (count > 1)
+                {
+                    hashSet.InsertLast(first);
+                }
                 return first;
             }
 
