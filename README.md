@@ -26,5 +26,6 @@ If you are interested in the project, please, read [wiki](https://github.com/iiw
 * [Actors](https://github.com/iiwaasnet/kino/wiki/Actors)
 * [ActorHost](https://github.com/iiwaasnet/kino/wiki/ActorHost)
 * [MessageHub](https://github.com/iiwaasnet/kino/wiki/MessageHub)
+* [MessageRouter]()https://github.com/iiwaasnet/kino/wiki/MessageRouter
 
 Powered by **[NetMQ](https://github.com/zeromq/netmq)**
