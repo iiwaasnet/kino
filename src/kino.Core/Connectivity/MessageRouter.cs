@@ -181,10 +181,10 @@ namespace kino.Core.Connectivity
                 }
             }
 
-            return UnicastMessageProcessedLocally(message, handlers);
+            return ProcessedLocallyOrMessageIsUnicast(message, handlers);
         }
 
-        private static bool UnicastMessageProcessedLocally(IMessage message, IEnumerable<SocketIdentifier> handlers)
+        private static bool ProcessedLocallyOrMessageIsUnicast(IMessage message, IEnumerable<SocketIdentifier> handlers)
             => handlers.Any() && message.Distribution == DistributionPattern.Unicast;
 
         private bool ForwardMessageAway(MessageIdentifier messageIdentifier, Message message, ISocket scaleOutBackend)
