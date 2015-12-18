@@ -12,7 +12,7 @@ Building a Web service is one of the ways to implement a component, accessible o
 
 **Kino** - is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)-like* framework for implementing and hosting components, accessible over the network. In other words, **kino** allows to build *networks* of components.
 
-Fault-tolerance and load scale-out by redundant deployment of actors, possibility to broadcast messages – everything without additional infrastructure dependencies. Rendezvous service provides auto-discovery and reduces amount of required configuration. Not much more to say, because **kino** is simple…
+Fault-tolerance and load scale-out by redundant deployment of actors, possibility to broadcast messages – everything without additional infrastructure dependencies. Rendezvous service provides actors auto-discovery and reduces amount of required configuration.
 
 Platform requirements: Windows with .NET 4.6+.
 
