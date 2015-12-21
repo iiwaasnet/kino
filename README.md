@@ -10,7 +10,7 @@ Kino
 ------------------------
 Building a Web service is one of the ways to implement a component, accessible over the network. But what if the functionality we would like to expose is too small for a stand-alone service?  Although, WS might still be a proper design choice, let's try something else...
 
-**Kino** - is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)-like* framework for implementing and hosting components, accessible over the network. In other words, **kino** allows to build *networks* of components.
+**Kino** is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)-like* framework for implementing and hosting components, accessible over the network. In other words, **kino** allows to build *networks* of components. It is a foundation for your applications based on Microservices architecture, but can be small enough to be used just within one process.
 
 Fault-tolerance and load scale-out by redundant deployment of actors, possibility to broadcast messages – everything without additional infrastructure dependencies. Rendezvous service provides actors auto-discovery and reduces amount of required configuration.
 
