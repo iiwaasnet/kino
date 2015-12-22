@@ -28,5 +28,6 @@ If you are interested in the project, please, read [wiki](https://github.com/iiw
 * [MessageHub](https://github.com/iiwaasnet/kino/wiki/MessageHub)
 * [MessageRouter](https://github.com/iiwaasnet/kino/wiki/MessageRouter)
 * [Rendezvous](https://github.com/iiwaasnet/kino/wiki/Rendezvous)
+* [Configuration](https://github.com/iiwaasnet/kino/wiki/Configuration)
 
 Powered by **[NetMQ](https://github.com/zeromq/netmq)**
