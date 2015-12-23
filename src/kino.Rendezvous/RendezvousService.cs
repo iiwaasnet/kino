@@ -42,7 +42,7 @@ namespace kino.Rendezvous
             cancellationTokenSource = new CancellationTokenSource();
             leaderPayload = serializer.Serialize(new RendezvousNode
                                                  {
-                                                     MulticastUri = config.MulticastUri.ToSocketAddress(),
+                                                     MulticastUri = config.BroadcastUri.ToSocketAddress(),
                                                      UnicastUri = config.UnicastUri.ToSocketAddress()
                                                  });
         }
@@ -187,7 +187,7 @@ namespace kino.Rendezvous
         private ISocket CreateBroadcastSocket()
         {
             var socket = socketFactory.CreatePublisherSocket();
-            socket.Bind(config.MulticastUri);
+            socket.Bind(config.BroadcastUri);
 
             return socket;
         }

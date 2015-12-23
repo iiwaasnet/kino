@@ -91,7 +91,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigurationProvider.cs" />
     <Compile Include="IConfigurationProvider.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Program.cs" />

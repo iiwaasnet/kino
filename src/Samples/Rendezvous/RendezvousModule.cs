@@ -26,10 +26,6 @@ namespace Rendezvous
                    .As<ApplicationConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterType<ConfigurationProvider>()
-                   .As<IConfigurationProvider>()
-                   .SingleInstance();
-
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetLeaseConfiguration())
                    .As<LeaseConfiguration>()
                    .SingleInstance();

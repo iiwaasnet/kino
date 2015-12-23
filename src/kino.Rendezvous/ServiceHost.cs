@@ -11,29 +11,18 @@ namespace kino.Rendezvous
     public class ServiceHost
     {
         private readonly IRendezvousService rendezvousService;
-        private readonly RendezvousConfiguration config;
+        private readonly ApplicationConfiguration config;
         private readonly ILogger logger;
 
-        public ServiceHost(IRendezvousService rendezvousService, RendezvousConfiguration config, ILogger logger)
-        {
-            this.logger = logger;
-            this.config = config;
-            this.rendezvousService = rendezvousService;
-        }
-
-        public ServiceHost(LeaseConfiguration leaseConfiguration,
-                           SocketConfiguration socketConfiguration,
-                           RendezvousConfiguration rendezvousConfiguration,
+        public ServiceHost(SocketConfiguration socketConfiguration,
                            ApplicationConfiguration applicationConfiguration,
                            ILogger logger)
         {
             this.logger = logger;
-            config = rendezvousConfiguration;
-            rendezvousService = new Composer().BuildRendezvousService(leaseConfiguration,
-                                                                     socketConfiguration,
-                                                                     rendezvousConfiguration,
-                                                                     applicationConfiguration,
-                                                                     logger);
+            config = applicationConfiguration;
+            rendezvousService = new Composer().BuildRendezvousService(socketConfiguration,
+                                                                      applicationConfiguration,
+                                                                      logger);
         }
 
         public void Run()

@@ -1,5 +1,4 @@
 ﻿using kino.Consensus;
-using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
 using kino.Core.Messaging;
 using kino.Core.Sockets;
@@ -10,25 +9,29 @@ namespace kino.Rendezvous
 {
     public class Composer
     {
-        public IRendezvousService BuildRendezvousService(LeaseConfiguration leaseConfiguration,
-                                                         SocketConfiguration socketConfiguration,
-                                                         RendezvousConfiguration rendezvousConfiguration,
+        public IRendezvousService BuildRendezvousService(ApplicationConfiguration applicationConfiguration,
+                                                         ILogger logger)
+        {
+            return BuildRendezvousService(null, applicationConfiguration, logger);
+        }
+
+        public IRendezvousService BuildRendezvousService(SocketConfiguration socketConfiguration,
                                                          ApplicationConfiguration applicationConfiguration,
                                                          ILogger logger)
         {
             var socketFactory = new SocketFactory(socketConfiguration);
-            var ballotGenerator = new BallotGenerator(leaseConfiguration);
-            var synodConfigurationProvider = new SynodConfigurationProvider(applicationConfiguration);
+            var ballotGenerator = new BallotGenerator(applicationConfiguration.Lease);
+            var synodConfigurationProvider = new SynodConfigurationProvider(applicationConfiguration.Synod);
             var synodeConfiguration = new SynodConfiguration(synodConfigurationProvider);
             var intercomMessageHub = new IntercomMessageHub(socketFactory, synodeConfiguration, logger);
             var roundBasedRegister = new RoundBasedRegister(intercomMessageHub,
                                                             ballotGenerator,
                                                             synodeConfiguration,
-                                                            leaseConfiguration,
+                                                            applicationConfiguration.Lease,
                                                             logger);
             var leaseProvider = new LeaseProvider(roundBasedRegister,
                                                   ballotGenerator,
-                                                  leaseConfiguration,
+                                                  applicationConfiguration.Lease,
                                                   synodeConfiguration,
                                                   logger);
             var messageSerializer = new ProtobufMessageSerializer();
@@ -37,7 +40,7 @@ namespace kino.Rendezvous
                                          synodeConfiguration,
                                          socketFactory,
                                          messageSerializer,
-                                         rendezvousConfiguration,
+                                         applicationConfiguration.Rendezvous,
                                          logger);
         }
     }

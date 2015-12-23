@@ -22,15 +22,15 @@ namespace Server
             var componentResolver = new Composer(container.ResolveOptional<SocketConfiguration>());
 
             var messageRouter = componentResolver.BuildMessageRouter(container.Resolve<RouterConfiguration>(),
-                                                                      container.Resolve<ClusterMembershipConfiguration>(),
-                                                                      container.Resolve<IEnumerable<RendezvousEndpoint>>(),
-                                                                      container.Resolve<ILogger>());
+                                                                     container.Resolve<ClusterMembershipConfiguration>(),
+                                                                     container.Resolve<IEnumerable<RendezvousEndpoint>>(),
+                                                                     container.Resolve<ILogger>());
             messageRouter.Start();
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
             Thread.Sleep(TimeSpan.FromMilliseconds(30));
 
             var actorHostManager = componentResolver.BuildActorHostManager(container.Resolve<RouterConfiguration>(),
-                                                              container.Resolve<ILogger>());
+                                                                           container.Resolve<ILogger>());
             foreach (var actor in container.Resolve<IEnumerable<IActor>>())
             {
                 actorHostManager.AssignActor(actor);

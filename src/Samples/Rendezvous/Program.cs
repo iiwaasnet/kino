@@ -15,9 +15,7 @@ namespace Rendezvous
             builder.RegisterModule<RendezvousModule>();
             var container = builder.Build();
 
-            new ServiceHost(container.Resolve<LeaseConfiguration>(),
-                            container.ResolveOptional<SocketConfiguration>(),
-                            container.Resolve<RendezvousConfiguration>(),
+            new ServiceHost(container.ResolveOptional<SocketConfiguration>(),
                             container.Resolve<ApplicationConfiguration>(),
                             container.Resolve<ILogger>())
                 .Run();

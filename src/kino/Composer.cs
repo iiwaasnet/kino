@@ -17,6 +17,11 @@ namespace kino
             socketFactory = new SocketFactory(socketConfiguration);
         }
 
+        public Composer()
+            :this(null)
+        {
+        }
+
         public IMessageRouter BuildMessageRouter(RouterConfiguration routerConfiguration,
                                                  ClusterMembershipConfiguration clusterMembershipConfiguration,
                                                  IEnumerable<RendezvousEndpoint> rendezvousEndpoints,

@@ -7,13 +7,14 @@ namespace kino.Rendezvous.Configuration
 {
     public class SynodConfigurationProvider : ISynodConfigurationProvider
     {
-        public SynodConfigurationProvider(ApplicationConfiguration config)
+        public SynodConfigurationProvider(SynodConfiguration config)
         {
-            LocalNode = new Uri(config.Synod.LocalNode);
-            Synod = config.Synod.Members.Select(m => new Uri(m));
+            LocalNode = new Uri(config.LocalNode);
+            Synod = config.Members.Select(m => new Uri(m));
         }
 
         public Uri LocalNode { get; }
+
         public IEnumerable<Uri> Synod { get; }
     }
 }
