@@ -6,9 +6,14 @@ namespace kino.Core.Connectivity
     {
         private readonly int hashCode;
 
-        public RendezvousEndpoint(Uri unicastUri, Uri multicastUri)
+        public RendezvousEndpoint(string unicastUri, string broadcastUri)
+            : this(new Uri(unicastUri), new Uri(broadcastUri))
         {
-            MulticastUri = multicastUri;
+        }
+
+        public RendezvousEndpoint(Uri unicastUri, Uri broadcastUri)
+        {
+            BroadcastUri = broadcastUri;
             UnicastUri = unicastUri;
 
             hashCode = CalculateHashCode();
@@ -25,7 +30,7 @@ namespace kino.Core.Connectivity
                 return true;
             }
 
-            return Equals(MulticastUri, other.MulticastUri) && Equals(UnicastUri, other.UnicastUri);
+            return Equals(BroadcastUri, other.BroadcastUri) && Equals(UnicastUri, other.UnicastUri);
         }
 
         public override bool Equals(object obj)
@@ -53,11 +58,12 @@ namespace kino.Core.Connectivity
         {
             unchecked
             {
-                return ((MulticastUri?.GetHashCode() ?? 0) * 397) ^ (UnicastUri?.GetHashCode() ?? 0);
+                return ((BroadcastUri?.GetHashCode() ?? 0) * 397) ^ (UnicastUri?.GetHashCode() ?? 0);
             }
         }
 
-        public Uri MulticastUri { get; }
+        public Uri BroadcastUri { get; }
+
         public Uri UnicastUri { get; }
     }
 }

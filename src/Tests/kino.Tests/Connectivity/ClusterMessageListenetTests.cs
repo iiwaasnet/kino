@@ -278,7 +278,7 @@ namespace kino.Tests.Connectivity
                                                                    new RendezvousNode
                                                                    {
                                                                        UnicastUri = newRendezouvEndpoint.UnicastUri.AbsoluteUri,
-                                                                       MulticastUri = newRendezouvEndpoint.MulticastUri.AbsoluteUri
+                                                                       MulticastUri = newRendezouvEndpoint.BroadcastUri.AbsoluteUri
                                                                    }
                                                                }
                                          });
@@ -389,7 +389,7 @@ namespace kino.Tests.Connectivity
                 TimeSpan.FromMilliseconds(clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover.TotalMilliseconds * 1.5);
 
         private static bool SameServer(RendezvousEndpoint e, RendezvousNotLeaderMessage notLeaderMessage)
-            => e.MulticastUri.ToSocketAddress() == notLeaderMessage.NewLeader.MulticastUri
+            => e.BroadcastUri.ToSocketAddress() == notLeaderMessage.NewLeader.MulticastUri
                && e.UnicastUri.ToSocketAddress() == notLeaderMessage.NewLeader.UnicastUri;
 
         private Task StartListeningMessages(IClusterMessageListener clusterMessageListener, Action restartRequestAction, CancellationToken token)

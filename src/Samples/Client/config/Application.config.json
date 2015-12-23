@@ -4,22 +4,21 @@
     "scaleOutAddressUri": "tcp://127.0.0.2:5201",
     "pingSilenceBeforeRendezvousFailover": "00:00:20",
     "pongSilenceBeforeRouteDeletion": "00:00:10",
-    "promiseExpirationEvaluationInterval": "00:00:10",
     "runAsStandalone":  false,
 
     "rendezvousServers": [
-      {
-        "multicastUri": "tcp://127.0.0.31:5000",
-        "unicastUri": "tcp://127.0.0.31:5001"
-      },
-      {
-        "multicastUri": "tcp://127.0.0.32:5000",
-        "unicastUri": "tcp://127.0.0.32:5001"
-      },
-      {
-        "multicastUri": "tcp://127.0.0.33:5000",
-        "unicastUri": "tcp://127.0.0.33:5001"
-      }
+        {
+            "broadcastUri": "tcp://127.0.0.31:5000",
+            "unicastUri": "tcp://127.0.0.31:5001"
+        },
+        {
+            "broadcastUri": "tcp://127.0.0.32:5000",
+            "unicastUri": "tcp://127.0.0.32:5001"
+        },
+        {
+            "broadcastUri": "tcp://127.0.0.33:5000",
+            "unicastUri": "tcp://127.0.0.33:5001"
+        }
     ]
   }
 }

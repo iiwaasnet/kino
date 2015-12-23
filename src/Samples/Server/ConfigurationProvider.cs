@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using kino.Core.Connectivity;
 
 namespace Server
@@ -14,13 +14,13 @@ namespace Server
         }
 
         public IEnumerable<RendezvousEndpoint> GetRendezvousEndpointsConfiguration()
-            => appConfig.RendezvousServers;
+            => appConfig.RendezvousServers.Select(s => new RendezvousEndpoint(s.UnicastUri, s.BroadcastUri));
 
         public RouterConfiguration GetRouterConfiguration()
             => new RouterConfiguration
                {
-                   RouterAddress = new SocketEndpoint(new Uri(appConfig.RouterUri), SocketIdentifier.CreateIdentity()),
-                   ScaleOutAddress = new SocketEndpoint(new Uri(appConfig.ScaleOutAddressUri), SocketIdentifier.CreateIdentity())
+                   RouterAddress = new SocketEndpoint(appConfig.RouterUri),
+                   ScaleOutAddress = new SocketEndpoint(appConfig.ScaleOutAddressUri)
                };
 
         public ClusterMembershipConfiguration GetClusterTimingConfiguration()

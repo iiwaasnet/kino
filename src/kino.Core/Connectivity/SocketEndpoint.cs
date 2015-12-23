@@ -7,7 +7,12 @@ namespace kino.Core.Connectivity
     {
         private readonly int hashCode;
 
-        public SocketEndpoint(Uri uri, byte[] identity)
+        public SocketEndpoint(string uri)
+            : this(new Uri(uri), SocketIdentifier.CreateIdentity())
+        {
+        }
+
+        internal SocketEndpoint(Uri uri, byte[] identity)
         {
             Uri = uri;
             Identity = identity;
@@ -61,6 +66,7 @@ namespace kino.Core.Connectivity
         }
 
         public Uri Uri { get; }
+
         public byte[] Identity { get; }
     }
 }
