@@ -14,7 +14,7 @@ namespace kino.Tests.Consensus.Setup
 {
     public class RoundBasedRegisterTestsHelper
     {
-        internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<string> synod, string localNodeUri)
+        internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<Uri> synod, Uri localNodeUri)
         {
             var intercomMessageHubSocketFactory = new IntercomMessageHubSocketFactory();
             var socketFactory = new Mock<ISocketFactory>();
@@ -24,36 +24,33 @@ namespace kino.Tests.Consensus.Setup
                                 Synod = new SynodConfiguration
                                         {
                                             Members = synod,
+                                            LocalNode = localNodeUri
+                                        },
+                                Lease = new LeaseConfiguration
+                                        {
                                             ClockDrift = TimeSpan.FromMilliseconds(100),
                                             MessageRoundtrip = TimeSpan.FromSeconds(4),
                                             NodeResponseTimeout = TimeSpan.FromSeconds(2),
-                                            LocalNode = localNodeUri,
                                             MaxLeaseTimeSpan = TimeSpan.FromSeconds(10)
                                         }
                             };
-            var leaseConfig = new LeaseConfiguration
-                              {
-                                  ClockDrift = appConfig.Synod.ClockDrift,
-                                  MaxLeaseTimeSpan = appConfig.Synod.MaxLeaseTimeSpan,
-                                  MessageRoundtrip = appConfig.Synod.MessageRoundtrip,
-                                  NodeResponseTimeout = appConfig.Synod.NodeResponseTimeout
-                              };
+
             var socketConfig = new SocketConfiguration
                                {
                                    ReceivingHighWatermark = 1000,
                                    SendingHighWatermark = 1000,
                                    Linger = TimeSpan.Zero
                                };
-            var synodConfig = new kino.Consensus.Configuration.SynodConfiguration(new SynodConfigurationProvider(appConfig));
+            var synodConfig = new kino.Consensus.Configuration.SynodConfiguration(new SynodConfigurationProvider(appConfig.Synod));
             var loggerMock = new Mock<ILogger>();
             var intercomMessageHub = new IntercomMessageHub(new SocketFactory(socketConfig),
                                                             synodConfig,
                                                             loggerMock.Object);
-            var ballotGenerator = new BallotGenerator(leaseConfig);
+            var ballotGenerator = new BallotGenerator(appConfig.Lease);
             var roundBasedRegister = new RoundBasedRegister(intercomMessageHub,
                                                             ballotGenerator,
                                                             synodConfig,
-                                                            leaseConfig,
+                                                            appConfig.Lease,
                                                             loggerMock.Object);
 
             Thread.Sleep(TimeSpan.FromMilliseconds(400));
@@ -61,13 +58,13 @@ namespace kino.Tests.Consensus.Setup
             return new RoundBasedRegisterTestSetup(ballotGenerator, synodConfig.LocalNode, roundBasedRegister);
         }
 
-        internal static string[] GetSynodMembers()
-        {
+        internal static Uri[] GetSynodMembers()
+        {            
             return new[]
                    {
-                       "tcp://127.0.0.1:3001",
-                       "tcp://127.0.0.2:3002",
-                       "tcp://127.0.0.3:3003"
+                       new Uri("tcp://127.0.0.1:3001"),
+                       new Uri("tcp://127.0.0.2:3002"),
+                       new Uri("tcp://127.0.0.3:3003")
                    };
         }
     }

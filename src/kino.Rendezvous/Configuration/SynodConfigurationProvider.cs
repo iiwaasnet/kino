@@ -9,8 +9,8 @@ namespace kino.Rendezvous.Configuration
     {
         public SynodConfigurationProvider(SynodConfiguration config)
         {
-            LocalNode = new Uri(config.LocalNode);
-            Synod = config.Members.Select(m => new Uri(m));
+            LocalNode = config.LocalNode;
+            Synod = config.Members;
         }
 
         public Uri LocalNode { get; }
