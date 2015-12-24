@@ -36,6 +36,9 @@ namespace kino.Core.Messaging
             //TODO: Better implementation
             => Guid.NewGuid().ToString().GetBytes();
 
+        public bool Equals(MessageIdentifier messageIdentifier)
+            => messageIdentifier.Equals(new MessageIdentifier(Version, Identity));
+
         internal Message(MultipartMessage multipartMessage)
         {
             hops = new List<SocketEndpoint>(multipartMessage.GetMessageHops());
@@ -73,7 +76,7 @@ namespace kino.Core.Messaging
             {
                 hops.Add(scaleOutAddress);
             }
-        } 
+        }
 
         internal IEnumerable<SocketEndpoint> GetMessageHops()
             => hops;
@@ -105,15 +108,25 @@ namespace kino.Core.Messaging
             => new T().Deserialize<T>(content);
 
         public byte[] Body { get; }
+
         public byte[] Identity { get; }
+
         public byte[] Version { get; }
+
         public TimeSpan TTL { get; set; }
+
         public DistributionPattern Distribution { get; }
+
         public byte[] CorrelationId { get; private set; }
+
         public byte[] ReceiverIdentity { get; private set; }
+
         public IEnumerable<MessageIdentifier> CallbackPoint { get; private set; }
+
         public byte[] CallbackReceiverIdentity { get; private set; }
+
         public byte[] SocketIdentity { get; private set; }
+
         public MessageTraceOptions TraceOptions { get; set; }
     }
 }

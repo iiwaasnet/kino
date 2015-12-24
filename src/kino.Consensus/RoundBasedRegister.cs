@@ -42,15 +42,15 @@ namespace kino.Consensus
 
             listener = intercomMessageHub.Subscribe();
 
-            listener.Where(m => Unsafe.Equals(m.Identity, ConsensusMessages.LeaseRead.Identity))
+            listener.Where(m => m.Equals(ConsensusMessages.LeaseRead))
                     .Subscribe(OnReadReceived);
-            listener.Where(m => Unsafe.Equals(m.Identity, ConsensusMessages.LeaseWrite.Identity))
+            listener.Where(m => m.Equals(ConsensusMessages.LeaseWrite))
                     .Subscribe(OnWriteReceived);
 
-            ackReadStream = listener.Where(m => Unsafe.Equals(m.Identity, ConsensusMessages.LeaseAckRead.Identity));
-            nackReadStream = listener.Where(m => Unsafe.Equals(m.Identity, ConsensusMessages.LeaseNackRead.Identity));
-            ackWriteStream = listener.Where(m => Unsafe.Equals(m.Identity, ConsensusMessages.LeaseAckWrite.Identity));
-            nackWriteStream = listener.Where(m => Unsafe.Equals(m.Identity, ConsensusMessages.LeaseNackWrite.Identity));
+            ackReadStream = listener.Where(m => m.Equals(ConsensusMessages.LeaseAckRead));
+            nackReadStream = listener.Where(m => m.Equals(ConsensusMessages.LeaseNackRead));
+            ackWriteStream = listener.Where(m => m.Equals(ConsensusMessages.LeaseAckWrite));
+            nackWriteStream = listener.Where(m => m.Equals(ConsensusMessages.LeaseNackWrite));
         }
 
         private void OnWriteReceived(IMessage message)

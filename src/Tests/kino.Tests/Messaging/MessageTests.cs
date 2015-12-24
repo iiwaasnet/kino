@@ -34,7 +34,7 @@ namespace kino.Tests.Messaging
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
             Assert.IsNotNull(message.Identity);
-            CollectionAssert.AreEqual(MessageIdentifier.Create<SimpleMessage>().Identity, message.Identity);
+            Assert.IsTrue(message.Equals(MessageIdentifier.Create<SimpleMessage>()));
         }
 
         [Test]
@@ -133,8 +133,7 @@ namespace kino.Tests.Messaging
             message = new Message(multipart);
 
             Assert.AreEqual(messageText, message.GetPayload<SimpleMessage>().Content);
-            CollectionAssert.AreEqual(MessageIdentifier.Create<SimpleMessage>().Identity, message.Identity);
-            CollectionAssert.AreEqual(Message.CurrentVersion, message.Version);
+            Assert.IsTrue(message.Equals(MessageIdentifier.Create<SimpleMessage>()));
         }
 
 

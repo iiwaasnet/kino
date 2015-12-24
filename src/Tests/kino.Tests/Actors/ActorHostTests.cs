@@ -224,7 +224,7 @@ namespace kino.Tests.Actors
                 var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 var messageIdentifier = MessageIdentifier.Create<AsyncMessage>();
-                CollectionAssert.AreEqual(messageIdentifier.Identity, messageOut.Identity);
+                Assert.IsTrue(messageOut.Equals(messageIdentifier));
                 Assert.AreEqual(delay, messageOut.GetPayload<AsyncMessage>().Delay);
                 CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
             }
@@ -261,7 +261,7 @@ namespace kino.Tests.Actors
 
                 var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
-                CollectionAssert.AreEqual(KinoMessages.Exception.Identity, messageOut.Identity);
+                Assert.IsTrue(messageOut.Equals(KinoMessages.Exception));
                 CollectionAssert.AreEqual(messageOut.CorrelationId, messageIn.CorrelationId);
             }
             finally
@@ -400,7 +400,7 @@ namespace kino.Tests.Actors
                 var messageOut = socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
-                CollectionAssert.AreEqual(KinoMessages.Exception.Identity, messageOut.Identity);
+                Assert.IsTrue(messageOut.Equals(KinoMessages.Exception));
                 CollectionAssert.Contains(messageOut.CallbackPoint, KinoMessages.Exception);
                 CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
             }
@@ -442,7 +442,7 @@ namespace kino.Tests.Actors
                 var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.AreEqual(error, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
-                CollectionAssert.AreEqual(KinoMessages.Exception.Identity, messageOut.Identity);
+                Assert.IsTrue(messageOut.Equals(KinoMessages.Exception));
                 CollectionAssert.Contains(messageOut.CallbackPoint, KinoMessages.Exception);
                 CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
             }
@@ -453,7 +453,7 @@ namespace kino.Tests.Actors
         }
 
         private static bool IsAsyncMessage(AsyncMessageContext amc)
-            => Unsafe.Equals(amc.OutMessages.First().Identity, MessageIdentifier.Create<AsyncMessage>().Identity);
+            => amc.OutMessages.First().Equals(MessageIdentifier.Create<AsyncMessage>());
 
         private static void StartActorHost(IActorHost actorHost)
         {

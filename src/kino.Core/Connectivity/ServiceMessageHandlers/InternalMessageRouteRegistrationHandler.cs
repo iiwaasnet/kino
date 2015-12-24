@@ -41,7 +41,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         }
 
         private static bool IsInternalMessageRoutingRegistration(IMessage message)
-            => Unsafe.Equals(RegisterInternalMessageRouteMessageIdentifier.Identity, message.Identity);
+            => message.Equals(RegisterInternalMessageRouteMessageIdentifier);
 
         private IEnumerable<MessageIdentifier> UpdateLocalRoutingTable(RegisterInternalMessageRouteMessage payload,
                                                                        SocketIdentifier socketIdentifier)

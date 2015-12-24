@@ -32,8 +32,7 @@ namespace kino.Client
         {
             RemoveCallbackHander();
 
-            if (Unsafe.Equals(message.Identity, KinoMessages.Exception.Identity)
-                && Unsafe.Equals(message.Version, KinoMessages.Exception.Version))
+            if (message.Equals(KinoMessages.Exception))
             {
                 var error = message.GetPayload<ExceptionMessage>().Exception;
                 result.TrySetException(error);

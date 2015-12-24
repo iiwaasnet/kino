@@ -82,7 +82,7 @@ namespace kino.Tests.Connectivity
                 var message = socket.GetSentMessages().BlockingLast(AsyncOp);
 
                 Assert.IsNotNull(message);
-                Assert.IsTrue(Unsafe.Equals(message.Identity, KinoMessages.RegisterExternalMessageRoute.Identity));
+                Assert.IsTrue(message.Equals(KinoMessages.RegisterExternalMessageRoute));
                 var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
                 Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
                 Assert.AreEqual(payload.Uri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
@@ -113,7 +113,7 @@ namespace kino.Tests.Connectivity
                 var message = socket.GetSentMessages().BlockingLast(AsyncOp);
 
                 Assert.IsNotNull(message);
-                Assert.IsTrue(Unsafe.Equals(message.Identity, KinoMessages.UnregisterMessageRoute.Identity));
+                Assert.IsTrue(message.Equals(KinoMessages.UnregisterMessageRoute));
                 var payload = message.GetPayload<UnregisterMessageRouteMessage>();
                 Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
                 Assert.AreEqual(payload.Uri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
@@ -143,7 +143,7 @@ namespace kino.Tests.Connectivity
                 var message = socket.GetSentMessages().BlockingLast(AsyncOp);
 
                 Assert.IsNotNull(message);
-                Assert.IsTrue(Unsafe.Equals(message.Identity, KinoMessages.RequestClusterMessageRoutes.Identity));
+                Assert.IsTrue(message.Equals(KinoMessages.RequestClusterMessageRoutes));
             }
             finally
             {
@@ -169,7 +169,7 @@ namespace kino.Tests.Connectivity
                 var message = socket.GetSentMessages().BlockingLast(AsyncOp);
 
                 Assert.IsNotNull(message);
-                Assert.IsTrue(Unsafe.Equals(message.Identity, KinoMessages.DiscoverMessageRoute.Identity));
+                Assert.IsTrue(message.Equals(KinoMessages.DiscoverMessageRoute));
                 var payload = message.GetPayload<DiscoverMessageRouteMessage>();
                 Assert.IsTrue(Unsafe.Equals(payload.RequestorSocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
                 Assert.AreEqual(payload.RequestorUri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());

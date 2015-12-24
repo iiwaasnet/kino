@@ -298,7 +298,7 @@ namespace kino.Tests.Connectivity
         public void TestRequestClusterMessageRoutesMessage_IsForwardedToMessageRouter()
         {
             var payload = new RequestClusterMessageRoutesMessage();
-            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.RequestClusterMessageRoutes.Identity);
+            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.RequestClusterMessageRoutes);
         }
 
         [Test]
@@ -309,7 +309,7 @@ namespace kino.Tests.Connectivity
                               Uri = "tcp://127.1.1.1:5000",
                               SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterMessageRoute.Identity);
+            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterMessageRoute);
         }
 
         [Test]
@@ -320,7 +320,7 @@ namespace kino.Tests.Connectivity
                               Uri = "tcp://127.0.0.3:6000",
                               SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterNodeMessageRoute.Identity);
+            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterNodeMessageRoute);
         }
 
         [Test]
@@ -331,7 +331,7 @@ namespace kino.Tests.Connectivity
                               RequestorUri = "tcp://127.0.0.3:6000",
                               RequestorSocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.DiscoverMessageRoute.Identity);
+            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.DiscoverMessageRoute);
         }
 
         [Test]
@@ -342,10 +342,10 @@ namespace kino.Tests.Connectivity
                               Uri = "tcp://127.0.0.3:6000",
                               SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.RegisterExternalMessageRoute.Identity);
+            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.RegisterExternalMessageRoute);
         }
 
-        private void TestMessageIsForwardedToMessageRouter<TPayload>(TPayload payload, byte[] messageIdentity)
+        private void TestMessageIsForwardedToMessageRouter<TPayload>(TPayload payload, MessageIdentifier messageIdentity)
             where TPayload : IPayload
         {
             var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
@@ -371,7 +371,7 @@ namespace kino.Tests.Connectivity
             task.Wait();
 
             Assert.IsNotNull(messageRouterMessage);
-            Assert.IsTrue(Unsafe.Equals(messageRouterMessage.Identity, messageIdentity));
+            Assert.IsTrue(messageRouterMessage.Equals(messageIdentity));
         }
 
         private bool RoutesRequestMessage(IMessage message, RequestNodeMessageRoutesMessage routesRequestMessage)

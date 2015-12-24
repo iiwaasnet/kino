@@ -37,6 +37,6 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         }
 
         private bool IsUnregisterMessageRouting(IMessage message)
-            => Unsafe.Equals(UnregisterMessageRouteMessageIdentifier.Identity, message.Identity);
+            => message.Equals(UnregisterMessageRouteMessageIdentifier);
     }
 }

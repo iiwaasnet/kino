@@ -47,6 +47,6 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         }
 
         private static bool IsExternalRouteRegistration(IMessage message)
-            => Unsafe.Equals(RegisterExternalMessageRouteMessageIdentifier.Identity, message.Identity);
+            => message.Equals(RegisterExternalMessageRouteMessageIdentifier);
     }
 }

@@ -34,6 +34,6 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         }
 
         private bool IsDiscoverMessageRouteRequest(IMessage message)
-           => Unsafe.Equals(DiscoverMessageRouteMessageIdentifier.Identity, message.Identity);
+           => message.Equals(DiscoverMessageRouteMessageIdentifier);
     }
 }

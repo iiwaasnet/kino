@@ -253,7 +253,7 @@ namespace kino.Core.Connectivity
 
         private bool IsDiscoverMessageRouteMessage(IMessage message)
         {
-            if (Unsafe.Equals(KinoMessages.DiscoverMessageRoute.Identity, message.Identity))
+            if (message.Equals(KinoMessages.DiscoverMessageRoute))
             {
                 var payload = message.GetPayload<DiscoverMessageRouteMessage>();
 
@@ -264,17 +264,17 @@ namespace kino.Core.Connectivity
         }
 
         private bool IsPing(IMessage message)
-            => Unsafe.Equals(KinoMessages.Ping.Identity, message.Identity);
+            => message.Equals(KinoMessages.Ping);
 
         private bool IsRendezvousNotLeader(IMessage message)
-            => Unsafe.Equals(KinoMessages.RendezvousNotLeader.Identity, message.Identity);
+            => message.Equals(KinoMessages.RendezvousNotLeader);
 
         private bool IsRendezvousReconfiguration(IMessage message)
-            => Unsafe.Equals(KinoMessages.RendezvousConfigurationChanged.Identity, message.Identity);
+            => message.Equals(KinoMessages.RendezvousConfigurationChanged);
 
         private bool IsRequestAllMessageRoutingMessage(IMessage message)
         {
-            if (Unsafe.Equals(KinoMessages.RequestClusterMessageRoutes.Identity, message.Identity))
+            if (message.Equals(KinoMessages.RequestClusterMessageRoutes))
             {
                 var payload = message.GetPayload<RequestClusterMessageRoutesMessage>();
 
@@ -286,7 +286,7 @@ namespace kino.Core.Connectivity
 
         private bool IsPong(IMessage message)
         {
-            if (Unsafe.Equals(KinoMessages.Pong.Identity, message.Identity))
+            if (message.Equals(KinoMessages.Pong))
             {
                 var payload = message.GetPayload<PongMessage>();
 
@@ -298,7 +298,7 @@ namespace kino.Core.Connectivity
 
         private bool IsRequestNodeMessageRoutingMessage(IMessage message)
         {
-            if (Unsafe.Equals(KinoMessages.RequestNodeMessageRoutes.Identity, message.Identity))
+            if (message.Equals(KinoMessages.RequestNodeMessageRoutes))
             {
                 var payload = message.GetPayload<RequestNodeMessageRoutesMessage>();
 
@@ -310,7 +310,7 @@ namespace kino.Core.Connectivity
 
         private bool IsUnregisterRoutingMessage(IMessage message)
         {
-            if (Unsafe.Equals(KinoMessages.UnregisterNodeMessageRoute.Identity, message.Identity))
+            if (message.Equals(KinoMessages.UnregisterNodeMessageRoute))
             {
                 var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
 
@@ -322,7 +322,7 @@ namespace kino.Core.Connectivity
 
         private bool IsRegisterExternalRoute(IMessage message)
         {
-            if (Unsafe.Equals(KinoMessages.RegisterExternalMessageRoute.Identity, message.Identity))
+            if (message.Equals(KinoMessages.RegisterExternalMessageRoute))
             {
                 var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
 
@@ -334,7 +334,7 @@ namespace kino.Core.Connectivity
 
         private bool IsUnregisterMessageRoutingMessage(IMessage message)
         {
-            if (Unsafe.Equals(KinoMessages.UnregisterMessageRoute.Identity, message.Identity))
+            if (message.Equals(KinoMessages.UnregisterMessageRoute))
             {
                 var payload = message.GetPayload<UnregisterMessageRouteMessage>();
 
