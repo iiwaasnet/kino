@@ -1,4 +1,5 @@
 ﻿using System;
+using kino.Core.Framework;
 
 namespace kino.Core.Connectivity
 {
@@ -7,7 +8,7 @@ namespace kino.Core.Connectivity
         private readonly int hashCode;
 
         public RendezvousEndpoint(string unicastUri, string broadcastUri)
-            : this(new Uri(unicastUri), new Uri(broadcastUri))
+            : this(unicastUri.ParseAddress(), broadcastUri.ParseAddress())
         {
         }
 

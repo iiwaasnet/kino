@@ -8,7 +8,7 @@ namespace kino.Core.Connectivity
         private readonly int hashCode;
 
         public SocketEndpoint(string uri)
-            : this(uri.TryParseAddress(), SocketIdentifier.CreateIdentity())
+            : this(uri.ParseAddress(), SocketIdentifier.CreateIdentity())
         {
         }
 

@@ -8,16 +8,16 @@
 
     "rendezvousServers": [
         {
-            "broadcastUri": "tcp://127.0.0.31:5000",
-            "unicastUri": "tcp://127.0.0.31:5001"
+            "broadcastUri": "tcp://localhost:5001",
+            "unicastUri": "tcp://localhost:5011"
         },
         {
-            "broadcastUri": "tcp://127.0.0.32:5000",
-            "unicastUri": "tcp://127.0.0.32:5001"
+            "broadcastUri": "tcp://localhost:5002",
+            "unicastUri": "tcp://localhost:5012"
         },
         {
-            "broadcastUri": "tcp://127.0.0.33:5000",
-            "unicastUri": "tcp://127.0.0.33:5001"
+            "broadcastUri": "tcp://localhost:5003",
+            "unicastUri": "tcp://localhost:5013"
         }
     ]
   }
