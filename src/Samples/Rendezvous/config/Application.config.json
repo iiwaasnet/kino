@@ -2,16 +2,16 @@
     "dev": {
         "serviceName": "kino.Rendezvous",
         "rendezvous": {
-            "broadcastUri": "tcp://localhost:5001",
-            "unicastUri": "tcp://localhost:5011",
+            "broadcastUri": "tcp://127.0.0.8:8001",
+            "unicastUri": "tcp://127.0.0.8:8011",
             "pingInterval": "00:00:05"
         },
         "synod": {
-            "localNode": "tcp://localhost:7001",
+            "localNode": "tcp://127.0.0.71:7000",
             "members": [
-                "tcp://localhost:7001",
-                "tcp://localhost:7002",
-                "tcp://localhost:7003"
+                "tcp://127.0.0.71:7000",
+                "tcp://127.0.0.72:7000",
+                "tcp://127.0.0.73:7000"
             ]
 
         },
