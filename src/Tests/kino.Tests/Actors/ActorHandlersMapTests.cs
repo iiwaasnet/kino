@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using kino.Actors;
+using kino.Core.Connectivity;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
 using kino.Tests.Actors.Setup;
 using NUnit.Framework;
-using MessageIdentifier = kino.Core.Connectivity.MessageIdentifier;
 
 namespace kino.Tests.Actors
 {
@@ -14,7 +14,50 @@ namespace kino.Tests.Actors
     public class ActorHandlersMapTests
     {
         [Test]
-        public void TestAddingActorsHandlingTheSameMessageTwice_ThowsDuplicatedKeyException()
+        public void AddingActorWithoutRegisteredMessageHandlers_ThrowsNoException()
+        {
+            var actorHandlersMap = new ActorHandlerMap();
+            var voidActor = new ConfigurableActor(Enumerable.Empty<MessageHandlerDefinition>());
+            actorHandlersMap.Add(voidActor);
+        }
+
+        [Test]
+        public void WhenDuplicatedKeyExceptionThrown_NonOfTheActorHandlersIsAdded()
+        {
+            var actorHandlersMap = new ActorHandlerMap();
+
+            var simpleMessageActor = new ConfigurableActor(new[]
+                                                           {
+                                                               new MessageHandlerDefinition
+                                                               {
+                                                                   Handler = null,
+                                                                   Message = MessageDefinition.Create<SimpleMessage>()
+                                                               }
+                                                           });
+            var exceptionMessageActor = new ConfigurableActor(new[]
+                                                              {
+                                                                  new MessageHandlerDefinition
+                                                                  {
+                                                                      Handler = null,
+                                                                      Message = MessageDefinition.Create<ExceptionMessage>()
+                                                                  },
+                                                                  new MessageHandlerDefinition
+                                                                  {
+                                                                      Handler = null,
+                                                                      Message = MessageDefinition.Create<SimpleMessage>()
+                                                                  }
+                                                              });
+
+            actorHandlersMap.Add(simpleMessageActor);
+            Assert.AreEqual(1, actorHandlersMap.GetMessageHandlerIdentifiers().Count());
+
+            Assert.Throws<DuplicatedKeyException>(() => { actorHandlersMap.Add(exceptionMessageActor); });
+
+            Assert.AreEqual(1, actorHandlersMap.GetMessageHandlerIdentifiers().Count());
+        }
+
+        [Test]
+        public void AddingActorsHandlingTheSameMessageTwice_ThowsDuplicatedKeyException()
         {
             var actorHandlersMap = new ActorHandlerMap();
             var actor = new EchoActor();
@@ -24,7 +67,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestCanAddReturnsFalse_IfActorAlreadyAdded()
+        public void CanAddReturnsFalse_IfActorAlreadyAdded()
         {
             var actorHandlersMap = new ActorHandlerMap();
             var actor = new EchoActor();
@@ -35,7 +78,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestCanAddReturnsTrue_IfActorIsNotYetAadded()
+        public void CanAddReturnsTrue_IfActorIsNotYetAdded()
         {
             var actorHandlersMap = new ActorHandlerMap();
             var actor = new EchoActor();
@@ -44,7 +87,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestGetRegisteredIdentifiers_ReturnsAllRegisteredMessageHandlers()
+        public void GetRegisteredIdentifiers_ReturnsAllRegisteredMessageHandlers()
         {
             var actorHandlersMap = new ActorHandlerMap();
             var actor = new EchoActor();
@@ -56,18 +99,17 @@ namespace kino.Tests.Actors
             Assert.AreEqual(2, identifiers.Count());
             CollectionAssert.Contains(identifiers, MessageIdentifier.Create<SimpleMessage>());
             CollectionAssert.Contains(identifiers, MessageIdentifier.Create<AsyncMessage>());
-
         }
 
         [Test]
-        public void TestGettingHandlerForNonRegisteredMessageIdentifier_ThrowsKeyNotFoundException()
+        public void GettingHandlerForNonRegisteredMessageIdentifier_ThrowsKeyNotFoundException()
         {
             var actorHandlersMap = new ActorHandlerMap();
             var actor = new EchoActor();
 
             actorHandlersMap.Add(actor);
 
-            Assert.Throws<KeyNotFoundException>(()=> actorHandlersMap.Get(new MessageIdentifier(Message.CurrentVersion, KinoMessages.Exception.Identity)));
+            Assert.Throws<KeyNotFoundException>(() => actorHandlersMap.Get(new MessageIdentifier(Message.CurrentVersion, KinoMessages.Exception.Identity)));
         }
     }
 }

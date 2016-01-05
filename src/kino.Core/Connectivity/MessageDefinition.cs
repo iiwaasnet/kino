@@ -1,4 +1,6 @@
-﻿namespace kino.Core.Connectivity
+﻿using kino.Core.Messaging;
+
+namespace kino.Core.Connectivity
 {
     public class MessageDefinition
     {
@@ -9,7 +11,7 @@
         }
 
         public static MessageDefinition Create<T>()
-            where T: MessageIdentifier, new()
+            where T: IMessageIdentifier, new()
         {
             var message = new T();
             return new MessageDefinition(message.Identity, message.Version);
