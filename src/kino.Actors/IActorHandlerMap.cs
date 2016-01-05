@@ -10,7 +10,5 @@ namespace kino.Actors
         bool CanAdd(IActor actor);
 
         MessageHandler Get(MessageIdentifier identifier);
-
-        IEnumerable<MessageIdentifier> GetMessageHandlerIdentifiers();
     }
 }

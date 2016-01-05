@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using kino.Core.Connectivity;
 using kino.Core.Framework;
 
@@ -9,41 +9,39 @@ namespace kino.Actors
 {
     public class ActorHandlerMap : IActorHandlerMap
     {
-        private readonly IDictionary<MessageIdentifier, MessageHandler> messageHandlers;
-        private readonly object @lock = new object();
+        private readonly ConcurrentDictionary<MessageIdentifier, MessageHandler> messageHandlers;
 
         public ActorHandlerMap()
         {
-            messageHandlers = new Dictionary<MessageIdentifier, MessageHandler>();
+            messageHandlers = new ConcurrentDictionary<MessageIdentifier, MessageHandler>();
         }
 
         public IEnumerable<MessageIdentifier> Add(IActor actor)
         {
             var tmp = new List<MessageIdentifier>();
-            var registrations = GetActorRegistrations(actor);
-
-            lock (@lock)
+            foreach (var reg in GetActorRegistrations(actor))
             {
-                AssertRegistrationsNotDiplicated(registrations);
-
-                foreach (var reg in registrations)
+                if (messageHandlers.TryAdd(reg.Key, reg.Value))
                 {
-                    messageHandlers.Add(reg.Key, reg.Value);
-
                     tmp.Add(reg.Key);
                 }
+                else
+                {
+                    CleanupIncompleteRegistration(tmp);
+
+                    throw new DuplicatedKeyException(reg.Key.ToString());
+                }
             }
-            
+
             return tmp;
         }
 
-        private void AssertRegistrationsNotDiplicated(IEnumerable<KeyValuePair<MessageIdentifier, MessageHandler>> registrations)
+        private void CleanupIncompleteRegistration(IEnumerable<MessageIdentifier> inclomplete)
         {
-            var conflict = registrations.Select(reg => reg.Key).FirstOrDefault(key => messageHandlers.ContainsKey(key));
-
-            if (conflict != null)
+            foreach (var identifier in inclomplete)
             {
-                throw new DuplicatedKeyException(conflict.ToString());
+                MessageHandler _;
+                messageHandlers.TryRemove(identifier, out _);
             }
         }
 
@@ -61,10 +59,8 @@ namespace kino.Actors
             throw new KeyNotFoundException(identifier.ToString());
         }
 
-        public IEnumerable<MessageIdentifier> GetMessageHandlerIdentifiers()
-        {
-            return messageHandlers.Keys;
-        }
+        internal IEnumerable<MessageIdentifier> GetMessageHandlerIdentifiers()
+            => messageHandlers.Keys;
 
         private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
             => actor
@@ -73,10 +69,5 @@ namespace kino.Actors
                         new KeyValuePair<MessageIdentifier, MessageHandler>(new MessageIdentifier(messageMap.Message.Version,
                                                                                                   messageMap.Message.Identity),
                                                                             messageMap.Handler));
-
-        private static bool InterfaceMethodFilter(MemberInfo memberInfo, object filterCriteria)
-        {
-            return memberInfo.GetCustomAttributes((Type) filterCriteria).Any();
-        }
     }
 }
