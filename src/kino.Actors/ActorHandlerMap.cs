@@ -33,12 +33,7 @@ namespace kino.Actors
                     tmp.Add(reg.Key);
                 }
             }
-
-            if (!tmp.Any())
-            {
-                throw new Exception($"Actor {actor.GetType().FullName} seems to not handle any message!");
-            }
-
+            
             return tmp;
         }
 
