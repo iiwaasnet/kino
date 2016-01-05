@@ -46,7 +46,7 @@ namespace kino.Actors
 
         public void AssignActor(IActor actor)
         {
-            var registrations = actorHandlerMap.Add(actor);
+            var registrations = actorHandlerMap.Add(actor);            
             actorRegistrationsQueue.Enqueue(registrations, cancellationTokenSource.Token);
         }
 

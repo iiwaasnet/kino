@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -10,25 +9,28 @@ namespace kino.Actors
 {
     public class ActorHandlerMap : IActorHandlerMap
     {
-        private readonly ConcurrentDictionary<MessageIdentifier, MessageHandler> messageHandlers;
+        private readonly IDictionary<MessageIdentifier, MessageHandler> messageHandlers;
+        private readonly object @lock = new object();
 
         public ActorHandlerMap()
         {
-            messageHandlers = new ConcurrentDictionary<MessageIdentifier, MessageHandler>();
+            messageHandlers = new Dictionary<MessageIdentifier, MessageHandler>();
         }
 
         public IEnumerable<MessageIdentifier> Add(IActor actor)
         {
             var tmp = new List<MessageIdentifier>();
-            foreach (var reg in GetActorRegistrations(actor))
+            var registrations = GetActorRegistrations(actor);
+
+            lock (@lock)
             {
-                if (messageHandlers.TryAdd(reg.Key, reg.Value))
+                AssertRegistrationsNotDiplicated(registrations);
+
+                foreach (var reg in registrations)
                 {
+                    messageHandlers.Add(reg.Key, reg.Value);
+
                     tmp.Add(reg.Key);
-                }
-                else
-                {
-                    throw new DuplicatedKeyException(reg.Key.ToString());
                 }
             }
 
@@ -38,6 +40,16 @@ namespace kino.Actors
             }
 
             return tmp;
+        }
+
+        private void AssertRegistrationsNotDiplicated(IEnumerable<KeyValuePair<MessageIdentifier, MessageHandler>> registrations)
+        {
+            var conflict = registrations.Select(reg => reg.Key).FirstOrDefault(key => messageHandlers.ContainsKey(key));
+
+            if (conflict != null)
+            {
+                throw new DuplicatedKeyException(conflict.ToString());
+            }
         }
 
         public bool CanAdd(IActor actor)
