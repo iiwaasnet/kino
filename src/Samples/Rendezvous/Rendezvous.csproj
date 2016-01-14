@@ -87,7 +87,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="WindowsServiceHost, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\WindowsService.Host.0.0.0.3\lib\net46\WindowsServiceHost.dll</HintPath>
+      <HintPath>..\..\packages\WindowsService.Host.0.0.0.4\lib\net46\WindowsServiceHost.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
