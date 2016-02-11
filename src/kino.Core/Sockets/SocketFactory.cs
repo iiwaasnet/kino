@@ -1,33 +1,28 @@
 ﻿using System;
-using NetMQ;
+using NetMQ.Sockets;
 
 namespace kino.Core.Sockets
 {
     public class SocketFactory : ISocketFactory
     {
-        private readonly NetMQContext context;
         private readonly SocketConfiguration config;
 
         public SocketFactory(SocketConfiguration config)
         {
-            context = NetMQContext.Create();
             this.config = config ?? CreateDefaultConfiguration();
         }
 
         public ISocket CreateDealerSocket()
-            => new Socket(context.CreateDealerSocket(), config);
+            => new Socket(new DealerSocket(), config);
 
         public ISocket CreateRouterSocket()
-            => new Socket(context.CreateRouterSocket(), config);
+            => new Socket(new RouterSocket(), config);
 
         public ISocket CreateSubscriberSocket()
-            => new Socket(context.CreateSubscriberSocket(), config);
+            => new Socket(new SubscriberSocket(), config);
 
         public ISocket CreatePublisherSocket()
-            => new Socket(context.CreatePublisherSocket(), config);
-
-        public void Dispose()
-            => context.Dispose();
+            => new Socket(new PublisherSocket(),  config);
 
         private SocketConfiguration CreateDefaultConfiguration()
             => new SocketConfiguration

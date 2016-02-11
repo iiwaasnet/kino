@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace kino.Core.Sockets
+﻿namespace kino.Core.Sockets
 {
-    public interface ISocketFactory : IDisposable
+    public interface ISocketFactory
     {
         ISocket CreateDealerSocket();
         ISocket CreateRouterSocket();
