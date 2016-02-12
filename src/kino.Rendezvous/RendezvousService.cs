@@ -178,7 +178,6 @@ namespace kino.Rendezvous
         private ISocket CreateUnicastSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
-            socket.SetMandatoryRouting();
             socket.Bind(config.UnicastUri);
 
             return socket;
