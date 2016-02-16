@@ -10,6 +10,7 @@ namespace kino.Core.Sockets
     {
         private readonly NetMQSocket socket;
         private static readonly TimeSpan ReceiveWaitTimeout;
+        private readonly TimeSpan sendingTimeout;
 
         static Socket()
         {
@@ -21,13 +22,17 @@ namespace kino.Core.Sockets
             socket.Options.Linger = config.Linger;
             socket.Options.ReceiveHighWatermark = config.ReceivingHighWatermark;
             socket.Options.SendHighWatermark = config.SendingHighWatermark;
+            sendingTimeout = config.SendTimeout;
             this.socket = socket;
         }
 
         public void SendMessage(IMessage message)
         {
             var multipart = new MultipartMessage((Message) message);
-            socket.SendMultipartMessage(new NetMQMessage(multipart.Frames));
+            if (!socket.TrySendMultipartMessage(sendingTimeout, new NetMQMessage(multipart.Frames)))
+            {
+                throw new TimeoutException($"Sending timed out after {sendingTimeout.TotalMilliseconds} ms!");
+            }
         }
 
         public IMessage ReceiveMessage(CancellationToken cancellationToken)
@@ -68,6 +73,9 @@ namespace kino.Core.Sockets
 
         public void SetMandatoryRouting(bool mandatory = true)
             => socket.Options.RouterMandatory = mandatory;
+
+        public void SetReceiveHighWaterMark(int hwm)
+            => socket.Options.ReceiveHighWatermark = hwm;
 
         public void SetIdentity(byte[] identity)
             => socket.Options.Identity = identity;

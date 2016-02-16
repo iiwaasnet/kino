@@ -74,6 +74,10 @@ namespace kino.Tests.Actors.Setup
         {
         }
 
+        public void SetReceiveHighWaterMark(int hwm)
+        {
+        }
+
         public void SetIdentity(byte[] identity)
             => this.identity = identity;
 

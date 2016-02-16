@@ -22,6 +22,8 @@ namespace kino.Core.Sockets
 
         void SetMandatoryRouting(bool mandatory = true);
 
+        void SetReceiveHighWaterMark(int hwm);
+
         byte[] GetIdentity();
 
         void Subscribe(string topic = "");

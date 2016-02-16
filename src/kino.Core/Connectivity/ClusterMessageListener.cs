@@ -242,6 +242,7 @@ namespace kino.Core.Connectivity
                 if (IsUnregisterRoutingMessage(message))
                 {
                     var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
+                    // TODO: Make updates to ClusterMembers and ExternalRoutingTable atomic, i.e. external route should not stay after node is removed
                     clusterMembership.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
                 }
 

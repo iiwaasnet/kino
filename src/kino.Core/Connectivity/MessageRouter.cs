@@ -267,6 +267,7 @@ namespace kino.Core.Connectivity
         private ISocket CreateScaleOutBackendSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
+
             foreach (var peer in clusterMonitor.GetClusterMembers())
             {
                 socket.Connect(peer.Uri);
@@ -280,10 +281,26 @@ namespace kino.Core.Connectivity
             var socket = socketFactory.CreateRouterSocket();
             socket.SetIdentity(routerConfiguration.ScaleOutAddress.Identity);
             socket.SetMandatoryRouting();
+            socket.SetReceiveHighWaterMark(GetScaleOutReceiveMessageQueueLength());
             SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
             socket.Bind(routerConfiguration.ScaleOutAddress.Uri);
 
             return socket;
+        }
+
+        private int GetScaleOutReceiveMessageQueueLength()
+        {
+            var hwm = routerConfiguration.ScaleOutReceiveMessageQueueLength;
+            var internalSocketsHWM = socketFactory.GetSocketDefaultConfiguration().ReceivingHighWatermark;
+
+            if (hwm == 0 || hwm > internalSocketsHWM)
+            {
+                logger.Warn($"ScaleOutReceiveMessageQueueLength ({hwm}) cannot be greater, than internal ReceivingHighWatermark ({internalSocketsHWM}). " +
+                            $"Current value of ScaleOutReceiveMessageQueueLength will be set to {internalSocketsHWM}.");
+                hwm = internalSocketsHWM;
+            }
+
+            return hwm;
         }
 
         private ISocket CreateRouterSocket()

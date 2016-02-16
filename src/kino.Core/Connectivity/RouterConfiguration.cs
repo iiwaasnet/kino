@@ -8,6 +8,8 @@ namespace kino.Core.Connectivity
 
         public SocketEndpoint ScaleOutAddress { get; set; }
 
+        public int ScaleOutReceiveMessageQueueLength { get; set; }
+
         public TimeSpan ConnectionEstablishWaitTime { get; set; }
     }
 }

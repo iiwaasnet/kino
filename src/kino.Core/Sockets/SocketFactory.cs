@@ -22,14 +22,18 @@ namespace kino.Core.Sockets
             => new Socket(new SubscriberSocket(), config);
 
         public ISocket CreatePublisherSocket()
-            => new Socket(new PublisherSocket(),  config);
+            => new Socket(new PublisherSocket(), config);
 
         private SocketConfiguration CreateDefaultConfiguration()
             => new SocketConfiguration
                {
-                   ReceivingHighWatermark = 1000,
-                   SendingHighWatermark = 1000,
+                   ReceivingHighWatermark = 10000,
+                   SendingHighWatermark = 10000,
+                   SendTimeout = TimeSpan.FromMilliseconds(200),
                    Linger = TimeSpan.Zero
                };
+
+        public SocketConfiguration GetSocketDefaultConfiguration()
+            => config;
     }
 }
