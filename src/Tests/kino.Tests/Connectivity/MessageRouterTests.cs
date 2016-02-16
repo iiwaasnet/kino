@@ -47,6 +47,7 @@ namespace kino.Tests.Connectivity
             clusterMonitor = new Mock<IClusterMonitor>();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(messageRouterSocketFactory.CreateSocket);
+            socketFactory.Setup(m => m.GetSocketDefaultConfiguration()).Returns(new SocketConfiguration());
             logger = new Mock<ILogger>().Object;
             serviceMessageHandlers = Enumerable.Empty<IServiceMessageHandler>();
         }
