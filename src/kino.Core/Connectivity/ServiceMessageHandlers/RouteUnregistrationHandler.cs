@@ -9,11 +9,13 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
     public class RouteUnregistrationHandler : IServiceMessageHandler
     {
         private readonly IExternalRoutingTable externalRoutingTable;
+        private readonly IClusterMembership clusterMembership;
         private static readonly MessageIdentifier UnregisterNodeMessageRouteMessageIdentifier = MessageIdentifier.Create<UnregisterNodeMessageRouteMessage>();
 
-        public RouteUnregistrationHandler(IExternalRoutingTable externalRoutingTable)
+        public RouteUnregistrationHandler(IExternalRoutingTable externalRoutingTable, IClusterMembership clusterMembership)
         {
             this.externalRoutingTable = externalRoutingTable;
+            this.clusterMembership = clusterMembership;
         }
 
         public bool Handle(IMessage message, ISocket forwardingSocket)
@@ -22,6 +24,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             if (shouldHandle)
             {
                 var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
+                clusterMembership.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
                 var connectionAction = externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(payload.SocketIdentity));
                 if (connectionAction == PeerConnectionAction.Disconnect)
                 {

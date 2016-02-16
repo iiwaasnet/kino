@@ -7,6 +7,7 @@ using kino.Core.Connectivity.ServiceMessageHandlers;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Core.Messaging;
+using kino.Core.Messaging.Messages;
 using kino.Core.Sockets;
 using NetMQ;
 
@@ -216,11 +217,12 @@ namespace kino.Core.Connectivity
                 }
                 catch (HostUnreachableException err)
                 {
-                    externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(route.Node.SocketIdentity));
-                    if (route.Connected)
-                    {
-                        scaleOutBackend.SafeDisconnect(route.Node.Uri);
-                    }
+                    var unregMessage = new UnregisterNodeMessageRouteMessage
+                                       {
+                                           SocketIdentity = route.Node.SocketIdentity,
+                                           Uri = route.Node.Uri.ToSocketAddress()
+                                       };
+                    TryHandleServiceMessage(Message.Create(unregMessage), scaleOutBackend);
                     logger.Error(err);
                 }
             }

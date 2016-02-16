@@ -14,12 +14,22 @@ namespace kino.Tests.Connectivity
     [TestFixture]
     public class RouteUnregistrationHandlerTests
     {
+        private ILogger logger;
+        private IClusterMembership clusterMembership;
+        private IExternalRoutingTable externalRoutingTable;
+
+        [SetUp]
+        public void Setup()
+        {
+            logger = new Mock<ILogger>().Object;
+            clusterMembership = new Mock<IClusterMembership>().Object;
+            externalRoutingTable = new ExternalRoutingTable(logger);
+        }
+
         [Test]
         public void TestDisconnectNotCalled_IfConnectWasNotCalledBefore()
-        {
-            var logger = new Mock<ILogger>().Object;
-            var externalRoutingTable = new ExternalRoutingTable(logger);
-            var registrationHandler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable, logger);
+        {            
+            var registrationHandler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable,clusterMembership, logger);
             var socket = new Mock<ISocket>();
             var peerUri = "tcp://127.0.0.1:80";
             var peerSocketIdentity = Guid.NewGuid().ToByteArray();
@@ -43,7 +53,7 @@ namespace kino.Tests.Connectivity
             socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never());
             Assert.AreEqual(peerUri, externalRoutingTable.FindRoute(new MessageIdentifier(messageVersion, messageIdentifier)).Node.Uri.ToSocketAddress());
 
-            var unregistrationHandler = new RouteUnregistrationHandler(externalRoutingTable);
+            var unregistrationHandler = new RouteUnregistrationHandler(externalRoutingTable, clusterMembership);
 
             message = Message.Create(new UnregisterNodeMessageRouteMessage {Uri = peerUri, SocketIdentity = peerSocketIdentity});
             unregistrationHandler.Handle(message, socket.Object);
@@ -54,9 +64,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void TestDisconnectCalled_IfConnectWasCalledBefore()
         {
-            var logger = new Mock<ILogger>().Object;
-            var externalRoutingTable = new ExternalRoutingTable(logger);
-            var registrationHandler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable, logger);
+            var registrationHandler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership,  logger);
             var socket = new Mock<ISocket>();
             var peerUri = "tcp://127.0.0.1:80";
             var peerSocketIdentity = Guid.NewGuid().ToByteArray();
@@ -80,7 +88,7 @@ namespace kino.Tests.Connectivity
             var peerConnection = externalRoutingTable.FindRoute(new MessageIdentifier(messageVersion, messageIdentifier));
             peerConnection.Connected = true;
 
-            var unregistrationHandler = new RouteUnregistrationHandler(externalRoutingTable);
+            var unregistrationHandler = new RouteUnregistrationHandler(externalRoutingTable, clusterMembership);
 
             message = Message.Create(new UnregisterNodeMessageRouteMessage {Uri = peerUri, SocketIdentity = peerSocketIdentity});
             unregistrationHandler.Handle(message, socket.Object);

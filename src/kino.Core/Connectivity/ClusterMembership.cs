@@ -14,7 +14,7 @@ namespace kino.Core.Connectivity
         private DateTime lastPingTime;
         private readonly ClusterMembershipConfiguration config;
 
-        public ClusterMembership(ClusterMembershipConfiguration config,  ILogger logger)
+        public ClusterMembership(ClusterMembershipConfiguration config, ILogger logger)
         {
             lastPingTime = DateTime.UtcNow;
             this.config = config;
@@ -50,9 +50,9 @@ namespace kino.Core.Connectivity
         public IEnumerable<SocketEndpoint> GetDeadMembers(DateTime pingTime, TimeSpan pingInterval)
         {
             var now = DateTime.UtcNow;
-            var pingDelay = CalculatePingDelay(pingTime ,pingInterval);
+            var pingDelay = CalculatePingDelay(pingTime, pingInterval);
             lastPingTime = pingTime;
-            
+
             return clusterMembers
                 .Where(mem => now - mem.Value.LastKnownPong - pingDelay > config.PongSilenceBeforeRouteDeletion)
                 .Select(mem => mem.Key)
@@ -72,7 +72,7 @@ namespace kino.Core.Connectivity
             clusterMembers.TryRemove(node, out meta);
 
             logger.Debug($"Dead route removed Uri:{node.Uri.AbsoluteUri} " +
-                             $"Socket:{node.Identity.GetString()}");
+                         $"Socket:{node.Identity.GetString()}");
         }
     }
 }

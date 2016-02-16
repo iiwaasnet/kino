@@ -12,11 +12,13 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ILogger logger;
         private static readonly MessageIdentifier RegisterExternalMessageRouteMessageIdentifier = MessageIdentifier.Create<RegisterExternalMessageRouteMessage>();
+        private readonly IClusterMembership clusterMembership;
 
-        public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable, ILogger logger)
+        public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable, IClusterMembership clusterMembership, ILogger logger)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.logger = logger;
+            this.clusterMembership = clusterMembership;
         }
 
         public bool Handle(IMessage message, ISocket forwardingSocket)
@@ -25,6 +27,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             if (shouldHandle)
             {
                 var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
+                clusterMembership.AddClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
 
                 var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
                 var uri = new Uri(payload.Uri);

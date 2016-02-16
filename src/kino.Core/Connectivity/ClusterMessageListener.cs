@@ -235,16 +235,16 @@ namespace kino.Core.Connectivity
 
             if (shouldHandle)
             {
-                if (IsRegisterExternalRoute(message))
-                {
-                    AddClusterMember(message);
-                }
-                if (IsUnregisterRoutingMessage(message))
-                {
-                    var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
-                    // TODO: Make updates to ClusterMembers and ExternalRoutingTable atomic, i.e. external route should not stay after node is removed
-                    clusterMembership.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
-                }
+                //if (IsRegisterExternalRoute(message))
+                //{
+                //    AddClusterMember(message);
+                //}
+                //if (IsUnregisterRoutingMessage(message))
+                //{
+                //    var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
+                //    // TODO: Make updates to ClusterMembers and ExternalRoutingTable atomic, i.e. external route should not stay after node is removed
+                //    clusterMembership.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
+                //}
 
                 routerNotificationSocket.SendMessage(message);
             }
@@ -368,17 +368,17 @@ namespace kino.Core.Connectivity
                                                  Uri = deadNode.Uri.ToSocketAddress(),
                                                  SocketIdentity = deadNode.Identity
                                              });
-                clusterMembership.DeleteClusterMember(deadNode);
+                //clusterMembership.DeleteClusterMember(deadNode);
                 routerNotificationSocket.SendMessage(message);
             }
         }
 
-        private void AddClusterMember(IMessage message)
-        {
-            var registration = message.GetPayload<RegisterExternalMessageRouteMessage>();
-            var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
-            clusterMembership.AddClusterMember(clusterMember);
-        }
+        //private void AddClusterMember(IMessage message)
+        //{
+        //    var registration = message.GetPayload<RegisterExternalMessageRouteMessage>();
+        //    var clusterMember = new SocketEndpoint(new Uri(registration.Uri), registration.SocketIdentity);
+        //    clusterMembership.AddClusterMember(clusterMember);
+        //}
 
         private void ProcessPongMessage(IMessage message)
         {

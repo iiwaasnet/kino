@@ -18,7 +18,8 @@ namespace kino.Tests.Connectivity
         {
             var logger = new Mock<ILogger>().Object;
             var externalRoutingTable = new ExternalRoutingTable(logger);
-            var handler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable, logger);
+            var clusterMembership = new Mock<IClusterMembership>();
+            var handler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership.Object, logger);
             var socket = new Mock<ISocket>();
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
