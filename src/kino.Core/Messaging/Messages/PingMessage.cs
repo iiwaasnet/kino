@@ -7,7 +7,7 @@ namespace kino.Core.Messaging.Messages
     [ProtoContract]
     public class PingMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = "PING".GetBytes();
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("PING");
         private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]

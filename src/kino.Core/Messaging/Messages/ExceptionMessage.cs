@@ -9,7 +9,7 @@ namespace kino.Core.Messaging.Messages
     {
         private static readonly IMessageSerializer messageSerializer = new NewtonJsonMessageSerializer();
 
-        private static readonly byte[] MessageIdentity = "EXCEPTION".GetBytes();
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("EXCEPTION");
 
         public ExceptionMessage()
             : base(messageSerializer)

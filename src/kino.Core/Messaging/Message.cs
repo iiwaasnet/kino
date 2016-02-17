@@ -9,6 +9,7 @@ namespace kino.Core.Messaging
     public class Message : IMessage
     {
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
+        public static readonly string KinoMessageNamespace = "KINO";
 
         private object payload;
         private readonly List<SocketEndpoint> hops;

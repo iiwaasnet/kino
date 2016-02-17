@@ -6,7 +6,7 @@ namespace kino.Core.Messaging.Messages
     [ProtoContract]
     public class UnregisterMessageRouteMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = "UNREGMSGROUTE".GetBytes();
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("UNREGMSGROUTE");
         private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]

@@ -7,7 +7,7 @@ namespace kino.Core.Messaging.Messages
     [ProtoContract]
     public class RendezvousConfigurationChangedMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = "RNDZVRECONFIG".GetBytes();
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("RNDZVRECONFIG");
         private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]

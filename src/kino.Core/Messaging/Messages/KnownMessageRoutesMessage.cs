@@ -7,7 +7,7 @@ namespace kino.Core.Messaging.Messages
     [ProtoContract]
     public class KnownMessageRoutesMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = "KNOWNMSGROUTES".GetBytes();
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("KNOWNMSGROUTES");
         private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]

@@ -6,7 +6,7 @@ namespace kino.Core.Messaging.Messages
     [ProtoContract]
     public class RegisterInternalMessageRouteMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = "REGINTROUTE".GetBytes();
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("REGINTROUTE");
         private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]

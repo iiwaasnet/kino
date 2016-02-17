@@ -1,3 +1,5 @@
+using kino.Core.Framework;
+
 namespace kino.Core.Messaging
 {
     public abstract class Payload : IPayload
@@ -15,6 +17,10 @@ namespace kino.Core.Messaging
             messageSerializer = DefaultSerializer;
         }
 
+
+        protected static byte[] BuildFullIdentity(string identity)
+            => (Message.KinoMessageNamespace + "." + identity).GetBytes();
+
         public virtual T Deserialize<T>(byte[] content)
             => messageSerializer.Deserialize<T>(content);
 
@@ -22,6 +28,7 @@ namespace kino.Core.Messaging
             => messageSerializer.Serialize(this);
 
         public abstract byte[] Version { get; }
+
         public abstract byte[] Identity { get; }
     }
 }

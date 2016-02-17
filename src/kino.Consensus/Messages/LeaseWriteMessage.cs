@@ -7,7 +7,7 @@ namespace kino.Consensus.Messages
     [ProtoContract]
     public class LeaseWriteMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = "WRITELEASE".GetBytes();
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("WRITELEASE");
         private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]

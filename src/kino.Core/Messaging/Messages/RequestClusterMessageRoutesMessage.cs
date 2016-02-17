@@ -6,7 +6,7 @@ namespace kino.Core.Messaging.Messages
     [ProtoContract]
     public class RequestClusterMessageRoutesMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = "REQCLUSTROUTES".GetBytes();
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("REQCLUSTROUTES");
         private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]

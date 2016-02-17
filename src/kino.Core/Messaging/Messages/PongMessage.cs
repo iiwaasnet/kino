@@ -6,7 +6,7 @@ namespace kino.Core.Messaging.Messages
     [ProtoContract]
     public class PongMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = "PONG".GetBytes();
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("PONG");
         private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
