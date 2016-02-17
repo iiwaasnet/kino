@@ -225,37 +225,6 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestUnregisterMessageRouteMessage_DeletesClusterMember()
-        {
-            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
-                                                                    socketFactory.Object,
-                                                                    routerConfiguration,
-                                                                    clusterMessageSender.Object,
-                                                                    clusterMembership.Object,
-                                                                    clusterMembershipConfiguration,
-                                                                    logger.Object);
-
-            var cancellationSource = new CancellationTokenSource();
-            var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
-
-            var socket = clusterMonitorSocketFactory.GetClusterMonitorSubscriptionSocket();
-            var message = new UnregisterNodeMessageRouteMessage
-                          {
-                              Uri = "tcp://127.0.0.1:5000",
-                              SocketIdentity = SocketIdentifier.CreateIdentity()
-                          };
-            socket.DeliverMessage(Message.Create(message));
-            Thread.Sleep(AsyncOp);
-
-            cancellationSource.Cancel();
-            task.Wait();
-
-            clusterMembership.Verify(m => m.DeleteClusterMember(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == message.Uri
-                                                                                           && Unsafe.Equals(e.Identity, message.SocketIdentity))),
-                                     Times.Once());
-        }
-
-        [Test]
         public void TestIfRendezvousReconfigurationMessageArrives_RendezvousClusterIsChanged()
         {
             var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,

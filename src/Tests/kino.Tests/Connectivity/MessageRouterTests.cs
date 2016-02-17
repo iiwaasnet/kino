@@ -30,7 +30,7 @@ namespace kino.Tests.Connectivity
         private MessageRouterSocketFactory messageRouterSocketFactory;
         private ClusterMembershipConfiguration membershipConfiguration;
         private IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
-        private IClusterMembership clusterMembership;
+        private Mock<IClusterMembership> clusterMembership;
 
         [SetUp]
         public void Setup()
@@ -44,7 +44,7 @@ namespace kino.Tests.Connectivity
                                       ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity()),
                                       RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity())
                                   };
-            clusterMembership = new Mock<IClusterMembership>().Object;
+            clusterMembership = new Mock<IClusterMembership>();
             messageRouterSocketFactory = new MessageRouterSocketFactory(routerConfiguration);
             clusterMonitor = new Mock<IClusterMonitor>();
             socketFactory = new Mock<ISocketFactory>();
@@ -476,7 +476,7 @@ namespace kino.Tests.Connectivity
         public void TestIfRegisterExternalMessageRouteMessageReceived_AllRoutesAreAddedToExternalRoutingTable()
         {
             var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership, logger)};
+            serviceMessageHandlers = new[] {new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership.Object, logger)};
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
@@ -571,6 +571,43 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
+        public void TestUnregisterMessageRouteMessage_DeletesClusterMember()
+        {
+            var externalRoutingTable = new ExternalRoutingTable(logger);
+            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object)};
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           new InternalRoutingTable(),
+                                           externalRoutingTable,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var socket = messageRouterSocketFactory.GetRouterSocket();
+                var message = new UnregisterNodeMessageRouteMessage
+                {
+                    Uri = "tcp://127.0.0.1:5000",
+                    SocketIdentity = SocketIdentifier.CreateIdentity()
+                };
+                socket.DeliverMessage(Message.Create(message));
+                Thread.Sleep(AsyncOp);
+
+                clusterMembership.Verify(m => m.DeleteClusterMember(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == message.Uri
+                                                                                               && Unsafe.Equals(e.Identity, message.SocketIdentity))),
+                                         Times.Once());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
         public void TestIfAllMessageRoutesUnregisteredForNode_SocketIsDisconnected()
         {
             var externalRoutingTable = new ExternalRoutingTable(logger);
@@ -630,7 +667,7 @@ namespace kino.Tests.Connectivity
         public void TestIfUnregisterNodeMessageRouteMessageAndConnectionWasEstablished_SocketIsDisconnected()
         {
             var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership)};
+            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object)};
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
@@ -676,7 +713,7 @@ namespace kino.Tests.Connectivity
         public void TestIfUnregisterNodeMessageRouteMessage_AllRoutesAreRemovedFromExternalRoutingTable()
         {
             var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership)};
+            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object)};
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
