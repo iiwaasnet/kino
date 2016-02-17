@@ -71,7 +71,7 @@ namespace kino.Core.Connectivity
             ClusterMemberMeta meta;
             clusterMembers.TryRemove(node, out meta);
 
-            logger.Debug($"Dead route removed Uri:{node.Uri.AbsoluteUri} " +
+            logger.Debug($"Dead node removed Uri:{node.Uri.AbsoluteUri} " +
                          $"Socket:{node.Identity.GetString()}");
         }
     }
