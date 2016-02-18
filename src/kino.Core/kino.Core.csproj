@@ -90,6 +90,7 @@
     <Compile Include="Connectivity\ServiceMessageHandlers\RoutesRegistrationRequestHandler.cs" />
     <Compile Include="Connectivity\ServiceMessageHandlers\RouteUnregistrationHandler.cs" />
     <Compile Include="Framework\HashedQueue.cs" />
+    <Compile Include="Framework\ConcurrentHashSet.cs" />
     <Compile Include="Framework\IConfigurationStorage.cs" />
     <Compile Include="Messaging\IMessageIdentifier.cs" />
     <Compile Include="Messaging\Messages\DiscoverMessageRouteMessage.cs" />
