@@ -18,7 +18,7 @@ namespace kino
         }
 
         public Composer()
-            :this(null)
+            : this(null)
         {
         }
 
@@ -32,6 +32,10 @@ namespace kino
             var clusterMessageSender = new ClusterMessageSender(rendezvousCluster, routerConfiguration, socketFactory, logger);
             var clusterMembership = new ClusterMembership(clusterMembershipConfiguration, logger);
             var externalRoutingTable = new ExternalRoutingTable(logger);
+            var routeDiscovery = new RouteDiscovery(clusterMessageSender,
+                                                    routerConfiguration,
+                                                    clusterMembershipConfiguration.RouteDiscovery,
+                                                    logger);
             var clusterMonitor = new ClusterMonitorProvider(clusterMembershipConfiguration,
                                                             routerConfiguration,
                                                             clusterMembership,
@@ -42,7 +46,8 @@ namespace kino
                                                                                        clusterMessageSender,
                                                                                        clusterMembership,
                                                                                        clusterMembershipConfiguration,
-                                                                                       logger))
+                                                                                       logger),
+                                                            routeDiscovery)
                 .GetClusterMonitor();
             var internalRoutingTable = new InternalRoutingTable();
             var serviceMessageHandlers = new IServiceMessageHandler[]

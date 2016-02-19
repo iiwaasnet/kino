@@ -17,27 +17,26 @@ namespace kino.Core.Connectivity
         private Task listenningMessages;
         private readonly IClusterMessageSender clusterMessageSender;
         private readonly IClusterMessageListener clusterMessageListener;
+        private readonly IRouteDiscovery routeDiscovery;
 
         public ClusterMonitor(RouterConfiguration routerConfiguration,
                               IClusterMembership clusterMembership,
                               IClusterMessageSender clusterMessageSender,
-                              IClusterMessageListener clusterMessageListener)
+                              IClusterMessageListener clusterMessageListener,
+                              IRouteDiscovery routeDiscovery)
         {
             this.clusterMessageSender = clusterMessageSender;
             this.clusterMessageListener = clusterMessageListener;
+            this.routeDiscovery = routeDiscovery;
             this.routerConfiguration = routerConfiguration;
             this.clusterMembership = clusterMembership;
         }
 
         public void Start()
-        {
-            StartProcessingClusterMessages();
-        }
+            => StartProcessingClusterMessages();
 
         public void Stop()
-        {
-            StopProcessingClusterMessages();
-        }
+            => StopProcessingClusterMessages();
 
         private void StartProcessingClusterMessages()
         {
@@ -50,11 +49,13 @@ namespace kino.Core.Connectivity
                 listenningMessages = Task.Factory.StartNew(_ => clusterMessageListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
                                                            TaskCreationOptions.LongRunning);
                 gateway.SignalAndWait(messageProcessingToken.Token);
+                routeDiscovery.Start();
             }
         }
 
         private void StopProcessingClusterMessages()
         {
+            routeDiscovery.Stop();
             messageProcessingToken.Cancel();
             sendingMessages.Wait();
             listenningMessages.Wait();
@@ -114,18 +115,6 @@ namespace kino.Core.Connectivity
             => clusterMembership.GetClusterMembers();
 
         public void DiscoverMessageRoute(MessageIdentifier messageIdentifier)
-        {
-            var message = Message.Create(new DiscoverMessageRouteMessage
-                                         {
-                                             RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                             RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                             MessageContract = new MessageContract
-                                                               {
-                                                                   Version = messageIdentifier.Version,
-                                                                   Identity = messageIdentifier.Identity
-                                                               }
-                                         });
-            clusterMessageSender.EnqueueMessage(message);
-        }
+            => routeDiscovery.RequestRouteDiscovery(messageIdentifier);
     }
 }

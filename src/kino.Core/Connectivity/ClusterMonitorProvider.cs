@@ -8,14 +8,16 @@
                                       RouterConfiguration routerConfiguration,
                                       IClusterMembership clusterMembership,
                                       IClusterMessageSender clusterMessageSender,
-                                      IClusterMessageListener clusterMessageListener)
+                                      IClusterMessageListener clusterMessageListener,
+                                      IRouteDiscovery routeDiscovery)
         {
             clusterMonitor = membershipConfiguration.RunAsStandalone
                                  ? (IClusterMonitor) new LoopbackClusterMonitor()
                                  : new ClusterMonitor(routerConfiguration,
                                                       clusterMembership,
                                                       clusterMessageSender,
-                                                      clusterMessageListener);
+                                                      clusterMessageListener,
+                                                      routeDiscovery);
         }
 
         public IClusterMonitor GetClusterMonitor()

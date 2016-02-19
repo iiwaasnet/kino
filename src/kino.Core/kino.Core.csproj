@@ -72,6 +72,7 @@
     <Compile Include="Connectivity\ClusterMonitorProvider.cs" />
     <Compile Include="Connectivity\IClusterMessageListener.cs" />
     <Compile Include="Connectivity\IClusterMessageSender.cs" />
+    <Compile Include="Connectivity\IRouteDiscovery.cs" />
     <Compile Include="Connectivity\MessageHandlerDefinitionAttribute.cs" />
     <Compile Include="Connectivity\MessageRouter.Tracing.cs" />
     <Compile Include="Connectivity\PeerConnection.cs" />
@@ -79,6 +80,8 @@
     <Compile Include="Connectivity\RendezvousClusterConfigurationReadonlyStorage.cs" />
     <Compile Include="Connectivity\Node.cs" />
     <Compile Include="Connectivity\RendezvousClusterConfiguration.cs" />
+    <Compile Include="Connectivity\RouteDiscovery.cs" />
+    <Compile Include="Connectivity\RouteDiscoveryConfiguration.cs" />
     <Compile Include="Connectivity\ServiceMessageHandlers\ExternalMessageRouteRegistrationHandler.cs" />
     <Compile Include="Connectivity\ServiceMessageHandlers\InternalMessageRouteRegistrationHandler.cs" />
     <Compile Include="Connectivity\ServiceMessageHandlers\IServiceMessageHandler.cs" />

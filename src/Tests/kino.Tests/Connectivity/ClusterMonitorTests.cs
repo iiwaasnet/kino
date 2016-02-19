@@ -26,12 +26,14 @@ namespace kino.Tests.Connectivity
         private ClusterMembershipConfiguration clusterMembershipConfiguration;
         private IClusterMessageSender clusterMessageSender;
         private IClusterMessageListener clusterMessageListener;
+        private Mock<IRouteDiscovery> routeDiscovery;
 
         [SetUp]
         public void Setup()
         {
             clusterMonitorSocketFactory = new ClusterMonitorSocketFactory();
             logger = new Mock<ILogger>();
+            routeDiscovery = new Mock<IRouteDiscovery>();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
@@ -49,7 +51,13 @@ namespace kino.Tests.Connectivity
                                              {
                                                  RunAsStandalone = false,
                                                  PingSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(2),
-                                                 PongSilenceBeforeRouteDeletion = TimeSpan.FromMilliseconds(4)
+                                                 PongSilenceBeforeRouteDeletion = TimeSpan.FromMilliseconds(4),
+                                                 RouteDiscovery = new RouteDiscoveryConfiguration
+                                                                  {
+                                                                      MaxRequestsQueueLength = 100,
+                                                                      RequestsPerSend = 10,
+                                                                      SendingPeriod = TimeSpan.FromSeconds(1)
+                                                                  }
                                              };
             clusterMessageSender = new ClusterMessageSender(rendezvousCluster.Object,
                                                             routerConfiguration,
@@ -70,7 +78,8 @@ namespace kino.Tests.Connectivity
             var clusterMonitor = new ClusterMonitor(routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMessageSender,
-                                                    clusterMessageListener);
+                                                    clusterMessageListener,
+                                                    routeDiscovery.Object);
             try
             {
                 clusterMonitor.Start();
@@ -101,7 +110,8 @@ namespace kino.Tests.Connectivity
             var clusterMonitor = new ClusterMonitor(routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMessageSender,
-                                                    clusterMessageListener);
+                                                    clusterMessageListener,
+                                                    routeDiscovery.Object);
             try
             {
                 clusterMonitor.Start();
@@ -132,7 +142,8 @@ namespace kino.Tests.Connectivity
             var clusterMonitor = new ClusterMonitor(routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMessageSender,
-                                                    clusterMessageListener);
+                                                    clusterMessageListener,
+                                                    routeDiscovery.Object);
             try
             {
                 clusterMonitor.Start();
@@ -154,10 +165,18 @@ namespace kino.Tests.Connectivity
         [Test]
         public void TestDiscoverMessageRoute_SendDiscoverMessageRouteMessageToRendezvous()
         {
+            clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
+            clusterMembershipConfiguration.PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(10);
+            clusterMembershipConfiguration.RouteDiscovery.SendingPeriod = TimeSpan.FromMilliseconds(10);
+
             var clusterMonitor = new ClusterMonitor(routerConfiguration,
                                                     clusterMembership.Object,
                                                     clusterMessageSender,
-                                                    clusterMessageListener);
+                                                    clusterMessageListener,
+                                                    new RouteDiscovery(clusterMessageSender,
+                                                                       routerConfiguration,
+                                                                       clusterMembershipConfiguration.RouteDiscovery,
+                                                                       logger.Object));
             try
             {
                 clusterMonitor.Start();
@@ -166,7 +185,7 @@ namespace kino.Tests.Connectivity
                 clusterMonitor.DiscoverMessageRoute(messageIdentifier);
 
                 var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
-                var message = socket.GetSentMessages().BlockingLast(AsyncOp);
+                var message = socket.GetSentMessages().BlockingLast(TimeSpan.FromSeconds(2));
 
                 Assert.IsNotNull(message);
                 Assert.IsTrue(message.Equals(KinoMessages.DiscoverMessageRoute));
