@@ -18,7 +18,7 @@ namespace kino.Core.Framework
         }
 
         public HashedQueue()
-            :this(int.MaxValue)
+            : this(int.MaxValue)
         {
         }
 
@@ -36,37 +36,25 @@ namespace kino.Core.Framework
             return false;
         }
 
-        public bool TryDequeue(out T item)
+        public bool TryPeek(out System.Collections.Generic.IList<T> items, int count)
         {
-            item = default(T);
-
-            lock (@lock)
-            {
-                if (collection.Count > 0)
-                {
-                    item = collection.RemoveFirst();
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public bool TryDequeue(out IEnumerable<T> items, int count)
-        {
-            var tmp = new List<T>(count);
-            items = tmp;
+            items = new List<T>();
 
             lock (@lock)
             {
                 var dequeueCount = Math.Min(collection.Count, count);
-                while (dequeueCount-- > 0)
-                {
-                    tmp.Add(collection.RemoveFirst());
-                }
+                ((List<T>)items).AddRange(collection.View(0, dequeueCount));
             }
 
             return items.Any();
+        }
+
+        public void TryDelete(IEnumerable<T> items)
+        {
+            lock (@lock)
+            {
+                collection.RemoveAll(items);
+            }
         }
     }
 }

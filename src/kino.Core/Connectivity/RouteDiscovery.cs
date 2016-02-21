@@ -24,11 +24,11 @@ namespace kino.Core.Connectivity
                               RouteDiscoveryConfiguration discoveryConfiguration,
                               ILogger logger)
         {
-            this.clusterMessageSender = clusterMessageSender;
             this.routerConfiguration = routerConfiguration;
-            this.discoveryConfiguration = discoveryConfiguration;
+            this.discoveryConfiguration = discoveryConfiguration ?? DefaultConfiguration();
+            this.clusterMessageSender = clusterMessageSender;
             this.logger = logger;
-            requests = new HashedQueue<MessageIdentifier>(discoveryConfiguration.MaxRequestsQueueLength);
+            requests = new HashedQueue<MessageIdentifier>(this.discoveryConfiguration.MaxRequestsQueueLength);
         }
 
         public void Start()
@@ -49,8 +49,8 @@ namespace kino.Core.Connectivity
             {
                 try
                 {
-                    IEnumerable<MessageIdentifier> missingRoutes;
-                    if (requests.TryDequeue(out missingRoutes, discoveryConfiguration.RequestsPerSend))
+                    IList<MessageIdentifier> missingRoutes;
+                    if (requests.TryPeek(out missingRoutes, discoveryConfiguration.RequestsPerSend))
                     {
                         foreach (var messageIdentifier in missingRoutes)
                         {
@@ -69,6 +69,8 @@ namespace kino.Core.Connectivity
                     }
 
                     await Task.Delay(discoveryConfiguration.SendingPeriod, token);
+
+                    requests.TryDelete(missingRoutes);
                 }
                 catch (OperationCanceledException)
                 {
@@ -82,5 +84,13 @@ namespace kino.Core.Connectivity
 
         public void RequestRouteDiscovery(MessageIdentifier messageIdentifier)
             => requests.TryEnqueue(messageIdentifier);
+
+        private RouteDiscoveryConfiguration DefaultConfiguration()
+            => new RouteDiscoveryConfiguration
+               {
+                   SendingPeriod = TimeSpan.FromSeconds(2),
+                   MaxRequestsQueueLength = 1000,
+                   RequestsPerSend = 10
+               };
     }
 }

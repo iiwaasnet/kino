@@ -88,6 +88,7 @@
     <Compile Include="Consensus\Setup\RoundBasedRegisterTestsHelper.cs" />
     <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR1.cs" />
     <Compile Include="Consensus\Setup\RoundBasedRegisterTestSetup.cs" />
+    <Compile Include="Framework\HashedQueueTests.cs" />
     <Compile Include="Helpers\ClusterMonitorSocketFactory.cs" />
     <Compile Include="Helpers\IntercomMessageHubSocketFactory.cs" />
     <Compile Include="Helpers\MessageHubSocketFactory.cs" />
