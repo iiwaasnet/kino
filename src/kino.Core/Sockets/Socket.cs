@@ -3,6 +3,7 @@ using System.Threading;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using NetMQ;
+using NetMQ.Sockets;
 
 namespace kino.Core.Sockets
 {
@@ -63,13 +64,13 @@ namespace kino.Core.Sockets
             => socket.Unbind(address.ToSocketAddress());
 
         public void Subscribe(string topic = "")
-            => socket.Subscribe(topic);
+            => ((SubscriberSocket)socket).Subscribe(topic);
 
         public void Subscribe(byte[] topic)
-            => socket.Subscribe(topic);
+            => ((SubscriberSocket)socket).Subscribe(topic);
 
         public void Unsubscribe(string topic = "")
-            => socket.Unsubscribe(topic);
+            => ((SubscriberSocket)socket).Unsubscribe(topic);
 
         public void SetMandatoryRouting(bool mandatory = true)
             => socket.Options.RouterMandatory = mandatory;
