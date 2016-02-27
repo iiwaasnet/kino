@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
 using kino.Rendezvous.Configuration;
 using TypedConfigProvider;
@@ -24,14 +23,6 @@ namespace Rendezvous
 
             builder.Register(c => c.Resolve<IConfigProvider>().GetConfiguration<ApplicationConfiguration>())
                    .As<ApplicationConfiguration>()
-                   .SingleInstance();
-
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetLeaseConfiguration())
-                   .As<LeaseConfiguration>()
-                   .SingleInstance();
-
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousConfiguration())
-                   .As<RendezvousConfiguration>()
                    .SingleInstance();
         }
     }

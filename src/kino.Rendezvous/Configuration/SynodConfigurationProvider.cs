@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using kino.Consensus.Configuration;
 
 namespace kino.Rendezvous.Configuration
