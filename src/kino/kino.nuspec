@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>kino</id>
-        <version>0.0.1.12</version>
+        <version>0.0.1.13-beta</version>
         <title>kino</title>
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
@@ -19,10 +19,10 @@
         <copyright>Copyright 2015</copyright>
         <tags>Actors framework</tags>
         <dependencies>
-            <dependency id="Newtonsoft.Json" version="8.0.1" />
-            <dependency id="C5" version="2.4.5828.26833" />
-            <dependency id="NetMQ" version="3.3.2.2" />
-            <dependency id="protobuf-net" version="2.0.0.668" />
+            <dependency id="Newtonsoft.Json" version="8.0.2" />
+            <dependency id="C5" version="2.4.5891.40110" />
+            <dependency id="NetMQ" version="4.0.0.0-beta" />
+            <dependency id="protobuf-net" version="2.1.0-alpha-1" />
 			<dependency id="AsyncIO" version="0.1.18.0" />
         </dependencies>
     </metadata>
