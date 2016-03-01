@@ -30,12 +30,15 @@ namespace kino.Core.Connectivity
 
             if (mapped)
             {
-                socketToConnectionMap[socketIdentifier] = new PeerConnection
-                                                          {
-                                                              Node = new Node(uri, socketIdentifier.Identity),
-                                                              Connected = false
-                                                          };
-                IncrementUriReferenceCount(uri.ToSocketAddress());
+                var peerConnection = new PeerConnection
+                                     {
+                                         Node = new Node(uri, socketIdentifier.Identity),
+                                         Connected = false
+                                     };
+                if (!socketToConnectionMap.FindOrAdd(socketIdentifier, ref peerConnection))
+                {
+                    IncrementUriReferenceCount(uri.ToSocketAddress());
+                }
 
                 MapSocketToMessage(messageIdentifier, socketIdentifier);
 
@@ -45,14 +48,6 @@ namespace kino.Core.Connectivity
                              $"Version:{messageIdentifier.Version.GetString()} " +
                              $"Message:{messageIdentifier.Identity.GetString()}");
             }
-        }
-
-        private void IncrementUriReferenceCount(string uri)
-        {
-            var refCount = 0;
-            uriReferenceCount.FindOrAdd(uri, ref refCount);
-            refCount++;
-            uriReferenceCount[uri] = refCount;
         }
 
         private bool MapMessageToSocket(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier)
@@ -135,7 +130,10 @@ namespace kino.Core.Connectivity
                              $"Socket:{socketIdentifier.Identity.GetString()}");
             }
 
-            return (connection != null && connection.Connected)
+            // NOTE: Don't change order so that ref count is decreased
+            return (connection != null
+                    && DecrementUriReferenceCount(connection.Node.Uri.ToSocketAddress()) == 0
+                    && connection.Connected)
                        ? PeerConnectionAction.Disconnect
                        : PeerConnectionAction.None;
         }
@@ -158,7 +156,12 @@ namespace kino.Core.Connectivity
                     socketToMessageMap.Remove(socketIdentifier);
                     PeerConnection connection;
                     socketToConnectionMap.Remove(socketIdentifier, out connection);
-                    connectionAction = connection.Connected ? PeerConnectionAction.Disconnect : connectionAction;
+                    // NOTE: Don't change order so that ref count is decreased
+                    connectionAction = (connection != null
+                                        && DecrementUriReferenceCount(connection.Node.Uri.ToSocketAddress()) == 0
+                                        && connection.Connected)
+                                           ? PeerConnectionAction.Disconnect
+                                           : connectionAction;
 
                     logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
                                  $"Socket:{socketIdentifier.Identity.GetString()}");
@@ -208,6 +211,39 @@ namespace kino.Core.Connectivity
                                     },
                        Messages = socketMessagePair.Value
                    };
+        }
+
+        private int IncrementUriReferenceCount(string uri)
+        {
+            var refCount = 0;
+            uriReferenceCount.FindOrAdd(uri, ref refCount);
+            refCount++;
+            uriReferenceCount[uri] = refCount;
+
+            logger.Debug($"New connection to {uri}. Total count: {refCount}");
+
+            return refCount;
+        }
+
+        private int DecrementUriReferenceCount(string uri)
+        {
+            var refCount = 0;
+            if (uriReferenceCount.Find(ref uri, out refCount))
+            {
+                refCount--;
+                if (refCount <= 0)
+                {
+                    uriReferenceCount.Remove(uri);
+                }
+                else
+                {
+                    uriReferenceCount[uri] = refCount;
+                }
+            }
+
+            logger.Debug($"Removed connection to {uri}. Connections left: {refCount}");
+
+            return (refCount < 0) ? 0 : refCount;
         }
     }
 }
