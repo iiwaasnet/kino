@@ -287,6 +287,9 @@ namespace kino.Core.Connectivity
             SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
             socket.Bind(routerConfiguration.ScaleOutAddress.Uri);
 
+            logger.Info($"MessageRouter started at Uri:{routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()} " +
+                        $"Identity:{routerConfiguration.ScaleOutAddress.Identity.GetString()}");
+
             return socket;
         }
 
