@@ -365,8 +365,8 @@ namespace kino.Core.Connectivity
         {
             var payload = message.GetPayload<PongMessage>();
 
-            var nodeNotFound = clusterMembership.KeepAlive(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
-            if (!nodeNotFound)
+            var nodeFound = clusterMembership.KeepAlive(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
+            if (!nodeFound)
             {
                 RequestNodeMessageHandlersRouting(payload);
             }

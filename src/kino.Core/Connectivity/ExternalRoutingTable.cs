@@ -12,6 +12,7 @@ namespace kino.Core.Connectivity
         private readonly C5.IDictionary<MessageIdentifier, HashedLinkedList<SocketIdentifier>> messageToSocketMap;
         private readonly C5.IDictionary<SocketIdentifier, C5.HashSet<MessageIdentifier>> socketToMessageMap;
         private readonly C5.IDictionary<SocketIdentifier, PeerConnection> socketToConnectionMap;
+        private readonly C5.IDictionary<string, int> uriReferenceCount;
         private readonly ILogger logger;
 
         public ExternalRoutingTable(ILogger logger)
@@ -20,6 +21,7 @@ namespace kino.Core.Connectivity
             messageToSocketMap = new HashDictionary<MessageIdentifier, HashedLinkedList<SocketIdentifier>>();
             socketToMessageMap = new HashDictionary<SocketIdentifier, C5.HashSet<MessageIdentifier>>();
             socketToConnectionMap = new HashDictionary<SocketIdentifier, PeerConnection>();
+            uriReferenceCount = new HashDictionary<string, int>();
         }
 
         public void AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri)
@@ -33,6 +35,7 @@ namespace kino.Core.Connectivity
                                                               Node = new Node(uri, socketIdentifier.Identity),
                                                               Connected = false
                                                           };
+                IncrementUriReferenceCount(uri.ToSocketAddress());
 
                 MapSocketToMessage(messageIdentifier, socketIdentifier);
 
@@ -42,6 +45,14 @@ namespace kino.Core.Connectivity
                              $"Version:{messageIdentifier.Version.GetString()} " +
                              $"Message:{messageIdentifier.Identity.GetString()}");
             }
+        }
+
+        private void IncrementUriReferenceCount(string uri)
+        {
+            var refCount = 0;
+            uriReferenceCount.FindOrAdd(uri, ref refCount);
+            refCount++;
+            uriReferenceCount[uri] = refCount;
         }
 
         private bool MapMessageToSocket(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier)
