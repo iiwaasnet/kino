@@ -63,18 +63,18 @@ namespace kino.Consensus
         {
             if (config.NodeResponseTimeout.TotalMilliseconds * 2 > config.MessageRoundtrip.TotalMilliseconds)
             {
-                throw new Exception("NodeResponseTimeout[{config.NodeResponseTimeout.TotalMilliseconds} msec] " +
+                throw new Exception($"{nameof(config.NodeResponseTimeout)}[{config.NodeResponseTimeout.TotalMilliseconds} msec] " +
                                     "should be at least 2 times shorter than " +
-                                    "MessageRoundtrip[{config.MessageRoundtrip.TotalMilliseconds} msec]");
+                                    $"{nameof(config.MessageRoundtrip)}[{config.MessageRoundtrip.TotalMilliseconds} msec]");
             }
             if (config.MaxLeaseTimeSpan
                 - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
                 - config.ClockDrift <= TimeSpan.Zero)
             {
-                throw new Exception($"MaxLeaseTimeSpan[{config.MaxLeaseTimeSpan.TotalMilliseconds} msec] " +
+                throw new Exception($"{nameof(config.MaxLeaseTimeSpan)}[{config.MaxLeaseTimeSpan.TotalMilliseconds} msec] " +
                                     "should be longer than " +
-                                    $"(2 * MessageRoundtrip[{config.MessageRoundtrip.TotalMilliseconds} msec] " +
-                                    $"+ ClockDrift[{config.ClockDrift.TotalMilliseconds} msec])");
+                                    $"(2 * {nameof(config.MessageRoundtrip)}[{config.MessageRoundtrip.TotalMilliseconds} msec] " +
+                                    $"+ {nameof(config.ClockDrift)}[{config.ClockDrift.TotalMilliseconds} msec])");
             }
         }
 
