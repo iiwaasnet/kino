@@ -141,7 +141,7 @@ namespace kino.Actors
                             {
                                 messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverIdentity, messageContext.CallbackPoint);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
-                                messageOut.CopyMessageHops(messageContext.MessageHops);
+                                messageOut.CopyMessageRouting(messageContext.MessageHops);
                                 messageOut.TraceOptions = messageContext.TraceOptions;
 
                                 localSocket.SendMessage(messageOut);
@@ -220,7 +220,7 @@ namespace kino.Actors
                     {
                         messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
                         messageOut.SetCorrelationId(messageIn.CorrelationId);
-                        messageOut.CopyMessageHops(messageIn.GetMessageHops());
+                        messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
                         messageOut.TraceOptions = messageIn.TraceOptions;
 
                         localSocket.SendMessage(messageOut);
@@ -241,7 +241,7 @@ namespace kino.Actors
             var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err, StackTrace = err.StackTrace});
             messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
-            messageOut.CopyMessageHops(messageIn.GetMessageHops());
+            messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
             messageOut.TraceOptions = messageIn.TraceOptions;
 
             localSocket.SendMessage(messageOut);
@@ -255,7 +255,7 @@ namespace kino.Actors
                                           CallbackPoint = messageIn.CallbackPoint,
                                           CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
                                           CorrelationId = messageIn.CorrelationId,
-                                          MessageHops = messageIn.GetMessageHops(),
+                                          MessageHops = messageIn.GetMessageRouting(),
                                           TraceOptions = messageIn.TraceOptions
                                       };
             asyncQueue.Enqueue(asyncMessageContext, token);

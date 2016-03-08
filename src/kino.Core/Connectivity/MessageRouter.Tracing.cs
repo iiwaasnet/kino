@@ -36,7 +36,7 @@ namespace kino.Core.Connectivity
             {
                 var hops = string.Join("|",
                                        message
-                                           .GetMessageHops()
+                                           .GetMessageRouting()
                                            .Select(h => $"{nameof(h.Uri)}:{h.Uri.ToSocketAddress()}/{h.Identity.GetString()}"));
 
                 logger.Trace("Message: " +

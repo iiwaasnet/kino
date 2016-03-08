@@ -348,8 +348,7 @@ namespace kino.Tests.Connectivity
 
                 var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
                 var message = (Message) Message.Create(new SimpleMessage());
-                message.TraceOptions = MessageTraceOptions.Routing;
-                message.PushRouterAddress(new SocketEndpoint(new Uri("tcp://127.1.1.1:9000"), SocketIdentifier.CreateIdentity()));
+                message.AddHop();
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);

@@ -151,7 +151,10 @@ namespace kino.Core.Connectivity
             var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
 
             var handled = HandleMessageLocally(messageHandlerIdentifier, message, localSocket);
-            if (!handled || message.Distribution == DistributionPattern.Broadcast)
+            // TODO: Write test case:
+            // DO: locally registered actor handles broadcast message, which it sends as a response
+            // ASSERT: broadcast message is processed by local actor and is sent to all external routes
+            if (message.Distribution == DistributionPattern.Broadcast || !handled)
             {
                 handled = ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend) || handled;
             }
@@ -203,14 +206,17 @@ namespace kino.Core.Connectivity
             {
                 try
                 {
-                    message.SetSocketIdentity(route.Node.SocketIdentity);
-                    message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
                     if (!route.Connected)
                     {
                         scaleOutBackend.Connect(route.Node.Uri);
                         route.Connected = true;
-                        Thread.Sleep(routerConfiguration.ConnectionEstablishWaitTime);
+                        routerConfiguration.ConnectionEstablishWaitTime.Sleep();
                     }
+
+                    message.SetSocketIdentity(route.Node.SocketIdentity);
+                    message.AddHop();
+                    message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
+
                     scaleOutBackend.SendMessage(message);
 
                     ForwardedToOtherNode(message);
@@ -257,14 +263,10 @@ namespace kino.Core.Connectivity
         }
 
         private bool MessageCameFromLocalActor(Message message)
-        {
-            return !message.GetMessageHops().Any();
-        }
+            => message.Hops == 0;
 
         private bool MessageCameFromOtherNode(Message message)
-        {
-            return !MessageCameFromLocalActor(message);
-        }
+            => !MessageCameFromLocalActor(message);
 
         private ISocket CreateScaleOutBackendSocket()
         {

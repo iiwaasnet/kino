@@ -12,18 +12,19 @@ namespace kino.Core.Messaging
         public static readonly string KinoMessageNamespace = "KINO";
 
         private object payload;
-        private List<SocketEndpoint> hops;
+        private List<SocketEndpoint> routing;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
         private Message(IPayload payload, DistributionPattern distributionPattern)
         {
-            hops = new List<SocketEndpoint>();
+            routing = new List<SocketEndpoint>();
             CallbackPoint = Enumerable.Empty<MessageIdentifier>();
             Body = Serialize(payload);
             Version = payload.Version;
             Identity = payload.Identity;
             Distribution = distributionPattern;
             TTL = TimeSpan.Zero;
+            Hops = 0;
             TraceOptions = MessageTraceOptions.None;
         }
 
@@ -47,7 +48,7 @@ namespace kino.Core.Messaging
 
         private void ReadV1Frames(MultipartMessage multipartMessage)
         {
-            hops = new List<SocketEndpoint>(multipartMessage.GetMessageHops());
+            routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting());
             Body = multipartMessage.GetMessageBody();
             Identity = multipartMessage.GetMessageIdentity();
             Version = multipartMessage.GetMessageVersion();
@@ -58,6 +59,7 @@ namespace kino.Core.Messaging
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
             CorrelationId = multipartMessage.GetCorrelationId();
             TraceOptions = multipartMessage.GetTraceOptions().GetEnumFromLong<MessageTraceOptions>();
+            Hops = multipartMessage.GetMessageHops().GetInt();
         }
 
         internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, MessageIdentifier callbackMessageIdentifier)
@@ -80,17 +82,20 @@ namespace kino.Core.Messaging
         {
             if (TraceOptions == MessageTraceOptions.Routing)
             {
-                hops.Add(scaleOutAddress);
+                routing.Add(scaleOutAddress);
             }
         }
 
-        internal IEnumerable<SocketEndpoint> GetMessageHops()
-            => hops;
+        internal void AddHop()
+            => Hops++;
 
-        internal void CopyMessageHops(IEnumerable<SocketEndpoint> messageHops)
+        internal IEnumerable<SocketEndpoint> GetMessageRouting()
+            => routing;
+
+        internal void CopyMessageRouting(IEnumerable<SocketEndpoint> messageRouting)
         {
-            hops.Clear();
-            hops.AddRange(messageHops);
+            routing.Clear();
+            routing.AddRange(messageRouting);
         }
 
         internal void SetCorrelationId(byte[] correlationId)
@@ -134,5 +139,7 @@ namespace kino.Core.Messaging
         public byte[] SocketIdentity { get; private set; }
 
         public MessageTraceOptions TraceOptions { get; set; }
+
+        public int Hops { get; private set; }
     }
 }

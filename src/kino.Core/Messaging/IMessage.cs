@@ -29,5 +29,7 @@ namespace kino.Core.Messaging
         MessageTraceOptions TraceOptions { get; set; }
 
         byte[] Body { get; }
+
+        int Hops { get; }
     }
 }

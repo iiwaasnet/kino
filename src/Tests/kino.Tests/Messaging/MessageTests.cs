@@ -60,7 +60,7 @@ namespace kino.Tests.Messaging
                 message.PushRouterAddress(socketEndpoint);
             }
 
-            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageHops());
+            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
         }
 
         [Test]
@@ -81,16 +81,16 @@ namespace kino.Tests.Messaging
             }
             if (hopsAdded)
             {
-                CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageHops());
+                CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
             }
             else
             {
-                CollectionAssert.AreEqual(Enumerable.Empty<SocketEndpoint>(), message.GetMessageHops());
+                CollectionAssert.AreEqual(Enumerable.Empty<SocketEndpoint>(), message.GetMessageRouting());
             }
         }
 
         [Test]
-        public void TestMessageHops_AreConsistentlyTransferredViaMultipartMessage()
+        public void TestMessageRouting_IsConsistentlyTransferredViaMultipartMessage()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = MessageTraceOptions.Routing;
@@ -107,7 +107,7 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageHops());
+            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
         }
 
         [Test]

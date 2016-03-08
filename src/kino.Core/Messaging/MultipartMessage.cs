@@ -40,16 +40,17 @@ namespace kino.Core.Messaging
 
         private IEnumerable<byte[]> WriteV1Frames(Message message)
         {
-            foreach (var hop in message.GetMessageHops())
+            foreach (var route in message.GetMessageRouting())
             {
-                yield return hop.Uri.ToSocketAddress().GetBytes();
-                yield return hop.Identity;
+                yield return route.Uri.ToSocketAddress().GetBytes();
+                yield return route.Identity;
             }
             foreach (var callback in message.CallbackPoint)
             {
                 yield return callback.Version;
                 yield return callback.Identity;
             }
+            yield return GetMessageHopsFrame(message); // 15
             yield return GetRoutingEntryCountFrame(message); // 14
             yield return GetRoutingStartFrame(message); // 13
             yield return GetTraceOptionsFrame(message); // 12
@@ -70,7 +71,7 @@ namespace kino.Core.Messaging
 
         private byte[] GetRoutingEntryCountFrame(Message message)
         {
-            var count = message.GetMessageHops().Count();
+            var count = message.GetMessageRouting().Count();
             return (count > 0)
                        ? count.GetBytes()
                        : EmptyFrame;
@@ -78,7 +79,7 @@ namespace kino.Core.Messaging
 
         private byte[] GetRoutingStartFrame(Message message)
         {
-            var count = message.GetMessageHops().Count();
+            var count = message.GetMessageRouting().Count();
             return (count > 0)
                        ? GetRoutingStartFrameIndex(message).GetBytes()
                        : EmptyFrame;
@@ -87,10 +88,16 @@ namespace kino.Core.Messaging
         private int GetRoutingStartFrameIndex(IMessage message)
         {
             var callbacksFrameCount = message.CallbackPoint.Count() * 2;
-            var callbacksStartFrameIndex = ReversedFrames.MessageRoutingEntryCount + 1;
+            var callbacksStartFrameIndex = GetLastFixedFrameIndex() + 1;
 
             return callbacksStartFrameIndex + callbacksFrameCount;
         }
+
+        private static int GetLastFixedFrameIndex()
+            => ReversedFrames.MessageHops;
+
+        private byte[] GetMessageHopsFrame(Message message)
+            => message.Hops.GetBytes();
 
         private byte[] GetTraceOptionsFrame(IMessage message)
             => ((long) message.TraceOptions).GetBytes();
@@ -106,7 +113,7 @@ namespace kino.Core.Messaging
 
         private byte[] GetCallbacksStartFrame(IMessage message)
             => message.CallbackPoint.Any()
-                   ? (ReversedFrames.MessageRoutingEntryCount + 1).GetBytes()
+                   ? (GetLastFixedFrameIndex() + 1).GetBytes()
                    : EmptyFrame;
 
         private byte[] GetCallbackEntryCountFrame(IMessage message)
@@ -161,6 +168,9 @@ namespace kino.Core.Messaging
         internal byte[] GetTraceOptions()
             => frames[frames.Count - ReversedFrames.TraceOptions];
 
+        internal byte[] GetMessageHops()
+            => frames[frames.Count - ReversedFrames.MessageHops];
+
         internal byte[] GetCallbackReceiverIdentity()
             => frames[frames.Count - ReversedFrames.CallbackReceiverIdentity];
 
@@ -194,26 +204,26 @@ namespace kino.Core.Messaging
             return callbacks;
         }
 
-        internal IEnumerable<SocketEndpoint> GetMessageHops()
+        internal IEnumerable<SocketEndpoint> GetMessageRouting()
         {
-            var hopFrameCount = GetEntryCount(ReversedFrames.MessageRoutingEntryCount) * 2;
-            var hops = new List<SocketEndpoint>();
-            if (hopFrameCount > 0)
+            var routingFrameCount = GetEntryCount(ReversedFrames.MessageRoutingEntryCount) * 2;
+            var routing = new List<SocketEndpoint>();
+            if (routingFrameCount > 0)
             {
                 var startIndex = frames.Count
                                  - frames[frames.Count - ReversedFrames.MessageRoutingStartFrame].GetInt();
-                var endIndex = startIndex - hopFrameCount;
+                var endIndex = startIndex - routingFrameCount;
                 while (startIndex > endIndex)
                 {
                     var identity = frames[startIndex];
                     var uri = new Uri(frames[--startIndex].GetString());
-                    hops.Add(new SocketEndpoint(uri, identity));
+                    routing.Add(new SocketEndpoint(uri, identity));
 
                     --startIndex;
                 }
             }
 
-            return hops;
+            return routing;
         }
 
         private int GetEntryCount(int entryCountOffset)

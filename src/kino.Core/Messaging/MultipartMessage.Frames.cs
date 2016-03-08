@@ -17,6 +17,7 @@
             internal const int TraceOptions = 12;
             internal const int MessageRoutingStartFrame = 13;
             internal const int MessageRoutingEntryCount = 14;
+            internal const int MessageHops = 15;
         }
 
         private class ForwardFrames
