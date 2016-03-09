@@ -20,6 +20,7 @@ namespace kino.Consensus
         private readonly TimeSpan leaseRenewWaitTimeout;
         private byte[] ownerPayload;
 
+
         public LeaseProvider(IRoundBasedRegister register,
                              IBallotGenerator ballotGenerator,
                              LeaseConfiguration config,
@@ -27,8 +28,6 @@ namespace kino.Consensus
                              ILogger logger)
         {
             ValidateConfiguration(config);
-
-            WaitBeforeNextLeaseIssued(config);
 
             localNode = synodConfig.LocalNode;
             this.logger = logger;
@@ -46,7 +45,7 @@ namespace kino.Consensus
         }
 
         public Lease GetLease(byte[] ownerPayload)
-        {
+        {  
             Interlocked.Exchange(ref this.ownerPayload, ownerPayload);
 
             return GetLastKnownLease();
@@ -162,7 +161,7 @@ namespace kino.Consensus
                 if (LeaseIsNotSafelyExpired(lease, now))
                 {
                     LogStartSleep();
-                    Sleep(config.ClockDrift);
+                    config.ClockDrift.Sleep();
                     LogAwake();
 
                     // TODO: Add recursion exit condition
@@ -200,19 +199,6 @@ namespace kino.Consensus
             return lease != null
                    && lease.ExpiresAt < now
                    && lease.ExpiresAt + config.ClockDrift > now;
-        }
-
-        private void WaitBeforeNextLeaseIssued(LeaseConfiguration config)
-        {
-            Sleep(config.MaxLeaseTimeSpan);
-        }
-
-        private void Sleep(TimeSpan delay)
-        {
-            using (var @lock = new ManualResetEvent(false))
-            {
-                @lock.WaitOne(delay);
-            }
         }
     }
 }

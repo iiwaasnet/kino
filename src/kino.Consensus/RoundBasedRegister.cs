@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using kino.Consensus.Configuration;
 using kino.Consensus.Messages;
 using kino.Core.Diagnostics;
@@ -36,7 +37,6 @@ namespace kino.Consensus
             this.synodConfig = synodConfig;
             this.leaseConfig = leaseConfig;
             this.intercomMessageHub = intercomMessageHub;
-            intercomMessageHub.Start();
             readBallot = ballotGenerator.Null();
             writeBallot = ballotGenerator.Null();
 
@@ -51,6 +51,13 @@ namespace kino.Consensus
             nackReadStream = listener.Where(m => m.Equals(ConsensusMessages.LeaseNackRead));
             ackWriteStream = listener.Where(m => m.Equals(ConsensusMessages.LeaseAckWrite));
             nackWriteStream = listener.Where(m => m.Equals(ConsensusMessages.LeaseNackWrite));
+
+            WaitBeforeNextLeaseIssued(leaseConfig);
+        }
+
+        private void WaitBeforeNextLeaseIssued(LeaseConfiguration config)
+        {
+            Task.Delay(config.MaxLeaseTimeSpan).ContinueWith(_ => intercomMessageHub.Start());
         }
 
         private void OnWriteReceived(IMessage message)
