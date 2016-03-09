@@ -80,7 +80,7 @@ namespace kino.Core.Messaging
 
         internal void PushRouterAddress(SocketEndpoint scaleOutAddress)
         {
-            if (TraceOptions == MessageTraceOptions.Routing)
+            if (TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
                 routing.Add(scaleOutAddress);
             }

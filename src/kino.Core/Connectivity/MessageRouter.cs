@@ -151,10 +151,7 @@ namespace kino.Core.Connectivity
             var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
 
             var handled = HandleMessageLocally(messageHandlerIdentifier, message, localSocket);
-            // TODO: Write test case:
-            // DO: locally registered actor handles broadcast message, which it sends as a response
-            // ASSERT: broadcast message is processed by local actor and is sent to all external routes
-            if (message.Distribution == DistributionPattern.Broadcast || !handled)
+            if (!handled || message.Distribution == DistributionPattern.Broadcast)
             {
                 handled = ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend) || handled;
             }

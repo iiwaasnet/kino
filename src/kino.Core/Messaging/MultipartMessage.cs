@@ -142,6 +142,7 @@ namespace kino.Core.Messaging
         private byte[] GetMessageIdentityFrame(IMessage message)
             => message.Identity;
 
+        //TODO: Should be removed when message versioning is implemented
         private static void AssertMessage(NetMQMessage message)
         {
             if (message.FrameCount < MinFramesCount)

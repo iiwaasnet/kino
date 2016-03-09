@@ -6,6 +6,6 @@ namespace kino.Core.Messaging
     public enum MessageTraceOptions : long
     {
         None = 0,
-        Routing = 2
+        Routing = 1 << 0
     }
 }

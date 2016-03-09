@@ -11,7 +11,7 @@ namespace kino.Tests.Messaging
     public class MessageTests
     {
         [Test]
-        public void TestFlowStartMessage_HasCorrelationIdSet()
+        public void FlowStartMessage_HasCorrelationIdSet()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
@@ -20,7 +20,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void TestMessage_HasVersionSet()
+        public void Message_HasVersionSet()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
@@ -29,7 +29,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void TestMessage_HasIdentitySet()
+        public void Message_HasIdentitySet()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
@@ -38,7 +38,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void TestMessage_HasDistributionPatternSet()
+        public void Message_HasDistributionPatternSet()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
@@ -46,7 +46,29 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void TestPushRouterAddress_AddsOneMessageHop()
+        public void Message_HasInitialyZeroHops()
+        {
+            var message = Message.CreateFlowStartMessage(new SimpleMessage());
+
+            Assert.AreEqual(0, message.Hops);
+        }
+
+        [Test]
+        public void AddHop_IncreasesHopsCountByOne()
+        {
+            var message = Message.CreateFlowStartMessage(new SimpleMessage());
+            var hopsCount = 0;
+            Assert.AreEqual(hopsCount, message.Hops);
+
+            ((Message) message).AddHop();
+            Assert.AreEqual(++hopsCount, message.Hops);
+
+            ((Message)message).AddHop();
+            Assert.AreEqual(++hopsCount, message.Hops);
+        }
+
+        [Test]
+        public void PushRouterAddress_AddsOneRouterAddress()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = MessageTraceOptions.Routing;
@@ -66,7 +88,7 @@ namespace kino.Tests.Messaging
         [Test]
         [TestCase(MessageTraceOptions.Routing, true)]
         [TestCase(MessageTraceOptions.None, false)]
-        public void TestRouterAddressAddeToMessageHops_OnlyIfRouteTracingIsEnabled(MessageTraceOptions traceOptions, bool hopsAdded)
+        public void RouterAddressAddedToMessageHops_OnlyIfRouteTracingIsEnabled(MessageTraceOptions traceOptions, bool hopsAdded)
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = traceOptions;
@@ -90,7 +112,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void TestMessageRouting_IsConsistentlyTransferredViaMultipartMessage()
+        public void MessageRouting_IsConsistentlyTransferredViaMultipartMessage()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = MessageTraceOptions.Routing;
@@ -111,7 +133,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void TestCorrelationId_IsConsistentlyTransferredViaMultipartMessage()
+        public void CorrelationId_IsConsistentlyTransferredViaMultipartMessage()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             var correlationId = Guid.NewGuid().ToByteArray();
@@ -124,7 +146,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void TestMessageContent_IsConsistentlyTransferredViaMultipartMessage()
+        public void MessageContent_IsConsistentlyTransferredViaMultipartMessage()
         {
             var messageText = Guid.NewGuid().ToString();
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage {Content = messageText});
@@ -136,15 +158,14 @@ namespace kino.Tests.Messaging
             Assert.IsTrue(message.Equals(MessageIdentifier.Create<SimpleMessage>()));
         }
 
-
         [Test]
-        public void TestRegisteringCallbackPoint_SetsCallbackIdentityAndCallbackReceiverIdentity()
+        public void RegisteringCallbackPoint_SetsCallbackIdentityAndCallbackReceiverIdentity()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
 
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
             var callbackMessageIdentifiers = new MessageIdentifier(Guid.NewGuid().ToByteArray(), Guid.NewGuid().ToByteArray());
-            message.RegisterCallbackPoint( callbackReceiverIdentity, callbackMessageIdentifiers);
+            message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifiers);
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
@@ -154,9 +175,8 @@ namespace kino.Tests.Messaging
             CollectionAssert.IsEmpty(message.ReceiverIdentity);
         }
 
-
         [Test]
-        public void TestIfCallbackIdentityIsEqualToMessageIdentity_ReceiverIdentityIsSetToCallbackReceiverIdentity()
+        public void IfCallbackIdentityIsEqualToMessageIdentity_ReceiverIdentityIsSetToCallbackReceiverIdentity()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
 
@@ -173,7 +193,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void TestMessageDistribution_IsConsistentlyTransferredViaMultipartMessage()
+        public void MessageDistribution_IsConsistentlyTransferredViaMultipartMessage()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             var distribution = message.Distribution;
@@ -185,9 +205,23 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
+        public void MessageHops_AreConsistentlyTransferredViaMultipartMessage()
+        {
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            message.AddHop();
+            message.AddHop();
+            var hops = message.Hops;
+
+            var multipart = new MultipartMessage(message);
+            message = new Message(multipart);
+
+            Assert.AreEqual(hops, message.Hops);
+        }        
+
+        [Test]
         [TestCase(MessageTraceOptions.None)]
         [TestCase(MessageTraceOptions.Routing)]
-        public void TestMessageTraceOptions_IsConsistentlyTransferredViaMultipartMessage(MessageTraceOptions routeOptions)
+        public void MessageTraceOptions_IsConsistentlyTransferredViaMultipartMessage(MessageTraceOptions routeOptions)
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = routeOptions;
@@ -199,9 +233,9 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void TestMessageTTL_IsConsistentlyTransferredViaMultipartMessage()
+        public void MessageTTL_IsConsistentlyTransferredViaMultipartMessage()
         {
-            var random = new Random((int)(0x0000ffff & DateTime.UtcNow.Ticks));
+            var random = new Random((int) (0x0000ffff & DateTime.UtcNow.Ticks));
             var ttl = TimeSpan.FromSeconds(random.Next(2, 60));
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TTL = ttl;
@@ -213,13 +247,13 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void TestCallbackTriggeresForEveryMessageInCallbackPoint()
+        public void CallbackTriggeresForEveryMessageInCallbackPoint()
         {
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
             var callbackMessageIdentifier = new[]
                                             {
-                                                MessageIdentifier.Create<SimpleMessage>(), 
-                                                MessageIdentifier.Create<AsyncExceptionMessage>(), 
+                                                MessageIdentifier.Create<SimpleMessage>(),
+                                                MessageIdentifier.Create<AsyncExceptionMessage>(),
                                                 MessageIdentifier.Create<AsyncMessage>()
                                             };
             var messages = new[]

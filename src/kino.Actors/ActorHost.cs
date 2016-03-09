@@ -142,7 +142,7 @@ namespace kino.Actors
                                 messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverIdentity, messageContext.CallbackPoint);
                                 messageOut.SetCorrelationId(messageContext.CorrelationId);
                                 messageOut.CopyMessageRouting(messageContext.MessageHops);
-                                messageOut.TraceOptions = messageContext.TraceOptions;
+                                messageOut.TraceOptions |= messageContext.TraceOptions;
 
                                 localSocket.SendMessage(messageOut);
 
@@ -221,7 +221,7 @@ namespace kino.Actors
                         messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
                         messageOut.SetCorrelationId(messageIn.CorrelationId);
                         messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
-                        messageOut.TraceOptions = messageIn.TraceOptions;
+                        messageOut.TraceOptions |= messageIn.TraceOptions;
 
                         localSocket.SendMessage(messageOut);
 
@@ -242,7 +242,7 @@ namespace kino.Actors
             messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
-            messageOut.TraceOptions = messageIn.TraceOptions;
+            messageOut.TraceOptions |= messageIn.TraceOptions;
 
             localSocket.SendMessage(messageOut);
         }
