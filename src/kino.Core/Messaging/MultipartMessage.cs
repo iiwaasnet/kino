@@ -29,10 +29,17 @@ namespace kino.Core.Messaging
             => message.Select(m => m.Buffer).ToList();
 
         private IEnumerable<byte[]> BuildMessageParts(Message message)
+            => WriteSocketIdentityFrames(message)
+                .Concat(WriteV1Frames(message));
+
+        private IEnumerable<byte[]> WriteSocketIdentityFrames(Message message)
         {
             yield return GetSocketIdentity(message);
-
             yield return EmptyFrame;
+        }
+
+        private IEnumerable<byte[]> WriteV1Frames(Message message)
+        {
             foreach (var hop in message.GetMessageHops())
             {
                 yield return hop.Uri.ToSocketAddress().GetBytes();
@@ -196,7 +203,7 @@ namespace kino.Core.Messaging
                 var startIndex = frames.Count
                                  - frames[frames.Count - ReversedFrames.MessageRoutingStartFrame].GetInt();
                 var endIndex = startIndex - hopFrameCount;
-                while (startIndex> endIndex)
+                while (startIndex > endIndex)
                 {
                     var identity = frames[startIndex];
                     var uri = new Uri(frames[--startIndex].GetString());

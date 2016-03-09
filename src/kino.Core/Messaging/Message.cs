@@ -12,7 +12,7 @@ namespace kino.Core.Messaging
         public static readonly string KinoMessageNamespace = "KINO";
 
         private object payload;
-        private readonly List<SocketEndpoint> hops;
+        private List<SocketEndpoint> hops;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
         private Message(IPayload payload, DistributionPattern distributionPattern)
@@ -41,6 +41,11 @@ namespace kino.Core.Messaging
             => messageIdentifier.Equals(new MessageIdentifier(Version, Identity));
 
         internal Message(MultipartMessage multipartMessage)
+        {
+            ReadV1Frames(multipartMessage);
+        }
+
+        private void ReadV1Frames(MultipartMessage multipartMessage)
         {
             hops = new List<SocketEndpoint>(multipartMessage.GetMessageHops());
             Body = multipartMessage.GetMessageBody();
@@ -108,15 +113,15 @@ namespace kino.Core.Messaging
             where T : IPayload, new()
             => new T().Deserialize<T>(content);
 
-        public byte[] Body { get; }
+        public byte[] Body { get; private set; }
 
-        public byte[] Identity { get; }
+        public byte[] Identity { get; private set; }
 
-        public byte[] Version { get; }
+        public byte[] Version { get; private set; }
 
         public TimeSpan TTL { get; set; }
 
-        public DistributionPattern Distribution { get; }
+        public DistributionPattern Distribution { get; private set; }
 
         public byte[] CorrelationId { get; private set; }
 
