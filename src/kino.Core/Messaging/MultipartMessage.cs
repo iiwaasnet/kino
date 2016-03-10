@@ -50,19 +50,20 @@ namespace kino.Core.Messaging
                 yield return callback.Version;
                 yield return callback.Identity;
             }
-            yield return GetMessageHopsFrame(message); // 15
-            yield return GetRoutingEntryCountFrame(message); // 14
-            yield return GetRoutingStartFrame(message); // 13
-            yield return GetTraceOptionsFrame(message); // 12
-            yield return GetVersionFrame(message); // 11
-            yield return GetMessageIdentityFrame(message); // 10
-            yield return GetReceiverIdentityFrame(message); // 9
-            yield return GetDistributionFrame(message); // 8
-            yield return GetCorrelationIdFrame(message); // 7
-            yield return GetCallbackEntryCountFrame(message); // 6
-            yield return GetCallbacksStartFrame(message); // 5
-            yield return GetCallbackReceiverIdentityFrame(message); // 4
-            yield return GetTTLFrame(message); // 3
+            yield return GetMessageHopsFrame(message); // 16
+            yield return GetRoutingEntryCountFrame(message); // 15
+            yield return GetRoutingStartFrame(message); // 14
+            yield return GetTraceOptionsFrame(message); // 13
+            yield return GetVersionFrame(message); // 12
+            yield return GetMessageIdentityFrame(message); // 11
+            yield return GetReceiverIdentityFrame(message); // 10
+            yield return GetDistributionFrame(message); // 9
+            yield return GetCorrelationIdFrame(message); // 8
+            yield return GetCallbackEntryCountFrame(message); // 7
+            yield return GetCallbacksStartFrame(message); // 6
+            yield return GetCallbackReceiverIdentityFrame(message); // 5
+            yield return GetTTLFrame(message); // 4
+            yield return GetWireFormatVersionFrame(message); // 3
 
             yield return EmptyFrame;
 
@@ -124,6 +125,9 @@ namespace kino.Core.Messaging
                        : EmptyFrame;
         }
 
+        private byte[] GetWireFormatVersionFrame(Message message)
+            => message.WireFormatVersion.GetBytes();
+
         private byte[] GetCorrelationIdFrame(IMessage message)
             => message.CorrelationId ?? EmptyFrame;
 
@@ -180,6 +184,9 @@ namespace kino.Core.Messaging
 
         internal byte[] GetReceiverIdentity()
             => frames[frames.Count - ReversedFrames.ReceiverIdentity];
+
+        internal byte[] GetWireFormatVersion()
+            => frames[frames.Count - ReversedFrames.WireFormatVersion];
 
         internal IEnumerable<byte[]> Frames => frames;
 

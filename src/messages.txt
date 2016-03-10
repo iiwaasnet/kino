@@ -14,25 +14,24 @@ FRAME				CONTENT							        DESCRIPTION
                     Callback Version
                     Callback Message ID                     Callbacks
 ..
-n-15                Message Hops                            Number of times a Message was sent away to another node
-n-14				Message Routing Entries Count           Number of message route entries
+n-16                Message Hops                            Number of times a Message was sent away to another node
+n-15				Message Routing Entries Count           Number of message route entries
                                                                 Own Socket Identities and URIs added by every MessageRouter, forwarding the message
                                                                 Each entry takes 2 frames: 1 - URI, 2 - socket ID
-n-13				Routing Start Frame Offset              Offset of the first message route frame
-n-12                TraceOptions                            Type of tracing to record for the message
-n-11				Version							        Message Version
-n-10			    Message ID						        Message Identifier
-n-9					Receiver ID						        Socket Identity of the receiver of the message. Empty frame, for the non-specific receiver
-n-8					Distribution pattern			        One of the following distribution patterns {Unicast, Broadcast}
-n-7					Correlation ID					        Unique identifier, copied onto all messages, spawned within the same flow, from the initial one
-n-6                 Callback Version                        Version of the Callback Message
-n-5					Callback Message ID			            Message Identifier, which designates and of the flow
-n-6                 Callback Entries Count                  Number of callback entries:
+n-14				Routing Start Frame Offset              Offset of the first message route frame
+n-13                TraceOptions                            Type of tracing to record for the message
+n-12				Version							        Message Version
+n-11			    Message ID						        Message Identifier
+n-10				Receiver ID						        Socket Identity of the receiver of the message. Empty frame, for the non-specific receiver
+n-9					Distribution pattern			        One of the following distribution patterns {Unicast, Broadcast}
+n-8					Correlation ID					        Unique identifier, copied onto all messages, spawned within the same flow, from the initial one
+n-7                 Callback Entries Count                  Number of callback entries:
                                                                 Frames: 1 - Callback Message Identifier, 2 - Callback Version
-n-5                 Callback Start Frame Offset             Offset of the first callback messages frames
-n-4					Callback Receiver ID			        Value from this field will be copied to Receiver Identity when 
+n-6                 Callback Start Frame Offset             Offset of the first callback messages frames
+n-5					Callback Receiver ID			        Value from this field will be copied to Receiver Identity when 
                                                                 Message Identifier becomes equal to Callback Message Identifier
-n-3					TTL								        Message Time-to-Live in msec.
+n-4					TTL								        Message Time-to-Live in msec.
+n-3                 Wire Format Version                     Version of the message wire format
 n-2					[0]                                     Empty frame
 n-1					Body							        Message content
 

@@ -10,6 +10,7 @@ namespace kino.Core.Messaging
     {
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
         public static readonly string KinoMessageNamespace = "KINO";
+        private static int CurrentWireFormatVersion = 1;
 
         private object payload;
         private List<SocketEndpoint> routing;
@@ -17,6 +18,7 @@ namespace kino.Core.Messaging
 
         private Message(IPayload payload, DistributionPattern distributionPattern)
         {
+            WireFormatVersion = CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
             CallbackPoint = Enumerable.Empty<MessageIdentifier>();
             Body = Serialize(payload);
@@ -43,6 +45,8 @@ namespace kino.Core.Messaging
 
         internal Message(MultipartMessage multipartMessage)
         {
+            ReadWireFormatVersion(multipartMessage);
+
             ReadV1Frames(multipartMessage);
         }
 
@@ -60,6 +64,11 @@ namespace kino.Core.Messaging
             CorrelationId = multipartMessage.GetCorrelationId();
             TraceOptions = multipartMessage.GetTraceOptions().GetEnumFromLong<MessageTraceOptions>();
             Hops = multipartMessage.GetMessageHops().GetInt();
+        }
+
+        private void ReadWireFormatVersion(MultipartMessage multipartMessage)
+        {
+            WireFormatVersion = multipartMessage.GetWireFormatVersion().GetInt();
         }
 
         internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, MessageIdentifier callbackMessageIdentifier)
@@ -141,5 +150,7 @@ namespace kino.Core.Messaging
         public MessageTraceOptions TraceOptions { get; set; }
 
         public int Hops { get; private set; }
+
+        public int WireFormatVersion { get; private set; }
     }
 }

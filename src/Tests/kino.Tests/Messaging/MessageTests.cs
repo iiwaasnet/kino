@@ -216,6 +216,19 @@ namespace kino.Tests.Messaging
             message = new Message(multipart);
 
             Assert.AreEqual(hops, message.Hops);
+        }
+
+
+        [Test]
+        public void MessageWireFormatVersion_IsConsistentlyTransferredViaMultipartMessage()
+        {
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            Assert.AreEqual(1, message.WireFormatVersion);
+
+            var multipart = new MultipartMessage(message);
+            message = new Message(multipart);
+
+            Assert.AreEqual(1, message.WireFormatVersion);
         }        
 
         [Test]
