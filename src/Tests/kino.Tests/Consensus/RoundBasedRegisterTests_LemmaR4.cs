@@ -28,6 +28,8 @@ and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
                 {
                     using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
                     {
+                        testSetup.WaitUntilStarted();
+
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
                         var roundBasedRegister = testSetup.RoundBasedRegister;

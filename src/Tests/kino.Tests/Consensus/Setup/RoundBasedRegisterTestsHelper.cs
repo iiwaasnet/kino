@@ -29,9 +29,9 @@ namespace kino.Tests.Consensus.Setup
                                 Lease = new LeaseConfiguration
                                         {
                                             ClockDrift = TimeSpan.FromMilliseconds(10),
-                                            MessageRoundtrip = TimeSpan.FromMilliseconds(30),
-                                            NodeResponseTimeout = TimeSpan.FromMilliseconds(100),
-                                            MaxLeaseTimeSpan = TimeSpan.FromSeconds(1)
+                                            MessageRoundtrip = TimeSpan.FromMilliseconds(400),
+                                            NodeResponseTimeout = TimeSpan.FromMilliseconds(200),
+                                            MaxLeaseTimeSpan = TimeSpan.FromSeconds(3)
                                         }
                             };
 
@@ -53,10 +53,7 @@ namespace kino.Tests.Consensus.Setup
                                                             appConfig.Lease,
                                                             loggerMock.Object);
 
-            Thread.Sleep(appConfig.Lease.MaxLeaseTimeSpan);
-            Thread.Sleep(TimeSpan.FromMilliseconds(300));
-
-            return new RoundBasedRegisterTestSetup(ballotGenerator, synodConfig.LocalNode, roundBasedRegister);
+            return new RoundBasedRegisterTestSetup(ballotGenerator, synodConfig.LocalNode, roundBasedRegister, appConfig.Lease.MaxLeaseTimeSpan);
         }
 
         internal static Uri[] GetSynodMembers()

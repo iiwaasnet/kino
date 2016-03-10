@@ -8,7 +8,7 @@ using static kino.Tests.Consensus.Setup.RoundBasedRegisterTestsHelper;
 namespace kino.Tests.Consensus
 {
     [TestFixture(Category = "FLease", Description = @"Lemma R1: Read-abort: If READ(k) aborts, then some
-operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
+operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
     public class RoundBasedRegisterTests_LemmaR1
     {
         private byte[] ownerPayload;
@@ -28,6 +28,8 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
                 {
                     using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
                     {
+                        testSetup.WaitUntilStarted();
+
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
                         var roundBasedRegister = testSetup.RoundBasedRegister;
@@ -52,6 +54,8 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
                 {
                     using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
                     {
+                        testSetup.WaitUntilStarted();
+
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
                         var roundBasedRegister = testSetup.RoundBasedRegister;
@@ -78,6 +82,8 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
                 {
                     using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
                     {
+                        testSetup.WaitUntilStarted();
+
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
                         var roundBasedRegister = testSetup.RoundBasedRegister;
@@ -103,6 +109,8 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
                 {
                     using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
                     {
+                        testSetup.WaitUntilStarted();
+
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
                         var roundBasedRegister = testSetup.RoundBasedRegister;

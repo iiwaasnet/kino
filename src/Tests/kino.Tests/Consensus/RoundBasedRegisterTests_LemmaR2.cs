@@ -7,8 +7,8 @@ using static kino.Tests.Consensus.Setup.RoundBasedRegisterTestsHelper;
 
 namespace kino.Tests.Consensus
 {
-    [TestFixture(Category = "FLease", Description = @"Lemma R2: Write-abort: If WRITE(k; ) aborts, then
-some operation READ(k0) or WRITE(k0; *) was invoked with k0 > k.")]
+    [TestFixture(Category = "FLease", Description = @"Lemma R2: Write-abort: If WRITE(k; *) aborts, then
+some operation READ(k0) or WRITE(k0; *) was invoked with k0 > k.")]
     public class RoundBasedRegisterTests_LemmaR2
     {
         private byte[] ownerPayload;
@@ -28,6 +28,8 @@ some operation READ(k0) or WRITE(k0; *) was invoked with k0 > k.")]
                 {
                     using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
                     {
+                        testSetup.WaitUntilStarted();
+
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
                         var roundBasedRegister = testSetup.RoundBasedRegister;
@@ -55,6 +57,8 @@ some operation READ(k0) or WRITE(k0; *) was invoked with k0 > k.")]
                 {
                     using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
                     {
+                        testSetup.WaitUntilStarted();
+
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
                         var roundBasedRegister = testSetup.RoundBasedRegister;
