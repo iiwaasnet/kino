@@ -16,9 +16,8 @@ namespace kino.Tests.Client
     public class CallbackHandlerStackTests
     {
         [Test]
-        public void TestAddingHandlersForExistingCorrelation_ThrowsDuplicatedKeyException()
+        public void AddingHandlersForExistingCorrelation_ThrowsDuplicatedKeyException()
         {
-            var logger = new Mock<ILogger>();
             var callbackHandlerStack = new CallbackHandlerStack();
 
             var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
@@ -32,9 +31,8 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void TestPopCallBackHandlerForSpecificMessage_RemovesAllOtherHandlersForThisCorrelationId()
+        public void PopCallBackHandlerForSpecificMessage_RemovesAllOtherHandlersForThisCorrelationId()
         {
-            var logger = new Mock<ILogger>();
             var callbackHandlerStack = new CallbackHandlerStack();
 
             var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());

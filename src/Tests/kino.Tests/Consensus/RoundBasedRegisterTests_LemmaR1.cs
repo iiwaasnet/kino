@@ -20,7 +20,7 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
         }
 
         [Test]
-        public void TestReadIsAborted_AfterReadWithBallotEqualToCurrent()
+        public void ReadIsAborted_AfterReadWithBallotEqualToCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
             {
@@ -46,7 +46,7 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
         }
 
         [Test]
-        public void TestReadIsAborted_AfterReadWithBallotGreaterThanCurrent()
+        public void ReadIsAborted_AfterReadWithBallotGreaterThanCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
             {
@@ -74,7 +74,7 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
         }
 
         [Test]
-        public void TestReadIsAborted_AfterWriteWithBallotEqualToCurrent()
+        public void ReadIsAborted_AfterWriteWithBallotEqualToCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
             {
@@ -101,7 +101,7 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
         }
 
         [Test]
-        public void TestReadIsAborted_AfterWriteWithBallotGreaterThanCurrent()
+        public void ReadIsAborted_AfterWriteWithBallotGreaterThanCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
             {

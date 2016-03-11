@@ -8,7 +8,7 @@ namespace kino.Tests.Connectivity
     public class SocketEndpointTests
     {
         [Test]
-        public void TestTwoSocketEndpointsAreEqual_IfUriAndIdentityAreEqual()
+        public void TwoSocketEndpointsAreEqual_IfUriAndIdentityAreEqual()
         {
             var localhost = "tcp://127.0.0.1:4000";
             var identity = Guid.NewGuid().ToByteArray();

@@ -43,7 +43,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void TestOnMessageHubStart_RegisterationMessageIsSent()
+        public void OnMessageHubStart_RegisterationMessageIsSent()
         {
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
@@ -71,7 +71,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void TestEnqueueRequest_RegistersMessageAndExceptionHandlers()
+        public void EnqueueRequest_RegistersMessageAndExceptionHandlers()
         {
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
@@ -100,7 +100,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void TestEnqueueRequest_SendsMessageWithCallbackReceiverIdentityEqualsToReceivingSocketIdentity()
+        public void EnqueueRequest_SendsMessageWithCallbackReceiverIdentityEqualsToReceivingSocketIdentity()
         {
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
@@ -131,7 +131,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void TestWhenMessageReceived_CorrespondingPromiseResultSet()
+        public void WhenMessageReceived_CorrespondingPromiseResultSet()
         {
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
@@ -160,7 +160,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void TestWhenPromiseIsDisposed_ItsCallbackIsRemoved()
+        public void WhenPromiseIsDisposed_ItsCallbackIsRemoved()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
             var messageHub = new MessageHub(socketFactory.Object,
@@ -193,7 +193,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void TestWhenPromiseResultIsSet_ItsCallbackIsRemoved()
+        public void WhenPromiseResultIsSet_ItsCallbackIsRemoved()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
             var messageHub = new MessageHub(socketFactory.Object,
@@ -226,7 +226,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void TestWhenExceptionMessageReceived_PromiseThrowsException()
+        public void WhenExceptionMessageReceived_PromiseThrowsException()
         {
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
@@ -254,7 +254,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void TestWhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
+        public void WhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
         {
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,

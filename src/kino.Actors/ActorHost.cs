@@ -49,7 +49,11 @@ namespace kino.Actors
             var registrations = actorHandlerMap.Add(actor);
             if (registrations.Any())
             {
-                actorRegistrationsQueue.Enqueue(registrations, cancellationTokenSource.Token);
+                var globalRegistrations = registrations.Where(reg => !reg.KeepRegistrationLocal).Select(reg=>reg.Identifier);
+                if (globalRegistrations.Any())
+                {
+                    actorRegistrationsQueue.Enqueue(globalRegistrations, cancellationTokenSource.Token);
+                }
             }
             else
             {

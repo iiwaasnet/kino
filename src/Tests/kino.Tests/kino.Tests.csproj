@@ -74,6 +74,7 @@
     <Compile Include="Actors\Setup\ConfigurableActor.cs" />
     <Compile Include="Actors\Setup\NullActor.cs" />
     <Compile Include="Actors\Setup\NullMessage.cs" />
+    <Compile Include="Actors\Setup\LocalMessage.cs" />
     <Compile Include="Connectivity\ClusterMessageListenetTests.cs" />
     <Compile Include="Connectivity\ExternalMessageRouteRegistrationHandlerTests.cs" />
     <Compile Include="Connectivity\MessageRouterTests.cs" />

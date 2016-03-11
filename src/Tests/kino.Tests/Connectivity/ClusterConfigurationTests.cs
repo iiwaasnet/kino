@@ -26,7 +26,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestAddClusterMember()
+        public void AddClusterMember()
         {
             var config = new ClusterMembership(membershipConfiguration, logger);
             var localhost = "tcp://127.0.0.1:40";
@@ -40,7 +40,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestDeleteClusterMember()
+        public void DeleteClusterMember()
         {
             var config = new ClusterMembership(membershipConfiguration, logger);
             var localhost = "tcp://127.0.0.1:40";
@@ -61,7 +61,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestNodeConsideredDead_IfLastKnownPongWasLongerThanPongSilenceBeforeRouteDeletionAgo()
+        public void NodeConsideredDead_IfLastKnownPongWasLongerThanPongSilenceBeforeRouteDeletionAgo()
         {
             var config = new ClusterMembership(membershipConfiguration, logger);
             var localhost = "tcp://127.0.0.1:40";

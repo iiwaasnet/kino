@@ -27,7 +27,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestDisconnectNotCalled_IfConnectWasNotCalledBefore()
+        public void DisconnectNotCalled_IfConnectWasNotCalledBefore()
         {            
             var registrationHandler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable,clusterMembership, logger);
             var socket = new Mock<ISocket>();
@@ -62,7 +62,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestDisconnectCalled_IfConnectWasCalledBefore()
+        public void DisconnectCalled_IfConnectWasCalledBefore()
         {
             var registrationHandler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership,  logger);
             var socket = new Mock<ISocket>();

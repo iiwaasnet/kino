@@ -73,7 +73,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestRegisterSelf_SendRegistrationMessageToRendezvous()
+        public void RegisterSelf_SendRegistrationMessageToRendezvous()
         {
             var clusterMonitor = new ClusterMonitor(routerConfiguration,
                                                     clusterMembership.Object,
@@ -105,7 +105,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestUnregisterSelf_SendUnregisterMessageRouteMessageToRendezvous()
+        public void UnregisterSelf_SendUnregisterMessageRouteMessageToRendezvous()
         {
             var clusterMonitor = new ClusterMonitor(routerConfiguration,
                                                     clusterMembership.Object,
@@ -137,7 +137,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestRequestClusterRoutes_SendRequestClusterMessageRoutesMessageToRendezvous()
+        public void RequestClusterRoutes_SendRequestClusterMessageRoutesMessageToRendezvous()
         {
             var clusterMonitor = new ClusterMonitor(routerConfiguration,
                                                     clusterMembership.Object,
@@ -163,7 +163,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestDiscoverMessageRoute_SendDiscoverMessageRouteMessageToRendezvous()
+        public void DiscoverMessageRoute_SendDiscoverMessageRouteMessageToRendezvous()
         {
             clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
             clusterMembershipConfiguration.PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(10);

@@ -13,7 +13,7 @@ namespace kino.Tests.Consensus
 message number r that is used to distinguish the messages
 sent by a process within the same interval. r must only
 be unique within an interval.")]
-        public void TestTwoBallotsGeneratedWithinSafetyPeriod_HaveDifferentMessageNumber()
+        public void TwoBallotsGeneratedWithinSafetyPeriod_HaveDifferentMessageNumber()
         {
             var identity = new byte[] {0};
             var leaseConfig = new LeaseConfiguration

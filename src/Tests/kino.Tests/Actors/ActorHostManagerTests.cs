@@ -37,7 +37,7 @@ namespace kino.Tests.Actors
         }
 
         [Test(Description = "Assigning several actors, handling the same message type, should not thor exception.")]
-        public void TestAssignActorWithSameInterfaceTwice_ThrowsNoException()
+        public void AssignActorWithSameInterfaceTwice_ThrowsNoException()
         {
             var actorHostManager = new ActorHostManager(socketFactory.Object, routerConfiguration, logger);
 
@@ -53,7 +53,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestIfActorHostInstancePolicyIsAlwaysCreateNew_NewActorHostIsCreatedForEachActor()
+        public void IfActorHostInstancePolicyIsAlwaysCreateNew_NewActorHostIsCreatedForEachActor()
         {
             var actorHostManager = new ActorHostManager(socketFactory.Object, routerConfiguration, logger);
 
@@ -66,7 +66,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestIfActorHostInstancePolicyIsTryReuseExisting_NewDifferentActorsAreHostedInOneActorHost()
+        public void IfActorHostInstancePolicyIsTryReuseExisting_NewDifferentActorsAreHostedInOneActorHost()
         {
             var actorHostManager = new ActorHostManager(socketFactory.Object, routerConfiguration, logger);
 

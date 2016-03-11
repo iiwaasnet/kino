@@ -56,7 +56,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestIfPingIsNotCommingInTime_SwitchToNextRendezvousServer()
+        public void IfPingIsNotCommingInTime_SwitchToNextRendezvousServer()
         {
             var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
                                                                     socketFactory.Object,
@@ -78,7 +78,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestIfPingComesInTime_SwitchToNextRendezvousServerNeverHappens()
+        public void IfPingComesInTime_SwitchToNextRendezvousServerNeverHappens()
         {
             var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
                                                                     socketFactory.Object,
@@ -111,7 +111,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestIfNonLeaderMessageArrives_NewLeaderIsSelectedFromReceivedMessage()
+        public void IfNonLeaderMessageArrives_NewLeaderIsSelectedFromReceivedMessage()
         {
             var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
                                                                     socketFactory.Object,
@@ -146,7 +146,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestPongMessage_RenewesRegistrationOfSourceNode()
+        public void PongMessage_RenewesRegistrationOfSourceNode()
         {
             var sourceNode = new SocketEndpoint(new Uri("tpc://127.0.0.3:7000"), SocketIdentifier.CreateIdentity());
 
@@ -182,7 +182,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestIfPongMessageComesFromUnknownNode_RequestNodeMessageRoutesMessageSent()
+        public void IfPongMessageComesFromUnknownNode_RequestNodeMessageRoutesMessageSent()
         {
             var sourceNode = new SocketEndpoint(new Uri("tpc://127.0.0.3:7000"), SocketIdentifier.CreateIdentity());
 
@@ -225,7 +225,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestIfRendezvousReconfigurationMessageArrives_RendezvousClusterIsChanged()
+        public void IfRendezvousReconfigurationMessageArrives_RendezvousClusterIsChanged()
         {
             var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
                                                                     socketFactory.Object,
@@ -264,57 +264,57 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestRequestClusterMessageRoutesMessage_IsForwardedToMessageRouter()
+        public void RequestClusterMessageRoutesMessage_IsForwardedToMessageRouter()
         {
             var payload = new RequestClusterMessageRoutesMessage();
-            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.RequestClusterMessageRoutes);
+            MessageIsForwardedToMessageRouter(payload, KinoMessages.RequestClusterMessageRoutes);
         }
 
         [Test]
-        public void TestUnregisterMessageRouteMessage_IsForwardedToMessageRouter()
+        public void UnregisterMessageRouteMessage_IsForwardedToMessageRouter()
         {
             var payload = new UnregisterMessageRouteMessage
                           {
                               Uri = "tcp://127.1.1.1:5000",
                               SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterMessageRoute);
+            MessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterMessageRoute);
         }
 
         [Test]
-        public void TestUnregisterNodeMessageRouteMessage_IsForwardedToMessageRouter()
+        public void UnregisterNodeMessageRouteMessage_IsForwardedToMessageRouter()
         {
             var payload = new UnregisterNodeMessageRouteMessage
                           {
                               Uri = "tcp://127.0.0.3:6000",
                               SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterNodeMessageRoute);
+            MessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterNodeMessageRoute);
         }
 
         [Test]
-        public void TestDiscoverMessageRouteMessage_IsForwardedToMessageRouter()
+        public void DiscoverMessageRouteMessage_IsForwardedToMessageRouter()
         {
             var payload = new DiscoverMessageRouteMessage
                           {
                               RequestorUri = "tcp://127.0.0.3:6000",
                               RequestorSocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.DiscoverMessageRoute);
+            MessageIsForwardedToMessageRouter(payload, KinoMessages.DiscoverMessageRoute);
         }
 
         [Test]
-        public void TestRegisterExternalMessageRouteMessage_IsForwardedToMessageRouter()
+        public void RegisterExternalMessageRouteMessage_IsForwardedToMessageRouter()
         {
             var payload = new RegisterExternalMessageRouteMessage
                           {
                               Uri = "tcp://127.0.0.3:6000",
                               SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            TestMessageIsForwardedToMessageRouter(payload, KinoMessages.RegisterExternalMessageRoute);
+            MessageIsForwardedToMessageRouter(payload, KinoMessages.RegisterExternalMessageRoute);
         }
 
-        private void TestMessageIsForwardedToMessageRouter<TPayload>(TPayload payload, MessageIdentifier messageIdentity)
+        private void MessageIsForwardedToMessageRouter<TPayload>(TPayload payload, MessageIdentifier messageIdentity)
             where TPayload : IPayload
         {
             var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,

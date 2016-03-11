@@ -9,7 +9,7 @@ namespace kino.Tests
   public class MessageHandlerIdentifierTests
   {
     [Test]
-    public void TestTwoMessageHandlerIdentifiers_AreComparedByVersionIdentity()
+    public void TwoMessageHandlerIdentifiers_AreComparedByVersionIdentity()
     {
       var firstIdentifier = MessageIdentifier.Create<SimpleMessage>();
       var secondIdentifier = MessageIdentifier.Create<SimpleMessage>();

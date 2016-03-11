@@ -96,9 +96,10 @@ namespace kino.Tests.Actors
 
             var identifiers = actorHandlersMap.GetMessageHandlerIdentifiers();
 
-            Assert.AreEqual(2, identifiers.Count());
+            Assert.AreEqual(3, identifiers.Count());
             CollectionAssert.Contains(identifiers, MessageIdentifier.Create<SimpleMessage>());
             CollectionAssert.Contains(identifiers, MessageIdentifier.Create<AsyncMessage>());
+            CollectionAssert.Contains(identifiers, MessageIdentifier.Create<LocalMessage>());
         }
 
         [Test]

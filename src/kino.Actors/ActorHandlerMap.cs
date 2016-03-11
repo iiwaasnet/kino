@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using kino.Core.Connectivity;
@@ -16,18 +15,18 @@ namespace kino.Actors
             messageHandlers = new ConcurrentDictionary<MessageIdentifier, MessageHandler>();
         }
 
-        public IEnumerable<MessageIdentifier> Add(IActor actor)
+        public IEnumerable<ActorMessageHandlerIdentifier> Add(IActor actor)
         {
-            var tmp = new List<MessageIdentifier>();
+            var tmp = new List<ActorMessageHandlerIdentifier>();
             foreach (var reg in GetActorRegistrations(actor))
             {
-                if (messageHandlers.TryAdd(reg.Key, reg.Value))
+                if (messageHandlers.TryAdd(reg.Key, reg.Value.Handler))
                 {
-                    tmp.Add(reg.Key);
+                    tmp.Add(new ActorMessageHandlerIdentifier {Identifier = reg.Key, KeepRegistrationLocal = reg.Value.KeepRegistrationLocal});
                 }
                 else
                 {
-                    CleanupIncompleteRegistration(tmp);
+                    CleanupIncompleteRegistration(tmp.Select(t => t.Identifier));
 
                     throw new DuplicatedKeyException(reg.Key.ToString());
                 }
@@ -62,12 +61,12 @@ namespace kino.Actors
         internal IEnumerable<MessageIdentifier> GetMessageHandlerIdentifiers()
             => messageHandlers.Keys;
 
-        private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandler>> GetActorRegistrations(IActor actor)
+        private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandlerDefinition>> GetActorRegistrations(IActor actor)
             => actor
                 .GetInterfaceDefinition()
                 .Select(messageMap =>
-                        new KeyValuePair<MessageIdentifier, MessageHandler>(new MessageIdentifier(messageMap.Message.Version,
-                                                                                                  messageMap.Message.Identity),
-                                                                            messageMap.Handler));
+                        new KeyValuePair<MessageIdentifier, MessageHandlerDefinition>(new MessageIdentifier(messageMap.Message.Version,
+                                                                                                            messageMap.Message.Identity),
+                                                                                      messageMap));
     }
 }

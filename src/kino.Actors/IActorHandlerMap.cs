@@ -5,7 +5,7 @@ namespace kino.Actors
 {
     public interface IActorHandlerMap
     {
-        IEnumerable<MessageIdentifier> Add(IActor actor);
+        IEnumerable<ActorMessageHandlerIdentifier> Add(IActor actor);
 
         bool CanAdd(IActor actor);
 

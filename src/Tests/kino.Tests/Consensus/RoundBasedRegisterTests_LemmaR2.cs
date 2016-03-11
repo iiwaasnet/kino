@@ -20,7 +20,7 @@ some operation READ(k0) or WRITE(k0; *) was invoked with k0 > k.")]
         }
 
         [Test]
-        public void TestWriteIsAborted_AfterReadWithBallotGreaterThanCurrent()
+        public void WriteIsAborted_AfterReadWithBallotGreaterThanCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
             {
@@ -49,7 +49,7 @@ some operation READ(k0) or WRITE(k0; *) was invoked with k0 > k.")]
         }
 
         [Test]
-        public void TestWriteIsAborted_AfterWriteWithBallotGreaterThanCurrent()
+        public void WriteIsAborted_AfterWriteWithBallotGreaterThanCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
             {

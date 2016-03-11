@@ -11,7 +11,7 @@ namespace kino.Tests.Connectivity
     public class ExternalRoutingTableTests
     {
         [Test]
-        public void TestTwoExternalRegistrationsForSameMessage_AreReturnedInRoundRobinWay()
+        public void TwoExternalRegistrationsForSameMessage_AreReturnedInRoundRobinWay()
         {
             var logger = new Mock<ILogger>();
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
@@ -32,7 +32,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestRouteIsRemoved_BySocketIdentifier()
+        public void RouteIsRemoved_BySocketIdentifier()
         {
             var logger = new Mock<ILogger>();
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
@@ -59,7 +59,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestIfNoRouteRegisteredForSpecificMessage_ExternalRoutingTableReturnsNull()
+        public void IfNoRouteRegisteredForSpecificMessage_ExternalRoutingTableReturnsNull()
         {
             var logger = new Mock<ILogger>();
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
@@ -70,7 +70,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void TestRemoveMessageRoute_RemovesOnlyProvidedMessageIdentifiers()
+        public void RemoveMessageRoute_RemovesOnlyProvidedMessageIdentifiers()
         {
             var logger = new Mock<ILogger>();
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);

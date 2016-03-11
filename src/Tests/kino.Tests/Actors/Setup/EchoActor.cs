@@ -20,5 +20,11 @@ namespace kino.Tests.Actors.Setup
 
             return new ActorResult(await Task.Delay(delay).ContinueWith(_=> messageIn).ConfigureAwait(false));
         }
+
+        [MessageHandlerDefinition(typeof(LocalMessage))]
+        private async Task<IActorResult> ProcessLocalMessage(IMessage messageIn)
+        {
+            return null;
+        }
     }
 }

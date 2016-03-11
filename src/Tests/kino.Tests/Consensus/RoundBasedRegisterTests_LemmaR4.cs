@@ -20,7 +20,7 @@ and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
         }
 
         [Test]
-        public void TestReadCommitsWithNonEmptyLease_IfWriteCommittedLeaseWithBallotLessThanCurrent()
+        public void ReadCommitsWithNonEmptyLease_IfWriteCommittedLeaseWithBallotLessThanCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
             {

@@ -47,7 +47,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestAssignActor_RegistersActorHandlers()
+        public void AssignActor_RegistersActorHandlers()
         {
             var actorRegistrationsQueue = new AsyncQueue<IEnumerable<MessageIdentifier>>();
 
@@ -66,7 +66,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestStartingActorHost_SendsActorRegistrationMessage()
+        public void StartingActorHost_SendsActorRegistrationMessage()
         {
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
@@ -80,23 +80,21 @@ namespace kino.Tests.Actors
                 StartActorHost(actorHost);
 
                 var routableSocket = actorHostSocketFactory.GetRoutableSocket();
-                var registration = actorHostSocketFactory
-                    .GetRegistrationSocket()
-                    .GetSentMessages()
-                    .BlockingLast(AsyncOpCompletionDelay);
+                var registration = actorHostSocketFactory.GetRegistrationSocket()
+                                                         .GetSentMessages()
+                                                         .BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.IsNotNull(registration);
                 var payload = new RegisterInternalMessageRouteMessage
                               {
                                   SocketIdentity = routableSocket.GetIdentity(),
-                                  MessageContracts = actorHandlersMap
-                                      .GetMessageHandlerIdentifiers()
-                                      .Select(mh => new MessageContract
-                                                    {
-                                                        Identity = mh.Identity,
-                                                        Version = mh.Version
-                                                    })
-                                      .ToArray()
+                                  MessageContracts = actorHandlersMap.GetMessageHandlerIdentifiers()
+                                                                     .Select(mh => new MessageContract
+                                                                                   {
+                                                                                       Identity = mh.Identity,
+                                                                                       Version = mh.Version
+                                                                                   })
+                                                                     .ToArray()
                               };
                 var regMessage = registration.GetPayload<RegisterInternalMessageRouteMessage>();
 
@@ -105,8 +103,7 @@ namespace kino.Tests.Actors
                 CollectionAssert.AreEqual(payload.SocketIdentity, regMessage.SocketIdentity);
                 Assert.AreEqual(payload.MessageContracts.Length, regMessage.MessageContracts.Length);
                 Assert.AreEqual(payload.MessageContracts.Length,
-                                payload.MessageContracts
-                                       .Select(mc => new MessageIdentifier(mc.Version, mc.Identity))
+                                payload.MessageContracts.Select(mc => new MessageIdentifier(mc.Version, mc.Identity))
                                        .Intersect(regMessage.MessageContracts
                                                             .Select(mc => new MessageIdentifier(mc.Version, mc.Identity))).Count());
             }
@@ -117,7 +114,57 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestStartingActorHostWithoutActorAssigned_DoesntThrowException()
+        public void ActorRegistrationMessage_IsSentOnlyForGlobalyRegisteredHandlers()
+        {
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          routerConfiguration,
+                                          logger);
+            var actor = new EchoActor();
+            actorHost.AssignActor(actor);
+            var interfaceDefinition = actor.GetInterfaceDefinition();
+            try
+            {
+                StartActorHost(actorHost);
+
+                var routableSocket = actorHostSocketFactory.GetRoutableSocket();
+                var registration = actorHostSocketFactory.GetRegistrationSocket()
+                                                         .GetSentMessages()
+                                                         .BlockingLast(AsyncOpCompletionDelay);
+
+                Assert.IsNotNull(registration);
+                var payload = new RegisterInternalMessageRouteMessage
+                              {
+                                  SocketIdentity = routableSocket.GetIdentity(),
+                                  MessageContracts = interfaceDefinition.Where(def => !def.KeepRegistrationLocal)
+                                                                        .Select(def => new MessageContract
+                                                                                       {
+                                                                                           Identity = def.Message.Identity,
+                                                                                           Version = def.Message.Version
+                                                                                       })
+                                                                        .ToArray()
+                              };
+                var regMessage = registration.GetPayload<RegisterInternalMessageRouteMessage>();
+
+                CollectionAssert.AreEqual(payload.Identity, regMessage.Identity);
+                CollectionAssert.AreEqual(payload.Version, regMessage.Version);
+                CollectionAssert.AreEqual(payload.SocketIdentity, regMessage.SocketIdentity);
+                Assert.AreEqual(payload.MessageContracts.Length, regMessage.MessageContracts.Length);
+                Assert.AreEqual(payload.MessageContracts.Length,
+                                payload.MessageContracts.Select(mc => new MessageIdentifier(mc.Version, mc.Identity))
+                                       .Intersect(regMessage.MessageContracts
+                                                            .Select(mc => new MessageIdentifier(mc.Version, mc.Identity))).Count());
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
+        }
+
+        [Test]
+        public void StartingActorHostWithoutActorAssigned_DoesntThrowException()
         {
             var logger = loggerMock;
             var actorHost = new ActorHost(socketFactory.Object,
@@ -140,7 +187,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestSyncActorResponse_SendImmediately()
+        public void SyncActorResponse_SendImmediately()
         {
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
@@ -170,7 +217,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestExceptionThrownFromActorHandler_DeliveredAsExceptionMessage()
+        public void ExceptionThrownFromActorHandler_DeliveredAsExceptionMessage()
         {
             var errorMessage = Guid.NewGuid().ToString();
 
@@ -201,7 +248,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestAsyncActorResult_IsSentAfterCompletion()
+        public void AsyncActorResult_IsSentAfterCompletion()
         {
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
@@ -235,7 +282,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestAsyncActorException_IsSentAfterCompletionAsExceptionMessage()
+        public void AsyncActorException_IsSentAfterCompletionAsExceptionMessage()
         {
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
@@ -271,7 +318,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestAsyncActorResult_IsAddedToMessageCompletionQueue()
+        public void AsyncActorResult_IsAddedToMessageCompletionQueue()
         {
             var messageCompletionQueue = new Mock<IAsyncQueue<AsyncMessageContext>>();
             messageCompletionQueue.Setup(m => m.GetConsumingEnumerable(It.IsAny<CancellationToken>()))
@@ -307,7 +354,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestCallbackReceiverIdentities_AreCopiedFromIncomingMessageProcessedSync()
+        public void CallbackReceiverIdentities_AreCopiedFromIncomingMessageProcessedSync()
         {
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
@@ -339,7 +386,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestCallbackReceiverIdentities_AreCopiedFromIncomingMessageProcessedAsync()
+        public void CallbackReceiverIdentities_AreCopiedFromIncomingMessageProcessedAsync()
         {
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
@@ -374,7 +421,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestIfCallbackIsRegistered_SyncExceptionMessageIsDeliveredToCallbackReceiver()
+        public void IfCallbackIsRegistered_SyncExceptionMessageIsDeliveredToCallbackReceiver()
         {
             var errorMessage = Guid.NewGuid().ToString();
 
@@ -411,7 +458,7 @@ namespace kino.Tests.Actors
         }
 
         [Test]
-        public void TestIfCallbackIsRegistered_AsyncExceptionMessageIsDeliveredToCallbackReceiver()
+        public void IfCallbackIsRegistered_AsyncExceptionMessageIsDeliveredToCallbackReceiver()
         {
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,

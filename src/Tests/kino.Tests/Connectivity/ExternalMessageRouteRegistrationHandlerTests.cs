@@ -14,7 +14,7 @@ namespace kino.Tests.Connectivity
     public class ExternalMessageRouteRegistrationHandlerTests
     {
         [Test]
-        public void TestIfRegisterExternalMessageRouteMessageReceived_NoYetConnectionMadeToRemotePeer()
+        public void IfRegisterExternalMessageRouteMessageReceived_NoYetConnectionMadeToRemotePeer()
         {
             var logger = new Mock<ILogger>().Object;
             var externalRoutingTable = new ExternalRoutingTable(logger);
