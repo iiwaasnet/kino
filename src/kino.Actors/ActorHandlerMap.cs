@@ -36,9 +36,9 @@ namespace kino.Actors
             return tmp;
         }
 
-        private void CleanupIncompleteRegistration(IEnumerable<MessageIdentifier> inclomplete)
+        private void CleanupIncompleteRegistration(IEnumerable<MessageIdentifier> incomplete)
         {
-            foreach (var identifier in inclomplete)
+            foreach (var identifier in incomplete)
             {
                 MessageHandler _;
                 messageHandlers.TryRemove(identifier, out _);
