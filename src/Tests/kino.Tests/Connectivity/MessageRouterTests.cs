@@ -301,6 +301,45 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
+        public void BroadcastMessageIsRoutedOnlyToLocalActors_IfHopsCountGreaterThanZero()
+        {
+            var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
+            var externalRoutingTable = new Mock<IExternalRoutingTable>();
+            externalRoutingTable.Setup(m => m.FindAllRoutes(It.Is<MessageIdentifier>(mi => mi.Equals(messageIdentifier))))
+                                .Returns(new[] {new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity())}});
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            internalRoutingTable.Setup(m => m.FindAllRoutes(It.Is<MessageIdentifier>(mi => mi.Equals(messageIdentifier))))
+                                .Returns(new[] {new SocketIdentifier(Guid.NewGuid().ToByteArray())});
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           internalRoutingTable.Object,
+                                           externalRoutingTable.Object,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var message = (Message) Message.Create(new SimpleMessage(), DistributionPattern.Broadcast);
+                message.AddHop();
+                Assert.AreEqual(1, message.Hops);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Assert.Throws<InvalidOperationException>(() => messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay));
+                var messageLocalOut = messageRouterSocketFactory.GetRouterSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+
+                Assert.AreEqual(message, messageLocalOut);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
         public void BroadcastMessage_IsRoutedToRemoteActorsEvenIfNoLocalActorsRegistered()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
@@ -325,9 +364,43 @@ namespace kino.Tests.Connectivity
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 var messageScaleOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
-                Assert.Throws<InvalidOperationException>(() =>messageRouterSocketFactory.GetRouterSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay));
+                Assert.Throws<InvalidOperationException>(() => messageRouterSocketFactory.GetRouterSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay));
 
                 Assert.AreEqual(message, messageScaleOut);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void BroadcastMessageIsNotRoutedAndRouteDiscoverRequestSent_IfNoLocalActorsRegisteredAndHopsCountGreaterThanZero()
+        {
+            var externalRoutingTable = new Mock<IExternalRoutingTable>();
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           internalRoutingTable.Object,
+                                           externalRoutingTable.Object,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var message = (Message) Message.Create(new SimpleMessage(), DistributionPattern.Broadcast);
+                message.AddHop();
+                Assert.AreEqual(1, message.Hops);
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Assert.Throws<InvalidOperationException>(() => messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay));
+                Assert.Throws<InvalidOperationException>(() => messageRouterSocketFactory.GetRouterSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay));
+
+                clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<MessageIdentifier>(id => id.Equals(MessageIdentifier.Create<SimpleMessage>()))), Times.Once());
             }
             finally
             {
