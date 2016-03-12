@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using kino.Core.Framework;
 using kino.Core.Messaging;
@@ -30,7 +31,7 @@ namespace kino.Core.Sockets
         public void SendMessage(IMessage message)
         {
             var multipart = new MultipartMessage((Message) message);
-            if (!socket.TrySendMultipartMessage(sendingTimeout, new NetMQMessage(multipart.Frames)))
+            if (!socket.TrySendMultipartBytes(sendingTimeout, multipart.Frames))
             {
                 throw new TimeoutException($"Sending timed out after {sendingTimeout.TotalMilliseconds} ms!");
             }
@@ -40,10 +41,10 @@ namespace kino.Core.Sockets
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var message = new NetMQMessage();
-                if (socket.TryReceiveMultipartMessage(ReceiveWaitTimeout, ref message))
+                var frames = new List<byte[]>();
+                if (socket.TryReceiveMultipartBytes(ReceiveWaitTimeout, ref frames))
                 {
-                    var multipart = new MultipartMessage(message);
+                    var multipart = new MultipartMessage(frames);
                     return new Message(multipart);
                 }
             }

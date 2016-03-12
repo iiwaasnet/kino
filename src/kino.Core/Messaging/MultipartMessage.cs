@@ -18,15 +18,10 @@ namespace kino.Core.Messaging
             frames = BuildMessageParts(message).ToList();
         }
 
-        internal MultipartMessage(NetMQMessage message)
+        internal MultipartMessage(IList<byte[]> frames)
         {
-            AssertMessage(message);
-
-            frames = SplitMessageToFrames(message);
+            this.frames = frames;
         }
-
-        private IList<byte[]> SplitMessageToFrames(IEnumerable<NetMQFrame> message)
-            => message.Select(m => m.Buffer).ToList();
 
         private IEnumerable<byte[]> BuildMessageParts(Message message)
             => WriteSocketIdentityFrames(message)
@@ -145,15 +140,6 @@ namespace kino.Core.Messaging
 
         private byte[] GetMessageIdentityFrame(IMessage message)
             => message.Identity;
-
-        //TODO: Should be removed when message versioning is implemented
-        private static void AssertMessage(NetMQMessage message)
-        {
-            if (message.FrameCount < MinFramesCount)
-            {
-                throw new Exception($"FrameCount expected (at least): [{MinFramesCount}], received: [{message.FrameCount}]");
-            }
-        }
 
         internal byte[] GetMessageIdentity()
             => frames[frames.Count - ReversedFrames.Identity];
