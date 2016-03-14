@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using kino.Core.Diagnostics;
-using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
 using kino.Core.Sockets;
@@ -32,9 +32,15 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                 var payload = message.GetPayload<RegisterInternalMessageRouteMessage>();
                 var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
 
-                var handlers = UpdateLocalRoutingTable(payload, handlerSocketIdentifier);
-
-                clusterMonitor.RegisterSelf(handlers);
+                if (payload.LocalMessageContracts != null)
+                {
+                    UpdateLocalRoutingTable(handlerSocketIdentifier, payload.LocalMessageContracts);
+                }
+                if (payload.GlobalMessageContracts != null)
+                {
+                    var globalHandlers = UpdateLocalRoutingTable(handlerSocketIdentifier, payload.GlobalMessageContracts);
+                    clusterMonitor.RegisterSelf(globalHandlers);
+                }
             }
 
             return shouldHandle;
@@ -43,12 +49,11 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         private static bool IsInternalMessageRoutingRegistration(IMessage message)
             => message.Equals(RegisterInternalMessageRouteMessageIdentifier);
 
-        private IEnumerable<MessageIdentifier> UpdateLocalRoutingTable(RegisterInternalMessageRouteMessage payload,
-                                                                       SocketIdentifier socketIdentifier)
+        private IEnumerable<MessageIdentifier> UpdateLocalRoutingTable(SocketIdentifier socketIdentifier, MessageContract[] messageContracts)
         {
             var handlers = new List<MessageIdentifier>();
 
-            foreach (var registration in payload.MessageContracts)
+            foreach (var registration in messageContracts)
             {
                 try
                 {

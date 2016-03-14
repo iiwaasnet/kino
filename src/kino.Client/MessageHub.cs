@@ -177,14 +177,14 @@ namespace kino.Client
             var rdyMessage = Message.Create(new RegisterInternalMessageRouteMessage
                                             {
                                                 SocketIdentity = receivingSocketIdentity,
-                                                MessageContracts = new[]
-                                                                   {
-                                                                       new MessageContract
-                                                                       {
-                                                                           Version = IdentityExtensions.Empty,
-                                                                           Identity = receivingSocketIdentity
-                                                                       }
-                                                                   }
+                                                GlobalMessageContracts = new[]
+                                                                         {
+                                                                             new MessageContract
+                                                                             {
+                                                                                 Version = IdentityExtensions.Empty,
+                                                                                 Identity = receivingSocketIdentity
+                                                                             }
+                                                                         }
                                             });
             socket.SendMessage(rdyMessage);
 

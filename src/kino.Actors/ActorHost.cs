@@ -22,7 +22,7 @@ namespace kino.Actors
         private readonly IAsyncQueue<AsyncMessageContext> asyncQueue;
         private readonly ISocketFactory socketFactory;
         private readonly RouterConfiguration routerConfiguration;
-        private readonly IAsyncQueue<IEnumerable<MessageIdentifier>> actorRegistrationsQueue;
+        private readonly IAsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>> actorRegistrationsQueue;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
@@ -30,7 +30,7 @@ namespace kino.Actors
         public ActorHost(ISocketFactory socketFactory,
                          IActorHandlerMap actorHandlerMap,
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
-                         IAsyncQueue<IEnumerable<MessageIdentifier>> actorRegistrationsQueue,
+                         IAsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>> actorRegistrationsQueue,
                          RouterConfiguration routerConfiguration,
                          ILogger logger)
         {
@@ -49,11 +49,7 @@ namespace kino.Actors
             var registrations = actorHandlerMap.Add(actor);
             if (registrations.Any())
             {
-                var globalRegistrations = registrations.Where(reg => !reg.KeepRegistrationLocal).Select(reg=>reg.Identifier);
-                if (globalRegistrations.Any())
-                {
-                    actorRegistrationsQueue.Enqueue(globalRegistrations, cancellationTokenSource.Token);
-                }
+                actorRegistrationsQueue.Enqueue(registrations, cancellationTokenSource.Token);
             }
             else
             {
@@ -114,18 +110,25 @@ namespace kino.Actors
             }
         }
 
-        private static void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<MessageIdentifier> registrations)
+        private static void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<ActorMessageHandlerIdentifier> registrations)
         {
             var payload = new RegisterInternalMessageRouteMessage
                           {
                               SocketIdentity = identity,
-                              MessageContracts = registrations
-                                  .Select(mh => new MessageContract
-                                                {
-                                                    Identity = mh.Identity,
-                                                    Version = mh.Version
-                                                })
-                                  .ToArray()
+                              LocalMessageContracts = registrations.Where(mh => mh.KeepRegistrationLocal)
+                                                                   .Select(mh => new MessageContract
+                                                                                 {
+                                                                                     Identity = mh.Identifier.Identity,
+                                                                                     Version = mh.Identifier.Version
+                                                                                 })
+                                                                   .ToArray(),
+                              GlobalMessageContracts = registrations.Where(mh => !mh.KeepRegistrationLocal)
+                                                                    .Select(mh => new MessageContract
+                                                                                  {
+                                                                                      Identity = mh.Identifier.Identity,
+                                                                                      Version = mh.Identifier.Version
+                                                                                  })
+                                                                    .ToArray()
                           };
 
             socket.SendMessage(Message.Create(payload));

@@ -56,7 +56,7 @@ namespace kino.Actors
                 actorHost = new ActorHost(socketFactory,
                                           new ActorHandlerMap(),
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(), 
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(), 
                                           routerConfiguration,
                                           logger);
                 actorHost.Start();

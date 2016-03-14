@@ -43,7 +43,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void OnMessageHubStart_RegisterationMessageIsSent()
+        public void OnMessageHubStart_RegisterationMessageIsSentAsGlobalRegistration()
         {
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
@@ -60,9 +60,10 @@ namespace kino.Tests.Client
                 Assert.IsNotNull(message);
                 var registration = message.GetPayload<RegisterInternalMessageRouteMessage>();
                 CollectionAssert.AreEqual(receivingSocket.GetIdentity(), registration.SocketIdentity);
-                var handler = registration.MessageContracts.First();
+                var handler = registration.GlobalMessageContracts.First();
                 CollectionAssert.AreEqual(IdentityExtensions.Empty, handler.Version);
                 CollectionAssert.AreEqual(receivingSocket.GetIdentity(), handler.Identity);
+                Assert.IsNull(registration.LocalMessageContracts);
             }
             finally
             {

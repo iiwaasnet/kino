@@ -78,7 +78,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void RegisterMessageHandlers_AddsActorIdentifier()
+        public void RegisterLocalMessageHandlers_AddsActorIdentifier()
         {
             var internalRoutingTable = new InternalRoutingTable();
             serviceMessageHandlers = new[] {new InternalMessageRouteRegistrationHandler(clusterMonitor.Object, internalRoutingTable, logger)};
@@ -101,14 +101,14 @@ namespace kino.Tests.Connectivity
                 var message = Message.Create(new RegisterInternalMessageRouteMessage
                                              {
                                                  SocketIdentity = socketIdentity,
-                                                 MessageContracts = new[]
-                                                                    {
-                                                                        new MessageContract
-                                                                        {
-                                                                            Identity = messageIdentity,
-                                                                            Version = version
-                                                                        }
-                                                                    }
+                                                 LocalMessageContracts = new[]
+                                                                         {
+                                                                             new MessageContract
+                                                                             {
+                                                                                 Identity = messageIdentity,
+                                                                                 Version = version
+                                                                             }
+                                                                         }
                                              });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
@@ -119,6 +119,156 @@ namespace kino.Tests.Connectivity
                 Assert.IsNotNull(identifier);
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
                 CollectionAssert.AreEqual(socketIdentity, identifier.Identity);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void LocalActorRegistrations_AreNotBroadcastedToOtherNodes()
+        {
+            var internalRoutingTable = new InternalRoutingTable();
+            serviceMessageHandlers = new[] {new InternalMessageRouteRegistrationHandler(clusterMonitor.Object, internalRoutingTable, logger)};
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           internalRoutingTable,
+                                           new ExternalRoutingTable(logger),
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentity = Guid.NewGuid().ToByteArray();
+                var version = Guid.NewGuid().ToByteArray();
+                var socketIdentity = Guid.NewGuid().ToByteArray();
+                var message = Message.Create(new RegisterInternalMessageRouteMessage
+                                             {
+                                                 SocketIdentity = socketIdentity,
+                                                 LocalMessageContracts = new[]
+                                                                         {
+                                                                             new MessageContract
+                                                                             {
+                                                                                 Identity = messageIdentity,
+                                                                                 Version = version
+                                                                             }
+                                                                         }
+                                             });
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOpCompletionDelay);
+
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+
+                Assert.IsNotNull(identifier);
+
+                clusterMonitor.Verify(m => m.RegisterSelf(It.IsAny<IEnumerable<MessageIdentifier>>()), Times.Never);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void RegisterGlobalMessageHandlers_AddsActorIdentifier()
+        {
+            var internalRoutingTable = new InternalRoutingTable();
+            serviceMessageHandlers = new[] {new InternalMessageRouteRegistrationHandler(clusterMonitor.Object, internalRoutingTable, logger)};
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           internalRoutingTable,
+                                           new ExternalRoutingTable(logger),
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentity = Guid.NewGuid().ToByteArray();
+                var version = Guid.NewGuid().ToByteArray();
+                var socketIdentity = Guid.NewGuid().ToByteArray();
+                var message = Message.Create(new RegisterInternalMessageRouteMessage
+                                             {
+                                                 SocketIdentity = socketIdentity,
+                                                 GlobalMessageContracts = new[]
+                                                                          {
+                                                                              new MessageContract
+                                                                              {
+                                                                                  Identity = messageIdentity,
+                                                                                  Version = version
+                                                                              }
+                                                                          }
+                                             });
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOpCompletionDelay);
+
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+
+                Assert.IsNotNull(identifier);
+                Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
+                CollectionAssert.AreEqual(socketIdentity, identifier.Identity);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void GlobalActorRegistrations_AreBroadcastedToOtherNodes()
+        {
+            var internalRoutingTable = new InternalRoutingTable();
+            serviceMessageHandlers = new[] {new InternalMessageRouteRegistrationHandler(clusterMonitor.Object, internalRoutingTable, logger)};
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           internalRoutingTable,
+                                           new ExternalRoutingTable(logger),
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messageIdentity = Guid.NewGuid().ToByteArray();
+                var version = Guid.NewGuid().ToByteArray();
+                var socketIdentity = Guid.NewGuid().ToByteArray();
+                var message = Message.Create(new RegisterInternalMessageRouteMessage
+                                             {
+                                                 SocketIdentity = socketIdentity,
+                                                 GlobalMessageContracts = new[]
+                                                                          {
+                                                                              new MessageContract
+                                                                              {
+                                                                                  Identity = messageIdentity,
+                                                                                  Version = version
+                                                                              }
+                                                                          }
+                                             });
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOpCompletionDelay);
+
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+
+                Assert.IsNotNull(identifier);
+                Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
+                CollectionAssert.AreEqual(socketIdentity, identifier.Identity);
+
+                var messageIdentifiers = new[] {new MessageIdentifier(version, messageIdentity)};
+                clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageIdentifier>>(handlers => messageIdentifiers.SequenceEqual(handlers))), Times.Once);
             }
             finally
             {

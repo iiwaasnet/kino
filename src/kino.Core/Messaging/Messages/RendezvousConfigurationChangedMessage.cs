@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using kino.Core.Framework;
 using ProtoBuf;
 
 namespace kino.Core.Messaging.Messages
@@ -14,6 +13,7 @@ namespace kino.Core.Messaging.Messages
         public IEnumerable<RendezvousNode> RendezvousNodes { get; set; }
 
         public override byte[] Version => MessageVersion;
+
         public override byte[] Identity => MessageIdentity;
     }
 }

@@ -49,7 +49,7 @@ namespace kino.Tests.Actors
         [Test]
         public void AssignActor_RegistersActorHandlers()
         {
-            var actorRegistrationsQueue = new AsyncQueue<IEnumerable<MessageIdentifier>>();
+            var actorRegistrationsQueue = new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>();
 
             var actorHost = new ActorHost(new SocketFactory(null),
                                           actorHandlersMap,
@@ -61,20 +61,21 @@ namespace kino.Tests.Actors
 
             var registrations = actorRegistrationsQueue.GetConsumingEnumerable(CancellationToken.None).First();
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            Assert.IsTrue(registrations.Any(id => id.Identity == messageIdentifier.Identity));
-            Assert.IsTrue(registrations.Any(id => id.Version == messageIdentifier.Version));
+            Assert.IsTrue(registrations.Any(id => id.Identifier.Identity == messageIdentifier.Identity));
+            Assert.IsTrue(registrations.Any(id => id.Identifier.Version == messageIdentifier.Version));
         }
 
         [Test]
-        public void StartingActorHost_SendsActorRegistrationMessage()
+        public void StartingActorHost_SendsActorRegistrationMessageForBothGlobalAndLocalRegistrations()
         {
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
-            actorHost.AssignActor(new EchoActor());
+            var actorWithGlobalAndLocalHandlers = new EchoActor();
+            actorHost.AssignActor(actorWithGlobalAndLocalHandlers);
             try
             {
                 StartActorHost(actorHost);
@@ -88,73 +89,37 @@ namespace kino.Tests.Actors
                 var payload = new RegisterInternalMessageRouteMessage
                               {
                                   SocketIdentity = routableSocket.GetIdentity(),
-                                  MessageContracts = actorHandlersMap.GetMessageHandlerIdentifiers()
-                                                                     .Select(mh => new MessageContract
-                                                                                   {
-                                                                                       Identity = mh.Identity,
-                                                                                       Version = mh.Version
-                                                                                   })
-                                                                     .ToArray()
+                                  LocalMessageContracts = actorWithGlobalAndLocalHandlers.GetInterfaceDefinition()
+                                                                                         .Where(mh => mh.KeepRegistrationLocal)
+                                                                                         .Select(mh => new MessageContract
+                                                                                                       {
+                                                                                                           Identity = mh.Message.Identity,
+                                                                                                           Version = mh.Message.Version
+                                                                                                       })
+                                                                                         .ToArray(),
+                                  GlobalMessageContracts = actorWithGlobalAndLocalHandlers.GetInterfaceDefinition()
+                                                                                          .Where(mh => !mh.KeepRegistrationLocal)
+                                                                                          .Select(mh => new MessageContract
+                                                                                                        {
+                                                                                                            Identity = mh.Message.Identity,
+                                                                                                            Version = mh.Message.Version
+                                                                                                        })
+                                                                                          .ToArray()
                               };
                 var regMessage = registration.GetPayload<RegisterInternalMessageRouteMessage>();
 
                 CollectionAssert.AreEqual(payload.Identity, regMessage.Identity);
                 CollectionAssert.AreEqual(payload.Version, regMessage.Version);
                 CollectionAssert.AreEqual(payload.SocketIdentity, regMessage.SocketIdentity);
-                Assert.AreEqual(payload.MessageContracts.Length, regMessage.MessageContracts.Length);
-                Assert.AreEqual(payload.MessageContracts.Length,
-                                payload.MessageContracts.Select(mc => new MessageIdentifier(mc.Version, mc.Identity))
-                                       .Intersect(regMessage.MessageContracts
+                Assert.AreEqual(payload.GlobalMessageContracts.Length, regMessage.GlobalMessageContracts.Length);
+                Assert.AreEqual(payload.LocalMessageContracts.Length, regMessage.LocalMessageContracts.Length);
+                Assert.AreEqual(payload.GlobalMessageContracts.Length,
+                                payload.GlobalMessageContracts.Select(mc => new MessageIdentifier(mc.Version, mc.Identity))
+                                       .Intersect(regMessage.GlobalMessageContracts
                                                             .Select(mc => new MessageIdentifier(mc.Version, mc.Identity))).Count());
-            }
-            finally
-            {
-                actorHost.Stop();
-            }
-        }
-
-        [Test]
-        public void ActorRegistrationMessage_IsSentOnlyForGlobalyRegisteredHandlers()
-        {
-            var actorHost = new ActorHost(socketFactory.Object,
-                                          actorHandlersMap,
-                                          new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
-                                          routerConfiguration,
-                                          logger);
-            var actor = new EchoActor();
-            actorHost.AssignActor(actor);
-            var interfaceDefinition = actor.GetInterfaceDefinition();
-            try
-            {
-                StartActorHost(actorHost);
-
-                var routableSocket = actorHostSocketFactory.GetRoutableSocket();
-                var registration = actorHostSocketFactory.GetRegistrationSocket()
-                                                         .GetSentMessages()
-                                                         .BlockingLast(AsyncOpCompletionDelay);
-
-                Assert.IsNotNull(registration);
-                var payload = new RegisterInternalMessageRouteMessage
-                              {
-                                  SocketIdentity = routableSocket.GetIdentity(),
-                                  MessageContracts = interfaceDefinition.Where(def => !def.KeepRegistrationLocal)
-                                                                        .Select(def => new MessageContract
-                                                                                       {
-                                                                                           Identity = def.Message.Identity,
-                                                                                           Version = def.Message.Version
-                                                                                       })
-                                                                        .ToArray()
-                              };
-                var regMessage = registration.GetPayload<RegisterInternalMessageRouteMessage>();
-
-                CollectionAssert.AreEqual(payload.Identity, regMessage.Identity);
-                CollectionAssert.AreEqual(payload.Version, regMessage.Version);
-                CollectionAssert.AreEqual(payload.SocketIdentity, regMessage.SocketIdentity);
-                Assert.AreEqual(payload.MessageContracts.Length, regMessage.MessageContracts.Length);
-                Assert.AreEqual(payload.MessageContracts.Length,
-                                payload.MessageContracts.Select(mc => new MessageIdentifier(mc.Version, mc.Identity))
-                                       .Intersect(regMessage.MessageContracts
+                Assert.AreEqual(payload.LocalMessageContracts.Length,
+                                payload.LocalMessageContracts.Select(mc => new MessageIdentifier(mc.Version, mc.Identity))
+                                       .Intersect(regMessage.LocalMessageContracts
                                                             .Select(mc => new MessageIdentifier(mc.Version, mc.Identity))).Count());
             }
             finally
@@ -170,7 +135,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger.Object);
             try
@@ -192,7 +157,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -224,7 +189,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
@@ -253,7 +218,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -287,7 +252,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
@@ -327,7 +292,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           messageCompletionQueue.Object,
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -359,7 +324,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -391,7 +356,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new EchoActor());
@@ -428,7 +393,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
@@ -463,7 +428,7 @@ namespace kino.Tests.Actors
             var actorHost = new ActorHost(socketFactory.Object,
                                           actorHandlersMap,
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<MessageIdentifier>>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
             actorHost.AssignActor(new ExceptionActor());
