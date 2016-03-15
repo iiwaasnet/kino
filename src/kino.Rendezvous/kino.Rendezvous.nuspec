@@ -2,20 +2,20 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>kino.Rendezvous</id>
-        <version>0.0.1.14-beta</version>
+        <version>0.0.1.15-beta</version>
         <title>kino.Rendezvous</title>
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
         <licenseUrl>https://github.com/iiwaasnet/kino/blob/master/LICENSE</licenseUrl>
-		<iconUrl>https://cdn.rawgit.com/iiwaasnet/kino/master/img/kino-50x50-v2.png</iconUrl>
+        <iconUrl>https://cdn.rawgit.com/iiwaasnet/kino/master/img/kino-50x50-v2.png</iconUrl>
         <projectUrl>https://github.com/iiwaasnet/kino</projectUrl>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>kino is a framework for building actors networks.</description>
         <releaseNotes>Features:
-		* Creating and hosting Actors
-		* Sync- and asynchronous sending of the messages into actors network
-		* Unicast and broadcast message sending
-		* Ready to use Rendezvous service</releaseNotes>
+        * Creating and hosting Actors
+        * Sync- and asynchronous sending of the messages into actors network
+        * Unicast and broadcast message sending
+        * Ready to use Rendezvous service</releaseNotes>
         <copyright>Copyright 2015</copyright>
         <tags>Actors framework</tags>
         <dependencies>
@@ -23,7 +23,7 @@
             <dependency id="C5" version="2.4.5891.40110" />
             <dependency id="NetMQ" version="4.0.0.0-beta" />
             <dependency id="protobuf-net" version="2.1.0-alpha-1" />
-			<dependency id="AsyncIO" version="0.1.18.0" />
+            <dependency id="AsyncIO" version="0.1.18.0" />
             <dependency id="Rx-Linq" version="2.2.5" />
         </dependencies>
     </metadata>
