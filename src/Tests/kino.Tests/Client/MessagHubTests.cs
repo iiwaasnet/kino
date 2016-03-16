@@ -118,7 +118,7 @@ namespace kino.Tests.Client
 
                 Thread.Sleep(AsyncOp);
 
-                var messageOut = messageHubSocketFactory.GetSendingSocket().GetSentMessages().Last();
+                var messageOut = (Message) messageHubSocketFactory.GetSendingSocket().GetSentMessages().Last();
                 var receivingSocket = messageHubSocketFactory.GetReceivingSocket();
 
                 Assert.IsNotNull(messageOut);

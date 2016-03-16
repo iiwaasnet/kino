@@ -339,7 +339,7 @@ namespace kino.Tests.Actors
                 var socket = actorHostSocketFactory.GetRoutableSocket();
                 socket.DeliverMessage(messageIn);
 
-                var messageOut = socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
+                var messageOut = (Message)socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
 
                 CollectionAssert.AreEqual(messageIn.CallbackPoint, messageOut.CallbackPoint);
                 CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
@@ -374,7 +374,7 @@ namespace kino.Tests.Actors
 
                 Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
 
-                var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+                var messageOut = (Message)actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 CollectionAssert.AreEqual(messageIn.CallbackPoint, messageOut.CallbackPoint);
                 CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
@@ -409,7 +409,7 @@ namespace kino.Tests.Actors
                 var socket = actorHostSocketFactory.GetRoutableSocket();
                 socket.DeliverMessage(messageIn);
 
-                var messageOut = socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+                var messageOut = (Message) socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.AreEqual(errorMessage, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
                 Assert.IsTrue(messageOut.Equals(KinoMessages.Exception));
@@ -451,7 +451,7 @@ namespace kino.Tests.Actors
 
                 Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
 
-                var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+                var messageOut = (Message) actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.AreEqual(error, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
                 Assert.IsTrue(messageOut.Equals(KinoMessages.Exception));

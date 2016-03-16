@@ -9,7 +9,6 @@ namespace kino.Core.Messaging
 {
     internal partial class MultipartMessage
     {
-        private const int MinFramesCount = 12;
         private readonly IList<byte[]> frames;
         private static readonly byte[] EmptyFrame = new byte[0];
 
@@ -81,7 +80,7 @@ namespace kino.Core.Messaging
                        : EmptyFrame;
         }
 
-        private int GetRoutingStartFrameIndex(IMessage message)
+        private int GetRoutingStartFrameIndex(Message message)
         {
             var callbacksFrameCount = message.CallbackPoint.Count() * 2;
             var callbacksStartFrameIndex = GetLastFixedFrameIndex() + 1;
@@ -98,21 +97,21 @@ namespace kino.Core.Messaging
         private byte[] GetTraceOptionsFrame(IMessage message)
             => ((long) message.TraceOptions).GetBytes();
 
-        private byte[] GetSocketIdentity(IMessage message)
-            => ((Message) message).SocketIdentity ?? EmptyFrame;
+        private byte[] GetSocketIdentity(Message message)
+            => message.SocketIdentity ?? EmptyFrame;
 
-        private byte[] GetReceiverIdentityFrame(IMessage message)
+        private byte[] GetReceiverIdentityFrame(Message message)
             => message.ReceiverIdentity ?? EmptyFrame;
 
-        private byte[] GetCallbackReceiverIdentityFrame(IMessage message)
+        private byte[] GetCallbackReceiverIdentityFrame(Message message)
             => message.CallbackReceiverIdentity ?? EmptyFrame;
 
-        private byte[] GetCallbacksStartFrame(IMessage message)
+        private byte[] GetCallbacksStartFrame(Message message)
             => message.CallbackPoint.Any()
                    ? (GetLastFixedFrameIndex() + 1).GetBytes()
                    : EmptyFrame;
 
-        private byte[] GetCallbackEntryCountFrame(IMessage message)
+        private byte[] GetCallbackEntryCountFrame(Message message)
         {
             var count = message.CallbackPoint.Count();
             return (count > 0)

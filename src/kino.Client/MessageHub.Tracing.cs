@@ -5,7 +5,7 @@ namespace kino.Client
 {
     public partial class MessageHub
     {
-        private void CallbackRegistered(IMessage message)
+        private void CallbackRegistered(Message message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {

@@ -329,7 +329,7 @@ namespace kino.Core.Connectivity
             return handled;
         }
 
-        private static MessageIdentifier CreateMessageHandlerIdentifier(IMessage message)
+        private static MessageIdentifier CreateMessageHandlerIdentifier(Message message)
             => message.ReceiverIdentity.IsSet()
                    ? new MessageIdentifier(message.ReceiverIdentity)
                    : new MessageIdentifier(message.Version, message.Identity);
