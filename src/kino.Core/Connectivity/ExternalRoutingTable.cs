@@ -78,16 +78,32 @@ namespace kino.Core.Connectivity
             hashSet.Add(messageIdentifier);
         }
 
-        public PeerConnection FindRoute(MessageIdentifier messageIdentifier)
+        public PeerConnection FindRoute(MessageIdentifier messageIdentifier, byte[] receiverNodeIdentity)
         {
             HashedLinkedList<SocketIdentifier> collection;
             if (messageToSocketMap.Find(ref messageIdentifier, out collection))
             {
-                var socketIdentifier = Get(collection);
-                return socketToConnectionMap[socketIdentifier];
+                var socketIdentifier = GetReceiverSocketIdentifier(collection, receiverNodeIdentity);
+                PeerConnection peerConnection;
+                if (socketToConnectionMap.Find(ref socketIdentifier, out peerConnection))
+                {
+                    return peerConnection;
+                }
             }
 
             return null;
+        }
+
+        private SocketIdentifier GetReceiverSocketIdentifier(HashedLinkedList<SocketIdentifier> collection, byte[] receiverNodeIdentity)
+        {
+            if (receiverNodeIdentity.IsSet())
+            {
+                var socketIdentifier = new SocketIdentifier(receiverNodeIdentity);
+                return collection.Find(ref socketIdentifier)
+                           ? socketIdentifier
+                           : null;
+            }
+            return Get(collection);
         }
 
         public IEnumerable<PeerConnection> FindAllRoutes(MessageIdentifier messageIdentifier)

@@ -350,7 +350,7 @@ namespace kino.Tests.Connectivity
         public void IfLocalRoutingTableHasNoMessageHandlerRegistration_MessageRoutedToOtherNodes()
         {
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
-            externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>()))
+            externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>(), null))
                                 .Returns(new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity())});
 
             var router = new MessageRouter(socketFactory.Object,
@@ -382,7 +382,7 @@ namespace kino.Tests.Connectivity
         public void MessageHopIsAdded_WhenMessageIsSentToOtherNode()
         {
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
-            externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>()))
+            externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>(), null))
                                 .Returns(new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity())});
 
             var router = new MessageRouter(socketFactory.Object,
@@ -564,7 +564,7 @@ namespace kino.Tests.Connectivity
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()), Connected = false};
-            externalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => mi.Equals(messageIdentifier)))).Returns(peerConnection);
+            externalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => mi.Equals(messageIdentifier)), null)).Returns(peerConnection);
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
@@ -801,8 +801,8 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOp);
 
-                Assert.IsTrue(Unsafe.Equals(socketIdentity, externalRoutingTable.FindRoute(messageIdentifiers.First()).Node.SocketIdentity));
-                Assert.IsTrue(Unsafe.Equals(socketIdentity, externalRoutingTable.FindRoute(messageIdentifiers.Second()).Node.SocketIdentity));
+                Assert.IsTrue(Unsafe.Equals(socketIdentity, externalRoutingTable.FindRoute(messageIdentifiers.First(), null).Node.SocketIdentity));
+                Assert.IsTrue(Unsafe.Equals(socketIdentity, externalRoutingTable.FindRoute(messageIdentifiers.Second(), null).Node.SocketIdentity));
             }
             finally
             {
@@ -925,7 +925,7 @@ namespace kino.Tests.Connectivity
                 var socketIdentity = SocketIdentifier.Create();
                 var uri = new Uri("tcp://127.0.0.1:8000");
                 messageIdentifiers.ForEach(mi => externalRoutingTable.AddMessageRoute(mi, socketIdentity, uri));
-                var peerConnection = externalRoutingTable.FindRoute(messageIdentifiers.First());
+                var peerConnection = externalRoutingTable.FindRoute(messageIdentifiers.First(), null);
                 peerConnection.Connected = true;
                 var backEndScoket = messageRouterSocketFactory.GetScaleoutBackendSocket();
                 backEndScoket.Connect(uri);
@@ -976,7 +976,7 @@ namespace kino.Tests.Connectivity
                 var socketIdentity = SocketIdentifier.Create();
                 var uri = new Uri("tcp://127.0.0.1:8000");
                 externalRoutingTable.AddMessageRoute(messageIdentifier, socketIdentity, uri);
-                var peerConnection = externalRoutingTable.FindRoute(messageIdentifier);
+                var peerConnection = externalRoutingTable.FindRoute(messageIdentifier, null);
                 peerConnection.Connected = true;
                 var backEndScoket = messageRouterSocketFactory.GetScaleoutBackendSocket();
                 backEndScoket.Connect(uri);

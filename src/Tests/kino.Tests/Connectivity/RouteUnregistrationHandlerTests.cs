@@ -51,7 +51,7 @@ namespace kino.Tests.Connectivity
 
             registrationHandler.Handle(message, socket.Object);
             socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never());
-            Assert.AreEqual(peerUri, externalRoutingTable.FindRoute(new MessageIdentifier(messageVersion, messageIdentifier)).Node.Uri.ToSocketAddress());
+            Assert.AreEqual(peerUri, externalRoutingTable.FindRoute(new MessageIdentifier(messageVersion, messageIdentifier), null).Node.Uri.ToSocketAddress());
 
             var unregistrationHandler = new RouteUnregistrationHandler(externalRoutingTable, clusterMembership);
 
@@ -85,7 +85,7 @@ namespace kino.Tests.Connectivity
                                          });
 
             registrationHandler.Handle(message, socket.Object);
-            var peerConnection = externalRoutingTable.FindRoute(new MessageIdentifier(messageVersion, messageIdentifier));
+            var peerConnection = externalRoutingTable.FindRoute(new MessageIdentifier(messageVersion, messageIdentifier), null);
             peerConnection.Connected = true;
 
             var unregistrationHandler = new RouteUnregistrationHandler(externalRoutingTable, clusterMembership);

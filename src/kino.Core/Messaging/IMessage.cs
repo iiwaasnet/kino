@@ -7,6 +7,8 @@ namespace kino.Core.Messaging
     {
         T GetPayload<T>() where T : IPayload, new();
 
+        void SetReceiverNode(SocketIdentifier socketIdentifier);
+
         bool Equals(MessageIdentifier messageIdentifier);
 
         DistributionPattern Distribution { get; }

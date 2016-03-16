@@ -63,7 +63,7 @@ namespace kino.Tests.Messaging
             ((Message) message).AddHop();
             Assert.AreEqual(++hopsCount, message.Hops);
 
-            ((Message)message).AddHop();
+            ((Message) message).AddHop();
             Assert.AreEqual(++hopsCount, message.Hops);
         }
 
@@ -146,6 +146,30 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
+        public void ReceiverNode_IsConsistentlyTransferredViaMultipartMessage()
+        {
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            var socketIdentity = SocketIdentifier.Create();
+            message.SetReceiverNode(socketIdentity);
+
+            var multipart = new MultipartMessage(message);
+            message = new Message(multipart);
+
+            CollectionAssert.AreEqual(socketIdentity.Identity, message.PopReceiverNode());
+        }
+
+        [Test]
+        public void PopReceiverNode_RemovesReceiverNode()
+        {
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            var socketIdentity = SocketIdentifier.Create();
+            message.SetReceiverNode(socketIdentity);
+
+            CollectionAssert.AreEqual(socketIdentity.Identity, message.PopReceiverNode());
+            Assert.IsNull(message.PopReceiverNode());
+        }
+
+        [Test]
         public void MessageContent_IsConsistentlyTransferredViaMultipartMessage()
         {
             var messageText = Guid.NewGuid().ToString();
@@ -218,18 +242,19 @@ namespace kino.Tests.Messaging
             Assert.AreEqual(hops, message.Hops);
         }
 
-
         [Test]
         public void MessageWireFormatVersion_IsConsistentlyTransferredViaMultipartMessage()
         {
+            const int wireMessageFormat = 2;
+
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
-            Assert.AreEqual(1, message.WireFormatVersion);
+            Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            Assert.AreEqual(1, message.WireFormatVersion);
-        }        
+            Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
+        }
 
         [Test]
         [TestCase(MessageTraceOptions.None)]

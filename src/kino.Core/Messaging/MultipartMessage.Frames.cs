@@ -2,7 +2,7 @@
 {
     internal partial class MultipartMessage
     {
-        private class ReversedFrames
+        private class ReversedFramesV1
         {
             internal const int Body = 1;
             internal const int WireFormatVersion = 3;
@@ -20,6 +20,14 @@
             internal const int MessageRoutingEntryCount = 15;
             internal const int MessageHops = 16;
         }
+
+        private class ReversedFramesV2
+        {
+            internal const int ReceiverNodeIdentity = 17;
+        }
+
+        internal static int GetLastFixedFrameIndex()
+            => ReversedFramesV2.ReceiverNodeIdentity;
 
         private class ForwardFrames
         {

@@ -14,6 +14,7 @@ FRAME				CONTENT							        DESCRIPTION
                     Callback Version
                     Callback Message ID                     Callbacks
 ..
+n-17                Receiver Node ID                        MessageRouter Socket Identity to which the message should be routed
 n-16                Message Hops                            Number of times a Message was sent away to another node
 n-15				Message Routing Entries Count           Number of message route entries
                                                                 Own Socket Identities and URIs added by every MessageRouter, forwarding the message

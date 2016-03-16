@@ -10,10 +10,11 @@ namespace kino.Core.Messaging
     {
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
         public static readonly string KinoMessageNamespace = "KINO";
-        private static int CurrentWireFormatVersion = 1;
+        private static int CurrentWireFormatVersion = 2;
 
         private object payload;
         private List<SocketEndpoint> routing;
+        private byte[] receiverNodeIdentity;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
         private Message(IPayload payload, DistributionPattern distributionPattern)
@@ -48,6 +49,15 @@ namespace kino.Core.Messaging
             ReadWireFormatVersion(multipartMessage);
 
             ReadV1Frames(multipartMessage);
+            if (WireFormatVersion == 2)
+            {
+                ReadV2Frames(multipartMessage);
+            }
+        }
+
+        private void ReadV2Frames(MultipartMessage multipartMessage)
+        {
+            receiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
         }
 
         private void ReadV1Frames(MultipartMessage multipartMessage)
@@ -86,6 +96,27 @@ namespace kino.Core.Messaging
                 ReceiverIdentity = CallbackReceiverIdentity;
             }
         }
+
+        public void SetReceiverNode(SocketIdentifier socketIdentifier)
+        {
+            if (Distribution == DistributionPattern.Broadcast)
+            {
+                throw new ArgumentException("Receiver node cannot be set for broadcast message!");
+            }
+
+            receiverNodeIdentity = socketIdentifier.Identity;
+        }
+
+        internal byte[] PopReceiverNode()
+        {
+            var tmp = receiverNodeIdentity;
+            receiverNodeIdentity = null;
+
+            return tmp;
+        }
+
+        internal bool ReceiverNodeSet()
+            => receiverNodeIdentity.IsSet();
 
         internal void PushRouterAddress(SocketEndpoint scaleOutAddress)
         {

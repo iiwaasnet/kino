@@ -150,7 +150,8 @@ namespace kino.Core.Connectivity
         {
             var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
 
-            var handled = HandleMessageLocally(messageHandlerIdentifier, message, localSocket);
+            var handled = !message.ReceiverNodeSet()
+                          && HandleMessageLocally(messageHandlerIdentifier, message, localSocket);
             if (!handled || message.Distribution == DistributionPattern.Broadcast)
             {
                 handled = ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend) || handled;
@@ -191,8 +192,9 @@ namespace kino.Core.Connectivity
 
         private bool ForwardMessageAway(MessageIdentifier messageIdentifier, Message message, ISocket scaleOutBackend)
         {
+            var receiverNodeIdentity = message.PopReceiverNode();
             var routes = ((message.Distribution == DistributionPattern.Unicast)
-                              ? new[] {externalRoutingTable.FindRoute(messageIdentifier)}
+                              ? new[] {externalRoutingTable.FindRoute(messageIdentifier, receiverNodeIdentity)}
                               : (MessageCameFromLocalActor(message)
                                      ? externalRoutingTable.FindAllRoutes(messageIdentifier)
                                      : Enumerable.Empty<PeerConnection>()))
