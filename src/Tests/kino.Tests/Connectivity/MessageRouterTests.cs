@@ -379,6 +379,83 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
+        public void IfReceivingNodeIsSet_MessageAlwaysRoutedToOtherNodes()
+        {
+            var externalNode = new PeerConnection { Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()) };
+            var message = Message.Create(new SimpleMessage());
+            message.SetReceiverNode(new SocketIdentifier(externalNode.Node.SocketIdentity));
+            
+            var externalRoutingTable = new Mock<IExternalRoutingTable>();
+            externalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi)), It.Is<byte[]>(id => Unsafe.Equals(id, externalNode.Node.SocketIdentity))))
+                                .Returns(externalNode);
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi))))
+                                .Returns(SocketIdentifier.Create());
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           internalRoutingTable.Object,
+                                           externalRoutingTable.Object,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                var messageOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+
+                Assert.AreEqual(message, messageOut);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void IfReceivingNodeIsSetAndExternalRouteIsNotRegistered_RouterRequestsDiscovery()
+        {
+            var externalNode = new PeerConnection { Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()) };
+            var message = Message.Create(new SimpleMessage());
+            message.SetReceiverNode(new SocketIdentifier(externalNode.Node.SocketIdentity));
+            
+            var externalRoutingTable = new Mock<IExternalRoutingTable>();
+            externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>(), It.IsAny<byte[]>()))
+                                .Returns((PeerConnection)null);
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi))))
+                                .Returns(SocketIdentifier.Create());
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           internalRoutingTable.Object,
+                                           externalRoutingTable.Object,
+                                           routerConfiguration,
+                                           clusterMonitor.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOp);
+
+                clusterMonitor.Verify(m => m.UnregisterSelf(It.IsAny<IEnumerable<MessageIdentifier>>()), Times.Never());
+                clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<MessageIdentifier>(id => message.Equals(id))), Times.Once());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
         public void MessageHopIsAdded_WhenMessageIsSentToOtherNode()
         {
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
