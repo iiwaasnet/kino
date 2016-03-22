@@ -175,7 +175,7 @@ namespace kino.Tests.Connectivity
                                                     clusterMessageListener,
                                                     new RouteDiscovery(clusterMessageSender,
                                                                        routerConfiguration,
-                                                                       clusterMembershipConfiguration.RouteDiscovery,
+                                                                       clusterMembershipConfiguration,
                                                                        logger.Object));
             try
             {

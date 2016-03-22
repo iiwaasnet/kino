@@ -34,7 +34,7 @@ namespace kino
             var externalRoutingTable = new ExternalRoutingTable(logger);
             var routeDiscovery = new RouteDiscovery(clusterMessageSender,
                                                     routerConfiguration,
-                                                    clusterMembershipConfiguration.RouteDiscovery,
+                                                    clusterMembershipConfiguration,
                                                     logger);
             var clusterMonitor = new ClusterMonitorProvider(clusterMembershipConfiguration,
                                                             routerConfiguration,

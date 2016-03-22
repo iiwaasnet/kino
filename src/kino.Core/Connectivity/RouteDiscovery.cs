@@ -21,11 +21,11 @@ namespace kino.Core.Connectivity
 
         public RouteDiscovery(IClusterMessageSender clusterMessageSender,
                               RouterConfiguration routerConfiguration,
-                              RouteDiscoveryConfiguration discoveryConfiguration,
+                              ClusterMembershipConfiguration clusterMembershipConfiguration,
                               ILogger logger)
         {
             this.routerConfiguration = routerConfiguration;
-            this.discoveryConfiguration = discoveryConfiguration ?? DefaultConfiguration();
+            this.discoveryConfiguration = clusterMembershipConfiguration.RouteDiscovery ?? DefaultConfiguration();
             this.clusterMessageSender = clusterMessageSender;
             this.logger = logger;
             requests = new HashedQueue<MessageIdentifier>(this.discoveryConfiguration.MaxRequestsQueueLength);
