@@ -104,6 +104,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Integration\Autofac.kino\Autofac.kino.csproj">
+      <Project>{c50a6ac1-fa0f-42b5-b709-13832fd604d5}</Project>
+      <Name>Autofac.kino</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\kino.Client\kino.Client.csproj">
       <Project>{2c69ba32-dadc-4e4e-8d91-055fb9d35bff}</Project>
       <Name>kino.Client</Name>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Autofac;
+using Autofac.kino;
 using Client.Messages;
 using kino;
 using kino.Client;
@@ -18,21 +19,16 @@ namespace Client
         private static void Main(string[] args)
         {
             var builder = new ContainerBuilder();
-            builder.RegisterModule(new MainModule());
+            builder.RegisterModule<MainModule>();
+            builder.RegisterModule<KinoModule>();
             var container = builder.Build();
 
-            var componentResolver = new Composer(container.ResolveOptional<SocketConfiguration>());
-
-            var messageRouter = componentResolver.BuildMessageRouter(container.Resolve<RouterConfiguration>(),
-                                                                     container.Resolve<ClusterMembershipConfiguration>(),
-                                                                     container.Resolve<IEnumerable<RendezvousEndpoint>>(),
-                                                                     container.Resolve<ILogger>());
+            var messageRouter = container.Resolve<IMessageRouter>();
             messageRouter.Start();
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
-            Thread.Sleep(TimeSpan.FromMilliseconds(30));
+            Thread.Sleep(TimeSpan.FromMilliseconds(300));
 
-            var messageHub = componentResolver.BuildMessageHub(container.Resolve<MessageHubConfiguration>(),
-                                                               container.Resolve<ILogger>());
+            var messageHub = container.Resolve<IMessageHub>();
             messageHub.Start();
 
             Thread.Sleep(TimeSpan.FromSeconds(5));

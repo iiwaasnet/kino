@@ -1,8 +1,5 @@
-﻿using System.Collections.Generic;
-using Autofac;
-using kino.Client;
-using kino.Core.Connectivity;
-using kino.Core.Diagnostics;
+﻿using Autofac;
+using Autofac.kino;
 using TypedConfigProvider;
 
 namespace Client
@@ -11,10 +8,6 @@ namespace Client
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.Register(c => new Logger("default"))
-                   .As<ILogger>()
-                   .SingleInstance();
-
             builder.RegisterType<ConfigProvider>()
                    .As<IConfigProvider>()
                    .SingleInstance();
@@ -31,20 +24,19 @@ namespace Client
                    .As<IConfigurationProvider>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetMessageHubConfiguration())
-                   .As<MessageHubConfiguration>()
+            builder.RegisterLogger(c => new Logger("default"))
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRouterConfiguration())
-                   .As<RouterConfiguration>()
+            builder.RegisterMessageHubConfiguration(c => c.Resolve<IConfigurationProvider>().GetMessageHubConfiguration())
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
-                   .As<IEnumerable<RendezvousEndpoint>>()
+            builder.RegisterRouterConfiguration(c => c.Resolve<IConfigurationProvider>().GetRouterConfiguration())
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())
-                   .As<ClusterMembershipConfiguration>()
+            builder.RegisterRendezvousEndpoints(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
+                   .SingleInstance();
+
+            builder.RegisterClusterMembershipConfiguration(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())
                    .SingleInstance();
         }
     }
