@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using kino.Core.Diagnostics;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;

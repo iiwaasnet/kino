@@ -16,7 +16,7 @@
         * Sync- and asynchronous sending of the messages into actors network
         * Unicast and broadcast message sending
         * Ready to use Rendezvous service</releaseNotes>
-        <copyright>Copyright 2015</copyright>
+        <copyright>Copyright © 2015 Sergey Ivasenko</copyright>
         <tags>Actors framework</tags>
         <dependencies>
             <dependency id="Newtonsoft.Json" version="8.0.2" />
