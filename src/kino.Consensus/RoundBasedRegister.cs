@@ -57,7 +57,7 @@ namespace kino.Consensus
 
         private void WaitBeforeNextLeaseIssued(LeaseConfiguration config)
         {
-            Task.Delay(config.MaxLeaseTimeSpan).ContinueWith(_ => intercomMessageHub.Start());
+            Task.Delay(config.ClockDrift).ContinueWith(_ => intercomMessageHub.Start());
         }
 
         private void OnWriteReceived(IMessage message)
