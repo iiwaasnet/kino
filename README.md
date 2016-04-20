@@ -30,4 +30,9 @@ If you are interested in the project, please, read [wiki](https://github.com/iiw
 * [Rendezvous](https://github.com/iiwaasnet/kino/wiki/Rendezvous)
 * [Configuration](https://github.com/iiwaasnet/kino/wiki/Configuration)
 
+kino-based Projects
+-------------------------------------
+* [LeaseProvider Service](https://github.com/iiwaasnet/kino.LeaseProvider)
+ 
+
 Powered by **[NetMQ](https://github.com/zeromq/netmq)**
