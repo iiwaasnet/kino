@@ -13,7 +13,7 @@ namespace kino.Core.Messaging
 
         internal MultipartMessage(Message message)
         {
-            frames = BuildMessageParts(message).ToList();
+            frames = WriteFrames(message);
         }
 
         internal MultipartMessage(IList<byte[]> frames)
@@ -21,43 +21,43 @@ namespace kino.Core.Messaging
             this.frames = frames;
         }
 
-        private IEnumerable<byte[]> BuildMessageParts(Message message)
-            => WriteFrames(message);
-
-        private IEnumerable<byte[]> WriteFrames(Message message)
+        private IList<byte[]> WriteFrames(Message message)
         {
-            yield return GetSocketIdentity(message);
-            yield return EmptyFrame;
+            var frames = new List<byte[]>(50);
 
+            frames.Add(GetSocketIdentity(message));
+            frames.Add(EmptyFrame);
             foreach (var route in message.GetMessageRouting())
             {
-                yield return route.Uri.ToSocketAddress().GetBytes();
-                yield return route.Identity;
+                frames.Add(route.Uri.ToSocketAddress().GetBytes());
+                frames.Add(route.Identity);
             }
             foreach (var callback in message.CallbackPoint)
             {
-                yield return callback.Version;
-                yield return callback.Identity;
+                frames.Add(callback.Version);
+                frames.Add(callback.Identity);
             }
-            yield return GetReceiverNodeIdentityFrame(message); // 17
-            yield return GetMessageHopsFrame(message); // 16
-            yield return GetRoutingEntryCountFrame(message); // 15
-            yield return GetRoutingStartFrame(message); // 14
-            yield return GetTraceOptionsFrame(message); // 13
-            yield return GetVersionFrame(message); // 12
-            yield return GetMessageIdentityFrame(message); // 11
-            yield return GetReceiverIdentityFrame(message); // 10
-            yield return GetDistributionFrame(message); // 9
-            yield return GetCorrelationIdFrame(message); // 8
-            yield return GetCallbackEntryCountFrame(message); // 7
-            yield return GetCallbacksStartFrame(message); // 6
-            yield return GetCallbackReceiverIdentityFrame(message); // 5
-            yield return GetTTLFrame(message); // 4
-            yield return GetWireFormatVersionFrame(message); // 3
+            frames.Add(GetReceiverNodeIdentityFrame(message)); // 17
+            frames.Add(GetMessageHopsFrame(message)); // 16
+            frames.Add(GetRoutingEntryCountFrame(message)); // 15
+            frames.Add(GetRoutingStartFrame(message)); // 14
+            frames.Add(GetTraceOptionsFrame(message)); // 13
+            frames.Add(GetVersionFrame(message)); // 12
+            frames.Add(GetMessageIdentityFrame(message)); // 11
+            frames.Add(GetReceiverIdentityFrame(message)); // 10
+            frames.Add(GetDistributionFrame(message)); // 9
+            frames.Add(GetCorrelationIdFrame(message)); // 8
+            frames.Add(GetCallbackEntryCountFrame(message)); // 7
+            frames.Add(GetCallbacksStartFrame(message)); // 6
+            frames.Add(GetCallbackReceiverIdentityFrame(message)); // 5
+            frames.Add(GetTTLFrame(message)); // 4
+            frames.Add(GetWireFormatVersionFrame(message)); // 3
+            
+            frames.Add(EmptyFrame);
+            
+            frames.Add(GetMessageBodyFrame(message));
 
-            yield return EmptyFrame;
-
-            yield return GetMessageBodyFrame(message);
+            return frames;
         }
 
         private byte[] GetRoutingEntryCountFrame(Message message)
