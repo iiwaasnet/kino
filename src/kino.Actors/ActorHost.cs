@@ -221,7 +221,7 @@ namespace kino.Actors
                 {
                     var response = CreateTaskResultMessage(task).Messages;
 
-                    MessageProcessed(messageIn, response.Count());
+                    MessageProcessed(messageIn, response);
 
                     foreach (var messageOut in response.Cast<Message>())
                     {
@@ -288,7 +288,7 @@ namespace kino.Actors
                                                       }));
             }
 
-            return task.Result ?? new ActorResult(Enumerable.Empty<IMessage>().ToArray());
+            return task.Result ?? ActorResult.Empty;
         }
 
         private ISocket CreateOneWaySocket()

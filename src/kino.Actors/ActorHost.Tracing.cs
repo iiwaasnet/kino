@@ -1,4 +1,7 @@
-﻿using kino.Core.Framework;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using kino.Core.Framework;
 using kino.Core.Messaging;
 
 namespace kino.Actors
@@ -15,14 +18,14 @@ namespace kino.Actors
             }
         }
 
-        private void MessageProcessed(IMessage message, int responseCount)
+        private void MessageProcessed(IMessage message, IEnumerable<IMessage> responses)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
                 logger.Trace("Message processed sync: " +
                              $"{nameof(message.Version)}:{message.Version.GetString()} " +
                              $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                             $"Number of response messages:{responseCount}");
+                             $"Number of response messages:{responses.Count()}");
             }
         }
 
