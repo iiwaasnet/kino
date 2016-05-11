@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>kino.Consensus</id>
-        <version>0.0.1.15-beta</version>
+        <version>0.0.1.16-beta</version>
         <title>kino.Consensus</title>
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
@@ -19,8 +19,8 @@
         <copyright>Copyright © 2015 Sergey Ivasenko</copyright>
         <tags>Actors framework</tags>
         <dependencies>
-            <dependency id="Newtonsoft.Json" version="8.0.2" />
-            <dependency id="C5" version="2.4.5891.40110" />
+            <dependency id="Newtonsoft.Json" version="8.0.3" />
+            <dependency id="C5" version="2.4.5947.17249" />
             <dependency id="NetMQ" version="4.0.0.0-beta" />
             <dependency id="protobuf-net" version="2.1.0-alpha-1" />
             <dependency id="AsyncIO" version="0.1.18.0" />
