@@ -12,9 +12,9 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         private static readonly MessageIdentifier RequestClusterMessageRoutesMessageIdentifier = MessageIdentifier.Create<RequestClusterMessageRoutesMessage>();
         private static readonly MessageIdentifier RequestNodeMessageRoutesMessageIdentifier = MessageIdentifier.Create<RequestNodeMessageRoutesMessage>();
 
-        public RoutesRegistrationRequestHandler(IClusterMonitor clusterMonitor, IInternalRoutingTable internalRoutingTable)
+        public RoutesRegistrationRequestHandler(IClusterMonitorProvider clusterMonitorProvider, IInternalRoutingTable internalRoutingTable)
         {
-            this.clusterMonitor = clusterMonitor;
+            clusterMonitor = clusterMonitorProvider.GetClusterMonitor();
             this.internalRoutingTable = internalRoutingTable;
         }
 

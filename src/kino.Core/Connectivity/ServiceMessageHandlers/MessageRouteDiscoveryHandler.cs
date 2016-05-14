@@ -10,10 +10,10 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         private readonly IClusterMonitor clusterMonitor;
         private static readonly MessageIdentifier DiscoverMessageRouteMessageIdentifier = MessageIdentifier.Create<DiscoverMessageRouteMessage>();
 
-        public MessageRouteDiscoveryHandler(IInternalRoutingTable internalRoutingTable, IClusterMonitor clusterMonitor)
+        public MessageRouteDiscoveryHandler(IClusterMonitorProvider clusterMonitorProvider, IInternalRoutingTable internalRoutingTable)
         {
             this.internalRoutingTable = internalRoutingTable;
-            this.clusterMonitor = clusterMonitor;
+            clusterMonitor = clusterMonitorProvider.GetClusterMonitor();
         }
 
         public bool Handle(IMessage message, ISocket forwardingSocket)

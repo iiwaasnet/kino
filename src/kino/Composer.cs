@@ -36,34 +36,33 @@ namespace kino
                                                     routerConfiguration,
                                                     clusterMembershipConfiguration,
                                                     logger);
-            var clusterMonitor = new ClusterMonitorProvider(clusterMembershipConfiguration,
-                                                            routerConfiguration,
-                                                            clusterMembership,
-                                                            clusterMessageSender,
-                                                            new ClusterMessageListener(rendezvousCluster,
-                                                                                       socketFactory,
-                                                                                       routerConfiguration,
-                                                                                       clusterMessageSender,
-                                                                                       clusterMembership,
-                                                                                       clusterMembershipConfiguration,
-                                                                                       logger),
-                                                            routeDiscovery)
-                .GetClusterMonitor();
+            var clusterMonitorProvider = new ClusterMonitorProvider(clusterMembershipConfiguration,
+                                                                    routerConfiguration,
+                                                                    clusterMembership,
+                                                                    clusterMessageSender,
+                                                                    new ClusterMessageListener(rendezvousCluster,
+                                                                                               socketFactory,
+                                                                                               routerConfiguration,
+                                                                                               clusterMessageSender,
+                                                                                               clusterMembership,
+                                                                                               clusterMembershipConfiguration,
+                                                                                               logger),
+                                                                    routeDiscovery);
             var internalRoutingTable = new InternalRoutingTable();
             var serviceMessageHandlers = new IServiceMessageHandler[]
                                          {
                                              new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership, logger),
-                                             new InternalMessageRouteRegistrationHandler(clusterMonitor, internalRoutingTable, logger),
-                                             new MessageRouteDiscoveryHandler(internalRoutingTable, clusterMonitor),
+                                             new InternalMessageRouteRegistrationHandler(clusterMonitorProvider, internalRoutingTable, logger),
+                                             new MessageRouteDiscoveryHandler(clusterMonitorProvider, internalRoutingTable),
                                              new MessageRouteUnregistrationHandler(externalRoutingTable),
-                                             new RoutesRegistrationRequestHandler(clusterMonitor, internalRoutingTable),
+                                             new RoutesRegistrationRequestHandler(clusterMonitorProvider, internalRoutingTable),
                                              new RouteUnregistrationHandler(externalRoutingTable, clusterMembership)
                                          };
             return new MessageRouter(socketFactory,
                                      internalRoutingTable,
                                      externalRoutingTable,
                                      routerConfiguration,
-                                     clusterMonitor,
+                                     clusterMonitorProvider,
                                      serviceMessageHandlers,
                                      clusterMembershipConfiguration,
                                      logger);

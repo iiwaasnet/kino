@@ -14,11 +14,11 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         private readonly ILogger logger;
         private static readonly MessageIdentifier RegisterInternalMessageRouteMessageIdentifier = MessageIdentifier.Create<RegisterInternalMessageRouteMessage>();
 
-        public InternalMessageRouteRegistrationHandler(IClusterMonitor clusterMonitor,
+        public InternalMessageRouteRegistrationHandler(IClusterMonitorProvider clusterMonitorProvider,
                                                        IInternalRoutingTable internalRoutingTable,
                                                        ILogger logger)
         {
-            this.clusterMonitor = clusterMonitor;
+            clusterMonitor = clusterMonitorProvider.GetClusterMonitor();
             this.internalRoutingTable = internalRoutingTable;
             this.logger = logger;
         }

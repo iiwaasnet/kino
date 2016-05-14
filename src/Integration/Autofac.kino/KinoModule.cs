@@ -31,10 +31,6 @@ namespace Autofac.kino
                    .As<IExternalRoutingTable>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterMonitor>()
-                   .As<IClusterMonitor>()
-                   .SingleInstance();
-
             builder.RegisterType<ClusterMonitorProvider>()
                    .As<IClusterMonitorProvider>()
                    .SingleInstance();

@@ -33,7 +33,7 @@ namespace kino.Core.Connectivity
                              IInternalRoutingTable internalRoutingTable,
                              IExternalRoutingTable externalRoutingTable,
                              RouterConfiguration routerConfiguration,
-                             IClusterMonitor clusterMonitor,
+                             IClusterMonitorProvider clusterMonitorProvider,
                              IEnumerable<IServiceMessageHandler> serviceMessageHandlers,
                              ClusterMembershipConfiguration membershipConfiguration,
                              ILogger logger)
@@ -43,7 +43,7 @@ namespace kino.Core.Connectivity
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
-            this.clusterMonitor = clusterMonitor;
+            clusterMonitor = clusterMonitorProvider.GetClusterMonitor();
             this.routerConfiguration = SetDefaultsForMissingMembers(routerConfiguration);
             this.serviceMessageHandlers = serviceMessageHandlers;
             this.membershipConfiguration = membershipConfiguration;
