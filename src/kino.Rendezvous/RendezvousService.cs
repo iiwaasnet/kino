@@ -68,6 +68,7 @@ namespace kino.Rendezvous
             cancellationTokenSource.Cancel();
             messageProcessing?.Wait();
             pinging?.Wait();
+            leaseProvider.Dispose();
         }
 
         private void PingClusterMembers(CancellationToken token, Barrier gateway)

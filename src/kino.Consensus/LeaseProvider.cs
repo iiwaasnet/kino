@@ -56,6 +56,7 @@ namespace kino.Consensus
             leaseTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             leaseTimer.Dispose();
             renewGateway.Dispose();
+            register.Dispose();
         }
 
         private void ValidateConfiguration(LeaseConfiguration config)
