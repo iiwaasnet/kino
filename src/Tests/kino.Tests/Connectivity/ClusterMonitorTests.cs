@@ -17,6 +17,7 @@ namespace kino.Tests.Connectivity
     public class ClusterMonitorTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(3);
         private ClusterMonitorSocketFactory clusterMonitorSocketFactory;
         private Mock<ILogger> logger;
         private Mock<ISocketFactory> socketFactory;
@@ -82,7 +83,7 @@ namespace kino.Tests.Connectivity
                                                     routeDiscovery.Object);
             try
             {
-                clusterMonitor.Start();
+                clusterMonitor.Start(StartTimeout);
 
                 var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
                 clusterMonitor.RegisterSelf(new[] {messageIdentifier});
@@ -114,7 +115,7 @@ namespace kino.Tests.Connectivity
                                                     routeDiscovery.Object);
             try
             {
-                clusterMonitor.Start();
+                clusterMonitor.Start(StartTimeout);
 
                 var messageIdentifier = new MessageIdentifier(Message.CurrentVersion);
                 clusterMonitor.UnregisterSelf(new[] {messageIdentifier});
@@ -146,7 +147,7 @@ namespace kino.Tests.Connectivity
                                                     routeDiscovery.Object);
             try
             {
-                clusterMonitor.Start();
+                clusterMonitor.Start(StartTimeout);
 
                 clusterMonitor.RequestClusterRoutes();
 
@@ -179,7 +180,7 @@ namespace kino.Tests.Connectivity
                                                                        logger.Object));
             try
             {
-                clusterMonitor.Start();
+                clusterMonitor.Start(StartTimeout);
 
                 var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, Guid.NewGuid().ToByteArray());
                 clusterMonitor.DiscoverMessageRoute(messageIdentifier);

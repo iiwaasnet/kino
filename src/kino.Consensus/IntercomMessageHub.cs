@@ -38,7 +38,7 @@ namespace kino.Consensus
             subscriptions = new ConcurrentDictionary<Listener, object>();
         }
 
-        public void Start()
+        public bool Start(TimeSpan startTimeout)
         {
             const int participantsCount = 5;
             using (var gateway = new Barrier(participantsCount))
@@ -56,7 +56,7 @@ namespace kino.Consensus
                                                         cancellationTokenSource.Token,
                                                         TaskCreationOptions.LongRunning);
 
-                gateway.SignalAndWait(cancellationTokenSource.Token);
+                return gateway.SignalAndWait(startTimeout, cancellationTokenSource.Token);
             }
         }
 
@@ -64,10 +64,10 @@ namespace kino.Consensus
         {
             cancellationTokenSource.Cancel();
             inMessageQueue.CompleteAdding();
-            multicastReceiving.Wait(TerminationWaitTimeout);
-            unicastReceiving.Wait(TerminationWaitTimeout);
-            sending.Wait(TerminationWaitTimeout);
-            notifyListeners.Wait(TerminationWaitTimeout);
+            multicastReceiving?.Wait(TerminationWaitTimeout);
+            unicastReceiving?.Wait(TerminationWaitTimeout);
+            sending?.Wait(TerminationWaitTimeout);
+            notifyListeners?.Wait(TerminationWaitTimeout);
             inMessageQueue.Dispose();
             cancellationTokenSource.Dispose();
         }

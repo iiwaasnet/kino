@@ -1,4 +1,5 @@
-﻿using WindowsServiceHost;
+﻿using System;
+using WindowsServiceHost;
 using Autofac;
 using kino.Core.Diagnostics;
 using kino.Core.Sockets;
@@ -10,6 +11,7 @@ namespace Rendezvous
     public class ServiceHost : WindowsService
     {
         private IRendezvousService rendezvousService;
+        private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(3);
 
         protected override ServiceConfiguration GetServiceConfiguration()
             => new ServiceConfiguration
@@ -30,7 +32,10 @@ namespace Rendezvous
                                                                       container.Resolve<ApplicationConfiguration>(),
                                                                       container.Resolve<ILogger>());
 
-            rendezvousService.Start();
+            if (!rendezvousService.Start(StartTimeout))
+            {
+                throw new Exception($"Failed starting RendezvousService after {StartTimeout.TotalMilliseconds} ms!");
+            }
         }
 
         private void Stop()

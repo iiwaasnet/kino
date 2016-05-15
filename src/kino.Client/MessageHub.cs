@@ -55,8 +55,8 @@ namespace kino.Client
         public void Stop()
         {
             cancellationTokenSource.Cancel();
-            sending.Wait(TerminationWaitTimeout);
-            receiving.Wait(TerminationWaitTimeout);
+            sending?.Wait(TerminationWaitTimeout);
+            receiving?.Wait(TerminationWaitTimeout);
         }
 
         private void SendClientRequests(CancellationToken token)

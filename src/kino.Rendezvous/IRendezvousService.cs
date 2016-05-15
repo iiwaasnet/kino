@@ -1,8 +1,10 @@
-﻿namespace kino.Rendezvous
+﻿using System;
+
+namespace kino.Rendezvous
 {
     public interface IRendezvousService
     {
-        void Start();
+        bool Start(TimeSpan startTimeout);
         void Stop();
     }
 }

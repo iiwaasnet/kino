@@ -1,8 +1,10 @@
-﻿namespace kino.Core.Connectivity
+﻿using System;
+
+namespace kino.Core.Connectivity
 {
     public interface IMessageRouter
-    {        
-        void Start();
+    {
+        bool Start(TimeSpan startTimeout);
         void Stop();
     }
 }

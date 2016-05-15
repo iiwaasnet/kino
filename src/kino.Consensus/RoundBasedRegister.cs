@@ -21,6 +21,8 @@ namespace kino.Consensus
         private readonly ISynodConfiguration synodConfig;
         private readonly LeaseConfiguration leaseConfig;
         private readonly ILogger logger;
+        //TODO: Move to config file later
+        private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(10);
 
         private readonly IObservable<IMessage> ackReadStream;
         private readonly IObservable<IMessage> nackReadStream;
@@ -56,8 +58,15 @@ namespace kino.Consensus
         }
 
         private void WaitBeforeNextLeaseIssued(LeaseConfiguration config)
+            => Task.Delay(config.ClockDrift).ContinueWith(_ => StartIntercomMessageHub());
+
+        private void StartIntercomMessageHub()
         {
-            Task.Delay(config.ClockDrift).ContinueWith(_ => intercomMessageHub.Start());
+            var started = intercomMessageHub.Start(StartTimeout);
+            if (!started)
+            {
+                logger.Error($"Failed starting IntercomMessageHub! Method call timed out after {StartTimeout.TotalMilliseconds} ms.");
+            }
         }
 
         private void OnWriteReceived(IMessage message)
@@ -236,7 +245,7 @@ namespace kino.Consensus
                                                   Identity = lease.OwnerIdentity,
                                                   ExpiresAt = lease.ExpiresAt.Ticks,
                                                   OwnerPayload = lease.OwnerPayload
-                                      }
+                                              }
                                   });
         }
 

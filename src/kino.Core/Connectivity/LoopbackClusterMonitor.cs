@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace kino.Core.Connectivity
 {
     internal class LoopbackClusterMonitor : IClusterMonitor
     {
-        public void Start()
-        {
-        }
+        public bool Start(TimeSpan startTimeout)
+            => true;
 
         public void Stop()
         {

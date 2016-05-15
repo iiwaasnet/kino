@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,13 +33,13 @@ namespace kino.Core.Connectivity
             this.clusterMembership = clusterMembership;
         }
 
-        public void Start()
-            => StartProcessingClusterMessages();
+        public bool Start(TimeSpan startTimeout)
+            => StartProcessingClusterMessages(startTimeout);
 
         public void Stop()
             => StopProcessingClusterMessages();
 
-        private void StartProcessingClusterMessages()
+        private bool StartProcessingClusterMessages(TimeSpan startTimeout)
         {
             messageProcessingToken = new CancellationTokenSource();
             const int participantCount = 3;
@@ -48,24 +49,29 @@ namespace kino.Core.Connectivity
                                                         TaskCreationOptions.LongRunning);
                 listenningMessages = Task.Factory.StartNew(_ => clusterMessageListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
                                                            TaskCreationOptions.LongRunning);
-                gateway.SignalAndWait(messageProcessingToken.Token);
-                routeDiscovery.Start();
+                var started = gateway.SignalAndWait(startTimeout, messageProcessingToken.Token);
+                if (started)
+                {
+                    routeDiscovery.Start();
+                }
+
+                return started;
             }
         }
 
         private void StopProcessingClusterMessages()
         {
             routeDiscovery.Stop();
-            messageProcessingToken.Cancel();
-            sendingMessages.Wait();
-            listenningMessages.Wait();
-            messageProcessingToken.Dispose();
+            messageProcessingToken?.Cancel();
+            sendingMessages?.Wait();
+            listenningMessages?.Wait();
+            messageProcessingToken?.Dispose();
         }
 
         private void RestartProcessingClusterMessages()
         {
             StopProcessingClusterMessages();
-            StartProcessingClusterMessages();
+            StartProcessingClusterMessages(TimeSpan.FromMilliseconds(-1));
         }
 
         public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers)

@@ -22,6 +22,7 @@ namespace kino.Tests.Connectivity
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(4);
+        private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(3);
         private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
         private ILogger logger;
@@ -1149,7 +1150,7 @@ namespace kino.Tests.Connectivity
 
         private static void StartMessageRouter(IMessageRouter messageRouter)
         {
-            messageRouter.Start();
+            messageRouter.Start(StartTimeout);
             Thread.Sleep(AsyncOpCompletionDelay);
         }
     }

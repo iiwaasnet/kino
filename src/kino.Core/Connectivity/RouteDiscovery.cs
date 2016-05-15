@@ -39,8 +39,8 @@ namespace kino.Core.Connectivity
 
         public void Stop()
         {
-            cancellationTokenSource.Cancel();
-            sendingMessages.Wait();
+            cancellationTokenSource?.Cancel();
+            sendingMessages?.Wait();
         }
 
         private async void ThrottleRouteDiscoveryRequests(CancellationToken token)

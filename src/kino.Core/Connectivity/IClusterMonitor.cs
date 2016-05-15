@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace kino.Core.Connectivity
 {
     public interface IClusterMonitor
     {
-        void Start();
+        bool Start(TimeSpan startTimeout);
 
         void Stop();
 

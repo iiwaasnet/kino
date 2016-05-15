@@ -78,9 +78,9 @@ namespace kino.Actors
         public void Stop()
         {
             cancellationTokenSource.Cancel();
-            registrationsProcessing.Wait(TerminationWaitTimeout);
-            syncProcessing.Wait(TerminationWaitTimeout);
-            asyncProcessing.Wait(TerminationWaitTimeout);
+            registrationsProcessing?.Wait(TerminationWaitTimeout);
+            syncProcessing?.Wait(TerminationWaitTimeout);
+            asyncProcessing?.Wait(TerminationWaitTimeout);
         }
 
         private void RegisterActors(CancellationToken token)

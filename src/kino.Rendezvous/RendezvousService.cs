@@ -47,7 +47,7 @@ namespace kino.Rendezvous
                                                  });
         }
 
-        public void Start()
+        public bool Start(TimeSpan startTimeout)
         {
             const int participantCount = 3;
             using (var gateway = new Barrier(participantCount))
@@ -59,8 +59,15 @@ namespace kino.Rendezvous
                                                 cancellationTokenSource.Token,
                                                 TaskCreationOptions.LongRunning);
 
-                gateway.SignalAndWait(cancellationTokenSource.Token);
+                return gateway.SignalAndWait(startTimeout, cancellationTokenSource.Token);
             }
+        }
+
+        public void Stop()
+        {
+            cancellationTokenSource.Cancel();
+            messageProcessing?.Wait();
+            pinging?.Wait();
         }
 
         private void PingClusterMembers(CancellationToken token, Barrier gateway)
@@ -197,13 +204,6 @@ namespace kino.Rendezvous
             socket.Connect(config.UnicastUri);
 
             return socket;
-        }
-
-        public void Stop()
-        {
-            cancellationTokenSource.Cancel();
-            messageProcessing.Wait();
-            pinging.Wait();
         }
     }
 }

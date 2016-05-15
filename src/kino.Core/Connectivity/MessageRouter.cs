@@ -50,7 +50,7 @@ namespace kino.Core.Connectivity
             cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public void Start()
+        public bool Start(TimeSpan startTimeout)
         {
             localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token),
                                                  TaskCreationOptions.LongRunning);
@@ -58,14 +58,14 @@ namespace kino.Core.Connectivity
                                   ? Task.CompletedTask
                                   : Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token),
                                                           TaskCreationOptions.LongRunning);
-            SocketHelper.SafeConnect(clusterMonitor.Start);
+            return clusterMonitor.Start(startTimeout);
         }
 
         public void Stop()
         {
             cancellationTokenSource.Cancel();
-            localRouting.Wait(TerminationWaitTimeout);
-            scaleOutRouting.Wait(TerminationWaitTimeout);
+            localRouting?.Wait(TerminationWaitTimeout);
+            scaleOutRouting?.Wait(TerminationWaitTimeout);
             cancellationTokenSource.Dispose();
             clusterMonitor.Stop();
         }

@@ -1,4 +1,5 @@
-﻿using kino.Core.Messaging;
+﻿using System;
+using kino.Core.Messaging;
 
 namespace kino.Consensus
 {
@@ -7,7 +8,7 @@ namespace kino.Consensus
 		Listener Subscribe();
 		void Broadcast(IMessage message);
 		void Send(IMessage message, byte[] receiver);
-        void Start();
+        bool Start(TimeSpan startTimeout);
         void Stop();
     }
 }
