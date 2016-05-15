@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>kino</id>
-        <version>0.0.1.16-beta</version>
+        <version>0.0.1.17-beta</version>
         <title>kino</title>
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
@@ -14,8 +14,8 @@
         <releaseNotes>Features:
         * Creating and hosting Actors
         * Sync- and asynchronous sending of the messages into actors network
-        * Unicast and broadcast message sending
-        * Ready to use Rendezvous service</releaseNotes>
+        * Unicast, broadcast and direct message sending
+        * Auto-discovery with Rendezvous service</releaseNotes>
         <copyright>Copyright © 2015 Sergey Ivasenko</copyright>
         <tags>Actors framework</tags>
         <dependencies>
@@ -28,8 +28,12 @@
     </metadata>
     <files>
         <file src="bin\release\kino.Actors.dll" target="lib\net46\kino.Actors.dll" />
+        <file src="bin\release\kino.Actors.pdb" target="lib\net46\kino.Actors.pdb" />
         <file src="bin\release\kino.Client.dll" target="lib\net46\kino.Client.dll" />
+        <file src="bin\release\kino.Client.pdb" target="lib\net46\kino.Client.pdb" />
         <file src="bin\release\kino.Core.dll" target="lib\net46\kino.Core.dll" />
+        <file src="bin\release\kino.Core.pdb" target="lib\net46\kino.Core.pdb" />
         <file src="bin\release\kino.dll" target="lib\net46\kino.dll" />
+        <file src="bin\release\kino.pdb" target="lib\net46\kino.pdb" />
     </files>
 </package>

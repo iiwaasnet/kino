@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
         <id>Autofac.kino</id>
-        <version>0.0.0.2-beta</version>
+        <version>0.0.0.3-beta</version>
         <title>Autofac.kino</title>
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
@@ -21,5 +21,6 @@
     </metadata>
     <files>
         <file src="bin\release\Autofac.kino.dll" target="lib\net46\Autofac.kino.dll" />
+        <file src="bin\release\Autofac.kino.pdb" target="lib\net46\Autofac.kino.pdb" />
     </files>
 </package>
