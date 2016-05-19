@@ -25,7 +25,7 @@ namespace kino.Client
         private readonly MessageHubConfiguration config;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
-        private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception.Version, KinoMessages.Exception.Identity);
+        private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception);
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,

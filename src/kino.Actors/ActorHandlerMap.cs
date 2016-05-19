@@ -66,7 +66,8 @@ namespace kino.Actors
                 .GetInterfaceDefinition()
                 .Select(messageMap =>
                         new KeyValuePair<MessageIdentifier, MessageHandlerDefinition>(new MessageIdentifier(messageMap.Message.Version,
-                                                                                                            messageMap.Message.Identity),
+                                                                                                            messageMap.Message.Identity,
+                                                                                                            messageMap.Message.Partition),
                                                                                       messageMap));
     }
 }

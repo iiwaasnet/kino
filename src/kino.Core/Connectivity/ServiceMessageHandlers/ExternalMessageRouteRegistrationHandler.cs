@@ -35,7 +35,9 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                 {
                     try
                     {
-                        var messageHandlerIdentifier = new MessageIdentifier(registration.Version, registration.Identity);
+                        var messageHandlerIdentifier = new MessageIdentifier(registration.Version,
+                                                                             registration.Identity,
+                                                                             registration.Partition);
                         externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, handlerSocketIdentifier, uri);
                     }
                     catch (Exception err)

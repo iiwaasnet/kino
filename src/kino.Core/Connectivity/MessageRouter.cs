@@ -334,7 +334,7 @@ namespace kino.Core.Connectivity
         private static MessageIdentifier CreateMessageHandlerIdentifier(Message message)
             => message.ReceiverIdentity.IsSet()
                    ? new MessageIdentifier(message.ReceiverIdentity)
-                   : new MessageIdentifier(message.Version, message.Identity);
+                   : new MessageIdentifier(message);
 
         private RouterConfiguration SetDefaultsForMissingMembers(RouterConfiguration routerConfiguration)
         {

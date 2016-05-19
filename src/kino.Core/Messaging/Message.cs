@@ -9,8 +9,7 @@ namespace kino.Core.Messaging
     public class Message : IMessage
     {
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
-        public static readonly string KinoMessageNamespace = "KINO";
-        private static int CurrentWireFormatVersion = 2;
+        public static readonly string KinoMessageNamespace = "KINO";       
 
         private object payload;
         private List<SocketEndpoint> routing;
@@ -19,12 +18,13 @@ namespace kino.Core.Messaging
 
         private Message(IPayload payload, DistributionPattern distributionPattern)
         {
-            WireFormatVersion = CurrentWireFormatVersion;
+            WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
             CallbackPoint = Enumerable.Empty<MessageIdentifier>();
             Body = Serialize(payload);
             Version = payload.Version;
             Identity = payload.Identity;
+            Partition = payload.Partition;
             Distribution = distributionPattern;
             TTL = TimeSpan.Zero;
             Hops = 0;
@@ -42,22 +42,31 @@ namespace kino.Core.Messaging
             => Guid.NewGuid().ToString().GetBytes();
 
         public bool Equals(MessageIdentifier messageIdentifier)
-            => messageIdentifier.Equals(new MessageIdentifier(Version, Identity));
+            => messageIdentifier.Equals(new MessageIdentifier(Version, Identity, Partition));
 
         internal Message(MultipartMessage multipartMessage)
         {
             ReadWireFormatVersion(multipartMessage);
 
             ReadV1Frames(multipartMessage);
-            if (WireFormatVersion == 2)
+            if (WireFormatVersion >= Versioning.WireFormatV2)
             {
                 ReadV2Frames(multipartMessage);
+            }
+            if (WireFormatVersion == Versioning.WireFormatV3)
+            {
+                ReadV3Frames(multipartMessage);
             }
         }
 
         private void ReadV2Frames(MultipartMessage multipartMessage)
         {
             receiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
+        }
+
+        private void ReadV3Frames(MultipartMessage multipartMessage)
+        {
+            Partition = multipartMessage.GetMessagePartition();
         }
 
         private void ReadV1Frames(MultipartMessage multipartMessage)
@@ -68,7 +77,7 @@ namespace kino.Core.Messaging
             Version = multipartMessage.GetMessageVersion();
             TTL = multipartMessage.GetMessageTTL().GetTimeSpan();
             Distribution = multipartMessage.GetMessageDistributionPattern().GetEnumFromInt<DistributionPattern>();
-            CallbackPoint = multipartMessage.GetCallbackPoints();
+            CallbackPoint = multipartMessage.GetCallbackPoints(WireFormatVersion);
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
             CorrelationId = multipartMessage.GetCorrelationId();
@@ -91,7 +100,9 @@ namespace kino.Core.Messaging
             CallbackReceiverIdentity = callbackReceiverIdentity;
             CallbackPoint = callbackMessageIdentifiers;
 
-            if (CallbackPoint.Any(identifier => Unsafe.Equals(Identity, identifier.Identity) && Unsafe.Equals(Version, identifier.Version)))
+            if (CallbackPoint.Any(identifier => Unsafe.Equals(Identity, identifier.Identity)
+                                                && Unsafe.Equals(Version, identifier.Version)
+                                                && Unsafe.Equals(Partition, identifier.Partition)))
             {
                 ReceiverIdentity = CallbackReceiverIdentity;
             }
@@ -161,6 +172,8 @@ namespace kino.Core.Messaging
         public byte[] Body { get; private set; }
 
         public byte[] Identity { get; private set; }
+
+        public byte[] Partition { get; private set; }
 
         public byte[] Version { get; private set; }
 

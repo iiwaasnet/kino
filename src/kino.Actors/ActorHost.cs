@@ -184,7 +184,7 @@ namespace kino.Actors
                         {
                             try
                             {
-                                var actorIdentifier = new MessageIdentifier(message.Version, message.Identity);
+                                var actorIdentifier = new MessageIdentifier(message);
                                 var handler = actorHandlerMap.Get(actorIdentifier);
                                 if (handler != null)
                                 {

@@ -110,7 +110,7 @@ namespace kino.Tests.Actors
 
             actorHandlersMap.Add(actor);
 
-            Assert.Throws<KeyNotFoundException>(() => actorHandlersMap.Get(new MessageIdentifier(Message.CurrentVersion, KinoMessages.Exception.Identity)));
+            Assert.Throws<KeyNotFoundException>(() => actorHandlersMap.Get(new MessageIdentifier(KinoMessages.Exception)));
         }
     }
 }

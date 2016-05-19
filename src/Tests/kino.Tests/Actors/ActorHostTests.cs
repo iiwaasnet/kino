@@ -114,13 +114,13 @@ namespace kino.Tests.Actors
                 Assert.AreEqual(payload.GlobalMessageContracts.Length, regMessage.GlobalMessageContracts.Length);
                 Assert.AreEqual(payload.LocalMessageContracts.Length, regMessage.LocalMessageContracts.Length);
                 Assert.AreEqual(payload.GlobalMessageContracts.Length,
-                                payload.GlobalMessageContracts.Select(mc => new MessageIdentifier(mc.Version, mc.Identity))
+                                payload.GlobalMessageContracts.Select(mc => new MessageIdentifier(mc.Version, mc.Identity, mc.Partition))
                                        .Intersect(regMessage.GlobalMessageContracts
-                                                            .Select(mc => new MessageIdentifier(mc.Version, mc.Identity))).Count());
+                                                            .Select(mc => new MessageIdentifier(mc.Version, mc.Identity, mc.Partition))).Count());
                 Assert.AreEqual(payload.LocalMessageContracts.Length,
-                                payload.LocalMessageContracts.Select(mc => new MessageIdentifier(mc.Version, mc.Identity))
+                                payload.LocalMessageContracts.Select(mc => new MessageIdentifier(mc.Version, mc.Identity, mc.Partition))
                                        .Intersect(regMessage.LocalMessageContracts
-                                                            .Select(mc => new MessageIdentifier(mc.Version, mc.Identity))).Count());
+                                                            .Select(mc => new MessageIdentifier(mc.Version, mc.Identity, mc.Partition))).Count());
             }
             finally
             {

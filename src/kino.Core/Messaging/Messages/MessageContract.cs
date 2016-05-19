@@ -10,5 +10,8 @@ namespace kino.Core.Messaging.Messages
 
         [ProtoMember(2)]
         public byte[] Identity { get; set; }
+
+        [ProtoMember(3)]
+        public byte[] Partition { get; set; }
     }
 }

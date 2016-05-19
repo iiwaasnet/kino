@@ -118,7 +118,7 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty));
 
                 Assert.IsNotNull(identifier);
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
@@ -167,7 +167,7 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty));
 
                 Assert.IsNotNull(identifier);
 
@@ -216,7 +216,7 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty));
 
                 Assert.IsNotNull(identifier);
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
@@ -265,13 +265,13 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty));
 
                 Assert.IsNotNull(identifier);
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
                 CollectionAssert.AreEqual(socketIdentity, identifier.Identity);
 
-                var messageIdentifiers = new[] {new MessageIdentifier(version, messageIdentity)};
+                var messageIdentifiers = new[] {new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty) };
                 clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageIdentifier>>(handlers => messageIdentifiers.SequenceEqual(handlers))), Times.Once);
             }
             finally
@@ -300,7 +300,7 @@ namespace kino.Tests.Connectivity
                 var message = (Message) SendMessageOverMessageHub();
 
                 var callbackSocketIdentity = message.CallbackReceiverIdentity;
-                var callbackIdentifier = new MessageIdentifier(IdentityExtensions.Empty, callbackSocketIdentity);
+                var callbackIdentifier = new MessageIdentifier(IdentityExtensions.Empty, callbackSocketIdentity, IdentityExtensions.Empty);
                 internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(callbackIdentifier))))
                                     .Returns(new SocketIdentifier(callbackSocketIdentity));
 

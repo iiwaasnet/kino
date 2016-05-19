@@ -26,8 +26,15 @@
             internal const int ReceiverNodeIdentity = 17;
         }
 
+        private class ReversedFramesV3
+        {
+            internal const int Partition = 18;
+            internal const int RoutingFrameDivisor = 19;
+            internal const int CallbackFrameDivisor = 20;
+        }
+
         internal static int GetLastFixedFrameIndex()
-            => ReversedFramesV2.ReceiverNodeIdentity;
+            => ReversedFramesV3.CallbackFrameDivisor;
 
         private class ForwardFrames
         {

@@ -182,7 +182,7 @@ namespace kino.Tests.Connectivity
             {
                 clusterMonitor.Start(StartTimeout);
 
-                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, Guid.NewGuid().ToByteArray());
+                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, Guid.NewGuid().ToByteArray(), IdentityExtensions.Empty);
                 clusterMonitor.DiscoverMessageRoute(messageIdentifier);
 
                 var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();

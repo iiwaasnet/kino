@@ -3,7 +3,7 @@ using kino.Core.Connectivity;
 
 namespace kino.Core.Messaging
 {
-    public interface IMessage
+    public interface IMessage : IMessageIdentifier
     {
         T GetPayload<T>() where T : IPayload, new();
 
@@ -13,9 +13,11 @@ namespace kino.Core.Messaging
 
         DistributionPattern Distribution { get; }
 
-        byte[] Version { get; }
+        //byte[] Version { get; }
 
-        byte[] Identity { get; }
+        //byte[] Identity { get; }
+
+        //byte[] Partition { get; }
 
         byte[] CorrelationId { get; }
 

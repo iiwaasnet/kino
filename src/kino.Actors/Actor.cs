@@ -33,7 +33,7 @@ namespace kino.Actors
 
             return new MessageHandlerDefinition
                    {
-                       Message = new MessageDefinition(messageIdentifier.Identity, messageIdentifier.Version),
+                       Message = new MessageDefinition(messageIdentifier.Identity, messageIdentifier.Version, messageIdentifier.Partition),
                        Handler = @delegate,
                        KeepRegistrationLocal = attr.KeepRegistrationLocal
                    };

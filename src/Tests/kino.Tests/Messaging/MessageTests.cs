@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using kino.Core.Connectivity;
+using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Tests.Actors.Setup;
 using NUnit.Framework;
@@ -188,7 +189,9 @@ namespace kino.Tests.Messaging
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
 
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
-            var callbackMessageIdentifiers = new MessageIdentifier(Guid.NewGuid().ToByteArray(), Guid.NewGuid().ToByteArray());
+            var callbackMessageIdentifiers = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                   Guid.NewGuid().ToByteArray(),
+                                                                   IdentityExtensions.Empty);
             message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifiers);
 
             var multipart = new MultipartMessage(message);
@@ -245,7 +248,7 @@ namespace kino.Tests.Messaging
         [Test]
         public void MessageWireFormatVersion_IsConsistentlyTransferredViaMultipartMessage()
         {
-            const int wireMessageFormat = 2;
+            const int wireMessageFormat = 3;
 
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
