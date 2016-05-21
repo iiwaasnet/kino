@@ -1,5 +1,4 @@
-﻿using kino.Core.Framework;
-using ProtoBuf;
+﻿using ProtoBuf;
 
 namespace kino.Core.Messaging.Messages
 {

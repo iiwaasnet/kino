@@ -1,5 +1,4 @@
-﻿using kino.Core.Framework;
-using ProtoBuf;
+﻿using ProtoBuf;
 
 namespace kino.Core.Messaging.Messages
 {
@@ -13,6 +12,7 @@ namespace kino.Core.Messaging.Messages
         public RendezvousNode NewLeader { get; set; }
 
         public override byte[] Version => MessageVersion;
+
         public override byte[] Identity => MessageIdentity;
     }
 }

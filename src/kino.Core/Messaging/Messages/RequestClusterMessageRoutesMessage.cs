@@ -1,5 +1,4 @@
-﻿using kino.Core.Framework;
-using ProtoBuf;
+﻿using ProtoBuf;
 
 namespace kino.Core.Messaging.Messages
 {
@@ -16,6 +15,7 @@ namespace kino.Core.Messaging.Messages
         public byte[] RequestorSocketIdentity { get; set; }
 
         public override byte[] Version => MessageVersion;
+
         public override byte[] Identity => MessageIdentity;
     }
 }
