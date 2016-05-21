@@ -119,14 +119,16 @@ namespace kino.Actors
                                                                    .Select(mh => new MessageContract
                                                                                  {
                                                                                      Identity = mh.Identifier.Identity,
-                                                                                     Version = mh.Identifier.Version
+                                                                                     Version = mh.Identifier.Version,
+                                                                                     Partition = mh.Identifier.Partition
                                                                                  })
                                                                    .ToArray(),
                               GlobalMessageContracts = registrations.Where(mh => !mh.KeepRegistrationLocal)
                                                                     .Select(mh => new MessageContract
                                                                                   {
                                                                                       Identity = mh.Identifier.Identity,
-                                                                                      Version = mh.Identifier.Version
+                                                                                      Version = mh.Identifier.Version,
+                                                                                      Partition = mh.Identifier.Partition
                                                                                   })
                                                                     .ToArray()
                           };

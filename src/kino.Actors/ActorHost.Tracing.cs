@@ -14,7 +14,8 @@ namespace kino.Actors
             {
                 logger.Trace("No Actor found for message: " +
                              $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()}");
+                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
+                             $"{nameof(message.Partition)}:{message.Partition.GetString()}");
             }
         }
 
@@ -25,6 +26,7 @@ namespace kino.Actors
                 logger.Trace("Message processed sync: " +
                              $"{nameof(message.Version)}:{message.Version.GetString()} " +
                              $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
+                             $"{nameof(message.Partition)}:{message.Partition.GetString()} " +
                              $"Number of response messages:{responses.Count()}");
             }
         }
@@ -36,7 +38,8 @@ namespace kino.Actors
                 logger.Trace("Response: " +
                              $"{nameof(sentSync)}:{sentSync} " +
                              $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()}");
+                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
+                             $"{nameof(message.Partition)}:{message.Partition.GetString()}");
             }
         }
     }

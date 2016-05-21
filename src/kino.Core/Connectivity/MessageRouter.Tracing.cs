@@ -13,6 +13,7 @@ namespace kino.Core.Connectivity
                 logger.Trace("Message: " +
                              $"{nameof(message.Version)}:{message.Version.GetString()} " +
                              $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
+                             $"{nameof(message.Partition)}:{message.Partition.GetString()} " +
                              $"{nameof(message.Distribution)}:{message.Distribution} " +
                              $"routed to {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetString()}");
             }
@@ -25,6 +26,7 @@ namespace kino.Core.Connectivity
                 logger.Trace("Message: " +
                              $"{nameof(message.Version)}:{message.Version.GetString()} " +
                              $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
+                             $"{nameof(message.Partition)}:{message.Partition.GetString()} " +
                              $"{nameof(message.Distribution)}:{message.Distribution} " +
                              $"forwarded to other node {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetString()}");
             }
@@ -42,6 +44,7 @@ namespace kino.Core.Connectivity
                 logger.Trace("Message: " +
                              $"{nameof(message.Version)}:{message.Version.GetString()} " +
                              $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
+                             $"{nameof(message.Partition)}:{message.Partition.GetString()} " +
                              $"{nameof(message.Distribution)}:{message.Distribution} " +
                              $"received from other node via hops {hops}");
             }

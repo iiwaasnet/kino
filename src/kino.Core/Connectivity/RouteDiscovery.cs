@@ -61,7 +61,8 @@ namespace kino.Core.Connectivity
                                                              MessageContract = new MessageContract
                                                                                {
                                                                                    Version = messageIdentifier.Version,
-                                                                                   Identity = messageIdentifier.Identity
+                                                                                   Identity = messageIdentifier.Identity,
+                                                                                   Partition = messageIdentifier.Partition
                                                                                }
                                                          });
                             clusterMessageSender.EnqueueMessage(message);

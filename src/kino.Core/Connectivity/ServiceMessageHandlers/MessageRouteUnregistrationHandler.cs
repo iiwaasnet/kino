@@ -23,9 +23,11 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             {
                 var payload = message.GetPayload<UnregisterMessageRouteMessage>();
                 var connectionAction = externalRoutingTable.RemoveMessageRoute(payload
-                                                            .MessageContracts
-                                                            .Select(mh => new MessageIdentifier(mh.Version, mh.Identity, mh.Partition)),
-                                                        new SocketIdentifier(payload.SocketIdentity));
+                                                                                   .MessageContracts
+                                                                                   .Select(mh => new MessageIdentifier(mh.Version,
+                                                                                                                       mh.Identity,
+                                                                                                                       mh.Partition)),
+                                                                               new SocketIdentifier(payload.SocketIdentity));
                 if (connectionAction == PeerConnectionAction.Disconnect)
                 {
                     forwardingSocket.SafeDisconnect(new Uri(payload.Uri));

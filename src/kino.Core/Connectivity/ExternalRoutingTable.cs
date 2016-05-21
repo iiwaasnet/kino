@@ -45,8 +45,7 @@ namespace kino.Core.Connectivity
                 logger.Debug("External route added " +
                              $"Uri:{uri.AbsoluteUri} " +
                              $"Socket:{socketIdentifier.Identity.GetString()} " +
-                             $"Version:{messageIdentifier.Version.GetString()} " +
-                             $"Message:{messageIdentifier.Identity.GetString()}");
+                             $"Message:{messageIdentifier}");
             }
         }
 
