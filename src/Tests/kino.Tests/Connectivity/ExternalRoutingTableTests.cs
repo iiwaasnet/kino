@@ -33,6 +33,29 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
+        public void TwoExternalRegistrationsOfSameMessageForDifferentPartitions_AreDistinct()
+        {
+            var logger = new Mock<ILogger>();
+            var externalRoutingTable = new ExternalRoutingTable(logger.Object);
+            var messageHandlerIdentifier1 = MessageIdentifier.Create<SimpleMessage>();
+            var partition = Guid.NewGuid().ToByteArray();
+            var messageHandlerIdentifier2 = MessageIdentifier.Create<SimpleMessage>(partition);
+            var socketIdentifier1 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
+            var socketIdentifier2 = new SocketIdentifier(Guid.NewGuid().ToByteArray());
+            var uri1 = new Uri("tcp://127.0.0.1:40");
+            var uri2 = new Uri("tcp://127.0.0.2:40");
+            var peer1 = new PeerConnection {Node = new Node(uri1, socketIdentifier1.Identity)};
+            var peer2 = new PeerConnection {Node = new Node(uri2, socketIdentifier2.Identity)};
+
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier1, socketIdentifier1, uri1);
+            externalRoutingTable.AddMessageRoute(messageHandlerIdentifier2, socketIdentifier2, uri2);
+
+            Assert.AreEqual(peer1.Node, externalRoutingTable.FindRoute(messageHandlerIdentifier1, null).Node);
+            Assert.AreEqual(peer2.Node, externalRoutingTable.FindRoute(messageHandlerIdentifier2, null).Node);
+            Assert.AreNotEqual(peer1.Node, externalRoutingTable.FindRoute(messageHandlerIdentifier2, null).Node);
+        }
+
+        [Test]
         public void FindRouteForSpecificSocketIdentity_ReturnsRouteToRequestedSocket()
         {
             var logger = new Mock<ILogger>();

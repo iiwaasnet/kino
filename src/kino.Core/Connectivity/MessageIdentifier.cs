@@ -76,6 +76,12 @@ namespace kino.Core.Connectivity
             }
         }
 
+        public static bool operator ==(MessageIdentifier left, MessageIdentifier right)
+            => left != null && left.Equals(right);
+
+        public static bool operator !=(MessageIdentifier left, MessageIdentifier right)
+            => !(left == right);
+
         public override int GetHashCode()
             => hashCode;
 

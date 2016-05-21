@@ -191,7 +191,7 @@ namespace kino.Tests.Messaging
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
             var callbackMessageIdentifiers = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
                                                                    Guid.NewGuid().ToByteArray(),
-                                                                   IdentityExtensions.Empty);
+                                                                   Guid.NewGuid().ToByteArray());
             message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifiers);
 
             var multipart = new MultipartMessage(message);
@@ -229,6 +229,21 @@ namespace kino.Tests.Messaging
             message = new Message(multipart);
 
             Assert.AreEqual(distribution, message.Distribution);
+        }
+
+        [Test]
+        public void MessagePartition_IsConsistentlyTransferredViaMultipartMessage()
+        {
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage
+                                                                   {
+                                                                       Partition = Guid.NewGuid().ToByteArray()
+                                                                   });
+            var partition = message.Partition;
+
+            var multipart = new MultipartMessage(message);
+            message = new Message(multipart);
+
+            Assert.IsTrue(Unsafe.Equals(partition, message.Partition));
         }
 
         [Test]

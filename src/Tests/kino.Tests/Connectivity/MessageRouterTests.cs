@@ -271,7 +271,7 @@ namespace kino.Tests.Connectivity
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
                 CollectionAssert.AreEqual(socketIdentity, identifier.Identity);
 
-                var messageIdentifiers = new[] {new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty) };
+                var messageIdentifiers = new[] {new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty)};
                 clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageIdentifier>>(handlers => messageIdentifiers.SequenceEqual(handlers))), Times.Once);
             }
             finally
@@ -351,6 +351,41 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
+        public void MessageIsRouted_BasedOnHandlerIdentitiesVersionPartition()
+        {
+            var actorSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
+            var partition = Guid.NewGuid().ToByteArray();
+            var actorIdentifier = MessageIdentifier.Create<SimpleMessage>(partition);
+            var messageHandlerStack = new Mock<IInternalRoutingTable>();
+            messageHandlerStack.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
+                               .Returns(actorSocketIdentity);
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           messageHandlerStack.Object,
+                                           new ExternalRoutingTable(logger),
+                                           routerConfiguration,
+                                           clusterMonitorProvider.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var message = Message.Create(new SimpleMessage {Partition = partition});
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOpCompletionDelay);
+
+                messageHandlerStack.Verify(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Once());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
         public void IfLocalRoutingTableHasNoMessageHandlerRegistration_MessageRoutedToOtherNodes()
         {
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
@@ -385,10 +420,10 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfReceivingNodeIsSet_MessageAlwaysRoutedToOtherNodes()
         {
-            var externalNode = new PeerConnection { Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()) };
+            var externalNode = new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity())};
             var message = Message.Create(new SimpleMessage());
             message.SetReceiverNode(new SocketIdentifier(externalNode.Node.SocketIdentity));
-            
+
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
             externalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi)), It.Is<byte[]>(id => Unsafe.Equals(id, externalNode.Node.SocketIdentity))))
                                 .Returns(externalNode);
@@ -423,13 +458,13 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfReceivingNodeIsSetAndExternalRouteIsNotRegistered_RouterRequestsDiscovery()
         {
-            var externalNode = new PeerConnection { Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()) };
+            var externalNode = new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity())};
             var message = Message.Create(new SimpleMessage());
             message.SetReceiverNode(new SocketIdentifier(externalNode.Node.SocketIdentity));
-            
+
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
             externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>(), It.IsAny<byte[]>()))
-                                .Returns((PeerConnection)null);
+                                .Returns((PeerConnection) null);
             var internalRoutingTable = new Mock<IInternalRoutingTable>();
             internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi))))
                                 .Returns(SocketIdentifier.Create());
@@ -1039,7 +1074,7 @@ namespace kino.Tests.Connectivity
         public void IfUnregisterNodeMessageRouteMessageAndConnectionWasEstablished_SocketIsDisconnected()
         {
             var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object) };
+            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object)};
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
@@ -1085,7 +1120,7 @@ namespace kino.Tests.Connectivity
         public void IfUnregisterNodeMessageRouteMessage_AllRoutesAreRemovedFromExternalRoutingTable()
         {
             var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object) };
+            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object)};
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
