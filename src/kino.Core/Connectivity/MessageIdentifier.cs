@@ -100,7 +100,7 @@ namespace kino.Core.Connectivity
         public override string ToString()
             => string.Format($"Identity[{Identity?.GetString()}]-" +
                              $"Version[{Version?.GetString()}]-" +
-                             $"Filter[{Partition?.GetString()}");
+                             $"Partition[{Partition?.GetString()}");
 
         public byte[] Version { get; }
 
