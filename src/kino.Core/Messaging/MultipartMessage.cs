@@ -202,7 +202,6 @@ namespace kino.Core.Messaging
 
         internal IEnumerable<MessageIdentifier> GetCallbackPoints(int wireFormatVersion)
         {
-            
             var frameDivisor = GetCallbackFramesDivisor();
             var frameCount = GetEntryCount(ReversedFramesV1.CallbackEntryCount) * frameDivisor;
             var callbacks = new List<MessageIdentifier>();
@@ -223,7 +222,7 @@ namespace kino.Core.Messaging
                     }
 
                     callbacks.Add(new MessageIdentifier(version, identity, partition));
-                    
+
                     startIndex -= frameDivisor;
                 }
             }
@@ -248,7 +247,7 @@ namespace kino.Core.Messaging
                     var uri = new Uri(frames[startIndex - frameCounter].GetString());
 
                     routing.Add(new SocketEndpoint(uri, identity));
-                    
+
                     startIndex -= frameDivisor;
                 }
             }
