@@ -10,10 +10,7 @@ namespace kino.Core.Connectivity
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace("Message: " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                             $"{nameof(message.Partition)}:{message.Partition.GetString()} " +
+                logger.Trace($"Message: {new MessageIdentifier(message)} " +
                              $"{nameof(message.Distribution)}:{message.Distribution} " +
                              $"routed to {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetString()}");
             }
@@ -23,10 +20,7 @@ namespace kino.Core.Connectivity
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace("Message: " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                             $"{nameof(message.Partition)}:{message.Partition.GetString()} " +
+                logger.Trace($"Message: {new MessageIdentifier(message)} " +
                              $"{nameof(message.Distribution)}:{message.Distribution} " +
                              $"forwarded to other node {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetString()}");
             }
@@ -41,10 +35,7 @@ namespace kino.Core.Connectivity
                                            .GetMessageRouting()
                                            .Select(h => $"{nameof(h.Uri)}:{h.Uri.ToSocketAddress()}/{h.Identity.GetString()}"));
 
-                logger.Trace("Message: " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                             $"{nameof(message.Partition)}:{message.Partition.GetString()} " +
+                logger.Trace($"Message: {new MessageIdentifier(message)} " +
                              $"{nameof(message.Distribution)}:{message.Distribution} " +
                              $"received from other node via hops {hops}");
             }

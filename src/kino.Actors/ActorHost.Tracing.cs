@@ -1,7 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using kino.Core.Framework;
+using kino.Core.Connectivity;
 using kino.Core.Messaging;
 
 namespace kino.Actors
@@ -12,10 +11,7 @@ namespace kino.Actors
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace("No Actor found for message: " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                             $"{nameof(message.Partition)}:{message.Partition.GetString()}");
+                logger.Trace($"No Actor found for message: {new MessageIdentifier(message)}");
             }
         }
 
@@ -23,10 +19,7 @@ namespace kino.Actors
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace("Message processed sync: " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                             $"{nameof(message.Partition)}:{message.Partition.GetString()} " +
+                logger.Trace($"Message processed sync: {new MessageIdentifier(message)} " +
                              $"Number of response messages:{responses.Count()}");
             }
         }
@@ -35,11 +28,8 @@ namespace kino.Actors
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace("Response: " +
-                             $"{nameof(sentSync)}:{sentSync} " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                             $"{nameof(message.Partition)}:{message.Partition.GetString()}");
+                logger.Trace($"Response: {nameof(sentSync)}:{sentSync} " +
+                             $"{new MessageIdentifier(message)}");
             }
         }
     }
