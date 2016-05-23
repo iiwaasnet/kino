@@ -86,6 +86,7 @@ namespace kino.Tests.Actors
                                                          .BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.IsNotNull(registration);
+                //TODO: Add assertion of Partition
                 var payload = new RegisterInternalMessageRouteMessage
                               {
                                   SocketIdentity = routableSocket.GetIdentity(),

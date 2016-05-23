@@ -9,14 +9,14 @@ namespace kino.Core.Messaging
     public class Message : IMessage
     {
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
-        public static readonly string KinoMessageNamespace = "KINO";       
+        public static readonly string KinoMessageNamespace = "KINO";
 
         private object payload;
         private List<SocketEndpoint> routing;
         private byte[] receiverNodeIdentity;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
-        private Message(IPayload payload, DistributionPattern distributionPattern)
+        private Message(IPayload payload, DistributionPattern distribution)
         {
             WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
@@ -25,7 +25,7 @@ namespace kino.Core.Messaging
             Version = payload.Version;
             Identity = payload.Identity;
             Partition = payload.Partition;
-            Distribution = distributionPattern;
+            Distribution = distribution;
             TTL = TimeSpan.Zero;
             Hops = 0;
             TraceOptions = MessageTraceOptions.None;
@@ -47,42 +47,32 @@ namespace kino.Core.Messaging
         internal Message(MultipartMessage multipartMessage)
         {
             ReadWireFormatVersion(multipartMessage);
-
-            ReadV1Frames(multipartMessage);
-            if (WireFormatVersion >= Versioning.WireFormatV2)
-            {
-                ReadV2Frames(multipartMessage);
-            }
-            if (WireFormatVersion == Versioning.WireFormatV3)
-            {
-                ReadV3Frames(multipartMessage);
-            }
+            ReadV4Frames(multipartMessage);
         }
 
-        private void ReadV2Frames(MultipartMessage multipartMessage)
+        private void ReadV4Frames(MultipartMessage multipartMessage)
         {
-            receiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
-        }
-
-        private void ReadV3Frames(MultipartMessage multipartMessage)
-        {
-            Partition = multipartMessage.GetMessagePartition();
-        }
-
-        private void ReadV1Frames(MultipartMessage multipartMessage)
-        {
-            routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting());
             Body = multipartMessage.GetMessageBody();
+            TTL = multipartMessage.GetMessageTTL();
+            CorrelationId = multipartMessage.GetCorrelationId();
+
+            MessageTraceOptions traceOptions;
+            DistributionPattern distributionPattern;
+            multipartMessage.GetTraceOptionsDistributionPattern(out traceOptions, out distributionPattern);
+            TraceOptions = traceOptions;
+            Distribution = distributionPattern;
+
             Identity = multipartMessage.GetMessageIdentity();
             Version = multipartMessage.GetMessageVersion();
-            TTL = multipartMessage.GetMessageTTL().GetTimeSpan();
-            Distribution = multipartMessage.GetMessageDistributionPattern().GetEnumFromInt<DistributionPattern>();
-            CallbackPoint = multipartMessage.GetCallbackPoints(WireFormatVersion);
+            Partition = multipartMessage.GetMessagePartition();
+            receiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
-            CorrelationId = multipartMessage.GetCorrelationId();
-            TraceOptions = multipartMessage.GetTraceOptions().GetEnumFromLong<MessageTraceOptions>();
-            Hops = multipartMessage.GetMessageHops().GetInt();
+            CallbackPoint = multipartMessage.GetCallbackPoints(WireFormatVersion);
+
+            ushort hops;
+            routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting(out hops));
+            Hops = hops;
         }
 
         private void ReadWireFormatVersion(MultipartMessage multipartMessage)
@@ -179,8 +169,6 @@ namespace kino.Core.Messaging
 
         public TimeSpan TTL { get; set; }
 
-        public DistributionPattern Distribution { get; private set; }
-
         public byte[] CorrelationId { get; private set; }
 
         public byte[] ReceiverIdentity { get; private set; }
@@ -193,7 +181,9 @@ namespace kino.Core.Messaging
 
         public MessageTraceOptions TraceOptions { get; set; }
 
-        public int Hops { get; private set; }
+        public DistributionPattern Distribution { get; set; }
+
+        public ushort Hops { get; private set; }
 
         public int WireFormatVersion { get; private set; }
     }

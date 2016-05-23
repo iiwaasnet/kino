@@ -1,6 +1,6 @@
 ﻿namespace kino.Core.Messaging
 {
-    public enum DistributionPattern
+    public enum DistributionPattern : ushort
     {
         Unicast = 0,
         Broadcast = 1

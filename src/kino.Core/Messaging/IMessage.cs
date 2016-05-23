@@ -27,6 +27,6 @@ namespace kino.Core.Messaging
 
         byte[] Body { get; }
 
-        int Hops { get; }
+        ushort Hops { get; }
     }
 }

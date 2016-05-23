@@ -220,15 +220,17 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void MessageDistribution_IsConsistentlyTransferredViaMultipartMessage()
+        [TestCase(DistributionPattern.Broadcast)]
+        [TestCase(DistributionPattern.Unicast)]
+        public void MessageDistribution_IsConsistentlyTransferredViaMultipartMessage(DistributionPattern distributionPattern)
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
-            var distribution = message.Distribution;
+            message.Distribution = distributionPattern;
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            Assert.AreEqual(distribution, message.Distribution);
+            Assert.AreEqual(distributionPattern, message.Distribution);
         }
 
         [Test]
