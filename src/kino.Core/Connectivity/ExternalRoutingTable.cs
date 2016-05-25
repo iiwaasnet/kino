@@ -208,7 +208,7 @@ namespace kino.Core.Connectivity
         }
 
         private static IEnumerable<string> ConcatenateMessageHandlers(IEnumerable<MessageIdentifier> messageHandlerIdentifiers)
-            => messageHandlerIdentifiers.Select(mh => $"{mh.Identity.GetString()}:{mh.Version.GetString()}");
+            => messageHandlerIdentifiers.Select(mh => mh.ToString());
 
         public IEnumerable<ExternalRoute> GetAllRoutes()
             => socketToMessageMap.Select(CreateExternalRoute);

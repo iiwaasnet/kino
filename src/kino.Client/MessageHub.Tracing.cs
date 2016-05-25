@@ -1,18 +1,18 @@
-﻿using kino.Core.Connectivity;
-using kino.Core.Framework;
+﻿using kino.Core.Framework;
 using kino.Core.Messaging;
 
 namespace kino.Client
 {
     public partial class MessageHub
     {
+        //TODO: Review all tracing messages and improve info they log
         private void CallbackRegistered(Message message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
                 foreach (var messageIdentifier in message.CallbackPoint)
                 {
-                    logger.Trace($"Callback registered for Message {new MessageIdentifier(message)}: " +
+                    logger.Trace($"Callback registered for Message {message}: " +
                                  $"{nameof(message.CallbackPoint)} {messageIdentifier} " +
                                  $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetString()} " +
                                  $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
@@ -24,7 +24,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Message {new MessageIdentifier(message)} sent to Router.");
+                logger.Trace($"Message {message} sent to Router.");
             }
         }
 
@@ -32,8 +32,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Callback set: {new MessageIdentifier(message)} " +
-                             $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
+                logger.Trace($"Callback set: {message}");
             }
         }
 
@@ -41,8 +40,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Callback not found: {new MessageIdentifier(message)} " +
-                             $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
+                logger.Trace($"Callback not found: {message}");
             }
         }
     }

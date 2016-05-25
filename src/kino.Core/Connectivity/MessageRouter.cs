@@ -245,17 +245,13 @@ namespace kino.Core.Connectivity
 
                 if (message.Distribution == DistributionPattern.Broadcast)
                 {
-                    logger.Warn("Broadcast message: " +
-                                $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                                $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                                "didn't find any local handler and was not forwarded.");
+                    logger.Warn($"Broadcast message: {messageIdentifier} " +
+                                $"didn't find any local handler and was not forwarded.");
                 }
             }
             else
             {
-                logger.Warn("Handler not found: " +
-                            $"{nameof(messageIdentifier.Version)}:{messageIdentifier.Version.GetString()} " +
-                            $"{nameof(messageIdentifier.Identity)}:{messageIdentifier.Identity.GetString()}");
+                logger.Warn($"Handler not found: {messageIdentifier}");
             }
 
             return true;

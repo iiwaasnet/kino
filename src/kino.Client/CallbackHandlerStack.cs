@@ -24,7 +24,7 @@ namespace kino.Client
             }
             else
             {
-                throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
+                throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value}]");
             }
         }
 
