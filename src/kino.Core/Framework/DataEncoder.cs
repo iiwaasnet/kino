@@ -5,11 +5,11 @@ namespace kino.Core.Framework
 {
     public static class DataEncoder
     {
-        private static readonly Encoding Encoder;
+        private static readonly int SizeOfChar;
 
         static DataEncoder()
         {
-            Encoder = Encoding.UTF8;
+            SizeOfChar = sizeof(char);
         }
 
         public static ulong Combine(ushort v16, ushort v32)
@@ -52,10 +52,18 @@ namespace kino.Core.Framework
         }
 
         public static string GetString(this byte[] array)
-            => Encoder.GetString(array);
+        {
+            var chars = new char[array.Length / SizeOfChar];
+            Buffer.BlockCopy(array, 0, chars, 0, array.Length);
+            return new string(chars);
+        }
 
         public static byte[] GetBytes(this string str)
-            => Encoder.GetBytes(str);
+        {
+            var bytes = new byte[str.Length * SizeOfChar];
+            Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+            return bytes;
+        }
 
         public static byte[] GetBytes(this int val)
             => BitConverter.GetBytes(val);
@@ -103,12 +111,12 @@ namespace kino.Core.Framework
 
         private static TEnum CastToEnum<TEnum, TRaw>(TRaw raw) where TEnum : struct
         {
-            if (Enum.IsDefined(typeof (TEnum), raw))
+            if (Enum.IsDefined(typeof(TEnum), raw))
             {
-                return (TEnum) Enum.ToObject(typeof (TEnum), raw);
+                return (TEnum) Enum.ToObject(typeof(TEnum), raw);
             }
 
-            throw new InvalidCastException($"Unable to cast {raw} to enum {typeof (TEnum)}");
+            throw new InvalidCastException($"Unable to cast {raw} to enum {typeof(TEnum)}");
         }
     }
 }
