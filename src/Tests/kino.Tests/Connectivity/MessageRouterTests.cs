@@ -425,7 +425,9 @@ namespace kino.Tests.Connectivity
             message.SetReceiverNode(new SocketIdentifier(externalNode.Node.SocketIdentity));
 
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
-            externalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi)), It.Is<byte[]>(id => Unsafe.Equals(id, externalNode.Node.SocketIdentity))))
+            externalRoutingTable.Setup(
+                                       m =>
+                                       m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi)), It.Is<byte[]>(id => Unsafe.Equals(id, externalNode.Node.SocketIdentity))))
                                 .Returns(externalNode);
             var internalRoutingTable = new Mock<IInternalRoutingTable>();
             internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi))))
@@ -822,7 +824,8 @@ namespace kino.Tests.Connectivity
                                                  MessageContract = new MessageContract
                                                                    {
                                                                        Version = messageIdentifier.Version,
-                                                                       Identity = messageIdentifier.Identity
+                                                                       Identity = messageIdentifier.Identity,
+                                                                       Partition = messageIdentifier.Partition
                                                                    }
                                              });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -863,7 +866,8 @@ namespace kino.Tests.Connectivity
                                                  MessageContract = new MessageContract
                                                                    {
                                                                        Version = messageIdentifier.Version,
-                                                                       Identity = messageIdentifier.Identity
+                                                                       Identity = messageIdentifier.Identity,
+                                                                       Partition = messageIdentifier.Partition
                                                                    }
                                              });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -910,7 +914,8 @@ namespace kino.Tests.Connectivity
                                                  MessageContracts = messageIdentifiers.Select(mi => new MessageContract
                                                                                                     {
                                                                                                         Version = mi.Version,
-                                                                                                        Identity = mi.Identity
+                                                                                                        Identity = mi.Identity,
+                                                                                                        Partition = mi.Partition
                                                                                                     }).ToArray()
                                              });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -960,7 +965,8 @@ namespace kino.Tests.Connectivity
                                                  MessageContracts = messageIdentifiers.Select(mi => new MessageContract
                                                                                                     {
                                                                                                         Version = mi.Version,
-                                                                                                        Identity = mi.Identity
+                                                                                                        Identity = mi.Identity,
+                                                                                                        Partition = mi.Partition
                                                                                                     }).ToArray()
                                              });
 
@@ -1053,7 +1059,8 @@ namespace kino.Tests.Connectivity
                                                  MessageContracts = messageIdentifiers.Select(mi => new MessageContract
                                                                                                     {
                                                                                                         Version = mi.Version,
-                                                                                                        Identity = mi.Identity
+                                                                                                        Identity = mi.Identity,
+                                                                                                        Partition = mi.Partition
                                                                                                     }).ToArray()
                                              });
 
