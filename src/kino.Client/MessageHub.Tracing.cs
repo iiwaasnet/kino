@@ -5,7 +5,6 @@ namespace kino.Client
 {
     public partial class MessageHub
     {
-        //TODO: Review all tracing messages and improve info they log
         private void CallbackRegistered(Message message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
@@ -32,7 +31,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Callback set: {message}");
+                logger.Trace($"Callback set. Result message: {message}");
             }
         }
 
@@ -40,7 +39,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Callback not found: {message}");
+                logger.Trace($"Callback not found! Result message: {message}");
             }
         }
     }

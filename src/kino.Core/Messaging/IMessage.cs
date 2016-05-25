@@ -13,12 +13,6 @@ namespace kino.Core.Messaging
 
         DistributionPattern Distribution { get; }
 
-        //byte[] Version { get; }
-
-        //byte[] Identity { get; }
-
-        //byte[] Partition { get; }
-
         byte[] CorrelationId { get; }
 
         TimeSpan TTL { get; set; }
