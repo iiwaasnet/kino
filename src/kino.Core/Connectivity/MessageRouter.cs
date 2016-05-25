@@ -285,7 +285,7 @@ namespace kino.Core.Connectivity
             socket.Bind(routerConfiguration.ScaleOutAddress.Uri);
 
             logger.Info($"MessageRouter started at Uri:{routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()} " +
-                        $"Identity:{routerConfiguration.ScaleOutAddress.Identity.GetString()}");
+                        $"Identity:{routerConfiguration.ScaleOutAddress.Identity.GetAnyString()}");
 
             return socket;
         }

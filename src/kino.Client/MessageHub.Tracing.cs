@@ -13,8 +13,8 @@ namespace kino.Client
                 {
                     logger.Trace($"Callback registered for Message {message}: " +
                                  $"{nameof(message.CallbackPoint)} {messageIdentifier} " +
-                                 $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetString()} " +
-                                 $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
+                                 $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetAnyString()} " +
+                                 $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetAnyString()}");
                 }
             }
         }

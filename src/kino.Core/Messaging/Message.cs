@@ -157,10 +157,10 @@ namespace kino.Core.Messaging
             => new T().Deserialize<T>(content);
 
         public override string ToString()
-            => string.Format($"{nameof(Identity)}[{Identity?.GetString()}]-" +
-                             $"{nameof(Version)}[{Version?.GetString()}]-" +
-                             $"{nameof(Partition)}[{Partition?.GetString()}] " +
-                             $"{nameof(CorrelationId)}[{CorrelationId?.GetString()}] " +
+            => string.Format($"{nameof(Identity)}[{Identity?.GetAnyString()}]-" +
+                             $"{nameof(Version)}[{Version?.GetAnyString()}]-" +
+                             $"{nameof(Partition)}[{Partition?.GetAnyString()}] " +
+                             $"{nameof(CorrelationId)}[{CorrelationId?.GetAnyString()}] " +
                              $"{Distribution}");
 
         public byte[] Body { get; private set; }

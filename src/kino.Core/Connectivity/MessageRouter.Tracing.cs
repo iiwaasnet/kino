@@ -11,7 +11,7 @@ namespace kino.Core.Connectivity
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
                 logger.Trace($"Message: {message} " +
-                             $"routed to {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetString()}");
+                             $"routed to {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetAnyString()}");
             }
         }
 
@@ -20,7 +20,7 @@ namespace kino.Core.Connectivity
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
                 logger.Trace($"Message: {message} " +
-                             $"forwarded to other node {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetString()}");
+                             $"forwarded to other node {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetAnyString()}");
             }
         }
 
@@ -31,7 +31,7 @@ namespace kino.Core.Connectivity
                 var hops = string.Join("|",
                                        message
                                            .GetMessageRouting()
-                                           .Select(h => $"{nameof(h.Uri)}:{h.Uri.ToSocketAddress()}/{h.Identity.GetString()}"));
+                                           .Select(h => $"{nameof(h.Uri)}:{h.Uri.ToSocketAddress()}/{h.Identity.GetAnyString()}"));
 
                 logger.Trace($"Message: {message} received from other node via hops {hops}");
             }

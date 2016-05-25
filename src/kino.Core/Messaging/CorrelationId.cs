@@ -55,7 +55,7 @@ namespace kino.Core.Messaging
             => Unsafe.Equals(Value, other.Value);
 
         public override string ToString()
-            => Value?.GetString() ?? string.Empty;
+            => Value?.GetAnyString() ?? string.Empty;
 
         public byte[] Value { get; }
     }

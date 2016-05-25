@@ -104,9 +104,9 @@ namespace kino.Core.Connectivity
                && Unsafe.Equals(Partition, other.Partition);
 
         public override string ToString()
-            => string.Format($"{nameof(Identity)}[{Identity?.GetString()}]-" +
-                             $"{nameof(Version)}[{Version?.GetString()}]-" +
-                             $"{nameof(Partition)}[{Partition?.GetString()}]");
+            => string.Format($"{nameof(Identity)}[{Identity?.GetAnyString()}]-" +
+                             $"{nameof(Version)}[{Version?.GetAnyString()}]-" +
+                             $"{nameof(Partition)}[{Partition?.GetAnyString()}]");
 
         public byte[] Version { get; }
 

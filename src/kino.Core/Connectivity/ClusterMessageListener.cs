@@ -383,7 +383,7 @@ namespace kino.Core.Connectivity
 
             logger.Debug("Route not found. Requesting registrations for " +
                          $"Uri:{payload.Uri} " +
-                         $"Socket:{payload.SocketIdentity.GetString()}");
+                         $"Socket:{payload.SocketIdentity.GetAnyString()}");
         }
     }
 }

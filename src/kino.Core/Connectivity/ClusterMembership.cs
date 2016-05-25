@@ -31,7 +31,7 @@ namespace kino.Core.Connectivity
             {
                 logger.Debug($"New node added " +
                              $"Uri:{node.Uri.AbsoluteUri} " +
-                             $"Socket:{node.Identity.GetString()}");
+                             $"Socket:{node.Identity.GetAnyString()}");
             }
         }
 
@@ -72,7 +72,7 @@ namespace kino.Core.Connectivity
             clusterMembers.TryRemove(node, out meta);
 
             logger.Debug($"Dead node removed Uri:{node.Uri.AbsoluteUri} " +
-                         $"Socket:{node.Identity.GetString()}");
+                         $"Socket:{node.Identity.GetAnyString()}");
         }
     }
 }

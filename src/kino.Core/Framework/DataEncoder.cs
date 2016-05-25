@@ -6,10 +6,12 @@ namespace kino.Core.Framework
     public static class DataEncoder
     {
         private static readonly int SizeOfChar;
+        private static readonly Encoding Encoder;
 
         static DataEncoder()
         {
             SizeOfChar = sizeof(char);
+            Encoder = Encoding.UTF8;
         }
 
         public static ulong Combine(ushort v16, ushort v32)
@@ -51,19 +53,18 @@ namespace kino.Core.Framework
             v64 = (ushort) ((data >> 48) & 0xFFFF);
         }
 
-        public static string GetString(this byte[] array)
+        public static string GetAnyString(this byte[] array)
         {
             var chars = new char[array.Length / SizeOfChar];
-            Buffer.BlockCopy(array, 0, chars, 0, array.Length);
+            Buffer.BlockCopy(array, 0, chars, 0, chars.Length);
             return new string(chars);
         }
 
+        public static string GetString(this byte[] array)
+            => Encoder.GetString(array);
+
         public static byte[] GetBytes(this string str)
-        {
-            var bytes = new byte[str.Length * SizeOfChar];
-            Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
-            return bytes;
-        }
+            => Encoder.GetBytes(str);
 
         public static byte[] GetBytes(this int val)
             => BitConverter.GetBytes(val);

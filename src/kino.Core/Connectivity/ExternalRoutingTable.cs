@@ -44,7 +44,7 @@ namespace kino.Core.Connectivity
 
                 logger.Debug("External route added " +
                              $"Uri:{uri.AbsoluteUri} " +
-                             $"Socket:{socketIdentifier.Identity.GetString()} " +
+                             $"Socket:{socketIdentifier.Identity.GetAnyString()} " +
                              $"Message:{messageIdentifier}");
             }
         }
@@ -142,7 +142,7 @@ namespace kino.Core.Connectivity
                 socketToMessageMap.Remove(socketIdentifier);
 
                 logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
-                             $"Socket:{socketIdentifier.Identity.GetString()}");
+                             $"Socket:{socketIdentifier.Identity.GetAnyString()}");
             }
 
             // NOTE: Don't change order so that ref count is decreased
@@ -179,12 +179,12 @@ namespace kino.Core.Connectivity
                                            : connectionAction;
 
                     logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
-                                 $"Socket:{socketIdentifier.Identity.GetString()}");
+                                 $"Socket:{socketIdentifier.Identity.GetAnyString()}");
                 }
             }
 
             logger.Debug($"External message route removed " +
-                         $"Socket:{socketIdentifier.Identity.GetString()} " +
+                         $"Socket:{socketIdentifier.Identity.GetAnyString()} " +
                          $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageIdentifiers))}]");
 
             return connectionAction;
