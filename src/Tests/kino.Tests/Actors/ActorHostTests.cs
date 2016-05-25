@@ -63,6 +63,7 @@ namespace kino.Tests.Actors
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
             Assert.IsTrue(registrations.Any(id => id.Identifier.Identity == messageIdentifier.Identity));
             Assert.IsTrue(registrations.Any(id => id.Identifier.Version == messageIdentifier.Version));
+            Assert.IsTrue(registrations.Any(id => id.Identifier.Partition == messageIdentifier.Partition));
         }
 
         [Test]
@@ -86,7 +87,6 @@ namespace kino.Tests.Actors
                                                          .BlockingLast(AsyncOpCompletionDelay);
 
                 Assert.IsNotNull(registration);
-                //TODO: Add assertion of Partition
                 var payload = new RegisterInternalMessageRouteMessage
                               {
                                   SocketIdentity = routableSocket.GetIdentity(),
@@ -95,7 +95,8 @@ namespace kino.Tests.Actors
                                                                                          .Select(mh => new MessageContract
                                                                                                        {
                                                                                                            Identity = mh.Message.Identity,
-                                                                                                           Version = mh.Message.Version
+                                                                                                           Version = mh.Message.Version,
+                                                                                                           Partition = mh.Message.Partition
                                                                                                        })
                                                                                          .ToArray(),
                                   GlobalMessageContracts = actorWithGlobalAndLocalHandlers.GetInterfaceDefinition()
@@ -103,7 +104,8 @@ namespace kino.Tests.Actors
                                                                                           .Select(mh => new MessageContract
                                                                                                         {
                                                                                                             Identity = mh.Message.Identity,
-                                                                                                            Version = mh.Message.Version
+                                                                                                            Version = mh.Message.Version,
+                                                                                                            Partition = mh.Message.Partition
                                                                                                         })
                                                                                           .ToArray()
                               };
@@ -111,6 +113,7 @@ namespace kino.Tests.Actors
 
                 CollectionAssert.AreEqual(payload.Identity, regMessage.Identity);
                 CollectionAssert.AreEqual(payload.Version, regMessage.Version);
+                CollectionAssert.AreEqual(payload.Partition, regMessage.Partition);
                 CollectionAssert.AreEqual(payload.SocketIdentity, regMessage.SocketIdentity);
                 Assert.AreEqual(payload.GlobalMessageContracts.Length, regMessage.GlobalMessageContracts.Length);
                 Assert.AreEqual(payload.LocalMessageContracts.Length, regMessage.LocalMessageContracts.Length);
@@ -173,6 +176,8 @@ namespace kino.Tests.Actors
                 var messageOut = socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
 
                 CollectionAssert.AreEqual(messageIn.Identity, messageOut.Identity);
+                CollectionAssert.AreEqual(messageIn.Partition, messageOut.Partition);
+                CollectionAssert.AreEqual(messageIn.Version, messageOut.Version);
                 CollectionAssert.AreEqual(messageIn.Body, messageOut.Body);
                 CollectionAssert.AreEqual(messageIn.CorrelationId, messageOut.CorrelationId);
             }
@@ -340,7 +345,7 @@ namespace kino.Tests.Actors
                 var socket = actorHostSocketFactory.GetRoutableSocket();
                 socket.DeliverMessage(messageIn);
 
-                var messageOut = (Message)socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
+                var messageOut = (Message) socket.GetSentMessages().BlockingFirst(AsyncOpCompletionDelay);
 
                 CollectionAssert.AreEqual(messageIn.CallbackPoint, messageOut.CallbackPoint);
                 CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
@@ -375,7 +380,7 @@ namespace kino.Tests.Actors
 
                 Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
 
-                var messageOut = (Message)actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+                var messageOut = (Message) actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
                 CollectionAssert.AreEqual(messageIn.CallbackPoint, messageOut.CallbackPoint);
                 CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
