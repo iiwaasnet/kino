@@ -129,7 +129,8 @@ namespace kino.Client
                                                                               {
                                                                                   Version = message.Version,
                                                                                   Identity = message.Identity,
-                                                                                  Correlation = message.CorrelationId
+                                                                                  Correlation = message.CorrelationId,
+                                                                                  Partition = message.Partition
                                                                               });
                                 if (callback != null)
                                 {
