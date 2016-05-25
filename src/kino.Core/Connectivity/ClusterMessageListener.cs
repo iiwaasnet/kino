@@ -161,7 +161,7 @@ namespace kino.Core.Connectivity
             if (shouldHandle)
             {
                 var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
-                logger.Info($"New Rendezvous cluster configuration. " +
+                logger.Info("New Rendezvous cluster configuration. " +
                             $"Disconnecting {rendezvousServer.BroadcastUri.AbsoluteUri}");
 
                 var payload = message.GetPayload<RendezvousConfigurationChangedMessage>();

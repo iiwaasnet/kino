@@ -1,5 +1,4 @@
-﻿using System;
-using kino.Core.Messaging;
+﻿using kino.Core.Messaging;
 
 namespace kino.Client
 {

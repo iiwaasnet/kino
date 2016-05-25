@@ -4,7 +4,6 @@ using kino.Core.Messaging;
 
 namespace kino.Core.Connectivity
 {
-    // TODO: Review constructor overloads, i.e. remove unused
     public class MessageIdentifier : IEquatable<MessageIdentifier>, IMessageIdentifier
     {
         private readonly int hashCode;
@@ -58,7 +57,7 @@ namespace kino.Core.Connectivity
             {
                 return true;
             }
-            if (obj.GetType() != this.GetType())
+            if (obj.GetType() != GetType())
             {
                 return false;
             }

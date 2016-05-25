@@ -5,12 +5,10 @@ namespace kino.Core.Framework
 {
     public static class DataEncoder
     {
-        private static readonly int SizeOfChar;
         private static readonly Encoding Encoder;
 
         static DataEncoder()
         {
-            SizeOfChar = sizeof (char);
             Encoder = Encoding.UTF8;
         }
 

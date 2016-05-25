@@ -178,12 +178,12 @@ namespace kino.Core.Connectivity
                                            ? PeerConnectionAction.Disconnect
                                            : connectionAction;
 
-                    logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
+                    logger.Debug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} " +
                                  $"Socket:{socketIdentifier.Identity.GetAnyString()}");
                 }
             }
 
-            logger.Debug($"External message route removed " +
+            logger.Debug("External message route removed " +
                          $"Socket:{socketIdentifier.Identity.GetAnyString()} " +
                          $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageIdentifiers))}]");
 

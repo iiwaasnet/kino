@@ -245,8 +245,7 @@ namespace kino.Core.Connectivity
 
                 if (message.Distribution == DistributionPattern.Broadcast)
                 {
-                    logger.Warn($"Broadcast message: {messageIdentifier} " +
-                                $"didn't find any local handler and was not forwarded.");
+                    logger.Warn($"Broadcast message: {messageIdentifier} didn't find any local handler and was not forwarded.");
                 }
             }
             else

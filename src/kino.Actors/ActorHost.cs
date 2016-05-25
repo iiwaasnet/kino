@@ -286,7 +286,7 @@ namespace kino.Actors
                 return new ActorResult(Message.Create(new ExceptionMessage
                                                       {
                                                           Exception = err,
-                                                          StackTrace = err.StackTrace
+                                                          StackTrace = err?.StackTrace
                                                       }));
             }
 

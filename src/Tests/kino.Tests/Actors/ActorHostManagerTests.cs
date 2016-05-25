@@ -20,7 +20,7 @@ namespace kino.Tests.Actors
         private ILogger logger;
         private Mock<ISocketFactory> socketFactory;
         private ActorHostSocketFactory actorHostSocketFactory;
-        private const int numberOfDealerSocketsPerActorHost = 3;
+        private const int NumberOfDealerSocketsPerActorHost = 3;
 
         [SetUp]
         public void Setup()
@@ -49,7 +49,7 @@ namespace kino.Tests.Actors
 
             Thread.Sleep(AsyncOp);
 
-            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(numberOfDealerSocketsPerActorHost * numberOfActors));
+            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost * numberOfActors));
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace kino.Tests.Actors
 
             Thread.Sleep(AsyncOp);
 
-            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(numberOfDealerSocketsPerActorHost * 2));
+            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost * 2));
         }
 
         [Test]
@@ -75,7 +75,7 @@ namespace kino.Tests.Actors
 
             Thread.Sleep(AsyncOp);
 
-            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(numberOfDealerSocketsPerActorHost));
+            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost));
         }
     }
 }

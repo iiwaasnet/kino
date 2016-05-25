@@ -13,7 +13,7 @@ namespace kino.Actors
 
         private IEnumerable<MessageHandlerDefinition> GetActorRegistrationsByAttributes()
         {
-            var methods = this.GetType()
+            var methods = GetType()
                               .FindMembers(MemberTypes.Method,
                                            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                                            InterfaceMethodFilter,

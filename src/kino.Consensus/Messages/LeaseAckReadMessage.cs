@@ -1,5 +1,4 @@
-﻿using kino.Core.Framework;
-using kino.Core.Messaging;
+﻿using kino.Core.Messaging;
 using ProtoBuf;
 
 namespace kino.Consensus.Messages
@@ -23,6 +22,7 @@ namespace kino.Consensus.Messages
         public string SenderUri { get; set; }
 
         public override byte[] Version => MessageVersion;
+
         public override byte[] Identity => MessageIdentity;
     }
 }

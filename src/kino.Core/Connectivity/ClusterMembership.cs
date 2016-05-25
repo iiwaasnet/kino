@@ -29,7 +29,7 @@ namespace kino.Core.Connectivity
         {
             if (clusterMembers.TryAdd(node, new ClusterMemberMeta {LastKnownPong = DateTime.UtcNow}))
             {
-                logger.Debug($"New node added " +
+                logger.Debug("New node added " +
                              $"Uri:{node.Uri.AbsoluteUri} " +
                              $"Socket:{node.Identity.GetAnyString()}");
             }

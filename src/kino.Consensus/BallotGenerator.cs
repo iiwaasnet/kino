@@ -8,13 +8,12 @@ namespace kino.Consensus
         private readonly BallotTimestamp lastBallotTimestamp;
         private readonly LeaseConfiguration config;
         private static readonly byte[] Empty = new byte[0];
-        private readonly Ballot NullBallot;
+        private static readonly Ballot NullBallot = new Ballot(DateTime.MinValue, 0, Empty);
 
         public BallotGenerator(LeaseConfiguration config)
         {
             this.config = config;
             lastBallotTimestamp = new BallotTimestamp {MessageNumber = 0, Timestamp = DateTime.UtcNow};
-            NullBallot = new Ballot(DateTime.MinValue, 0, Empty);
         }
 
         public Ballot New(byte[] identity)

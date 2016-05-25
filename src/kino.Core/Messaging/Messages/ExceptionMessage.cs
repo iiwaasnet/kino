@@ -6,12 +6,12 @@ namespace kino.Core.Messaging.Messages
     [ProtoContract]
     public class ExceptionMessage : Payload
     {
-        private static readonly IMessageSerializer messageSerializer = new NewtonJsonMessageSerializer();
+        private static readonly IMessageSerializer MessageSerializer = new NewtonJsonMessageSerializer();
 
         private static readonly byte[] MessageIdentity = BuildFullIdentity("EXCEPTION");
 
         public ExceptionMessage()
-            : base(messageSerializer)
+            : base(MessageSerializer)
         {
         }
 
