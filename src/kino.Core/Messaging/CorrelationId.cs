@@ -54,6 +54,9 @@ namespace kino.Core.Messaging
         private bool StructuralCompare(CorrelationId other)
             => Unsafe.Equals(Value, other.Value);
 
+        public override string ToString()
+            => Value?.GetString() ?? string.Empty;
+
         public byte[] Value { get; }
     }
 }

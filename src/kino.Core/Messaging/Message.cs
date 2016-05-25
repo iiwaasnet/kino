@@ -145,9 +145,6 @@ namespace kino.Core.Messaging
         internal void SetSocketIdentity(byte[] socketIdentity)
             => SocketIdentity = socketIdentity;
 
-        internal string GetIdentityString()
-            => Identity.GetString();
-
         public T GetPayload<T>()
             where T : IPayload, new()
             => (T) (payload ?? (payload = Deserialize<T>(Body)));
@@ -158,6 +155,13 @@ namespace kino.Core.Messaging
         private T Deserialize<T>(byte[] content)
             where T : IPayload, new()
             => new T().Deserialize<T>(content);
+
+        public override string ToString()
+            => string.Format($"{nameof(Identity)}[{Identity?.GetString()}]-" +
+                             $"{nameof(Version)}[{Version?.GetString()}]-" +
+                             $"{nameof(Partition)}[{Partition?.GetString()}] " +
+                             $"{nameof(CorrelationId)}[{CorrelationId?.GetString()}] " +
+                             $"{Distribution}");
 
         public byte[] Body { get; private set; }
 
