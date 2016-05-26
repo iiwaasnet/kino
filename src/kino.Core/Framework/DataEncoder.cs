@@ -52,16 +52,7 @@ namespace kino.Core.Framework
         }
 
         public static string GetAnyString(this byte[] array)
-        {
-            try
-            {
-                return array.GetString();
-            }
-            catch
-            {
-                return Convert.ToBase64String(array);
-            }
-        }
+            => array.GetString();
 
         public static string GetString(this byte[] array)
             => Encoder.GetString(array);
@@ -115,12 +106,12 @@ namespace kino.Core.Framework
 
         private static TEnum CastToEnum<TEnum, TRaw>(TRaw raw) where TEnum : struct
         {
-            if (Enum.IsDefined(typeof (TEnum), raw))
+            if (Enum.IsDefined(typeof(TEnum), raw))
             {
-                return (TEnum) Enum.ToObject(typeof (TEnum), raw);
+                return (TEnum) Enum.ToObject(typeof(TEnum), raw);
             }
 
-            throw new InvalidCastException($"Unable to cast {raw} to enum {typeof (TEnum)}");
+            throw new InvalidCastException($"Unable to cast {raw} to enum {typeof(TEnum)}");
         }
     }
 }

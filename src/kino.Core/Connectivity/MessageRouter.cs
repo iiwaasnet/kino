@@ -128,9 +128,9 @@ namespace kino.Core.Connectivity
                             }
                             catch (NetMQException err)
                             {
-                                logger.Error(string.Format($"{nameof(err.ErrorCode)}:{err.ErrorCode} " +
-                                                           $"{nameof(err.Message)}:{err.Message} " +
-                                                           $"Exception:{err}"));
+                                logger.Error($"{nameof(err.ErrorCode)}:{err.ErrorCode} " +
+                                             $"{nameof(err.Message)}:{err.Message} " +
+                                             $"Exception:{err}");
                             }
                             catch (Exception err)
                             {
