@@ -44,9 +44,8 @@ namespace kino.Core.Connectivity
 
                 logger.Debug("External route added " +
                              $"Uri:{uri.AbsoluteUri} " +
-                             $"Socket:{socketIdentifier.Identity.GetString()} " +
-                             $"Version:{messageIdentifier.Version.GetString()} " +
-                             $"Message:{messageIdentifier.Identity.GetString()}");
+                             $"Socket:{socketIdentifier.Identity.GetAnyString()} " +
+                             $"Message:{messageIdentifier}");
             }
         }
 
@@ -143,7 +142,7 @@ namespace kino.Core.Connectivity
                 socketToMessageMap.Remove(socketIdentifier);
 
                 logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
-                             $"Socket:{socketIdentifier.Identity.GetString()}");
+                             $"Socket:{socketIdentifier.Identity.GetAnyString()}");
             }
 
             // NOTE: Don't change order so that ref count is decreased
@@ -179,13 +178,13 @@ namespace kino.Core.Connectivity
                                            ? PeerConnectionAction.Disconnect
                                            : connectionAction;
 
-                    logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
-                                 $"Socket:{socketIdentifier.Identity.GetString()}");
+                    logger.Debug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} " +
+                                 $"Socket:{socketIdentifier.Identity.GetAnyString()}");
                 }
             }
 
-            logger.Debug($"External message route removed " +
-                         $"Socket:{socketIdentifier.Identity.GetString()} " +
+            logger.Debug("External message route removed " +
+                         $"Socket:{socketIdentifier.Identity.GetAnyString()} " +
                          $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageIdentifiers))}]");
 
             return connectionAction;
@@ -209,7 +208,7 @@ namespace kino.Core.Connectivity
         }
 
         private static IEnumerable<string> ConcatenateMessageHandlers(IEnumerable<MessageIdentifier> messageHandlerIdentifiers)
-            => messageHandlerIdentifiers.Select(mh => $"{mh.Identity.GetString()}:{mh.Version.GetString()}");
+            => messageHandlerIdentifiers.Select(mh => mh.ToString());
 
         public IEnumerable<ExternalRoute> GetAllRoutes()
             => socketToMessageMap.Select(CreateExternalRoute);

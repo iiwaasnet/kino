@@ -31,9 +31,24 @@ namespace kino.Core.Sockets
         public void SendMessage(IMessage message)
         {
             var multipart = new MultipartMessage((Message) message);
-            if (!socket.TrySendMultipartBytes(sendingTimeout, multipart.Frames))
+            var frames = (IList<byte[]>) multipart.Frames;
+            var msg = new Msg();
+            try
             {
-                throw new TimeoutException($"Sending timed out after {sendingTimeout.TotalMilliseconds} ms!");
+                var framesCount = frames.Count;
+                for (var i = 0; i < framesCount;)
+                {
+                    var buffer = frames[i];
+                    msg.InitGC(buffer, buffer.Length);
+                    if (!socket.TrySend(ref msg, sendingTimeout, ++i < framesCount))
+                    {
+                        throw new TimeoutException($"Sending timed out after {sendingTimeout.TotalMilliseconds} ms!");
+                    }
+                }
+            }
+            finally
+            {
+                msg.Close();
             }
         }
 
@@ -42,10 +57,26 @@ namespace kino.Core.Sockets
             while (!cancellationToken.IsCancellationRequested)
             {
                 var frames = new List<byte[]>();
-                if (socket.TryReceiveMultipartBytes(ReceiveWaitTimeout, ref frames))
+                var msg = new Msg();
+                msg.InitEmpty();
+                try
                 {
-                    var multipart = new MultipartMessage(frames);
-                    return new Message(multipart);
+                    do
+                    {
+                        if (socket.TryReceive(ref msg, ReceiveWaitTimeout))
+                        {
+                            frames.Add(msg.Data);
+                        }
+                    } while (msg.HasMore);
+
+                    if (frames.Count > 0)
+                    {
+                        return new Message(new MultipartMessage(frames));
+                    }
+                }
+                finally
+                {
+                    msg.Close();
                 }
             }
 
@@ -65,13 +96,13 @@ namespace kino.Core.Sockets
             => socket.Unbind(address.ToSocketAddress());
 
         public void Subscribe(string topic = "")
-            => ((SubscriberSocket)socket).Subscribe(topic);
+            => ((SubscriberSocket) socket).Subscribe(topic);
 
         public void Subscribe(byte[] topic)
-            => ((SubscriberSocket)socket).Subscribe(topic);
+            => ((SubscriberSocket) socket).Subscribe(topic);
 
         public void Unsubscribe(string topic = "")
-            => ((SubscriberSocket)socket).Unsubscribe(topic);
+            => ((SubscriberSocket) socket).Unsubscribe(topic);
 
         public void SetMandatoryRouting(bool mandatory = true)
             => socket.Options.RouterMandatory = mandatory;

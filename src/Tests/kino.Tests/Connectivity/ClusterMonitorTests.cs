@@ -97,7 +97,8 @@ namespace kino.Tests.Connectivity
                 Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
                 Assert.AreEqual(payload.Uri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
                 Assert.IsTrue(payload.MessageContracts.Any(mc => Unsafe.Equals(mc.Identity, messageIdentifier.Identity)
-                                                                 && Unsafe.Equals(mc.Version, messageIdentifier.Version)));
+                                                                 && Unsafe.Equals(mc.Version, messageIdentifier.Version)
+                                                                 && Unsafe.Equals(mc.Partition, messageIdentifier.Partition)));
             }
             finally
             {
@@ -129,7 +130,8 @@ namespace kino.Tests.Connectivity
                 Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
                 Assert.AreEqual(payload.Uri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
                 Assert.IsTrue(payload.MessageContracts.Any(mc => Unsafe.Equals(mc.Identity, messageIdentifier.Identity)
-                                                                 && Unsafe.Equals(mc.Version, messageIdentifier.Version)));
+                                                                 && Unsafe.Equals(mc.Version, messageIdentifier.Version)
+                                                                 && Unsafe.Equals(mc.Partition, messageIdentifier.Partition)));
             }
             finally
             {
@@ -182,7 +184,7 @@ namespace kino.Tests.Connectivity
             {
                 clusterMonitor.Start(StartTimeout);
 
-                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, Guid.NewGuid().ToByteArray());
+                var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, Guid.NewGuid().ToByteArray(), IdentityExtensions.Empty);
                 clusterMonitor.DiscoverMessageRoute(messageIdentifier);
 
                 var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
@@ -195,6 +197,7 @@ namespace kino.Tests.Connectivity
                 Assert.AreEqual(payload.RequestorUri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
                 Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Identity, messageIdentifier.Identity));
                 Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Version, messageIdentifier.Version));
+                Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Partition, messageIdentifier.Partition));
             }
             finally
             {

@@ -119,14 +119,16 @@ namespace kino.Actors
                                                                    .Select(mh => new MessageContract
                                                                                  {
                                                                                      Identity = mh.Identifier.Identity,
-                                                                                     Version = mh.Identifier.Version
+                                                                                     Version = mh.Identifier.Version,
+                                                                                     Partition = mh.Identifier.Partition
                                                                                  })
                                                                    .ToArray(),
                               GlobalMessageContracts = registrations.Where(mh => !mh.KeepRegistrationLocal)
                                                                     .Select(mh => new MessageContract
                                                                                   {
                                                                                       Identity = mh.Identifier.Identity,
-                                                                                      Version = mh.Identifier.Version
+                                                                                      Version = mh.Identifier.Version,
+                                                                                      Partition = mh.Identifier.Partition
                                                                                   })
                                                                     .ToArray()
                           };
@@ -184,7 +186,7 @@ namespace kino.Actors
                         {
                             try
                             {
-                                var actorIdentifier = new MessageIdentifier(message.Version, message.Identity);
+                                var actorIdentifier = new MessageIdentifier(message);
                                 var handler = actorHandlerMap.Get(actorIdentifier);
                                 if (handler != null)
                                 {
@@ -284,7 +286,7 @@ namespace kino.Actors
                 return new ActorResult(Message.Create(new ExceptionMessage
                                                       {
                                                           Exception = err,
-                                                          StackTrace = err.StackTrace
+                                                          StackTrace = err?.StackTrace
                                                       }));
             }
 

@@ -10,22 +10,22 @@ namespace kino.Core.Messaging
     {
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
         public static readonly string KinoMessageNamespace = "KINO";
-        private static int CurrentWireFormatVersion = 2;
 
         private object payload;
         private List<SocketEndpoint> routing;
         private byte[] receiverNodeIdentity;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
-        private Message(IPayload payload, DistributionPattern distributionPattern)
+        private Message(IPayload payload, DistributionPattern distribution)
         {
-            WireFormatVersion = CurrentWireFormatVersion;
+            WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
             CallbackPoint = Enumerable.Empty<MessageIdentifier>();
             Body = Serialize(payload);
             Version = payload.Version;
             Identity = payload.Identity;
-            Distribution = distributionPattern;
+            Partition = payload.Partition;
+            Distribution = distribution;
             TTL = TimeSpan.Zero;
             Hops = 0;
             TraceOptions = MessageTraceOptions.None;
@@ -42,38 +42,37 @@ namespace kino.Core.Messaging
             => Guid.NewGuid().ToString().GetBytes();
 
         public bool Equals(MessageIdentifier messageIdentifier)
-            => messageIdentifier.Equals(new MessageIdentifier(Version, Identity));
+            => messageIdentifier.Equals(new MessageIdentifier(Version, Identity, Partition));
 
         internal Message(MultipartMessage multipartMessage)
         {
             ReadWireFormatVersion(multipartMessage);
-
-            ReadV1Frames(multipartMessage);
-            if (WireFormatVersion == 2)
-            {
-                ReadV2Frames(multipartMessage);
-            }
+            ReadV4Frames(multipartMessage);
         }
 
-        private void ReadV2Frames(MultipartMessage multipartMessage)
+        private void ReadV4Frames(MultipartMessage multipartMessage)
         {
-            receiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
-        }
-
-        private void ReadV1Frames(MultipartMessage multipartMessage)
-        {
-            routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting());
             Body = multipartMessage.GetMessageBody();
+            TTL = multipartMessage.GetMessageTTL();
+            CorrelationId = multipartMessage.GetCorrelationId();
+
+            MessageTraceOptions traceOptions;
+            DistributionPattern distributionPattern;
+            multipartMessage.GetTraceOptionsDistributionPattern(out traceOptions, out distributionPattern);
+            TraceOptions = traceOptions;
+            Distribution = distributionPattern;
+
             Identity = multipartMessage.GetMessageIdentity();
             Version = multipartMessage.GetMessageVersion();
-            TTL = multipartMessage.GetMessageTTL().GetTimeSpan();
-            Distribution = multipartMessage.GetMessageDistributionPattern().GetEnumFromInt<DistributionPattern>();
-            CallbackPoint = multipartMessage.GetCallbackPoints();
+            Partition = multipartMessage.GetMessagePartition();
+            receiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
-            CorrelationId = multipartMessage.GetCorrelationId();
-            TraceOptions = multipartMessage.GetTraceOptions().GetEnumFromLong<MessageTraceOptions>();
-            Hops = multipartMessage.GetMessageHops().GetInt();
+            CallbackPoint = multipartMessage.GetCallbackPoints(WireFormatVersion);
+
+            ushort hops;
+            routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting(out hops));
+            Hops = hops;
         }
 
         private void ReadWireFormatVersion(MultipartMessage multipartMessage)
@@ -91,7 +90,9 @@ namespace kino.Core.Messaging
             CallbackReceiverIdentity = callbackReceiverIdentity;
             CallbackPoint = callbackMessageIdentifiers;
 
-            if (CallbackPoint.Any(identifier => Unsafe.Equals(Identity, identifier.Identity) && Unsafe.Equals(Version, identifier.Version)))
+            if (CallbackPoint.Any(identifier => Unsafe.Equals(Identity, identifier.Identity)
+                                                && Unsafe.Equals(Version, identifier.Version)
+                                                && Unsafe.Equals(Partition, identifier.Partition)))
             {
                 ReceiverIdentity = CallbackReceiverIdentity;
             }
@@ -144,9 +145,6 @@ namespace kino.Core.Messaging
         internal void SetSocketIdentity(byte[] socketIdentity)
             => SocketIdentity = socketIdentity;
 
-        internal string GetIdentityString()
-            => Identity.GetString();
-
         public T GetPayload<T>()
             where T : IPayload, new()
             => (T) (payload ?? (payload = Deserialize<T>(Body)));
@@ -158,15 +156,22 @@ namespace kino.Core.Messaging
             where T : IPayload, new()
             => new T().Deserialize<T>(content);
 
+        public override string ToString()
+            => $"{nameof(Identity)}[{Identity?.GetAnyString()}]-" +
+               $"{nameof(Version)}[{Version?.GetAnyString()}]-" +
+               $"{nameof(Partition)}[{Partition?.GetAnyString()}] " +
+               $"{nameof(CorrelationId)}[{CorrelationId?.GetAnyString()}] " +
+               $"{Distribution}";
+
         public byte[] Body { get; private set; }
 
         public byte[] Identity { get; private set; }
 
+        public byte[] Partition { get; private set; }
+
         public byte[] Version { get; private set; }
 
         public TimeSpan TTL { get; set; }
-
-        public DistributionPattern Distribution { get; private set; }
 
         public byte[] CorrelationId { get; private set; }
 
@@ -180,7 +185,9 @@ namespace kino.Core.Messaging
 
         public MessageTraceOptions TraceOptions { get; set; }
 
-        public int Hops { get; private set; }
+        public DistributionPattern Distribution { get; set; }
+
+        public ushort Hops { get; private set; }
 
         public int WireFormatVersion { get; private set; }
     }

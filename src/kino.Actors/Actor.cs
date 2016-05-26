@@ -9,13 +9,11 @@ namespace kino.Actors
     public abstract class Actor : IActor
     {
         public virtual IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
-        {
-            return GetActorRegistrationsByAttributes();
-        }
+            => GetActorRegistrationsByAttributes();
 
         private IEnumerable<MessageHandlerDefinition> GetActorRegistrationsByAttributes()
         {
-            var methods = this.GetType()
+            var methods = GetType()
                               .FindMembers(MemberTypes.Method,
                                            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                                            InterfaceMethodFilter,
@@ -33,15 +31,15 @@ namespace kino.Actors
 
             return new MessageHandlerDefinition
                    {
-                       Message = new MessageDefinition(messageIdentifier.Identity, messageIdentifier.Version),
+                       Message = new MessageDefinition(messageIdentifier.Identity,
+                                                       messageIdentifier.Version,
+                                                       messageIdentifier.Partition),
                        Handler = @delegate,
                        KeepRegistrationLocal = attr.KeepRegistrationLocal
                    };
         }
 
         private static bool InterfaceMethodFilter(MemberInfo memberInfo, object filterCriteria)
-        {
-            return memberInfo.GetCustomAttributes((Type) filterCriteria).Any();
-        }
+            => memberInfo.GetCustomAttributes((Type) filterCriteria).Any();
     }
 }

@@ -184,6 +184,7 @@ namespace kino.Tests.Client
                                                        {
                                                            Version = callback.MessageIdentifiers.Single().Version,
                                                            Identity = callback.MessageIdentifiers.Single().Identity,
+                                                           Partition = callback.MessageIdentifiers.Single().Partition,
                                                            Correlation = promise.CorrelationId.Value
                                                        }));
             }
@@ -217,6 +218,7 @@ namespace kino.Tests.Client
                                                        {
                                                            Version = callback.MessageIdentifiers.Single().Version,
                                                            Identity = callback.MessageIdentifiers.Single().Identity,
+                                                           Partition = callback.MessageIdentifiers.Single().Partition,
                                                            Correlation = promise.CorrelationId.Value
                                                        }));
             }
@@ -285,7 +287,8 @@ namespace kino.Tests.Client
         private bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageIdentifier> registrations)
         {
             return registrations.Any(h => Unsafe.Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
-                   && registrations.Any(h => Unsafe.Equals(h.Identity, KinoMessages.Exception.Identity));
+                   && registrations.Any(h => Unsafe.Equals(h.Version, KinoMessages.Exception.Version))
+                   && registrations.Any(h => Unsafe.Equals(h.Partition, KinoMessages.Exception.Partition));
         }
     }
 }

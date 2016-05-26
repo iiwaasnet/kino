@@ -56,7 +56,9 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             {
                 try
                 {
-                    var messageIdentifier = new MessageIdentifier(registration.Version, registration.Identity);
+                    var messageIdentifier = new MessageIdentifier(registration.Version,
+                                                                  registration.Identity,
+                                                                  registration.Partition);
                     internalRoutingTable.AddMessageRoute(messageIdentifier, socketIdentifier);
                     handlers.Add(messageIdentifier);
                 }

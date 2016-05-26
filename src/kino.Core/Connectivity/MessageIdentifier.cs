@@ -4,35 +4,48 @@ using kino.Core.Messaging;
 
 namespace kino.Core.Connectivity
 {
-    public class MessageIdentifier : IEquatable<MessageIdentifier>
+    public class MessageIdentifier : IEquatable<MessageIdentifier>, IMessageIdentifier
     {
         private readonly int hashCode;
 
-        public MessageIdentifier(byte[] version, byte[] identity)
+        internal MessageIdentifier(byte[] version, byte[] identity, byte[] partition)
         {
             Version = version;
             Identity = identity;
+            Partition = partition ?? IdentityExtensions.Empty;
 
             hashCode = CalculateHashCode();
         }
 
-        internal MessageIdentifier(byte[] identity)
-            : this(IdentityExtensions.Empty, identity)
+        public MessageIdentifier(IMessageIdentifier messageIdentifier)
+            : this(messageIdentifier.Version, messageIdentifier.Identity, messageIdentifier.Partition)
         {
+        }
+
+        internal MessageIdentifier(byte[] identity)
+            : this(IdentityExtensions.Empty, identity, IdentityExtensions.Empty)
+        {
+        }
+
+        public static MessageIdentifier Create<T>(byte[] partition)
+            where T : IMessageIdentifier, new()
+        {
+            var message = new T();
+            return new MessageIdentifier(message.Version, message.Identity, partition);
         }
 
         public static MessageIdentifier Create<T>()
             where T : IMessageIdentifier, new()
+            => Create<T>(IdentityExtensions.Empty);
+
+        public static MessageIdentifier Create(Type messageType, byte[] partition)
         {
-            var message = new T();
-            return new MessageIdentifier(message.Version, message.Identity);
+            var message = (IMessageIdentifier) Activator.CreateInstance(messageType);
+            return new MessageIdentifier(message.Version, message.Identity, partition);
         }
 
         public static MessageIdentifier Create(Type messageType)
-        {
-            var message = (IMessageIdentifier) Activator.CreateInstance(messageType);
-            return new MessageIdentifier(message.Version, message.Identity);
-        }
+            => Create(messageType, IdentityExtensions.Empty);
 
         public override bool Equals(object obj)
         {
@@ -44,7 +57,7 @@ namespace kino.Core.Connectivity
             {
                 return true;
             }
-            if (obj.GetType() != this.GetType())
+            if (obj.GetType() != GetType())
             {
                 return false;
             }
@@ -55,9 +68,18 @@ namespace kino.Core.Connectivity
         {
             unchecked
             {
-                return (Identity.ComputeHash() * 397) ^ Version.ComputeHash();
+                var hashCode = Identity.ComputeHash();
+                hashCode = (hashCode * 397) ^ Version.ComputeHash();
+                hashCode = (hashCode * 397) ^ Partition.ComputeHash();
+                return hashCode;
             }
         }
+
+        public static bool operator ==(MessageIdentifier left, MessageIdentifier right)
+            => left != null && left.Equals(right);
+
+        public static bool operator !=(MessageIdentifier left, MessageIdentifier right)
+            => !(left == right);
 
         public override int GetHashCode()
             => hashCode;
@@ -77,12 +99,18 @@ namespace kino.Core.Connectivity
 
         private bool StructuralCompare(MessageIdentifier other)
             => Unsafe.Equals(Identity, other.Identity)
-               && Unsafe.Equals(Version, other.Version);
+               && Unsafe.Equals(Version, other.Version)
+               && Unsafe.Equals(Partition, other.Partition);
 
         public override string ToString()
-            => string.Format($"Identity[{Identity?.GetString()}]-Version[{Version?.GetString()}]");
+            => $"{nameof(Identity)}[{Identity?.GetAnyString()}]-" +
+               $"{nameof(Version)}[{Version?.GetAnyString()}]-" +
+               $"{nameof(Partition)}[{Partition?.GetAnyString()}]";
 
         public byte[] Version { get; }
+
         public byte[] Identity { get; }
+
+        public byte[] Partition { get; }
     }
 }

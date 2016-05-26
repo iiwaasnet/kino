@@ -11,11 +11,10 @@ namespace kino.Client
             {
                 foreach (var messageIdentifier in message.CallbackPoint)
                 {
-                    logger.Trace($"Callback registered for Message {message.Identity.GetString()}: " +
-                                 $"{nameof(message.CallbackPoint)}:{messageIdentifier.Identity.GetString()}-{messageIdentifier.Version.GetString()} " +
-                                 $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                                 $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetString()} " +
-                                 $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
+                    logger.Trace($"Callback registered for Message {message}: " +
+                                 $"{nameof(message.CallbackPoint)} {messageIdentifier} " +
+                                 $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetAnyString()} " +
+                                 $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetAnyString()}");
                 }
             }
         }
@@ -24,7 +23,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Message {message.Identity.GetString()} sent to Router.");
+                logger.Trace($"Message {message} sent to Router.");
             }
         }
 
@@ -32,10 +31,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace("Callback set: " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
+                logger.Trace($"Callback set. Result message: {message}");
             }
         }
 
@@ -43,10 +39,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace("Callback not found: " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetString()}");
+                logger.Trace($"Callback not found! Result message: {message}");
             }
         }
     }

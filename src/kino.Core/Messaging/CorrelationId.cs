@@ -25,7 +25,7 @@ namespace kino.Core.Messaging
             {
                 return true;
             }
-            if (obj.GetType() != this.GetType())
+            if (obj.GetType() != GetType())
             {
                 return false;
             }
@@ -53,6 +53,9 @@ namespace kino.Core.Messaging
 
         private bool StructuralCompare(CorrelationId other)
             => Unsafe.Equals(Value, other.Value);
+
+        public override string ToString()
+            => Value?.GetAnyString() ?? string.Empty;
 
         public byte[] Value { get; }
     }

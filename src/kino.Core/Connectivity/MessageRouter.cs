@@ -128,9 +128,9 @@ namespace kino.Core.Connectivity
                             }
                             catch (NetMQException err)
                             {
-                                logger.Error(string.Format($"{nameof(err.ErrorCode)}:{err.ErrorCode} " +
-                                                           $"{nameof(err.Message)}:{err.Message} " +
-                                                           $"Exception:{err}"));
+                                logger.Error($"{nameof(err.ErrorCode)}:{err.ErrorCode} " +
+                                             $"{nameof(err.Message)}:{err.Message} " +
+                                             $"Exception:{err}");
                             }
                             catch (Exception err)
                             {
@@ -245,17 +245,12 @@ namespace kino.Core.Connectivity
 
                 if (message.Distribution == DistributionPattern.Broadcast)
                 {
-                    logger.Warn("Broadcast message: " +
-                                $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                                $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
-                                "didn't find any local handler and was not forwarded.");
+                    logger.Warn($"Broadcast message: {messageIdentifier} didn't find any local handler and was not forwarded.");
                 }
             }
             else
             {
-                logger.Warn("Handler not found: " +
-                            $"{nameof(messageIdentifier.Version)}:{messageIdentifier.Version.GetString()} " +
-                            $"{nameof(messageIdentifier.Identity)}:{messageIdentifier.Identity.GetString()}");
+                logger.Warn($"Handler not found: {messageIdentifier}");
             }
 
             return true;
@@ -289,7 +284,7 @@ namespace kino.Core.Connectivity
             socket.Bind(routerConfiguration.ScaleOutAddress.Uri);
 
             logger.Info($"MessageRouter started at Uri:{routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()} " +
-                        $"Identity:{routerConfiguration.ScaleOutAddress.Identity.GetString()}");
+                        $"Identity:{routerConfiguration.ScaleOutAddress.Identity.GetAnyString()}");
 
             return socket;
         }
@@ -334,7 +329,7 @@ namespace kino.Core.Connectivity
         private static MessageIdentifier CreateMessageHandlerIdentifier(Message message)
             => message.ReceiverIdentity.IsSet()
                    ? new MessageIdentifier(message.ReceiverIdentity)
-                   : new MessageIdentifier(message.Version, message.Identity);
+                   : new MessageIdentifier(message);
 
         private RouterConfiguration SetDefaultsForMissingMembers(RouterConfiguration routerConfiguration)
         {

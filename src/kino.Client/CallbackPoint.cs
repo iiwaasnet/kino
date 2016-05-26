@@ -15,7 +15,7 @@ namespace kino.Client
             where T : IMessageIdentifier, new()
         {
             var message = new T();
-            return new CallbackPoint(new MessageIdentifier(message.Version, message.Identity));
+            return new CallbackPoint(new MessageIdentifier(message.Version, message.Identity, message.Partition));
         }
 
         public static ICallbackPoint Create<T1, T2>()
@@ -24,8 +24,8 @@ namespace kino.Client
         {
             var message1 = new T1();
             var message2 = new T2();
-            return new CallbackPoint(new MessageIdentifier(message1.Version, message1.Identity),
-                                     new MessageIdentifier(message2.Version, message2.Identity));
+            return new CallbackPoint(new MessageIdentifier(message1),
+                                     new MessageIdentifier(message2));
         }
 
         public static ICallbackPoint Create<T1, T2, T3>()
@@ -36,9 +36,9 @@ namespace kino.Client
             var message1 = new T1();
             var message2 = new T2();
             var message3 = new T3();
-            return new CallbackPoint(new MessageIdentifier(message1.Version, message1.Identity),
-                                     new MessageIdentifier(message2.Version, message2.Identity),
-                                     new MessageIdentifier(message3.Version, message3.Identity));
+            return new CallbackPoint(new MessageIdentifier(message1),
+                                     new MessageIdentifier(message2),
+                                     new MessageIdentifier(message3));
         }
 
         public IEnumerable<MessageIdentifier> MessageIdentifiers { get; }

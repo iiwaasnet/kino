@@ -29,9 +29,9 @@ namespace kino.Core.Connectivity
         {
             if (clusterMembers.TryAdd(node, new ClusterMemberMeta {LastKnownPong = DateTime.UtcNow}))
             {
-                logger.Debug($"New node added " +
+                logger.Debug("New node added " +
                              $"Uri:{node.Uri.AbsoluteUri} " +
-                             $"Socket:{node.Identity.GetString()}");
+                             $"Socket:{node.Identity.GetAnyString()}");
             }
         }
 
@@ -72,7 +72,7 @@ namespace kino.Core.Connectivity
             clusterMembers.TryRemove(node, out meta);
 
             logger.Debug($"Dead node removed Uri:{node.Uri.AbsoluteUri} " +
-                         $"Socket:{node.Identity.GetString()}");
+                         $"Socket:{node.Identity.GetAnyString()}");
         }
     }
 }

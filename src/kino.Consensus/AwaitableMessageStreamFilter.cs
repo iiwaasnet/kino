@@ -62,10 +62,7 @@ namespace kino.Consensus
             awaitable.Dispose();
         }
 
-        public WaitHandle Filtered
-        {
-            get { return awaitable.WaitHandle; }
-        }
+        public WaitHandle Filtered => awaitable.WaitHandle;
 
         public IEnumerable<IMessage> MessageStream
         {

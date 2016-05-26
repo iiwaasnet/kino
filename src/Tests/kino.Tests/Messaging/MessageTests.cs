@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using kino.Core.Connectivity;
+using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Tests.Actors.Setup;
 using NUnit.Framework;
@@ -188,7 +189,9 @@ namespace kino.Tests.Messaging
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
 
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
-            var callbackMessageIdentifiers = new MessageIdentifier(Guid.NewGuid().ToByteArray(), Guid.NewGuid().ToByteArray());
+            var callbackMessageIdentifiers = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                   Guid.NewGuid().ToByteArray(),
+                                                                   Guid.NewGuid().ToByteArray());
             message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifiers);
 
             var multipart = new MultipartMessage(message);
@@ -217,15 +220,32 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void MessageDistribution_IsConsistentlyTransferredViaMultipartMessage()
+        [TestCase(DistributionPattern.Broadcast)]
+        [TestCase(DistributionPattern.Unicast)]
+        public void MessageDistribution_IsConsistentlyTransferredViaMultipartMessage(DistributionPattern distributionPattern)
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
-            var distribution = message.Distribution;
+            message.Distribution = distributionPattern;
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            Assert.AreEqual(distribution, message.Distribution);
+            Assert.AreEqual(distributionPattern, message.Distribution);
+        }
+
+        [Test]
+        public void MessagePartition_IsConsistentlyTransferredViaMultipartMessage()
+        {
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage
+                                                                   {
+                                                                       Partition = Guid.NewGuid().ToByteArray()
+                                                                   });
+            var partition = message.Partition;
+
+            var multipart = new MultipartMessage(message);
+            message = new Message(multipart);
+
+            Assert.IsTrue(Unsafe.Equals(partition, message.Partition));
         }
 
         [Test]
@@ -245,7 +265,7 @@ namespace kino.Tests.Messaging
         [Test]
         public void MessageWireFormatVersion_IsConsistentlyTransferredViaMultipartMessage()
         {
-            const int wireMessageFormat = 2;
+            const int wireMessageFormat = 4;
 
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);

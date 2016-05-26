@@ -161,7 +161,7 @@ namespace kino.Core.Connectivity
             if (shouldHandle)
             {
                 var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
-                logger.Info($"New Rendezvous cluster configuration. " +
+                logger.Info("New Rendezvous cluster configuration. " +
                             $"Disconnecting {rendezvousServer.BroadcastUri.AbsoluteUri}");
 
                 var payload = message.GetPayload<RendezvousConfigurationChangedMessage>();
@@ -383,7 +383,7 @@ namespace kino.Core.Connectivity
 
             logger.Debug("Route not found. Requesting registrations for " +
                          $"Uri:{payload.Uri} " +
-                         $"Socket:{payload.SocketIdentity.GetString()}");
+                         $"Socket:{payload.SocketIdentity.GetAnyString()}");
         }
     }
 }

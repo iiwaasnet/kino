@@ -24,7 +24,7 @@ namespace kino.Client
             }
             else
             {
-                throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value.GetString()}]");
+                throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value}]");
             }
         }
 
@@ -35,7 +35,7 @@ namespace kino.Client
             IDictionary<MessageIdentifier, IPromise> messageHandlers;
             if (handlers.TryRemove(new CorrelationId(callbackIdentifier.Correlation), out messageHandlers))
             {
-                var massageHandlerId = new MessageIdentifier(callbackIdentifier.Version, callbackIdentifier.Identity);
+                var massageHandlerId = new MessageIdentifier(callbackIdentifier.Version, callbackIdentifier.Identity, callbackIdentifier.Partition);
                 messageHandlers.TryGetValue(massageHandlerId, out promise);
             }
 

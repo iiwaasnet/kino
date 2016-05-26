@@ -8,11 +8,11 @@ namespace kino.Core.Framework
 {
     public static class UriExtensions
     {
-        private static readonly Regex wildcardTcpAddress;
+        private static readonly Regex WildcardTcpAddress;
 
         static UriExtensions()
         {
-            wildcardTcpAddress = new Regex(@"tcp:\/\/\*:", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            WildcardTcpAddress = new Regex(@"tcp:\/\/\*:", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         }
 
         public static string ToSocketAddress(this Uri uri)
@@ -20,7 +20,7 @@ namespace kino.Core.Framework
 
         public static Uri ParseAddress(this string uri)
         {
-            var match = wildcardTcpAddress.Match(uri);
+            var match = WildcardTcpAddress.Match(uri);
             if (match.Success)
             {
                 var ipAddress = GetMachineIPAddress();

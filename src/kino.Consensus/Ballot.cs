@@ -13,7 +13,7 @@ namespace kino.Consensus
         }
 
         public Ballot(long timeStamp, int messageNumber, byte[] identity)
-            :this(new DateTime(timeStamp, DateTimeKind.Utc), messageNumber, identity)
+            : this(new DateTime(timeStamp, DateTimeKind.Utc), messageNumber, identity)
         {
         }
 
@@ -43,7 +43,7 @@ namespace kino.Consensus
 
         public int CompareTo(object obj)
         {
-            var ballot = obj as Ballot;
+            var ballot = (Ballot) obj;
 
             var res = Timestamp.CompareTo(ballot.Timestamp);
             if (res != 0)
@@ -61,7 +61,9 @@ namespace kino.Consensus
         }
 
         public byte[] Identity { get; }
+
         public DateTime Timestamp { get; }
+
         public int MessageNumber { get; }
     }
 }

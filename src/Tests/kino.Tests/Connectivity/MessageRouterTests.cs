@@ -102,6 +102,7 @@ namespace kino.Tests.Connectivity
                 var messageIdentity = Guid.NewGuid().ToByteArray();
                 var version = Guid.NewGuid().ToByteArray();
                 var socketIdentity = Guid.NewGuid().ToByteArray();
+                var partition = Guid.NewGuid().ToByteArray();
                 var message = Message.Create(new RegisterInternalMessageRouteMessage
                                              {
                                                  SocketIdentity = socketIdentity,
@@ -110,7 +111,8 @@ namespace kino.Tests.Connectivity
                                                                              new MessageContract
                                                                              {
                                                                                  Identity = messageIdentity,
-                                                                                 Version = version
+                                                                                 Version = version,
+                                                                                 Partition = partition
                                                                              }
                                                                          }
                                              });
@@ -118,7 +120,7 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity, partition));
 
                 Assert.IsNotNull(identifier);
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
@@ -151,6 +153,7 @@ namespace kino.Tests.Connectivity
                 var messageIdentity = Guid.NewGuid().ToByteArray();
                 var version = Guid.NewGuid().ToByteArray();
                 var socketIdentity = Guid.NewGuid().ToByteArray();
+                var partition = Guid.NewGuid().ToByteArray();
                 var message = Message.Create(new RegisterInternalMessageRouteMessage
                                              {
                                                  SocketIdentity = socketIdentity,
@@ -159,7 +162,8 @@ namespace kino.Tests.Connectivity
                                                                              new MessageContract
                                                                              {
                                                                                  Identity = messageIdentity,
-                                                                                 Version = version
+                                                                                 Version = version,
+                                                                                 Partition = partition
                                                                              }
                                                                          }
                                              });
@@ -167,7 +171,7 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity, partition));
 
                 Assert.IsNotNull(identifier);
 
@@ -200,6 +204,7 @@ namespace kino.Tests.Connectivity
                 var messageIdentity = Guid.NewGuid().ToByteArray();
                 var version = Guid.NewGuid().ToByteArray();
                 var socketIdentity = Guid.NewGuid().ToByteArray();
+                var partition = Guid.NewGuid().ToByteArray();
                 var message = Message.Create(new RegisterInternalMessageRouteMessage
                                              {
                                                  SocketIdentity = socketIdentity,
@@ -208,7 +213,8 @@ namespace kino.Tests.Connectivity
                                                                               new MessageContract
                                                                               {
                                                                                   Identity = messageIdentity,
-                                                                                  Version = version
+                                                                                  Version = version,
+                                                                                  Partition = partition
                                                                               }
                                                                           }
                                              });
@@ -216,7 +222,7 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity, partition));
 
                 Assert.IsNotNull(identifier);
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
@@ -265,13 +271,13 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOpCompletionDelay);
 
-                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity));
+                var identifier = internalRoutingTable.FindRoute(new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty));
 
                 Assert.IsNotNull(identifier);
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
                 CollectionAssert.AreEqual(socketIdentity, identifier.Identity);
 
-                var messageIdentifiers = new[] {new MessageIdentifier(version, messageIdentity)};
+                var messageIdentifiers = new[] {new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty)};
                 clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageIdentifier>>(handlers => messageIdentifiers.SequenceEqual(handlers))), Times.Once);
             }
             finally
@@ -281,7 +287,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void HandlerForReceiverIdentifier_HasHighestPriority()
+        public void HandlerForReceiverIdentity_HasHighestPriority()
         {
             var internalRoutingTable = new Mock<IInternalRoutingTable>();
 
@@ -300,7 +306,7 @@ namespace kino.Tests.Connectivity
                 var message = (Message) SendMessageOverMessageHub();
 
                 var callbackSocketIdentity = message.CallbackReceiverIdentity;
-                var callbackIdentifier = new MessageIdentifier(IdentityExtensions.Empty, callbackSocketIdentity);
+                var callbackIdentifier = new MessageIdentifier(IdentityExtensions.Empty, callbackSocketIdentity, IdentityExtensions.Empty);
                 internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(callbackIdentifier))))
                                     .Returns(new SocketIdentifier(callbackSocketIdentity));
 
@@ -320,7 +326,8 @@ namespace kino.Tests.Connectivity
         public void MessageIsRouted_BasedOnHandlerIdentities()
         {
             var actorSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
-            var actorIdentifier = MessageIdentifier.Create<SimpleMessage>();
+            var partition = Guid.NewGuid().ToByteArray();
+            var actorIdentifier = MessageIdentifier.Create<SimpleMessage>(partition);
             var messageHandlerStack = new Mock<IInternalRoutingTable>();
             messageHandlerStack.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
                                .Returns(actorSocketIdentity);
@@ -337,7 +344,78 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var message = Message.Create(new SimpleMessage());
+                var message = Message.Create(new SimpleMessage {Partition = partition});
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOpCompletionDelay);
+
+                messageHandlerStack.Verify(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Once());
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void MessageFromOnePartition_IsNotRoutedToActorFromOtherPartition()
+        {
+            var actorSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
+            var actorPartition = Guid.NewGuid().ToByteArray();
+            var actorIdentifier = MessageIdentifier.Create<SimpleMessage>(actorPartition);
+            var messageHandlerStack = new Mock<IInternalRoutingTable>();
+            messageHandlerStack.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
+                               .Returns(actorSocketIdentity);
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           messageHandlerStack.Object,
+                                           new ExternalRoutingTable(logger),
+                                           routerConfiguration,
+                                           clusterMonitorProvider.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var messagePartition = Guid.NewGuid().ToByteArray();
+                var message = Message.Create(new SimpleMessage {Partition = messagePartition});
+                messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
+
+                Thread.Sleep(AsyncOpCompletionDelay);
+
+                messageHandlerStack.Verify(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))), Times.Never);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void MessageIsRouted_BasedOnHandler_IdentityVersionPartition()
+        {
+            var actorSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
+            var partition = Guid.NewGuid().ToByteArray();
+            var actorIdentifier = MessageIdentifier.Create<SimpleMessage>(partition);
+            var messageHandlerStack = new Mock<IInternalRoutingTable>();
+            messageHandlerStack.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
+                               .Returns(actorSocketIdentity);
+
+            var router = new MessageRouter(socketFactory.Object,
+                                           messageHandlerStack.Object,
+                                           new ExternalRoutingTable(logger),
+                                           routerConfiguration,
+                                           clusterMonitorProvider.Object,
+                                           serviceMessageHandlers,
+                                           membershipConfiguration,
+                                           logger);
+            try
+            {
+                StartMessageRouter(router);
+
+                var message = Message.Create(new SimpleMessage {Partition = partition});
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOpCompletionDelay);
@@ -385,12 +463,13 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfReceivingNodeIsSet_MessageAlwaysRoutedToOtherNodes()
         {
-            var externalNode = new PeerConnection { Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()) };
+            var externalNode = new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity())};
             var message = Message.Create(new SimpleMessage());
             message.SetReceiverNode(new SocketIdentifier(externalNode.Node.SocketIdentity));
-            
+
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
-            externalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi)), It.Is<byte[]>(id => Unsafe.Equals(id, externalNode.Node.SocketIdentity))))
+            externalRoutingTable.Setup(m =>
+                                       m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi)), It.Is<byte[]>(id => Unsafe.Equals(id, externalNode.Node.SocketIdentity))))
                                 .Returns(externalNode);
             var internalRoutingTable = new Mock<IInternalRoutingTable>();
             internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi))))
@@ -423,13 +502,13 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfReceivingNodeIsSetAndExternalRouteIsNotRegistered_RouterRequestsDiscovery()
         {
-            var externalNode = new PeerConnection { Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity()) };
+            var externalNode = new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity())};
             var message = Message.Create(new SimpleMessage());
             message.SetReceiverNode(new SocketIdentifier(externalNode.Node.SocketIdentity));
-            
+
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
             externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>(), It.IsAny<byte[]>()))
-                                .Returns((PeerConnection)null);
+                                .Returns((PeerConnection) null);
             var internalRoutingTable = new Mock<IInternalRoutingTable>();
             internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mi => message.Equals(mi))))
                                 .Returns(SocketIdentifier.Create());
@@ -787,7 +866,8 @@ namespace kino.Tests.Connectivity
                                                  MessageContract = new MessageContract
                                                                    {
                                                                        Version = messageIdentifier.Version,
-                                                                       Identity = messageIdentifier.Identity
+                                                                       Identity = messageIdentifier.Identity,
+                                                                       Partition = messageIdentifier.Partition
                                                                    }
                                              });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -828,7 +908,8 @@ namespace kino.Tests.Connectivity
                                                  MessageContract = new MessageContract
                                                                    {
                                                                        Version = messageIdentifier.Version,
-                                                                       Identity = messageIdentifier.Identity
+                                                                       Identity = messageIdentifier.Identity,
+                                                                       Partition = messageIdentifier.Partition
                                                                    }
                                              });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -875,7 +956,8 @@ namespace kino.Tests.Connectivity
                                                  MessageContracts = messageIdentifiers.Select(mi => new MessageContract
                                                                                                     {
                                                                                                         Version = mi.Version,
-                                                                                                        Identity = mi.Identity
+                                                                                                        Identity = mi.Identity,
+                                                                                                        Partition = mi.Partition
                                                                                                     }).ToArray()
                                              });
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -925,7 +1007,8 @@ namespace kino.Tests.Connectivity
                                                  MessageContracts = messageIdentifiers.Select(mi => new MessageContract
                                                                                                     {
                                                                                                         Version = mi.Version,
-                                                                                                        Identity = mi.Identity
+                                                                                                        Identity = mi.Identity,
+                                                                                                        Partition = mi.Partition
                                                                                                     }).ToArray()
                                              });
 
@@ -1018,7 +1101,8 @@ namespace kino.Tests.Connectivity
                                                  MessageContracts = messageIdentifiers.Select(mi => new MessageContract
                                                                                                     {
                                                                                                         Version = mi.Version,
-                                                                                                        Identity = mi.Identity
+                                                                                                        Identity = mi.Identity,
+                                                                                                        Partition = mi.Partition
                                                                                                     }).ToArray()
                                              });
 
@@ -1039,7 +1123,7 @@ namespace kino.Tests.Connectivity
         public void IfUnregisterNodeMessageRouteMessageAndConnectionWasEstablished_SocketIsDisconnected()
         {
             var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object) };
+            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object)};
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),
@@ -1085,7 +1169,7 @@ namespace kino.Tests.Connectivity
         public void IfUnregisterNodeMessageRouteMessage_AllRoutesAreRemovedFromExternalRoutingTable()
         {
             var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object) };
+            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object)};
 
             var router = new MessageRouter(socketFactory.Object,
                                            new InternalRoutingTable(),

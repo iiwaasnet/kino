@@ -83,7 +83,8 @@ namespace kino.Core.Connectivity
                                              MessageContracts = messageHandlers.Select(mi => new MessageContract
                                                                                              {
                                                                                                  Version = mi.Version,
-                                                                                                 Identity = mi.Identity
+                                                                                                 Identity = mi.Identity,
+                                                                                                 Partition = mi.Partition
                                                                                              }).ToArray()
                                          });
             clusterMessageSender.EnqueueMessage(message);
@@ -99,7 +100,8 @@ namespace kino.Core.Connectivity
                                                  .Select(mi => new MessageContract
                                                                {
                                                                    Identity = mi.Identity,
-                                                                   Version = mi.Version
+                                                                   Version = mi.Version,
+                                                                   Partition = mi.Partition
                                                                }
                                                  )
                                                  .ToArray()

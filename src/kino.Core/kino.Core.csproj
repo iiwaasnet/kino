@@ -162,6 +162,7 @@
     <Compile Include="Messaging\NewtonJsonMessageSerializer.cs" />
     <Compile Include="Messaging\Payload.cs" />
     <Compile Include="Messaging\ProtobufMessageSerializer.cs" />
+    <Compile Include="Messaging\Versioning.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sockets\ISocket.cs" />
     <Compile Include="Sockets\ISocketFactory.cs" />

@@ -12,11 +12,11 @@ namespace kino.Consensus
                              "NACK_READ ==WB== " +
                              $"{writeBallot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{writeBallot.MessageNumber}-" +
-                             $"{writeBallot.Identity.GetString()} " +
+                             $"{writeBallot.Identity.GetAnyString()} " +
                              ">= " +
                              $"{ballot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{ballot.MessageNumber}-" +
-                             $"{ballot.Identity.GetString()}");
+                             $"{ballot.Identity.GetAnyString()}");
             }
             if (readBallot >= ballot)
             {
@@ -24,11 +24,11 @@ namespace kino.Consensus
                              "NACK_READ ==RB== " +
                              $"{readBallot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{readBallot.MessageNumber}-" +
-                             $"{readBallot.Identity.GetString()} " +
+                             $"{readBallot.Identity.GetAnyString()} " +
                              ">= " +
                              $"{ballot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{ballot.MessageNumber}-" +
-                             $"{ballot.Identity.GetString()}");
+                             $"{ballot.Identity.GetAnyString()}");
             }
         }
 
@@ -40,11 +40,11 @@ namespace kino.Consensus
                              "ACK_READ ==WB== " +
                              $"{writeBallot.Timestamp.ToString("HH: mm:ss fff")}-" +
                              $"{writeBallot.MessageNumber}-" +
-                             $"{writeBallot.Identity.GetString()} " +
+                             $"{writeBallot.Identity.GetAnyString()} " +
                              "< " +
                              $"{ballot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{ballot.MessageNumber}-" +
-                             $"{ballot.Identity.GetString()}");
+                             $"{ballot.Identity.GetAnyString()}");
             }
             if (readBallot < ballot)
             {
@@ -52,11 +52,11 @@ namespace kino.Consensus
                              "ACK_READ ==RB== " +
                              $"{readBallot.Timestamp.ToString("HH: mm:ss fff")}-" +
                              $"{readBallot.MessageNumber}-" +
-                             $"{readBallot.Identity.GetString()} " +
+                             $"{readBallot.Identity.GetAnyString()} " +
                              "< " +
                              $"{ballot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{ballot.MessageNumber}-" +
-                             $"{ballot.Identity.GetString()}");
+                             $"{ballot.Identity.GetAnyString()}");
             }
         }
 
@@ -68,11 +68,11 @@ namespace kino.Consensus
                              "NACK_WRITE ==WB== " +
                              $"{writeBallot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{writeBallot.MessageNumber}-" +
-                             $"{writeBallot.Identity.GetString()} " +
+                             $"{writeBallot.Identity.GetAnyString()} " +
                              "> " +
                              $"{ballot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{ballot.MessageNumber}-" +
-                             $"{ballot.Identity.GetString()}");
+                             $"{ballot.Identity.GetAnyString()}");
             }
             if (readBallot > ballot)
             {
@@ -80,11 +80,11 @@ namespace kino.Consensus
                              "NACK_WRITE ==RB== " +
                              $"{readBallot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{readBallot.MessageNumber}-" +
-                             $"{readBallot.Identity.GetString()} " +
+                             $"{readBallot.Identity.GetAnyString()} " +
                              "> " +
                              $"{ballot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{ballot.MessageNumber}-" +
-                             $"{ballot.Identity.GetString()}");
+                             $"{ballot.Identity.GetAnyString()}");
             }
         }
 
@@ -96,11 +96,11 @@ namespace kino.Consensus
                              "ACK_WRITE ==WB== " +
                              $"{writeBallot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{writeBallot.MessageNumber}-" +
-                             $"{writeBallot.Identity.GetString()} " +
+                             $"{writeBallot.Identity.GetAnyString()} " +
                              "<= " +
                              $"{ballot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{ballot.MessageNumber}-" +
-                             $"{ballot.Identity.GetString()}");
+                             $"{ballot.Identity.GetAnyString()}");
             }
             if (readBallot <= ballot)
             {
@@ -108,11 +108,11 @@ namespace kino.Consensus
                              "ACK_WRITE ==RB== " +
                              $"{readBallot.Timestamp.ToString("HH: mm:ss fff")}-" +
                              $"{readBallot.MessageNumber}-" +
-                             $"{readBallot.Identity.GetString()} " +
+                             $"{readBallot.Identity.GetAnyString()} " +
                              "<= " +
                              $"{ballot.Timestamp.ToString("HH:mm:ss fff")}-" +
                              $"{ballot.MessageNumber}-" +
-                             $"{ballot.Identity.GetString()}");
+                             $"{ballot.Identity.GetAnyString()}");
             }
         }
     }

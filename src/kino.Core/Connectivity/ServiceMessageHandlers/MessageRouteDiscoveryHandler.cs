@@ -22,10 +22,12 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             if (shouldHandle)
             {
                 var messageContract = message.GetPayload<DiscoverMessageRouteMessage>().MessageContract;
-                var messageIdentifier = new MessageIdentifier(messageContract.Version, messageContract.Identity);
+                var messageIdentifier = new MessageIdentifier(messageContract.Version,
+                                                              messageContract.Identity,
+                                                              messageContract.Partition);
                 if (internalRoutingTable.CanRouteMessage(messageIdentifier))
                 {
-                    clusterMonitor.RegisterSelf(new[] { messageIdentifier });
+                    clusterMonitor.RegisterSelf(new[] {messageIdentifier});
                 }
             }
 
@@ -33,6 +35,6 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         }
 
         private bool IsDiscoverMessageRouteRequest(IMessage message)
-           => message.Equals(DiscoverMessageRouteMessageIdentifier);
+            => message.Equals(DiscoverMessageRouteMessageIdentifier);
     }
 }

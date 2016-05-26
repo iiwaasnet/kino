@@ -23,7 +23,7 @@ namespace kino.Actors.Diagnostics
             this.routerConfiguration = routerConfiguration;
         }
 
-        [MessageHandlerDefinition(typeof(RequestKnownMessageRoutesMessage))]
+        [MessageHandlerDefinition(typeof (RequestKnownMessageRoutesMessage))]
         private async Task<IActorResult> Handler(IMessage message)
             => new ActorResult(Message.Create(new KnownMessageRoutesMessage
                                               {
@@ -42,7 +42,8 @@ namespace kino.Actors.Diagnostics
                        .Select(m => new MessageContract
                                     {
                                         Version = m.Version,
-                                        Identity = m.Identity
+                                        Identity = m.Identity,
+                                        Partition = m.Partition
                                     })
                        .ToArray()
                };
@@ -59,9 +60,10 @@ namespace kino.Actors.Diagnostics
                                                        .Select(m => new MessageContract
                                                                     {
                                                                         Version = m.Version,
-                                                                        Identity = m.Identity
+                                                                        Identity = m.Identity,
+                                                                        Partition = m.Partition
                                                                     })
                                                        .ToArray()
-                              });       
+                              });
     }
 }

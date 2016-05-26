@@ -20,7 +20,7 @@ namespace kino.Tests.Actors
         private ILogger logger;
         private Mock<ISocketFactory> socketFactory;
         private ActorHostSocketFactory actorHostSocketFactory;
-        private const int numberOfDealerSocketsPerActorHost = 3;
+        private const int NumberOfDealerSocketsPerActorHost = 3;
 
         [SetUp]
         public void Setup()
@@ -36,7 +36,7 @@ namespace kino.Tests.Actors
                                   };
         }
 
-        [Test(Description = "Assigning several actors, handling the same message type, should not thor exception.")]
+        [Test(Description = "Assigning several actors, handling the same message type, should not throw exception.")]
         public void AssignActorWithSameInterfaceTwice_ThrowsNoException()
         {
             var actorHostManager = new ActorHostManager(socketFactory.Object, routerConfiguration, logger);
@@ -49,7 +49,7 @@ namespace kino.Tests.Actors
 
             Thread.Sleep(AsyncOp);
 
-            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(numberOfDealerSocketsPerActorHost * numberOfActors));
+            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost * numberOfActors));
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace kino.Tests.Actors
 
             Thread.Sleep(AsyncOp);
 
-            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(numberOfDealerSocketsPerActorHost * 2));
+            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost * 2));
         }
 
         [Test]
@@ -75,7 +75,7 @@ namespace kino.Tests.Actors
 
             Thread.Sleep(AsyncOp);
 
-            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(numberOfDealerSocketsPerActorHost));
+            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost));
         }
     }
 }

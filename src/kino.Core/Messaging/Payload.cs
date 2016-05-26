@@ -10,13 +10,13 @@ namespace kino.Core.Messaging
         protected Payload(IMessageSerializer messageSerializer)
         {
             this.messageSerializer = messageSerializer;
+            Partition = IdentityExtensions.Empty;
         }
 
         protected Payload()
+            : this(DefaultSerializer)
         {
-            messageSerializer = DefaultSerializer;
         }
-
 
         protected static byte[] BuildFullIdentity(string identity)
             => (Message.KinoMessageNamespace + "." + identity).GetBytes();
@@ -30,5 +30,7 @@ namespace kino.Core.Messaging
         public abstract byte[] Version { get; }
 
         public abstract byte[] Identity { get; }
+
+        public byte[] Partition { get; set; }
     }
 }

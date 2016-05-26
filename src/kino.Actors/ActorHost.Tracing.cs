@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using kino.Core.Framework;
 using kino.Core.Messaging;
 
 namespace kino.Actors
@@ -12,9 +10,7 @@ namespace kino.Actors
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace("No Actor found for message: " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()}");
+                logger.Trace($"No Actor found for message: {message}");
             }
         }
 
@@ -22,9 +18,7 @@ namespace kino.Actors
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace("Message processed sync: " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()} " +
+                logger.Trace($"Message processed sync: {message} " +
                              $"Number of response messages:{responses.Count()}");
             }
         }
@@ -33,10 +27,7 @@ namespace kino.Actors
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace("Response: " +
-                             $"{nameof(sentSync)}:{sentSync} " +
-                             $"{nameof(message.Version)}:{message.Version.GetString()} " +
-                             $"{nameof(message.Identity)}:{message.Identity.GetString()}");
+                logger.Trace($"Response: {nameof(sentSync)}:{sentSync} {message}");
             }
         }
     }

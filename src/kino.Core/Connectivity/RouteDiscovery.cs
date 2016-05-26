@@ -25,10 +25,10 @@ namespace kino.Core.Connectivity
                               ILogger logger)
         {
             this.routerConfiguration = routerConfiguration;
-            this.discoveryConfiguration = clusterMembershipConfiguration.RouteDiscovery ?? DefaultConfiguration();
+            discoveryConfiguration = clusterMembershipConfiguration.RouteDiscovery ?? DefaultConfiguration();
             this.clusterMessageSender = clusterMessageSender;
             this.logger = logger;
-            requests = new HashedQueue<MessageIdentifier>(this.discoveryConfiguration.MaxRequestsQueueLength);
+            requests = new HashedQueue<MessageIdentifier>(discoveryConfiguration.MaxRequestsQueueLength);
         }
 
         public void Start()
@@ -61,7 +61,8 @@ namespace kino.Core.Connectivity
                                                              MessageContract = new MessageContract
                                                                                {
                                                                                    Version = messageIdentifier.Version,
-                                                                                   Identity = messageIdentifier.Identity
+                                                                                   Identity = messageIdentifier.Identity,
+                                                                                   Partition = messageIdentifier.Partition
                                                                                }
                                                          });
                             clusterMessageSender.EnqueueMessage(message);
