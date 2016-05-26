@@ -265,7 +265,7 @@ namespace kino.Tests.Messaging
         [Test]
         public void MessageWireFormatVersion_IsConsistentlyTransferredViaMultipartMessage()
         {
-            const int wireMessageFormat = 3;
+            const int wireMessageFormat = 4;
 
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
