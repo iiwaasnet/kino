@@ -36,7 +36,7 @@ namespace kino.Tests.Actors
                                   };
         }
 
-        [Test(Description = "Assigning several actors, handling the same message type, should not thor exception.")]
+        [Test(Description = "Assigning several actors, handling the same message type, should not throw exception.")]
         public void AssignActorWithSameInterfaceTwice_ThrowsNoException()
         {
             var actorHostManager = new ActorHostManager(socketFactory.Object, routerConfiguration, logger);

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using kino.Actors;
 using kino.Core.Connectivity;
@@ -54,6 +55,34 @@ namespace kino.Tests.Actors
             Assert.Throws<DuplicatedKeyException>(() => { actorHandlersMap.Add(exceptionMessageActor); });
 
             Assert.AreEqual(1, actorHandlersMap.GetMessageHandlerIdentifiers().Count());
+        }
+
+        [Test]
+        public void ActorHandlersMap_CanAddTwoActorsHandlingSameMessageTypeInDifferentPartitions()
+        {
+            var actorHandlersMap = new ActorHandlerMap();
+
+            var actorWithoutPartition = new ConfigurableActor(new[]
+                                                           {
+                                                               new MessageHandlerDefinition
+                                                               {
+                                                                   Handler = null,
+                                                                   Message = MessageDefinition.Create<SimpleMessage>()
+                                                               }
+                                                           });
+            var actorWithPartition = new ConfigurableActor(new[]
+                                                              {
+                                                                  new MessageHandlerDefinition
+                                                                  {
+                                                                      Handler = null,
+                                                                      Message = MessageDefinition.Create<SimpleMessage>(Guid.NewGuid().ToByteArray())
+                                                                  }
+                                                              });
+
+            actorHandlersMap.Add(actorWithoutPartition);
+            actorHandlersMap.Add(actorWithPartition);
+
+            Assert.AreEqual(2, actorHandlersMap.GetMessageHandlerIdentifiers().Count());
         }
 
         [Test]

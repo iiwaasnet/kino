@@ -57,10 +57,21 @@ namespace kino.Tests.Actors
                                           actorRegistrationsQueue,
                                           routerConfiguration,
                                           logger);
-            actorHost.AssignActor(new EchoActor());
+            var partition = Guid.NewGuid().ToByteArray();
+            var messageIdentifier = MessageIdentifier.Create<SimpleMessage>(partition);
+            actorHost.AssignActor(new ConfigurableActor(new[]
+                                                        {
+                                                            new MessageHandlerDefinition
+                                                            {
+                                                                Handler = _ => null,
+                                                                Message = new MessageDefinition(messageIdentifier.Identity,
+                                                                                                messageIdentifier.Version,
+                                                                                                partition)
+                                                            }
+                                                        }));
 
             var registrations = actorRegistrationsQueue.GetConsumingEnumerable(CancellationToken.None).First();
-            var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
+
             Assert.IsTrue(registrations.Any(id => id.Identifier.Identity == messageIdentifier.Identity));
             Assert.IsTrue(registrations.Any(id => id.Identifier.Version == messageIdentifier.Version));
             Assert.IsTrue(registrations.Any(id => id.Identifier.Partition == messageIdentifier.Partition));
@@ -75,7 +86,26 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
                                           logger);
-            var actorWithGlobalAndLocalHandlers = new EchoActor();
+            var partition = Guid.NewGuid().ToByteArray();
+            var messageIdentifier = MessageIdentifier.Create<AsyncMessage>(partition);
+            var actorWithGlobalAndLocalHandlers = new ConfigurableActor(new[]
+                                                                        {
+                                                                            new MessageHandlerDefinition
+                                                                            {
+                                                                                Handler = _ => null,
+                                                                                Message = new MessageDefinition(messageIdentifier.Identity,
+                                                                                                                messageIdentifier.Version,
+                                                                                                                partition)
+                                                                            },
+                                                                            new MessageHandlerDefinition
+                                                                            {
+                                                                                Handler = _ => null,
+                                                                                Message = new MessageDefinition(messageIdentifier.Identity,
+                                                                                                                messageIdentifier.Version,
+                                                                                                                IdentityExtensions.Empty),
+                                                                                KeepRegistrationLocal = true
+                                                                            }
+                                                                        });
             actorHost.AssignActor(actorWithGlobalAndLocalHandlers);
             try
             {
