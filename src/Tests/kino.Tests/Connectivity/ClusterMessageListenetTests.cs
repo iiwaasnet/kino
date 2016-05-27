@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -26,6 +27,7 @@ namespace kino.Tests.Connectivity
         private Mock<IClusterMembership> clusterMembership;
         private Mock<IRendezvousCluster> rendezvousCluster;
         private Mock<IClusterMessageSender> clusterMessageSender;
+        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private ClusterMembershipConfiguration clusterMembershipConfiguration;
 
         [SetUp]
@@ -33,6 +35,7 @@ namespace kino.Tests.Connectivity
         {
             clusterMonitorSocketFactory = new ClusterMonitorSocketFactory();
             clusterMessageSender = new Mock<IClusterMessageSender>();
+            performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             logger = new Mock<ILogger>();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
@@ -64,6 +67,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMessageSender.Object,
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
+                                                                    performanceCounterManager.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -86,6 +90,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMessageSender.Object,
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
+                                                                    performanceCounterManager.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -119,6 +124,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMessageSender.Object,
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
+                                                                    performanceCounterManager.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -158,6 +164,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMessageSender.Object,
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
+                                                                    performanceCounterManager.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -194,6 +201,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMessageSender.Object,
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
+                                                                    performanceCounterManager.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -233,6 +241,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMessageSender.Object,
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
+                                                                    performanceCounterManager.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -323,6 +332,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMessageSender.Object,
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
+                                                                    performanceCounterManager.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();

@@ -58,7 +58,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -90,8 +92,21 @@
     <Compile Include="Connectivity\ServiceMessageHandlers\MessageRouteUnregistrationHandler.cs" />
     <Compile Include="Connectivity\ServiceMessageHandlers\RoutesRegistrationRequestHandler.cs" />
     <Compile Include="Connectivity\ServiceMessageHandlers\RouteUnregistrationHandler.cs" />
+    <Compile Include="Diagnostics\Performance\IInstanceNameResolver.cs" />
+    <Compile Include="Diagnostics\Performance\InstanceNameResolver.cs" />
+    <Compile Include="Diagnostics\Performance\IPerformanceCounter.cs" />
+    <Compile Include="Diagnostics\Performance\IPerformanceCounterManager.cs" />
+    <Compile Include="Diagnostics\Performance\KinoPerformanceCounters.cs" />
+    <Compile Include="Diagnostics\Performance\PerformanceCounterCategoryAttribute.cs" />
+    <Compile Include="Diagnostics\Performance\PerformanceCounterDefinitionAttribute.cs" />
+    <Compile Include="Diagnostics\Performance\PerformanceCounterInstaller.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Diagnostics\Performance\PerformanceCounterManager.cs" />
+    <Compile Include="Diagnostics\Performance\SafePerformanceCounter.cs" />
     <Compile Include="Framework\HashedQueue.cs" />
     <Compile Include="Framework\IConfigurationStorage.cs" />
+    <Compile Include="Framework\SyntacticSugar.cs" />
     <Compile Include="Framework\ThreadExtensions.cs" />
     <Compile Include="Messaging\IMessageIdentifier.cs" />
     <Compile Include="Messaging\Messages\DiscoverMessageRouteMessage.cs" />

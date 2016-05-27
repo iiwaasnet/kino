@@ -4,6 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
+using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Sockets;
 
@@ -17,6 +19,7 @@ namespace kino.Consensus
         private Task sending;
         private Task notifyListeners;
         private readonly ISynodConfiguration synodConfig;
+        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly BlockingCollection<IMessage> inMessageQueue;
         private readonly BlockingCollection<IntercomMessage> outMessageQueue;
         private readonly ISocketFactory socketFactory;
@@ -27,12 +30,14 @@ namespace kino.Consensus
 
         public IntercomMessageHub(ISocketFactory socketFactory,
                                   ISynodConfiguration synodConfig,
+                                  IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                   ILogger logger)
         {
             this.socketFactory = socketFactory;
             this.logger = logger;
             cancellationTokenSource = new CancellationTokenSource();
             this.synodConfig = synodConfig;
+            this.performanceCounterManager = performanceCounterManager;
             inMessageQueue = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             outMessageQueue = new BlockingCollection<IntercomMessage>(new ConcurrentQueue<IntercomMessage>());
             subscriptions = new ConcurrentDictionary<Listener, object>();
@@ -117,6 +122,7 @@ namespace kino.Consensus
         private ISocket CreateMulticastListeningSocket()
         {
             var socket = socketFactory.CreateSubscriberSocket();
+            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomMulticastSocketReceiveRate);
             socket.Subscribe();
             foreach (var node in synodConfig.Synod)
             {
@@ -129,6 +135,7 @@ namespace kino.Consensus
         private ISocket CreateUnicastListeningSocket()
         {
             var socket = socketFactory.CreateSubscriberSocket();
+            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomUnicastSocketReceiveRate);
             socket.Subscribe(synodConfig.LocalNode.SocketIdentity);
             foreach (var node in synodConfig.Synod)
             {
@@ -141,6 +148,7 @@ namespace kino.Consensus
         private ISocket CreateSendingSocket()
         {
             var socket = socketFactory.CreatePublisherSocket();
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomSocketSendRate);
             socket.Bind(synodConfig.LocalNode.Uri);
 
             return socket;

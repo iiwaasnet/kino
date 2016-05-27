@@ -64,6 +64,7 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
       <Private>True</Private>
@@ -87,7 +88,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="WindowsServiceHost, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\WindowsService.Host.0.0.0.5\lib\net46\WindowsServiceHost.dll</HintPath>
+      <HintPath>..\..\packages\WindowsService.Host.0.0.0.6\lib\net46\WindowsServiceHost.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using kino.Core.Connectivity.ServiceMessageHandlers;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -27,6 +28,7 @@ namespace kino.Core.Connectivity
         private readonly ILogger logger;
         private readonly IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
         private readonly ClusterMembershipConfiguration membershipConfiguration;
+        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageRouter(ISocketFactory socketFactory,
@@ -36,6 +38,7 @@ namespace kino.Core.Connectivity
                              IClusterMonitorProvider clusterMonitorProvider,
                              IEnumerable<IServiceMessageHandler> serviceMessageHandlers,
                              ClusterMembershipConfiguration membershipConfiguration,
+                             IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                              ILogger logger)
         {
             this.logger = logger;
@@ -47,6 +50,7 @@ namespace kino.Core.Connectivity
             this.routerConfiguration = SetDefaultsForMissingMembers(routerConfiguration);
             this.serviceMessageHandlers = serviceMessageHandlers;
             this.membershipConfiguration = membershipConfiguration;
+            this.performanceCounterManager = performanceCounterManager;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -265,6 +269,7 @@ namespace kino.Core.Connectivity
         private ISocket CreateScaleOutBackendSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutBackendSocketSendRate);
 
             foreach (var peer in clusterMonitor.GetClusterMembers())
             {
@@ -280,6 +285,8 @@ namespace kino.Core.Connectivity
             socket.SetIdentity(routerConfiguration.ScaleOutAddress.Identity);
             socket.SetMandatoryRouting();
             socket.SetReceiveHighWaterMark(GetScaleOutReceiveMessageQueueLength());
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutFrontendSocketSendRate);
+            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutFrontendSocketReceiveRate);
             SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
             socket.Bind(routerConfiguration.ScaleOutAddress.Uri);
 
@@ -309,6 +316,8 @@ namespace kino.Core.Connectivity
             var socket = socketFactory.CreateRouterSocket();
             socket.SetMandatoryRouting();
             socket.SetIdentity(routerConfiguration.RouterAddress.Identity);
+            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterSocketReceiveRate);
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterSocketSendRate);
             socket.Bind(routerConfiguration.RouterAddress.Uri);
 
             return socket;

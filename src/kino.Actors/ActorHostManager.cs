@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Sockets;
 
@@ -12,6 +13,7 @@ namespace kino.Actors
     {
         private readonly ISocketFactory socketFactory;
         private readonly RouterConfiguration routerConfiguration;
+        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILogger logger;
         private readonly IList<IActorHost> actorHosts;
         private readonly object @lock = new object();
@@ -19,10 +21,12 @@ namespace kino.Actors
 
         public ActorHostManager(ISocketFactory socketFactory,
                                 RouterConfiguration routerConfiguration,
+                                IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                 ILogger logger)
         {
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
+            this.performanceCounterManager = performanceCounterManager;
             this.logger = logger;
             actorHosts = new List<IActorHost>();
         }
@@ -56,8 +60,9 @@ namespace kino.Actors
                 actorHost = new ActorHost(socketFactory,
                                           new ActorHandlerMap(),
                                           new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(), 
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
+                                          performanceCounterManager,
                                           logger);
                 actorHost.Start();
                 actorHosts.Add(actorHost);

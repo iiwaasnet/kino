@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Messaging;
 using kino.Core.Sockets;
 
@@ -96,5 +97,9 @@ namespace kino.Tests.Actors.Setup
 
         internal bool IsConnected()
             => connected;
+
+        public IPerformanceCounter ReceiveRate { get; set; }
+
+        public IPerformanceCounter SendRate { get; set; }
     }
 }

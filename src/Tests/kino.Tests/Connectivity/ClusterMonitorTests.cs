@@ -2,6 +2,7 @@
 using System.Linq;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -27,6 +28,7 @@ namespace kino.Tests.Connectivity
         private ClusterMembershipConfiguration clusterMembershipConfiguration;
         private IClusterMessageSender clusterMessageSender;
         private IClusterMessageListener clusterMessageListener;
+        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private Mock<IRouteDiscovery> routeDiscovery;
 
         [SetUp]
@@ -34,6 +36,7 @@ namespace kino.Tests.Connectivity
         {
             clusterMonitorSocketFactory = new ClusterMonitorSocketFactory();
             logger = new Mock<ILogger>();
+            performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             routeDiscovery = new Mock<IRouteDiscovery>();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
@@ -63,6 +66,7 @@ namespace kino.Tests.Connectivity
             clusterMessageSender = new ClusterMessageSender(rendezvousCluster.Object,
                                                             routerConfiguration,
                                                             socketFactory.Object,
+                                                            performanceCounterManager.Object,
                                                             logger.Object);
             clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
                                                                 socketFactory.Object,
@@ -70,6 +74,7 @@ namespace kino.Tests.Connectivity
                                                                 clusterMessageSender,
                                                                 clusterMembership.Object,
                                                                 clusterMembershipConfiguration,
+                                                                performanceCounterManager.Object,
                                                                 logger.Object);
         }
 

@@ -5,6 +5,7 @@ using kino.Consensus;
 using kino.Consensus.Configuration;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -22,6 +23,7 @@ namespace kino.Rendezvous
         private Task messageProcessing;
         private Task pinging;
         private readonly RendezvousConfiguration config;
+        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly IMessageSerializer serializer;
         private readonly ILogger logger;
         private readonly byte[] leaderPayload;
@@ -31,6 +33,7 @@ namespace kino.Rendezvous
                                  ISocketFactory socketFactory,
                                  IMessageSerializer serializer,
                                  RendezvousConfiguration config,
+                                 IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                  ILogger logger)
         {
             this.socketFactory = socketFactory;
@@ -39,6 +42,7 @@ namespace kino.Rendezvous
             localNode = synodConfig.LocalNode;
             this.leaseProvider = leaseProvider;
             this.config = config;
+            this.performanceCounterManager = performanceCounterManager;
             cancellationTokenSource = new CancellationTokenSource();
             leaderPayload = serializer.Serialize(new RendezvousNode
                                                  {
@@ -186,6 +190,7 @@ namespace kino.Rendezvous
         private ISocket CreateUnicastSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
+            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousSocketReceiveRate);
             socket.Bind(config.UnicastUri);
 
             return socket;
@@ -194,6 +199,7 @@ namespace kino.Rendezvous
         private ISocket CreateBroadcastSocket()
         {
             var socket = socketFactory.CreatePublisherSocket();
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousBroadcastSocketSendRate);
             socket.Bind(config.BroadcastUri);
 
             return socket;
@@ -202,6 +208,7 @@ namespace kino.Rendezvous
         private ISocket CreatePingNotificationSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousPingSocketSendRate);
             socket.Connect(config.UnicastUri);
 
             return socket;

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -23,6 +24,7 @@ namespace kino.Client
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
         private readonly MessageHubConfiguration config;
+        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception);
@@ -30,11 +32,13 @@ namespace kino.Client
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
                           MessageHubConfiguration config,
+                          IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                           ILogger logger)
         {
             this.logger = logger;
             this.socketFactory = socketFactory;
             this.config = config;
+            this.performanceCounterManager = performanceCounterManager;
             receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             hubRegistered = new ManualResetEventSlim();
             this.callbackHandlers = callbackHandlers;
@@ -159,6 +163,7 @@ namespace kino.Client
         private ISocket CreateOneWaySocket()
         {
             var socket = socketFactory.CreateDealerSocket();
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageHubRequestSocketSendRate);
             SocketHelper.SafeConnect(() => socket.Connect(config.RouterUri));
 
             return socket;
@@ -168,6 +173,7 @@ namespace kino.Client
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(SocketIdentifier.CreateIdentity());
+            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageHubResponseSocketReceiveRate);
             SocketHelper.SafeConnect(() => socket.Connect(config.RouterUri));
 
             return socket;

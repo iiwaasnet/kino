@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Messaging;
 
 namespace kino.Core.Sockets
@@ -31,5 +32,9 @@ namespace kino.Core.Sockets
         void Subscribe(byte[] topic);
 
         void Unsubscribe(string topic = "");
+
+        IPerformanceCounter ReceiveRate { get; set; }
+
+        IPerformanceCounter SendRate { get; set; }
     }
 }

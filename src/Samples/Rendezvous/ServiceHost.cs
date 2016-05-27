@@ -2,6 +2,7 @@
 using WindowsServiceHost;
 using Autofac;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Sockets;
 using kino.Rendezvous;
 using kino.Rendezvous.Configuration;
@@ -19,7 +20,8 @@ namespace Rendezvous
                    ServiceName = "kino.Rendezvous",
                    DisplayName = "kino.Rendezvous",
                    OnStart = Start,
-                   OnStop = Stop
+                   OnStop = Stop,
+                   Installers = new[] {new PerformanceCounterInstaller()}
                };
 
         private void Start()
