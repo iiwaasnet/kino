@@ -24,6 +24,10 @@ namespace kino.Rendezvous
             builder.Register(c => c.Resolve<IConfigProvider>().GetConfiguration<ApplicationConfiguration>())
                    .As<ApplicationConfiguration>()
                    .SingleInstance();
+
+            builder.RegisterType<RendezvousService>()
+                   .As<IRendezvousService>()
+                   .SingleInstance();
         }
     }
 }
