@@ -3,6 +3,7 @@ using kino.Actors.Diagnostics;
 using kino.Client;
 using kino.Core.Connectivity;
 using kino.Core.Connectivity.ServiceMessageHandlers;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Sockets;
 
@@ -14,6 +15,14 @@ namespace Autofac.kino
         {
             RegisterServiceMessageHandlers(builder);
             RegisterFrameworkActors(builder);
+
+            builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
+                   .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
+                   .SingleInstance();
+
+            builder.RegisterType<InstanceNameResolver>()
+                   .As<IInstanceNameResolver>()
+                   .SingleInstance();
 
             builder.RegisterType<MessageRouter>()
                    .As<IMessageRouter>()

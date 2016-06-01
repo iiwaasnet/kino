@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
         <id>Autofac.kino</id>
-        <version>0.0.0.3-beta</version>
+        <version>0.0.0.4-beta</version>
         <title>Autofac.kino</title>
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
@@ -13,7 +13,7 @@
         <copyright>Copyright © 2016 Sergey Ivasenko</copyright>
         <dependencies>
             <dependency id="Autofac" version="3.5.2" />
-            <dependency id="kino" version="0.0.1.16-beta" />
+            <dependency id="kino" version="0.0.1.18-beta" />
             <dependency id="NetMQ" version="4.0.0.0-beta" />
             <dependency id="protobuf-net" version="2.1.0-alpha-1" />
             <dependency id="System.Reflection.Emit" version="4.0.1-beta-23516" />
