@@ -5,6 +5,7 @@ using System.Threading;
 using kino.Client;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -25,6 +26,7 @@ namespace kino.Tests.Client
         private readonly string localhost = "tcp://localhost:43";
         private Mock<ISocketFactory> socketFactory;
         private MessageHubConfiguration config;
+        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private ILogger logger;
         private Mock<ICallbackHandlerStack> callbackHandlerStack;
 
@@ -32,6 +34,7 @@ namespace kino.Tests.Client
         public void Setup()
         {
             callbackHandlerStack = new Mock<ICallbackHandlerStack>();
+            performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             logger = new Mock<ILogger>().Object;
             messageHubSocketFactory = new MessageHubSocketFactory();
             socketFactory = new Mock<ISocketFactory>();
@@ -48,6 +51,7 @@ namespace kino.Tests.Client
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            performanceCounterManager.Object,
                                             logger);
             try
             {
@@ -77,6 +81,7 @@ namespace kino.Tests.Client
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            performanceCounterManager.Object,
                                             logger);
             try
             {
@@ -106,6 +111,7 @@ namespace kino.Tests.Client
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            performanceCounterManager.Object,
                                             logger);
             try
             {
@@ -137,6 +143,7 @@ namespace kino.Tests.Client
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            performanceCounterManager.Object,
                                             logger);
             try
             {
@@ -167,6 +174,7 @@ namespace kino.Tests.Client
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack,
                                             config,
+                                            performanceCounterManager.Object,
                                             logger);
             try
             {
@@ -201,6 +209,7 @@ namespace kino.Tests.Client
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack,
                                             config,
+                                            performanceCounterManager.Object,
                                             logger);
             try
             {
@@ -234,6 +243,7 @@ namespace kino.Tests.Client
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            performanceCounterManager.Object,
                                             logger);
             try
             {
@@ -248,7 +258,11 @@ namespace kino.Tests.Client
                 var exception = Message.Create(new ExceptionMessage {Exception = new Exception(errorMessage)});
                 messageHubSocketFactory.GetReceivingSocket().DeliverMessage(exception);
 
-                Assert.Throws<AggregateException>(() => { var response = promise.GetResponse().Result; }, errorMessage);
+                Assert.Throws<AggregateException>(() =>
+                                                  {
+                                                      var response = promise.GetResponse().Result;
+                                                  },
+                                                  errorMessage);
             }
             finally
             {
@@ -262,6 +276,7 @@ namespace kino.Tests.Client
             var messageHub = new MessageHub(socketFactory.Object,
                                             callbackHandlerStack.Object,
                                             config,
+                                            performanceCounterManager.Object,
                                             logger);
             try
             {

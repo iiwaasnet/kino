@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -14,17 +15,20 @@ namespace kino.Core.Connectivity
         private readonly IRendezvousCluster rendezvousCluster;
         private readonly RouterConfiguration routerConfiguration;
         private readonly ISocketFactory socketFactory;
+        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILogger logger;
         private readonly BlockingCollection<IMessage> outgoingMessages;
 
         public ClusterMessageSender(IRendezvousCluster rendezvousCluster,
                                     RouterConfiguration routerConfiguration,
                                     ISocketFactory socketFactory,
+                                    IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                     ILogger logger)
         {
             this.rendezvousCluster = rendezvousCluster;
             this.routerConfiguration = routerConfiguration;
             this.socketFactory = socketFactory;
+            this.performanceCounterManager = performanceCounterManager;
             this.logger = logger;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
         }
@@ -70,6 +74,7 @@ namespace kino.Core.Connectivity
         {
             var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateDealerSocket();
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ClusterSenderSocketSendRate);
             socket.Connect(rendezvousServer.UnicastUri);
 
             return socket;

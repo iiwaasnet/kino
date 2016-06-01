@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -21,6 +22,7 @@ namespace kino.Core.Connectivity
         private readonly ManualResetEventSlim newRendezvousConfiguration;
         private readonly IClusterMembership clusterMembership;
         private readonly ClusterMembershipConfiguration membershipConfiguration;
+        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
 
         public ClusterMessageListener(IRendezvousCluster rendezvousCluster,
                                       ISocketFactory socketFactory,
@@ -28,10 +30,12 @@ namespace kino.Core.Connectivity
                                       IClusterMessageSender clusterMessageSender,
                                       IClusterMembership clusterMembership,
                                       ClusterMembershipConfiguration membershipConfiguration,
+                                      IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                       ILogger logger)
         {
             this.logger = logger;
             this.membershipConfiguration = membershipConfiguration;
+            this.performanceCounterManager = performanceCounterManager;
             this.rendezvousCluster = rendezvousCluster;
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
@@ -131,6 +135,7 @@ namespace kino.Core.Connectivity
         private ISocket CreateRouterCommunicationSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ClusterListenerInternalSocketSendRate);
             SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
 
             return socket;
@@ -140,6 +145,7 @@ namespace kino.Core.Connectivity
         {
             var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateSubscriberSocket();
+            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ClusterListenerSocketReceiveRate);
             socket.Connect(rendezvousServer.BroadcastUri);
             socket.Subscribe();
 

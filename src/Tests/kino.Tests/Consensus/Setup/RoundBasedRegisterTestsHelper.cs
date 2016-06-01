@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using kino.Consensus;
 using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Sockets;
 using kino.Rendezvous.Configuration;
 using kino.Tests.Helpers;
@@ -42,22 +42,24 @@ namespace kino.Tests.Consensus.Setup
                                    Linger = TimeSpan.Zero
                                };
             var synodConfig = new kino.Consensus.Configuration.SynodConfiguration(new SynodConfigurationProvider(appConfig.Synod));
-            var loggerMock = new Mock<ILogger>();
+            var logger = new Mock<ILogger>();
+            var performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             var intercomMessageHub = new IntercomMessageHub(new SocketFactory(socketConfig),
                                                             synodConfig,
-                                                            loggerMock.Object);
+                                                            performanceCounterManager.Object,
+                                                            logger.Object);
             var ballotGenerator = new BallotGenerator(appConfig.Lease);
             var roundBasedRegister = new RoundBasedRegister(intercomMessageHub,
                                                             ballotGenerator,
                                                             synodConfig,
                                                             appConfig.Lease,
-                                                            loggerMock.Object);
+                                                            logger.Object);
 
             return new RoundBasedRegisterTestSetup(ballotGenerator, synodConfig.LocalNode, roundBasedRegister, appConfig.Lease.MaxLeaseTimeSpan);
         }
 
         internal static Uri[] GetSynodMembers()
-        {            
+        {
             return new[]
                    {
                        new Uri("tcp://127.0.0.1:3001"),

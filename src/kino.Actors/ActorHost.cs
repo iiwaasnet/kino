@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -22,6 +23,7 @@ namespace kino.Actors
         private readonly IAsyncQueue<AsyncMessageContext> asyncQueue;
         private readonly ISocketFactory socketFactory;
         private readonly RouterConfiguration routerConfiguration;
+        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly IAsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>> actorRegistrationsQueue;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly ILogger logger;
@@ -32,6 +34,7 @@ namespace kino.Actors
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
                          IAsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>> actorRegistrationsQueue,
                          RouterConfiguration routerConfiguration,
+                         IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                          ILogger logger)
         {
             this.logger = logger;
@@ -39,6 +42,7 @@ namespace kino.Actors
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
+            this.performanceCounterManager = performanceCounterManager;
             this.asyncQueue = asyncQueue;
             this.actorRegistrationsQueue = actorRegistrationsQueue;
             cancellationTokenSource = new CancellationTokenSource();
@@ -87,7 +91,7 @@ namespace kino.Actors
         {
             try
             {
-                using (var socket = CreateOneWaySocket())
+                using (var socket = CreateOneWaySocket(KinoPerformanceCounters.ActorHostRegistrationSocketSendRate))
                 {
                     var localSocketIdentity = localSocketIdentityPromise.Task.Result;
 
@@ -140,7 +144,7 @@ namespace kino.Actors
         {
             try
             {
-                using (var localSocket = CreateOneWaySocket())
+                using (var localSocket = CreateOneWaySocket(KinoPerformanceCounters.ActorHostAsyncResponseSocketSendRate))
                 {
                     foreach (var messageContext in asyncQueue.GetConsumingEnumerable(token))
                     {
@@ -293,9 +297,10 @@ namespace kino.Actors
             return task.Result ?? ActorResult.Empty;
         }
 
-        private ISocket CreateOneWaySocket()
+        private ISocket CreateOneWaySocket(KinoPerformanceCounters couter)
         {
             var socket = socketFactory.CreateDealerSocket();
+            socket.SendRate = performanceCounterManager.GetCounter(couter);
             SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
 
             return socket;
@@ -305,6 +310,8 @@ namespace kino.Actors
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(SocketIdentifier.CreateIdentity());
+            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ActorHostRequestSocketReceiveRate);
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ActorHostRequestSocketSendRate);
             SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
 
             return socket;

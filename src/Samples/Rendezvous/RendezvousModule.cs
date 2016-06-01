@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Rendezvous.Configuration;
 using TypedConfigProvider;
 

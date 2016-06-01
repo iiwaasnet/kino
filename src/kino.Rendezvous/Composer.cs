@@ -1,5 +1,6 @@
 ﻿using kino.Consensus;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Messaging;
 using kino.Core.Sockets;
 using kino.Rendezvous.Configuration;
@@ -11,9 +12,7 @@ namespace kino.Rendezvous
     {
         public IRendezvousService BuildRendezvousService(ApplicationConfiguration applicationConfiguration,
                                                          ILogger logger)
-        {
-            return BuildRendezvousService(null, applicationConfiguration, logger);
-        }
+            => BuildRendezvousService(null, applicationConfiguration, logger);
 
         public IRendezvousService BuildRendezvousService(SocketConfiguration socketConfiguration,
                                                          ApplicationConfiguration applicationConfiguration,
@@ -23,7 +22,13 @@ namespace kino.Rendezvous
             var ballotGenerator = new BallotGenerator(applicationConfiguration.Lease);
             var synodConfigurationProvider = new SynodConfigurationProvider(applicationConfiguration.Synod);
             var synodeConfiguration = new SynodConfiguration(synodConfigurationProvider);
-            var intercomMessageHub = new IntercomMessageHub(socketFactory, synodeConfiguration, logger);
+            var instanceNameResolver = new InstanceNameResolver();
+            var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver, logger);
+
+            var intercomMessageHub = new IntercomMessageHub(socketFactory,
+                                                            synodeConfiguration,
+                                                            performanceCounterManager,
+                                                            logger);
             var roundBasedRegister = new RoundBasedRegister(intercomMessageHub,
                                                             ballotGenerator,
                                                             synodeConfiguration,
@@ -41,6 +46,7 @@ namespace kino.Rendezvous
                                          socketFactory,
                                          messageSerializer,
                                          applicationConfiguration.Rendezvous,
+                                         performanceCounterManager,
                                          logger);
         }
     }

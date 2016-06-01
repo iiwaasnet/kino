@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using NetMQ;
@@ -45,6 +46,7 @@ namespace kino.Core.Sockets
                         throw new TimeoutException($"Sending timed out after {sendingTimeout.TotalMilliseconds} ms!");
                     }
                 }
+                SendRate?.Increment();
             }
             finally
             {
@@ -71,6 +73,7 @@ namespace kino.Core.Sockets
 
                     if (frames.Count > 0)
                     {
+                        ReceiveRate?.Increment();
                         return new Message(new MultipartMessage(frames));
                     }
                 }
@@ -81,7 +84,7 @@ namespace kino.Core.Sockets
             }
 
             return null;
-        }
+        }        
 
         public void Connect(Uri address)
             => socket.Connect(address.ToSocketAddress());
@@ -118,5 +121,9 @@ namespace kino.Core.Sockets
 
         public void Dispose()
             => socket.Dispose();
+
+        public IPerformanceCounter ReceiveRate { get; set; }
+
+        public IPerformanceCounter SendRate { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using kino.Client;
 using kino.Core.Connectivity;
 using kino.Core.Connectivity.ServiceMessageHandlers;
 using kino.Core.Diagnostics;
+using kino.Core.Diagnostics.Performance;
 using kino.Core.Sockets;
 
 namespace kino
@@ -29,13 +30,15 @@ namespace kino
         {
             var rendezvousClusterConfigurationReadonlyStorage = new RendezvousClusterConfigurationReadonlyStorage(rendezvousEndpoints);
             var rendezvousCluster = new RendezvousCluster(rendezvousClusterConfigurationReadonlyStorage);
-            var clusterMessageSender = new ClusterMessageSender(rendezvousCluster, routerConfiguration, socketFactory, logger);
+            var clusterMessageSender = new ClusterMessageSender(rendezvousCluster, routerConfiguration, socketFactory, null, logger);
             var clusterMembership = new ClusterMembership(clusterMembershipConfiguration, logger);
             var externalRoutingTable = new ExternalRoutingTable(logger);
             var routeDiscovery = new RouteDiscovery(clusterMessageSender,
                                                     routerConfiguration,
                                                     clusterMembershipConfiguration,
                                                     logger);
+            var instanceNameResolver = new InstanceNameResolver();
+            var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver, logger);
             var clusterMonitorProvider = new ClusterMonitorProvider(clusterMembershipConfiguration,
                                                                     routerConfiguration,
                                                                     clusterMembership,
@@ -46,6 +49,7 @@ namespace kino
                                                                                                clusterMessageSender,
                                                                                                clusterMembership,
                                                                                                clusterMembershipConfiguration,
+                                                                                               performanceCounterManager,
                                                                                                logger),
                                                                     routeDiscovery);
             var internalRoutingTable = new InternalRoutingTable();
@@ -65,6 +69,7 @@ namespace kino
                                      clusterMonitorProvider,
                                      serviceMessageHandlers,
                                      clusterMembershipConfiguration,
+                                     performanceCounterManager,
                                      logger);
         }
 
@@ -75,6 +80,7 @@ namespace kino
             return new MessageHub(socketFactory,
                                   callbackHandlerStack,
                                   messageHubConfiguration,
+                                  null,
                                   logger);
         }
 
@@ -83,6 +89,7 @@ namespace kino
         {
             return new ActorHostManager(socketFactory,
                                         routerConfiguration,
+                                        null,
                                         logger);
         }
     }
