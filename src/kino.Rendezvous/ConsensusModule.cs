@@ -7,7 +7,7 @@ using SynodConfiguration = kino.Consensus.Configuration.SynodConfiguration;
 
 namespace kino.Rendezvous
 {
-    public class ConsensusModule : RendezvousModule
+    public class ConsensusModule : Module
     {
         protected override void Load(ContainerBuilder builder)
         {
