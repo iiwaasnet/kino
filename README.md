@@ -3,7 +3,8 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/khn5imataa5uw4oj?svg=true)](https://ci.appveyor.com/project/iiwaasnet/kino)
 [![NuGet version](https://badge.fury.io/nu/kino.svg)](https://badge.fury.io/nu/kino)
-[![NuGet beta](https://img.shields.io/badge/nuget-kino%200.0.1.17--beta-orange.svg)](https://www.nuget.org/packages/kino/0.0.1.17-beta)
+[![NuGet beta](https://img.shields.io/badge/nuget-kino%200.0.1.18--beta-orange.svg)](https://www.nuget.org/packages/kino/0.0.1.18-beta)
+[![Chocolatey beta](https://img.shields.io/badge/kino.Rendezvous-0.0.1.18--beta-orange.svg)](https://chocolatey.org/packages/kino.Rendezvous/0.0.1.18-beta)
 
 Kino
 ------------------------
