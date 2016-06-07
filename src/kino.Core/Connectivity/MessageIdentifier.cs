@@ -36,7 +36,10 @@ namespace kino.Core.Connectivity
 
         public static MessageIdentifier Create<T>()
             where T : IMessageIdentifier, new()
-            => Create<T>(IdentityExtensions.Empty);
+        {
+            var message = new T();
+            return new MessageIdentifier(message.Version, message.Identity, message.Partition);
+        }
 
         public static MessageIdentifier Create(Type messageType, byte[] partition)
         {

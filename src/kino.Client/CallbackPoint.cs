@@ -11,35 +11,23 @@ namespace kino.Client
             MessageIdentifiers = messageIdentifiers;
         }
 
-        public static ICallbackPoint Create<T>()
+        public static ICallbackPoint Create<T>(byte[] partition = null)
             where T : IMessageIdentifier, new()
-        {
-            var message = new T();
-            return new CallbackPoint(new MessageIdentifier(message.Version, message.Identity, message.Partition));
-        }
+            => new CallbackPoint(MessageIdentifier.Create<T>(partition));
 
-        public static ICallbackPoint Create<T1, T2>()
+        public static ICallbackPoint Create<T1, T2>(byte[] partition = null)
             where T1 : IMessageIdentifier, new()
             where T2 : IMessageIdentifier, new()
-        {
-            var message1 = new T1();
-            var message2 = new T2();
-            return new CallbackPoint(new MessageIdentifier(message1),
-                                     new MessageIdentifier(message2));
-        }
+            => new CallbackPoint(MessageIdentifier.Create<T1>(partition),
+                                 MessageIdentifier.Create<T2>(partition));
 
-        public static ICallbackPoint Create<T1, T2, T3>()
+        public static ICallbackPoint Create<T1, T2, T3>(byte[] partition = null)
             where T1 : IMessageIdentifier, new()
             where T2 : IMessageIdentifier, new()
             where T3 : IMessageIdentifier, new()
-        {
-            var message1 = new T1();
-            var message2 = new T2();
-            var message3 = new T3();
-            return new CallbackPoint(new MessageIdentifier(message1),
-                                     new MessageIdentifier(message2),
-                                     new MessageIdentifier(message3));
-        }
+            => new CallbackPoint(MessageIdentifier.Create<T1>(partition),
+                                 MessageIdentifier.Create<T2>(partition),
+                                 MessageIdentifier.Create<T3>(partition));
 
         public IEnumerable<MessageIdentifier> MessageIdentifiers { get; }
     }
