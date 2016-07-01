@@ -1,24 +1,25 @@
 ﻿{
-  "dev": {
-    "routerUri": "inproc://router",
-    "scaleOutAddressUri": "tcp://127.0.0.2:5201",
-    "pingSilenceBeforeRendezvousFailover": "00:00:15",
-    "pongSilenceBeforeRouteDeletion": "00:00:25",
-    "runAsStandalone":  false,
+    "dev": {
+        "routerUri": "inproc://router",
+        "scaleOutAddressUri": "tcp://127.0.0.2:5201",
+        "pingSilenceBeforeRendezvousFailover": "00:00:15",
+        "pongSilenceBeforeRouteDeletion": "00:00:25",
+        "runAsStandalone": false,
+        "deferPeerConnection": true,
 
-    "rendezvousServers": [
-        {
-            "broadcastUri": "tcp://127.0.0.8:8001",
-            "unicastUri": "tcp://127.0.0.8:8011"
-        },
-        {
-            "broadcastUri": "tcp://127.0.0.8:8002",
-            "unicastUri": "tcp://127.0.0.8:8012"
-        },
-        {
-            "broadcastUri": "tcp://127.0.0.8:8003",
-            "unicastUri": "tcp://127.0.0.8:8013"
-        }
-    ]
-  }
+        "rendezvousServers": [
+            {
+                "broadcastUri": "tcp://127.0.0.8:8001",
+                "unicastUri": "tcp://127.0.0.8:8011"
+            },
+            {
+                "broadcastUri": "tcp://127.0.0.8:8002",
+                "unicastUri": "tcp://127.0.0.8:8012"
+            },
+            {
+                "broadcastUri": "tcp://127.0.0.8:8003",
+                "unicastUri": "tcp://127.0.0.8:8013"
+            }
+        ]
+    }
 }

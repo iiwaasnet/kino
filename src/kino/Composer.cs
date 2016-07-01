@@ -55,7 +55,7 @@ namespace kino
             var internalRoutingTable = new InternalRoutingTable();
             var serviceMessageHandlers = new IServiceMessageHandler[]
                                          {
-                                             new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership, logger),
+                                             new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership, routerConfiguration, logger),
                                              new InternalMessageRouteRegistrationHandler(clusterMonitorProvider, internalRoutingTable, logger),
                                              new MessageRouteDiscoveryHandler(clusterMonitorProvider, internalRoutingTable),
                                              new MessageRouteUnregistrationHandler(externalRoutingTable),

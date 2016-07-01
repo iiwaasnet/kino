@@ -12,12 +12,17 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         private readonly ILogger logger;
         private static readonly MessageIdentifier RegisterExternalMessageRouteMessageIdentifier = MessageIdentifier.Create<RegisterExternalMessageRouteMessage>();
         private readonly IClusterMembership clusterMembership;
+        private readonly RouterConfiguration config;
 
-        public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable, IClusterMembership clusterMembership, ILogger logger)
+        public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable,
+                                                       IClusterMembership clusterMembership,
+                                                       RouterConfiguration config,
+                                                       ILogger logger)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.logger = logger;
             this.clusterMembership = clusterMembership;
+            this.config = config;
         }
 
         public bool Handle(IMessage message, ISocket forwardingSocket)
@@ -38,7 +43,12 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                         var messageHandlerIdentifier = new MessageIdentifier(registration.Version,
                                                                              registration.Identity,
                                                                              registration.Partition);
-                        externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, handlerSocketIdentifier, uri);
+                        var peerConnection = externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, handlerSocketIdentifier, uri);
+                        if (!config.DeferPeerConnection && !peerConnection.Connected)
+                        {
+                            forwardingSocket.Connect(uri);
+                            peerConnection.Connected = true;
+                        }
                     }
                     catch (Exception err)
                     {

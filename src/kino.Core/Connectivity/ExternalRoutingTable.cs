@@ -24,18 +24,18 @@ namespace kino.Core.Connectivity
             uriReferenceCount = new HashDictionary<string, int>();
         }
 
-        public void AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri)
+        public PeerConnection AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri)
         {
-            var mapped = MapMessageToSocket(messageIdentifier, socketIdentifier);
+            var peerConnection = new PeerConnection
+                                 {
+                                     Node = new Node(uri, socketIdentifier.Identity),
+                                     Connected = false
+                                 };
+            var socketAlreadyFound = socketToConnectionMap.FindOrAdd(socketIdentifier, ref peerConnection);
 
-            if (mapped)
+            if (MapMessageToSocket(messageIdentifier, socketIdentifier))
             {
-                var peerConnection = new PeerConnection
-                                     {
-                                         Node = new Node(uri, socketIdentifier.Identity),
-                                         Connected = false
-                                     };
-                if (!socketToConnectionMap.FindOrAdd(socketIdentifier, ref peerConnection))
+                if (!socketAlreadyFound)
                 {
                     IncrementUriReferenceCount(uri.ToSocketAddress());
                 }
@@ -47,6 +47,8 @@ namespace kino.Core.Connectivity
                              $"Socket:{socketIdentifier.Identity.GetAnyString()} " +
                              $"Message:{messageIdentifier}");
             }
+
+            return peerConnection;
         }
 
         private bool MapMessageToSocket(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier)

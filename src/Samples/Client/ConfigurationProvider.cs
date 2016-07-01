@@ -22,7 +22,8 @@ namespace Client
             => new RouterConfiguration
                {
                    RouterAddress = new SocketEndpoint(appConfig.RouterUri),
-                   ScaleOutAddress = new SocketEndpoint(appConfig.ScaleOutAddressUri)
+                   ScaleOutAddress = new SocketEndpoint(appConfig.ScaleOutAddressUri),
+                   DeferPeerConnection = appConfig.DeferPeerConnection
                };
 
         public ClusterMembershipConfiguration GetClusterMembershipConfiguration()
