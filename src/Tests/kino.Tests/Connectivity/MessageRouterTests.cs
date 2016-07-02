@@ -291,7 +291,7 @@ namespace kino.Tests.Connectivity
             var actorIdentifier = MessageIdentifier.Create<SimpleMessage>(partition);
             var internalRoutingTable = new Mock<IInternalRoutingTable>();
             internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
-                               .Returns(actorSocketIdentity);
+                                .Returns(actorSocketIdentity);
 
             var router = CreateMessageRouter(internalRoutingTable.Object);
             try
@@ -319,7 +319,7 @@ namespace kino.Tests.Connectivity
             var actorIdentifier = MessageIdentifier.Create<SimpleMessage>(actorPartition);
             var internalRoutingTable = new Mock<IInternalRoutingTable>();
             internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
-                               .Returns(actorSocketIdentity);
+                                .Returns(actorSocketIdentity);
 
             var router = CreateMessageRouter(internalRoutingTable.Object);
             try
@@ -348,7 +348,7 @@ namespace kino.Tests.Connectivity
             var actorIdentifier = MessageIdentifier.Create<SimpleMessage>(partition);
             var internalRoutingTable = new Mock<IInternalRoutingTable>();
             internalRoutingTable.Setup(m => m.FindRoute(It.Is<MessageIdentifier>(mhi => mhi.Equals(actorIdentifier))))
-                               .Returns(actorSocketIdentity);
+                                .Returns(actorSocketIdentity);
 
             var router = CreateMessageRouter(internalRoutingTable.Object);
             try
@@ -771,7 +771,8 @@ namespace kino.Tests.Connectivity
         public void IfRegisterExternalMessageRouteMessageReceived_AllRoutesAreAddedToExternalRoutingTable()
         {
             var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership.Object, logger)};
+            var config = new RouterConfiguration {DeferPeerConnection = true};
+            serviceMessageHandlers = new[] {new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership.Object, config, logger)};
 
             var router = CreateMessageRouter(null, externalRoutingTable);
             try
