@@ -8,7 +8,7 @@ namespace kino.Core.Connectivity
     {
         private readonly int hashCode;
 
-        internal MessageIdentifier(byte[] version, byte[] identity, byte[] partition)
+        public MessageIdentifier(byte[] version, byte[] identity, byte[] partition)
         {
             Version = version;
             Identity = identity;
@@ -22,7 +22,7 @@ namespace kino.Core.Connectivity
         {
         }
 
-        internal MessageIdentifier(byte[] identity)
+        public MessageIdentifier(byte[] identity)
             : this(IdentityExtensions.Empty, identity, IdentityExtensions.Empty)
         {
         }

@@ -9,6 +9,10 @@ namespace kino.Core.Messaging
 
         void SetReceiverNode(SocketIdentifier socketIdentifier);
 
+        void EncryptPayload();
+
+        void DecryptPayload();
+
         bool Equals(MessageIdentifier messageIdentifier);
 
         DistributionPattern Distribution { get; }
@@ -22,5 +26,7 @@ namespace kino.Core.Messaging
         byte[] Body { get; }
 
         ushort Hops { get; }
+
+        string SecurityDomain { get; }
     }
 }

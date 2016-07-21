@@ -5,13 +5,13 @@ using kino.Core.Sockets;
 
 namespace kino.Core.Connectivity.ServiceMessageHandlers
 {
-    public class RouteUnregistrationHandler : IServiceMessageHandler
+    public class UnreachableNodeUnregistrationHandler : IServiceMessageHandler
     {
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IClusterMembership clusterMembership;
-        private static readonly MessageIdentifier UnregisterNodeMessageRouteMessageIdentifier = MessageIdentifier.Create<UnregisterNodeMessageRouteMessage>();
 
-        public RouteUnregistrationHandler(IExternalRoutingTable externalRoutingTable, IClusterMembership clusterMembership)
+        public UnreachableNodeUnregistrationHandler(IExternalRoutingTable externalRoutingTable,
+                                                    IClusterMembership clusterMembership)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.clusterMembership = clusterMembership;
@@ -22,7 +22,8 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             var shouldHandle = IsUnregisterRouting(message);
             if (shouldHandle)
             {
-                var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
+                var payload = message.GetPayload<UnregisterUnreachableNodeMessage>();
+
                 clusterMembership.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
                 var connectionAction = externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(payload.SocketIdentity));
                 if (connectionAction == PeerConnectionAction.Disconnect)
@@ -35,6 +36,6 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         }
 
         private static bool IsUnregisterRouting(IMessage message)
-            => message.Equals(UnregisterNodeMessageRouteMessageIdentifier);
+            => message.Equals(KinoMessages.UnregisterUnreachableNode);
     }
 }

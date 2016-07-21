@@ -6,6 +6,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace kino.Core.Connectivity
@@ -16,6 +17,7 @@ namespace kino.Core.Connectivity
         private readonly RouterConfiguration routerConfiguration;
         private readonly ISocketFactory socketFactory;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
+        private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
         private readonly BlockingCollection<IMessage> outgoingMessages;
 
@@ -23,12 +25,14 @@ namespace kino.Core.Connectivity
                                     RouterConfiguration routerConfiguration,
                                     ISocketFactory socketFactory,
                                     IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
+                                    ISecurityProvider securityProvider,
                                     ILogger logger)
         {
             this.rendezvousCluster = rendezvousCluster;
             this.routerConfiguration = routerConfiguration;
             this.socketFactory = socketFactory;
             this.performanceCounterManager = performanceCounterManager;
+            this.securityProvider = securityProvider;
             this.logger = logger;
             outgoingMessages = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
         }
@@ -54,7 +58,8 @@ namespace kino.Core.Connectivity
                     {
                     }
 
-                    clusterMonitorSendingSocket.SendMessage(CreateUnregisterRoutingMessage());
+                    UnregisterRoutingSelf(clusterMonitorSendingSocket);
+                    //TODO: Sending is async, probably a short delay needed to allow messages to be sent
                 }
             }
             catch (Exception err)
@@ -63,12 +68,21 @@ namespace kino.Core.Connectivity
             }
         }
 
-        private IMessage CreateUnregisterRoutingMessage()
-            => Message.Create(new UnregisterNodeMessageRouteMessage
-                              {
-                                  Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                  SocketIdentity = routerConfiguration.ScaleOutAddress.Identity
-                              });
+        private void UnregisterRoutingSelf(ISocket clusterMonitorSendingSocket)
+        {
+            foreach (var securityDomain in securityProvider.GetAllowedSecurityDomains())
+            {
+                var message = Message.Create(new UnregisterNodeMessage
+                                             {
+                                                 Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                                 SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                             },
+                                             securityDomain);
+                message.As<Message>().SignMessage(securityProvider);
+
+                clusterMonitorSendingSocket.SendMessage(message);
+            }
+        }
 
         private ISocket CreateClusterMonitorSendingSocket()
         {

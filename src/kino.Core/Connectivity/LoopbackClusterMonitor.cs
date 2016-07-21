@@ -13,7 +13,7 @@ namespace kino.Core.Connectivity
         {
         }
 
-        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers)
+        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers, string securityDomain)
         {
         }
 

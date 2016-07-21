@@ -1,4 +1,6 @@
-﻿namespace kino.Core.Connectivity
+﻿using kino.Core.Security;
+
+namespace kino.Core.Connectivity
 {
     public class ClusterMonitorProvider : IClusterMonitorProvider
     {
@@ -9,7 +11,8 @@
                                       IClusterMembership clusterMembership,
                                       IClusterMessageSender clusterMessageSender,
                                       IClusterMessageListener clusterMessageListener,
-                                      IRouteDiscovery routeDiscovery)
+                                      IRouteDiscovery routeDiscovery,
+                                      ISecurityProvider securityProvider)
         {
             clusterMonitor = membershipConfiguration.RunAsStandalone
                                  ? (IClusterMonitor) new LoopbackClusterMonitor()
@@ -17,7 +20,8 @@
                                                       clusterMembership,
                                                       clusterMessageSender,
                                                       clusterMessageListener,
-                                                      routeDiscovery);
+                                                      routeDiscovery,
+                                                      securityProvider);
         }
 
         public IClusterMonitor GetClusterMonitor()

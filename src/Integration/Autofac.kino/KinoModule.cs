@@ -5,6 +5,7 @@ using kino.Core.Connectivity;
 using kino.Core.Connectivity.ServiceMessageHandlers;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace Autofac.kino
@@ -79,6 +80,10 @@ namespace Autofac.kino
             builder.RegisterType<RendezvousClusterConfigurationReadonlyStorage>()
                    .As<IConfigurationStorage<RendezvousClusterConfiguration>>()
                    .SingleInstance();
+
+            builder.RegisterType<NullSecurityProvider>()
+                   .As<ISecurityProvider>()
+                   .SingleInstance();
         }
 
         private void RegisterFrameworkActors(ContainerBuilder builder)
@@ -94,6 +99,10 @@ namespace Autofac.kino
 
         private void RegisterServiceMessageHandlers(ContainerBuilder builder)
         {
+            builder.RegisterType<ClusterMessageRoutesRequestHandler>()
+                   .As<IServiceMessageHandler>()
+                   .SingleInstance();
+
             builder.RegisterType<ExternalMessageRouteRegistrationHandler>()
                    .As<IServiceMessageHandler>()
                    .SingleInstance();
@@ -110,11 +119,15 @@ namespace Autofac.kino
                    .As<IServiceMessageHandler>()
                    .SingleInstance();
 
-            builder.RegisterType<RoutesRegistrationRequestHandler>()
+            builder.RegisterType<NodeMessageRoutesRequestHandler>()
                    .As<IServiceMessageHandler>()
                    .SingleInstance();
 
-            builder.RegisterType<RouteUnregistrationHandler>()
+            builder.RegisterType<NodeUnregistrationHandler>()
+                   .As<IServiceMessageHandler>()
+                   .SingleInstance();
+
+            builder.RegisterType<UnreachableNodeUnregistrationHandler>()
                    .As<IServiceMessageHandler>()
                    .SingleInstance();
         }

@@ -3,9 +3,9 @@ using ProtoBuf;
 namespace kino.Core.Messaging.Messages
 {
     [ProtoContract]
-    public class UnregisterNodeMessageRouteMessage : Payload
+    public class UnregisterNodeMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = BuildFullIdentity("UNREGNODEROUTE");
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("UNREGNODE");
         private static readonly byte[] MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]

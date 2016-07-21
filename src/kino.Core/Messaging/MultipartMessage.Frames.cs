@@ -17,10 +17,11 @@
             internal const int ReceiverIdentity = 11;
             internal const int CallbackDescription = 12;
             internal const int RoutingDescription = 13;
+            internal const int Signature = 14;
         }
 
         internal static ushort GetLastFixedFrameIndex()
-            => ReversedFramesV4.RoutingDescription;
+            => ReversedFramesV4.Signature;
 
         private class ForwardFrames
         {

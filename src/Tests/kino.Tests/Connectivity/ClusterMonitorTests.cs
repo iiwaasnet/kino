@@ -6,6 +6,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
@@ -30,10 +31,12 @@ namespace kino.Tests.Connectivity
         private IClusterMessageListener clusterMessageListener;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private Mock<IRouteDiscovery> routeDiscovery;
+        private Mock<ISecurityProvider> securityProvider;
 
         [SetUp]
         public void Setup()
         {
+            securityProvider = new Mock<ISecurityProvider>();
             clusterMonitorSocketFactory = new ClusterMonitorSocketFactory();
             logger = new Mock<ILogger>();
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
@@ -67,6 +70,7 @@ namespace kino.Tests.Connectivity
                                                             routerConfiguration,
                                                             socketFactory.Object,
                                                             performanceCounterManager.Object,
+                                                            securityProvider.Object,
                                                             logger.Object);
             clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
                                                                 socketFactory.Object,
@@ -75,6 +79,7 @@ namespace kino.Tests.Connectivity
                                                                 clusterMembership.Object,
                                                                 clusterMembershipConfiguration,
                                                                 performanceCounterManager.Object,
+                                                                securityProvider.Object,
                                                                 logger.Object);
         }
 
@@ -85,7 +90,8 @@ namespace kino.Tests.Connectivity
                                                     clusterMembership.Object,
                                                     clusterMessageSender,
                                                     clusterMessageListener,
-                                                    routeDiscovery.Object);
+                                                    routeDiscovery.Object,
+                                                    securityProvider.Object);
             try
             {
                 clusterMonitor.Start(StartTimeout);
@@ -118,7 +124,8 @@ namespace kino.Tests.Connectivity
                                                     clusterMembership.Object,
                                                     clusterMessageSender,
                                                     clusterMessageListener,
-                                                    routeDiscovery.Object);
+                                                    routeDiscovery.Object,
+                                                    securityProvider.Object);
             try
             {
                 clusterMonitor.Start(StartTimeout);
@@ -151,7 +158,8 @@ namespace kino.Tests.Connectivity
                                                     clusterMembership.Object,
                                                     clusterMessageSender,
                                                     clusterMessageListener,
-                                                    routeDiscovery.Object);
+                                                    routeDiscovery.Object,
+                                                    securityProvider.Object);
             try
             {
                 clusterMonitor.Start(StartTimeout);
@@ -184,7 +192,9 @@ namespace kino.Tests.Connectivity
                                                     new RouteDiscovery(clusterMessageSender,
                                                                        routerConfiguration,
                                                                        clusterMembershipConfiguration,
-                                                                       logger.Object));
+                                                                       securityProvider.Object,
+                                                                       logger.Object),
+                                                    securityProvider.Object);
             try
             {
                 clusterMonitor.Start(StartTimeout);

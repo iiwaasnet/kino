@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security;
 using kino.Core.Connectivity;
 using kino.Core.Framework;
+using kino.Core.Security;
 
 namespace kino.Core.Messaging
 {
@@ -10,14 +13,16 @@ namespace kino.Core.Messaging
     {
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
         public static readonly string KinoMessageNamespace = "KINO";
+        private const int DefaultMACBufferSize = 2 * 1024;
 
         private object payload;
         private List<SocketEndpoint> routing;
         private byte[] receiverNodeIdentity;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
-        private Message(IPayload payload, DistributionPattern distribution)
+        private Message(IPayload payload, string securityDomain)
         {
+            SecurityDomain = securityDomain;
             WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
             CallbackPoint = Enumerable.Empty<MessageIdentifier>();
@@ -25,17 +30,35 @@ namespace kino.Core.Messaging
             Version = payload.Version;
             Identity = payload.Identity;
             Partition = payload.Partition;
-            Distribution = distribution;
             TTL = TimeSpan.Zero;
             Hops = 0;
+            Signature = IdentityExtensions.Empty;
             TraceOptions = MessageTraceOptions.None;
         }
 
-        public static IMessage CreateFlowStartMessage(IPayload payload)
-            => new Message(payload, DistributionPattern.Unicast) {CorrelationId = GenerateCorrelationId()};
+        public static IMessage CreateFlowStartMessage(IPayload payload, string securityDomain = null)
+            => new Message(payload, securityDomain)
+               {
+                   Distribution = DistributionPattern.Unicast,
+                   CorrelationId = GenerateCorrelationId()
+               };
 
-        public static IMessage Create(IPayload payload, DistributionPattern distributionPattern = DistributionPattern.Unicast)
-            => new Message(payload, distributionPattern) {CorrelationId = EmptyCorrelationId};
+        public static IMessage Create(IPayload payload,
+                                      DistributionPattern distributionPattern = DistributionPattern.Unicast)
+            => new Message(payload, null)
+               {
+                   Distribution = distributionPattern,
+                   CorrelationId = EmptyCorrelationId
+               };
+
+        public static IMessage Create(IPayload payload,
+                                      string securityDomain,
+                                      DistributionPattern distributionPattern = DistributionPattern.Unicast)
+            => new Message(payload, securityDomain)
+               {
+                   Distribution = distributionPattern,
+                   CorrelationId = EmptyCorrelationId
+               };
 
         private static byte[] GenerateCorrelationId()
             //TODO: Better implementation
@@ -55,6 +78,7 @@ namespace kino.Core.Messaging
             Body = multipartMessage.GetMessageBody();
             TTL = multipartMessage.GetMessageTTL();
             CorrelationId = multipartMessage.GetCorrelationId();
+            Signature = multipartMessage.GetSignature();
 
             MessageTraceOptions traceOptions;
             DistributionPattern distributionPattern;
@@ -127,6 +151,45 @@ namespace kino.Core.Messaging
             }
         }
 
+        internal void SignMessage(ISignatureProvider signatureProvider)
+        {
+            AssertSecurityDomainIsSet();
+
+            Signature = signatureProvider.CreateSignature(SecurityDomain, GetSignatureFields());
+        }
+
+        internal void VerifySignature(ISignatureProvider signatureProvider)
+        {
+            var mac = signatureProvider.CreateSignature(SecurityDomain, GetSignatureFields());
+
+            if (!Unsafe.Equals(Signature, mac))
+            {
+                throw new WrongMessageSignatureException();
+            }
+        }
+
+        private void AssertSecurityDomainIsSet()
+        {
+            if (string.IsNullOrWhiteSpace(SecurityDomain))
+            {
+                throw new SecurityException($"{nameof(SecurityDomain)} is not set!");
+            }
+        }
+
+        private byte[] GetSignatureFields()
+        {
+            using (var stream = new MemoryStream(DefaultMACBufferSize))
+            {
+                stream.Write(Identity, 0, Identity.Length);
+                stream.Write(Version, 0, Version.Length);
+                stream.Write(Partition, 0, Partition.Length);
+                stream.Write(Body, 0, Body.Length);
+                var callbackReceiverIdentity = CallbackReceiverIdentity ?? IdentityExtensions.Empty;
+                stream.Write(callbackReceiverIdentity, 0, callbackReceiverIdentity.Length);
+                return stream.GetBuffer();
+            }
+        }
+
         internal void AddHop()
             => Hops++;
 
@@ -156,6 +219,16 @@ namespace kino.Core.Messaging
             where T : IPayload, new()
             => new T().Deserialize<T>(content);
 
+        public void EncryptPayload()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DecryptPayload()
+        {
+            throw new NotImplementedException();
+        }
+
         public override string ToString()
             => $"{nameof(Identity)}[{Identity?.GetAnyString()}]-" +
                $"{nameof(Version)}[{Version?.GetAnyString()}]-" +
@@ -177,6 +250,8 @@ namespace kino.Core.Messaging
 
         public byte[] ReceiverIdentity { get; private set; }
 
+        public byte[] Signature { get; private set; }
+
         public IEnumerable<MessageIdentifier> CallbackPoint { get; private set; }
 
         public byte[] CallbackReceiverIdentity { get; private set; }
@@ -190,5 +265,7 @@ namespace kino.Core.Messaging
         public ushort Hops { get; private set; }
 
         public int WireFormatVersion { get; private set; }
+
+        public string SecurityDomain { get; }
     }
 }

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using kino.Core.Diagnostics;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace kino.Core.Connectivity.ServiceMessageHandlers
@@ -11,15 +13,17 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
     {
         private readonly IClusterMonitor clusterMonitor;
         private readonly IInternalRoutingTable internalRoutingTable;
+        private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
-        private static readonly MessageIdentifier RegisterInternalMessageRouteMessageIdentifier = MessageIdentifier.Create<RegisterInternalMessageRouteMessage>();
 
         public InternalMessageRouteRegistrationHandler(IClusterMonitorProvider clusterMonitorProvider,
                                                        IInternalRoutingTable internalRoutingTable,
+                                                       ISecurityProvider securityProvider,
                                                        ILogger logger)
         {
             clusterMonitor = clusterMonitorProvider.GetClusterMonitor();
             this.internalRoutingTable = internalRoutingTable;
+            this.securityProvider = securityProvider;
             this.logger = logger;
         }
 
@@ -37,8 +41,15 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                 }
                 if (payload.GlobalMessageContracts != null)
                 {
-                    var globalHandlers = UpdateLocalRoutingTable(handlerSocketIdentifier, payload.GlobalMessageContracts);
-                    clusterMonitor.RegisterSelf(globalHandlers);
+                    var messageGroups = UpdateLocalRoutingTable(handlerSocketIdentifier, payload.GlobalMessageContracts)
+                        .Select(mh => new { Message = mh, SecurityDomain = securityProvider.GetSecurityDomain(mh.Identity)})
+                        .GroupBy(mh => mh.SecurityDomain);
+
+                    foreach (var group in messageGroups)
+                    {
+                        clusterMonitor.RegisterSelf(group.Select(g => g.Message), group.Key);
+                    }
+                    
                 }
             }
 
@@ -46,7 +57,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         }
 
         private static bool IsInternalMessageRoutingRegistration(IMessage message)
-            => message.Equals(RegisterInternalMessageRouteMessageIdentifier);
+            => message.Equals(KinoMessages.RegisterInternalMessageRoute);
 
         private IEnumerable<MessageIdentifier> UpdateLocalRoutingTable(SocketIdentifier socketIdentifier, MessageContract[] messageContracts)
         {

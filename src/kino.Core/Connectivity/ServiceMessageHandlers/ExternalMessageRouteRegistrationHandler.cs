@@ -1,7 +1,9 @@
 ﻿using System;
 using kino.Core.Diagnostics;
+using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace kino.Core.Connectivity.ServiceMessageHandlers
@@ -10,19 +12,21 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
     {
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ILogger logger;
-        private static readonly MessageIdentifier RegisterExternalMessageRouteMessageIdentifier = MessageIdentifier.Create<RegisterExternalMessageRouteMessage>();
         private readonly IClusterMembership clusterMembership;
         private readonly RouterConfiguration config;
+        private readonly ISecurityProvider securityProvider;
 
         public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable,
                                                        IClusterMembership clusterMembership,
                                                        RouterConfiguration config,
+                                                       ISecurityProvider securityProvider,
                                                        ILogger logger)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.logger = logger;
             this.clusterMembership = clusterMembership;
             this.config = config;
+            this.securityProvider = securityProvider;
         }
 
         public bool Handle(IMessage message, ISocket forwardingSocket)
@@ -30,29 +34,34 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             var shouldHandle = IsExternalRouteRegistration(message);
             if (shouldHandle)
             {
-                var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
-                clusterMembership.AddClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
-
-                var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
-                var uri = new Uri(payload.Uri);
-
-                foreach (var registration in payload.MessageContracts)
+                if (securityProvider.SecurityDomainIsAllowed(message.SecurityDomain))
                 {
-                    try
+                    message.As<Message>().VerifySignature(securityProvider);
+
+                    var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
+                    clusterMembership.AddClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
+
+                    var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+                    var uri = new Uri(payload.Uri);
+                    //TODO: Check if all payload.MessageContracts belong to the same SecurityDomain
+                    foreach (var registration in payload.MessageContracts)
                     {
-                        var messageHandlerIdentifier = new MessageIdentifier(registration.Version,
-                                                                             registration.Identity,
-                                                                             registration.Partition);
-                        var peerConnection = externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, handlerSocketIdentifier, uri);
-                        if (!config.DeferPeerConnection && !peerConnection.Connected)
+                        try
                         {
-                            forwardingSocket.Connect(uri);
-                            peerConnection.Connected = true;
+                            var messageHandlerIdentifier = new MessageIdentifier(registration.Version,
+                                                                                 registration.Identity,
+                                                                                 registration.Partition);
+                            var peerConnection = externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, handlerSocketIdentifier, uri);
+                            if (!config.DeferPeerConnection && !peerConnection.Connected)
+                            {
+                                forwardingSocket.Connect(uri);
+                                peerConnection.Connected = true;
+                            }
                         }
-                    }
-                    catch (Exception err)
-                    {
-                        logger.Error(err);
+                        catch (Exception err)
+                        {
+                            logger.Error(err);
+                        }
                     }
                 }
             }
@@ -61,6 +70,6 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         }
 
         private static bool IsExternalRouteRegistration(IMessage message)
-            => message.Equals(RegisterExternalMessageRouteMessageIdentifier);
+            => message.Equals(KinoMessages.RegisterExternalMessageRoute);
     }
 }

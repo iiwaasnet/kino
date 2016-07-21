@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Core.Connectivity.ServiceMessageHandlers;
@@ -9,6 +10,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 using NetMQ;
 
@@ -29,6 +31,7 @@ namespace kino.Core.Connectivity
         private readonly IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
         private readonly ClusterMembershipConfiguration membershipConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
+        private readonly ISecurityProvider securityProvider;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageRouter(ISocketFactory socketFactory,
@@ -39,6 +42,7 @@ namespace kino.Core.Connectivity
                              IEnumerable<IServiceMessageHandler> serviceMessageHandlers,
                              ClusterMembershipConfiguration membershipConfiguration,
                              IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
+                             ISecurityProvider securityProvider,
                              ILogger logger)
         {
             this.logger = logger;
@@ -51,6 +55,7 @@ namespace kino.Core.Connectivity
             this.serviceMessageHandlers = serviceMessageHandlers;
             this.membershipConfiguration = membershipConfiguration;
             this.performanceCounterManager = performanceCounterManager;
+            this.securityProvider = securityProvider;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -84,16 +89,24 @@ namespace kino.Core.Connectivity
 
                     while (!token.IsCancellationRequested)
                     {
+                        Message message = null;
                         try
                         {
-                            var message = (Message) scaleOutFrontend.ReceiveMessage(token);
+                            message = (Message) scaleOutFrontend.ReceiveMessage(token);
                             if (message != null)
                             {
+                                securityProvider.VerifyDomainSignature(message, new MessageIdentifier(message.Identity));
+
                                 message.SetSocketIdentity(localSocketIdentity);
                                 scaleOutFrontend.SendMessage(message);
 
                                 ReceivedFromOtherNode(message);
                             }
+                        }
+                        catch (SecurityException err)
+                        {
+                            CallbackSecurityException(scaleOutFrontend, err, message, localSocketIdentity);
+                            logger.Error(err);
                         }
                         catch (Exception err)
                         {
@@ -220,13 +233,15 @@ namespace kino.Core.Connectivity
                     message.AddHop();
                     message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
 
+                    message.SignMessage(securityProvider.CreateDomainSignature(new MessageIdentifier(message.Identity), message));
+
                     scaleOutBackend.SendMessage(message);
 
                     ForwardedToOtherNode(message);
                 }
                 catch (HostUnreachableException err)
                 {
-                    var unregMessage = new UnregisterNodeMessageRouteMessage
+                    var unregMessage = new UnregisterUnreachableNodeMessage
                                        {
                                            SocketIdentity = route.Node.SocketIdentity,
                                            Uri = route.Node.Uri.ToSocketAddress()
@@ -346,6 +361,18 @@ namespace kino.Core.Connectivity
                                                                   ? TimeSpan.FromMilliseconds(200)
                                                                   : routerConfiguration.ConnectionEstablishWaitTime;
             return routerConfiguration;
+        }
+
+        private static void CallbackSecurityException(ISocket scaleOutFrontend, Exception err, Message messageIn, byte[] localSocketIdentity)
+        {
+            var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err, StackTrace = err.StackTrace});
+            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
+            messageOut.SetCorrelationId(messageIn.CorrelationId);
+            messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
+            messageOut.TraceOptions |= messageIn.TraceOptions;
+            messageOut.SetSocketIdentity(localSocketIdentity);
+
+            scaleOutFrontend.SendMessage(messageOut);
         }
     }
 }

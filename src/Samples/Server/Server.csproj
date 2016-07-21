@@ -82,13 +82,13 @@
     <Compile Include="IConfigurationProvider.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Messages\GroupCharsResponseMessage.cs" />
-    <Compile Include="Messages\GroupCharsRequestMessage.cs" />
     <Compile Include="MainModule.cs" />
     <Compile Include="Messages\EhlloMessage.cs" />
     <Compile Include="Messages\HelloMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RendezvousNode.cs" />
+    <Compile Include="SampleSecurityProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

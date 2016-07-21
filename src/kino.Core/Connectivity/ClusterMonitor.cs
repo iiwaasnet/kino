@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 
 namespace kino.Core.Connectivity
 {
@@ -19,16 +20,19 @@ namespace kino.Core.Connectivity
         private readonly IClusterMessageSender clusterMessageSender;
         private readonly IClusterMessageListener clusterMessageListener;
         private readonly IRouteDiscovery routeDiscovery;
+        private readonly ISecurityProvider securityProvider;
 
         public ClusterMonitor(RouterConfiguration routerConfiguration,
                               IClusterMembership clusterMembership,
                               IClusterMessageSender clusterMessageSender,
                               IClusterMessageListener clusterMessageListener,
-                              IRouteDiscovery routeDiscovery)
+                              IRouteDiscovery routeDiscovery,
+                              ISecurityProvider securityProvider)
         {
             this.clusterMessageSender = clusterMessageSender;
             this.clusterMessageListener = clusterMessageListener;
             this.routeDiscovery = routeDiscovery;
+            this.securityProvider = securityProvider;
             this.routerConfiguration = routerConfiguration;
             this.clusterMembership = clusterMembership;
         }
@@ -74,7 +78,7 @@ namespace kino.Core.Connectivity
             StartProcessingClusterMessages(TimeSpan.FromMilliseconds(-1));
         }
 
-        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers)
+        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers, string securityDomain)
         {
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
@@ -86,37 +90,55 @@ namespace kino.Core.Connectivity
                                                                                                  Identity = mi.Identity,
                                                                                                  Partition = mi.Partition
                                                                                              }).ToArray()
-                                         });
+                                         },
+                                         securityDomain);
+            message.As<Message>().SignMessage(securityProvider);
             clusterMessageSender.EnqueueMessage(message);
         }
 
         public void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers)
         {
-            var message = Message.Create(new UnregisterMessageRouteMessage
-                                         {
-                                             Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                             SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                             MessageContracts = messageIdentifiers
-                                                 .Select(mi => new MessageContract
-                                                               {
-                                                                   Identity = mi.Identity,
-                                                                   Version = mi.Version,
-                                                                   Partition = mi.Partition
-                                                               }
-                                                 )
-                                                 .ToArray()
-                                         });
-            clusterMessageSender.EnqueueMessage(message);
+            var messageGroups = messageIdentifiers.Select(mi => new
+                                                                {
+                                                                    Message = new MessageContract
+                                                                              {
+                                                                                  Identity = mi.Identity,
+                                                                                  Version = mi.Version,
+                                                                                  Partition = mi.Partition
+                                                                              },
+                                                                    SecurityDomain = securityProvider.GetSecurityDomain(mi.Identity)
+                                                                })
+                                                  .GroupBy(mh => mh.SecurityDomain);
+
+            foreach (var group in messageGroups)
+            {
+                var message = Message.Create(new UnregisterMessageRouteMessage
+                                             {
+                                                 Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                                 SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                                 MessageContracts = group.Select(g => g.Message).ToArray()
+                                             },
+                                             group.Key);
+                message.As<Message>().SignMessage(securityProvider);
+
+                clusterMessageSender.EnqueueMessage(message);
+            }
         }
 
         public void RequestClusterRoutes()
         {
-            var message = Message.Create(new RequestClusterMessageRoutesMessage
-                                         {
-                                             RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                             RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()
-                                         });
-            clusterMessageSender.EnqueueMessage(message);
+            foreach (var securityDomain in securityProvider.GetAllowedSecurityDomains())
+            {
+                var message = Message.Create(new RequestClusterMessageRoutesMessage
+                                             {
+                                                 RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                                 RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()
+                                             },
+                                             securityDomain);
+                message.As<Message>().SignMessage(securityProvider);
+
+                clusterMessageSender.EnqueueMessage(message);
+            }
         }
 
         public IEnumerable<SocketEndpoint> GetClusterMembers()

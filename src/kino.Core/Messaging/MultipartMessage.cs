@@ -44,6 +44,7 @@ namespace kino.Core.Messaging
                 frames.Add(callback.Identity);
             }
             //TODO: Optimize calculation of body, callbacks and routing frames offsets
+            frames.Add(GetSignatureFrame(message)); // 14
             frames.Add(GetRoutingDescriptionFrame(message)); // 13
             frames.Add(GetCallbackDescriptionFrame(message)); // 12
             frames.Add(GetReceiverIdentityFrame(message)); // 11
@@ -128,6 +129,9 @@ namespace kino.Core.Messaging
             return (ushort) (callbacksStartFrameIndex + callbacksFrameCount);
         }
 
+        private byte[] GetSignatureFrame(Message message)
+            => message.Signature ?? EmptyFrame;
+
         private byte[] GetSocketIdentity(Message message)
             => message.SocketIdentity ?? EmptyFrame;
 
@@ -190,6 +194,9 @@ namespace kino.Core.Messaging
             traceOptions = (MessageTraceOptions) v1;
             distributionPattern = (DistributionPattern) v2;
         }
+
+        internal byte[] GetSignature()
+            => frames[frames.Count - ReversedFramesV4.Signature];
 
         internal byte[] GetCallbackReceiverIdentity()
             => frames[frames.Count - ReversedFramesV4.CallbackReceiverIdentity];

@@ -7,6 +7,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace kino.Core.Connectivity
@@ -23,6 +24,7 @@ namespace kino.Core.Connectivity
         private readonly IClusterMembership clusterMembership;
         private readonly ClusterMembershipConfiguration membershipConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
+        private readonly ISecurityProvider securityProvider;
 
         public ClusterMessageListener(IRendezvousCluster rendezvousCluster,
                                       ISocketFactory socketFactory,
@@ -31,11 +33,13 @@ namespace kino.Core.Connectivity
                                       IClusterMembership clusterMembership,
                                       ClusterMembershipConfiguration membershipConfiguration,
                                       IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
+                                      ISecurityProvider securityProvider,
                                       ILogger logger)
         {
             this.logger = logger;
             this.membershipConfiguration = membershipConfiguration;
             this.performanceCounterManager = performanceCounterManager;
+            this.securityProvider = securityProvider;
             this.rendezvousCluster = rendezvousCluster;
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
@@ -236,7 +240,7 @@ namespace kino.Core.Connectivity
                                || IsRequestNodeMessageRoutingMessage(message)
                                || IsUnregisterMessageRoutingMessage(message)
                                || IsRegisterExternalRoute(message)
-                               || IsUnregisterRoutingMessage(message)
+                               || IsUnregisterNodeMessage(message)
                                || IsDiscoverMessageRouteMessage(message);
 
             if (shouldHandle)
@@ -304,16 +308,16 @@ namespace kino.Core.Connectivity
             return false;
         }
 
-        private bool IsUnregisterRoutingMessage(IMessage message)
+        private bool IsUnregisterNodeMessage(IMessage message)
         {
-            if (message.Equals(KinoMessages.UnregisterNodeMessageRoute))
+            if (message.Equals(KinoMessages.UnregisterNode))
             {
-                var payload = message.GetPayload<UnregisterNodeMessageRouteMessage>();
+                var payload = message.GetPayload<UnregisterNodeMessage>();
 
                 return !ThisNodeSocket(payload.SocketIdentity);
             }
 
-            return false;
+            return message.Equals(KinoMessages.UnregisterUnreachableNode);
         }
 
         private bool IsRegisterExternalRoute(IMessage message)
@@ -345,20 +349,26 @@ namespace kino.Core.Connectivity
 
         private void SendPong(ulong pingId)
         {
-            var message = Message.Create(new PongMessage
-                                         {
-                                             Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                             SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                             PingId = pingId
-                                         });
-            clusterMessageSender.EnqueueMessage(message);
+            foreach (var securityDomain in securityProvider.GetAllowedSecurityDomains())
+            {
+                var message = Message.Create(new PongMessage
+                                             {
+                                                 Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                                 SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                                 PingId = pingId
+                                             },
+                                             securityDomain);
+                message.As<Message>().SignMessage(securityProvider);
+
+                clusterMessageSender.EnqueueMessage(message);
+            }
         }
 
         private void UnregisterDeadNodes(ISocket routerNotificationSocket, DateTime pingTime, TimeSpan pingInterval)
         {
             foreach (var deadNode in clusterMembership.GetDeadMembers(pingTime, pingInterval))
             {
-                var message = Message.Create(new UnregisterNodeMessageRouteMessage
+                var message = Message.Create(new UnregisterUnreachableNodeMessage
                                              {
                                                  Uri = deadNode.Uri.ToSocketAddress(),
                                                  SocketIdentity = deadNode.Identity
@@ -369,23 +379,32 @@ namespace kino.Core.Connectivity
 
         private void ProcessPongMessage(IMessage message)
         {
-            var payload = message.GetPayload<PongMessage>();
-
-            var nodeFound = clusterMembership.KeepAlive(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
-            if (!nodeFound)
+            if (securityProvider.SecurityDomainIsAllowed(message.SecurityDomain))
             {
-                RequestNodeMessageHandlersRouting(payload);
+                message.As<Message>().VerifySignature(securityProvider);
+
+                var payload = message.GetPayload<PongMessage>();
+                var nodeFound = clusterMembership.KeepAlive(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
+                if (!nodeFound)
+                {
+                    RequestNodeMessageHandlersRouting(payload);
+                }
             }
         }
 
         private void RequestNodeMessageHandlersRouting(PongMessage payload)
         {
-            var request = Message.Create(new RequestNodeMessageRoutesMessage
-                                         {
-                                             TargetNodeIdentity = payload.SocketIdentity,
-                                             TargetNodeUri = payload.Uri
-                                         });
-            clusterMessageSender.EnqueueMessage(request);
+            foreach (var securityDomain in securityProvider.GetAllowedSecurityDomains())
+            {
+                var request = Message.Create(new RequestNodeMessageRoutesMessage
+                                             {
+                                                 TargetNodeIdentity = payload.SocketIdentity,
+                                                 TargetNodeUri = payload.Uri
+                                             },
+                                             securityDomain);
+                request.As<Message>().SignMessage(securityProvider);
+                clusterMessageSender.EnqueueMessage(request);
+            }
 
             logger.Debug("Route not found. Requesting registrations for " +
                          $"Uri:{payload.Uri} " +

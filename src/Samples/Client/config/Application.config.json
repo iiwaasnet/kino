@@ -5,7 +5,7 @@
         "pingSilenceBeforeRendezvousFailover": "00:00:15",
         "pongSilenceBeforeRouteDeletion": "00:00:25",
         "runAsStandalone": false,
-        "deferPeerConnection": true,
+        "deferPeerConnection": false,
 
         "rendezvousServers": [
             {

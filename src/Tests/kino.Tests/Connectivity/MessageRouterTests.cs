@@ -10,6 +10,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
@@ -26,7 +27,8 @@ namespace kino.Tests.Connectivity
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(3);
         private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
-        private ILogger logger;
+        private Mock<ILogger> logger;
+        private Mock<ISecurityProvider> securityProvider;
         private Mock<ISocketFactory> socketFactory;
         private Mock<IClusterMonitor> clusterMonitor;
         private Mock<IClusterMonitorProvider> clusterMonitorProvider;
@@ -57,8 +59,10 @@ namespace kino.Tests.Connectivity
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(messageRouterSocketFactory.CreateSocket);
             socketFactory.Setup(m => m.GetSocketDefaultConfiguration()).Returns(new SocketConfiguration());
-            logger = new Mock<ILogger>().Object;
+            logger = new Mock<ILogger>();
             serviceMessageHandlers = Enumerable.Empty<IServiceMessageHandler>();
+            securityProvider = new Mock<ISecurityProvider>();
+            securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(true);
         }
 
         [Test]
@@ -81,7 +85,12 @@ namespace kino.Tests.Connectivity
         public void RegisterLocalMessageHandlers_AddsActorIdentifier()
         {
             var internalRoutingTable = new InternalRoutingTable();
-            serviceMessageHandlers = new[] {new InternalMessageRouteRegistrationHandler(clusterMonitorProvider.Object, internalRoutingTable, logger)};
+            serviceMessageHandlers = new[]
+                                     {
+                                         new InternalMessageRouteRegistrationHandler(clusterMonitorProvider.Object,
+                                                                                     internalRoutingTable,
+                                                                                     logger.Object)
+                                     };
 
             var router = CreateMessageRouter(internalRoutingTable);
             try
@@ -125,7 +134,12 @@ namespace kino.Tests.Connectivity
         public void LocalActorRegistrations_AreNotBroadcastedToOtherNodes()
         {
             var internalRoutingTable = new InternalRoutingTable();
-            serviceMessageHandlers = new[] {new InternalMessageRouteRegistrationHandler(clusterMonitorProvider.Object, internalRoutingTable, logger)};
+            serviceMessageHandlers = new[]
+                                     {
+                                         new InternalMessageRouteRegistrationHandler(clusterMonitorProvider.Object,
+                                                                                     internalRoutingTable,
+                                                                                     logger.Object)
+                                     };
 
             var router = CreateMessageRouter(internalRoutingTable);
             try
@@ -169,7 +183,12 @@ namespace kino.Tests.Connectivity
         public void RegisterGlobalMessageHandlers_AddsActorIdentifier()
         {
             var internalRoutingTable = new InternalRoutingTable();
-            serviceMessageHandlers = new[] {new InternalMessageRouteRegistrationHandler(clusterMonitorProvider.Object, internalRoutingTable, logger)};
+            serviceMessageHandlers = new[]
+                                     {
+                                         new InternalMessageRouteRegistrationHandler(clusterMonitorProvider.Object,
+                                                                                     internalRoutingTable,
+                                                                                     logger.Object)
+                                     };
 
             var router = CreateMessageRouter(internalRoutingTable);
             try
@@ -213,7 +232,12 @@ namespace kino.Tests.Connectivity
         public void GlobalActorRegistrations_AreBroadcastedToOtherNodes()
         {
             var internalRoutingTable = new InternalRoutingTable();
-            serviceMessageHandlers = new[] {new InternalMessageRouteRegistrationHandler(clusterMonitorProvider.Object, internalRoutingTable, logger)};
+            serviceMessageHandlers = new[]
+                                     {
+                                         new InternalMessageRouteRegistrationHandler(clusterMonitorProvider.Object,
+                                                                                     internalRoutingTable,
+                                                                                     logger.Object)
+                                     };
 
             var router = CreateMessageRouter(internalRoutingTable);
             try
@@ -736,7 +760,12 @@ namespace kino.Tests.Connectivity
         public void IfMessageRouterCanHandleMessageBeingDiscovered_SelfRegisterIsCalled()
         {
             var internalRoutingTable = new InternalRoutingTable();
-            serviceMessageHandlers = new[] {new MessageRouteDiscoveryHandler(clusterMonitorProvider.Object, internalRoutingTable)};
+            serviceMessageHandlers = new[]
+                                     {
+                                         new MessageRouteDiscoveryHandler(clusterMonitorProvider.Object,
+                                                                          internalRoutingTable,
+                                                                          securityProvider.Object)
+                                     };
 
             var router = CreateMessageRouter(internalRoutingTable);
             try
@@ -770,9 +799,16 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfRegisterExternalMessageRouteMessageReceived_AllRoutesAreAddedToExternalRoutingTable()
         {
-            var externalRoutingTable = new ExternalRoutingTable(logger);
+            var externalRoutingTable = new ExternalRoutingTable(logger.Object);
             var config = new RouterConfiguration {DeferPeerConnection = true};
-            serviceMessageHandlers = new[] {new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership.Object, config, logger)};
+            serviceMessageHandlers = new[]
+                                     {
+                                         new ExternalMessageRouteRegistrationHandler(externalRoutingTable,
+                                                                                     clusterMembership.Object,
+                                                                                     config,
+                                                                                     securityProvider.Object,
+                                                                                     logger.Object)
+                                     };
 
             var router = CreateMessageRouter(null, externalRoutingTable);
             try
@@ -812,8 +848,8 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfUnregisterMessageRouteMessage_RoutesAreRemovedFromExternalRoutingTable()
         {
-            var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new MessageRouteUnregistrationHandler(externalRoutingTable)};
+            var externalRoutingTable = new ExternalRoutingTable(logger.Object);
+            serviceMessageHandlers = new[] {new MessageRouteUnregistrationHandler(externalRoutingTable, securityProvider.Object)};
 
             var router = CreateMessageRouter(null, externalRoutingTable);
             try
@@ -857,8 +893,13 @@ namespace kino.Tests.Connectivity
         [Test]
         public void UnregisterMessageRouteMessage_DeletesClusterMember()
         {
-            var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object)};
+            var externalRoutingTable = new ExternalRoutingTable(logger.Object);
+            serviceMessageHandlers = new[]
+                                     {
+                                         new NodeUnregistrationHandler(externalRoutingTable,
+                                                                       clusterMembership.Object,
+                                                                       securityProvider.Object)
+                                     };
 
             var router = CreateMessageRouter(null, externalRoutingTable);
             try
@@ -866,7 +907,7 @@ namespace kino.Tests.Connectivity
                 StartMessageRouter(router);
 
                 var socket = messageRouterSocketFactory.GetRouterSocket();
-                var message = new UnregisterNodeMessageRouteMessage
+                var message = new UnregisterNodeMessage
                               {
                                   Uri = "tcp://127.0.0.1:5000",
                                   SocketIdentity = SocketIdentifier.CreateIdentity()
@@ -887,8 +928,8 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfAllMessageRoutesUnregisteredForNode_SocketIsDisconnected()
         {
-            var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new MessageRouteUnregistrationHandler(externalRoutingTable)};
+            var externalRoutingTable = new ExternalRoutingTable(logger.Object);
+            serviceMessageHandlers = new[] {new MessageRouteUnregistrationHandler(externalRoutingTable, securityProvider.Object)};
 
             var router = CreateMessageRouter(null, externalRoutingTable);
             try
@@ -937,8 +978,13 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfUnregisterNodeMessageRouteMessageAndConnectionWasEstablished_SocketIsDisconnected()
         {
-            var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object)};
+            var externalRoutingTable = new ExternalRoutingTable(logger.Object);
+            serviceMessageHandlers = new[]
+                                     {
+                                         new NodeUnregistrationHandler(externalRoutingTable,
+                                                                       clusterMembership.Object,
+                                                                       securityProvider.Object)
+                                     };
 
             var router = CreateMessageRouter(null, externalRoutingTable);
             try
@@ -954,7 +1000,7 @@ namespace kino.Tests.Connectivity
                 var backEndScoket = messageRouterSocketFactory.GetScaleoutBackendSocket();
                 backEndScoket.Connect(uri);
                 Assert.IsTrue(backEndScoket.IsConnected());
-                var message = Message.Create(new UnregisterNodeMessageRouteMessage
+                var message = Message.Create(new UnregisterNodeMessage
                                              {
                                                  Uri = uri.ToSocketAddress(),
                                                  SocketIdentity = socketIdentity.Identity
@@ -976,8 +1022,13 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfUnregisterNodeMessageRouteMessage_AllRoutesAreRemovedFromExternalRoutingTable()
         {
-            var externalRoutingTable = new ExternalRoutingTable(logger);
-            serviceMessageHandlers = new[] {new RouteUnregistrationHandler(externalRoutingTable, clusterMembership.Object)};
+            var externalRoutingTable = new ExternalRoutingTable(logger.Object);
+            serviceMessageHandlers = new[]
+                                     {
+                                         new NodeUnregistrationHandler(externalRoutingTable,
+                                                                       clusterMembership.Object,
+                                                                       securityProvider.Object)
+                                     };
 
             var router = CreateMessageRouter(null, externalRoutingTable);
             try
@@ -993,7 +1044,7 @@ namespace kino.Tests.Connectivity
                 var socketIdentity = SocketIdentifier.Create();
                 var uri = new Uri("tcp://127.0.0.1:8000");
                 messageIdentifiers.ForEach(mi => externalRoutingTable.AddMessageRoute(mi, socketIdentity, uri));
-                var message = Message.Create(new UnregisterNodeMessageRouteMessage
+                var message = Message.Create(new UnregisterNodeMessage
                                              {
                                                  Uri = uri.ToSocketAddress(),
                                                  SocketIdentity = socketIdentity.Identity
@@ -1039,13 +1090,14 @@ namespace kino.Tests.Connectivity
                                                   IExternalRoutingTable externalRoutingTable = null)
             => new MessageRouter(socketFactory.Object,
                                  internalRoutingTable ?? new InternalRoutingTable(),
-                                 externalRoutingTable ?? new ExternalRoutingTable(logger),
+                                 externalRoutingTable ?? new ExternalRoutingTable(logger.Object),
                                  routerConfiguration,
                                  clusterMonitorProvider.Object,
                                  serviceMessageHandlers,
                                  membershipConfiguration,
                                  performanceCounterManager.Object,
-                                 logger);
+                                 securityProvider.Object,
+                                 logger.Object);
 
         private static void StartMessageRouter(IMessageRouter messageRouter)
         {

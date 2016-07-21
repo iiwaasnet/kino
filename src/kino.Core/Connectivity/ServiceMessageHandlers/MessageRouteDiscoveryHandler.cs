@@ -1,5 +1,8 @@
-﻿using kino.Core.Messaging;
+﻿using kino.Core.Diagnostics;
+using kino.Core.Framework;
+using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace kino.Core.Connectivity.ServiceMessageHandlers
@@ -7,12 +10,18 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
     public class MessageRouteDiscoveryHandler : IServiceMessageHandler
     {
         private readonly IInternalRoutingTable internalRoutingTable;
+        private readonly ISecurityProvider securityProvider;
+        private readonly ILogger logger;
         private readonly IClusterMonitor clusterMonitor;
-        private static readonly MessageIdentifier DiscoverMessageRouteMessageIdentifier = MessageIdentifier.Create<DiscoverMessageRouteMessage>();
 
-        public MessageRouteDiscoveryHandler(IClusterMonitorProvider clusterMonitorProvider, IInternalRoutingTable internalRoutingTable)
+        public MessageRouteDiscoveryHandler(IClusterMonitorProvider clusterMonitorProvider,
+                                            IInternalRoutingTable internalRoutingTable,
+                                            ISecurityProvider securityProvider,
+                                            ILogger logger)
         {
             this.internalRoutingTable = internalRoutingTable;
+            this.securityProvider = securityProvider;
+            this.logger = logger;
             clusterMonitor = clusterMonitorProvider.GetClusterMonitor();
         }
 
@@ -21,13 +30,27 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             var shouldHandle = IsDiscoverMessageRouteRequest(message);
             if (shouldHandle)
             {
-                var messageContract = message.GetPayload<DiscoverMessageRouteMessage>().MessageContract;
-                var messageIdentifier = new MessageIdentifier(messageContract.Version,
-                                                              messageContract.Identity,
-                                                              messageContract.Partition);
-                if (internalRoutingTable.CanRouteMessage(messageIdentifier))
+                if (securityProvider.SecurityDomainIsAllowed(message.SecurityDomain))
                 {
-                    clusterMonitor.RegisterSelf(new[] {messageIdentifier});
+                    message.As<Message>().VerifySignature(securityProvider);
+
+                    var messageContract = message.GetPayload<DiscoverMessageRouteMessage>().MessageContract;
+                    var messageIdentifier = new MessageIdentifier(messageContract.Version,
+                                                                  messageContract.Identity,
+                                                                  messageContract.Partition);
+                    if (internalRoutingTable.CanRouteMessage(messageIdentifier))
+                    {
+                        var securityDomain = securityProvider.GetSecurityDomain(messageIdentifier.Identity);
+                        if (securityDomain == message.SecurityDomain)
+                        {
+                            clusterMonitor.RegisterSelf(new[] {messageIdentifier}, securityDomain);
+                        }
+                        else
+                        {
+                            logger.Warn($"MessageIdentity {messageIdentifier.Identity.GetString()} doesn't belong to requested " +
+                                        $"SecurityDomain {message.SecurityDomain}!");
+                        }
+                    }
                 }
             }
 
@@ -35,6 +58,6 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         }
 
         private bool IsDiscoverMessageRouteRequest(IMessage message)
-            => message.Equals(DiscoverMessageRouteMessageIdentifier);
+            => message.Equals(KinoMessages.DiscoverMessageRoute);
     }
 }

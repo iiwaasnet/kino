@@ -5,6 +5,7 @@ using kino.Core.Connectivity;
 using kino.Core.Connectivity.ServiceMessageHandlers;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace kino
@@ -28,14 +29,16 @@ namespace kino
                                                  IEnumerable<RendezvousEndpoint> rendezvousEndpoints,
                                                  ILogger logger)
         {
+            var securityProvider = new NullSecurityProvider();
             var rendezvousClusterConfigurationReadonlyStorage = new RendezvousClusterConfigurationReadonlyStorage(rendezvousEndpoints);
             var rendezvousCluster = new RendezvousCluster(rendezvousClusterConfigurationReadonlyStorage);
-            var clusterMessageSender = new ClusterMessageSender(rendezvousCluster, routerConfiguration, socketFactory, null, logger);
+            var clusterMessageSender = new ClusterMessageSender(rendezvousCluster, routerConfiguration, socketFactory, null, securityProvider, logger);
             var clusterMembership = new ClusterMembership(clusterMembershipConfiguration, logger);
             var externalRoutingTable = new ExternalRoutingTable(logger);
             var routeDiscovery = new RouteDiscovery(clusterMessageSender,
                                                     routerConfiguration,
                                                     clusterMembershipConfiguration,
+                                                    securityProvider,
                                                     logger);
             var instanceNameResolver = new InstanceNameResolver();
             var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver, logger);
@@ -50,17 +53,21 @@ namespace kino
                                                                                                clusterMembership,
                                                                                                clusterMembershipConfiguration,
                                                                                                performanceCounterManager,
+                                                                                               securityProvider,
                                                                                                logger),
-                                                                    routeDiscovery);
+                                                                    routeDiscovery,
+                                                                    securityProvider);
             var internalRoutingTable = new InternalRoutingTable();
             var serviceMessageHandlers = new IServiceMessageHandler[]
                                          {
-                                             new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership, routerConfiguration, logger),
+                                             new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership, routerConfiguration, securityProvider, logger),
                                              new InternalMessageRouteRegistrationHandler(clusterMonitorProvider, internalRoutingTable, logger),
-                                             new MessageRouteDiscoveryHandler(clusterMonitorProvider, internalRoutingTable),
-                                             new MessageRouteUnregistrationHandler(externalRoutingTable),
-                                             new RoutesRegistrationRequestHandler(clusterMonitorProvider, internalRoutingTable),
-                                             new RouteUnregistrationHandler(externalRoutingTable, clusterMembership)
+                                             new MessageRouteDiscoveryHandler(clusterMonitorProvider, internalRoutingTable, securityProvider),
+                                             new MessageRouteUnregistrationHandler(externalRoutingTable, securityProvider),
+                                             new ClusterMessageRoutesRequestHandler(clusterMonitorProvider, internalRoutingTable, securityProvider),
+                                             new NodeMessageRoutesRequestHandler(clusterMonitorProvider, internalRoutingTable, securityProvider),
+                                             new NodeUnregistrationHandler(externalRoutingTable, clusterMembership, securityProvider),
+                                             new UnreachableNodeUnregistrationHandler(externalRoutingTable, clusterMembership)
                                          };
             return new MessageRouter(socketFactory,
                                      internalRoutingTable,
@@ -70,6 +77,7 @@ namespace kino
                                      serviceMessageHandlers,
                                      clusterMembershipConfiguration,
                                      performanceCounterManager,
+                                     securityProvider,
                                      logger);
         }
 

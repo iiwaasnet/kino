@@ -6,6 +6,7 @@ using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 
 namespace kino.Core.Connectivity
 {
@@ -13,6 +14,7 @@ namespace kino.Core.Connectivity
     {
         private readonly IClusterMessageSender clusterMessageSender;
         private readonly RouterConfiguration routerConfiguration;
+        private readonly ISecurityProvider securityProvider;
         private readonly RouteDiscoveryConfiguration discoveryConfiguration;
         private readonly ILogger logger;
         private readonly HashedQueue<MessageIdentifier> requests;
@@ -22,9 +24,11 @@ namespace kino.Core.Connectivity
         public RouteDiscovery(IClusterMessageSender clusterMessageSender,
                               RouterConfiguration routerConfiguration,
                               ClusterMembershipConfiguration clusterMembershipConfiguration,
+                              ISecurityProvider securityProvider,
                               ILogger logger)
         {
             this.routerConfiguration = routerConfiguration;
+            this.securityProvider = securityProvider;
             discoveryConfiguration = clusterMembershipConfiguration.RouteDiscovery ?? DefaultConfiguration();
             this.clusterMessageSender = clusterMessageSender;
             this.logger = logger;
@@ -64,7 +68,9 @@ namespace kino.Core.Connectivity
                                                                                    Identity = messageIdentifier.Identity,
                                                                                    Partition = messageIdentifier.Partition
                                                                                }
-                                                         });
+                                                         },
+                                                         securityProvider.GetSecurityDomain(messageIdentifier.Identity));
+                            message.As<Message>().SignMessage(securityProvider);
                             clusterMessageSender.EnqueueMessage(message);
                         }
                     }

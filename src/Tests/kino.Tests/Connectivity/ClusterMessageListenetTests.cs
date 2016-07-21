@@ -9,6 +9,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 using kino.Tests.Helpers;
 using Moq;
@@ -22,6 +23,7 @@ namespace kino.Tests.Connectivity
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
         private ClusterMonitorSocketFactory clusterMonitorSocketFactory;
         private Mock<ILogger> logger;
+        private Mock<ISecurityProvider> securityProvider;
         private Mock<ISocketFactory> socketFactory;
         private RouterConfiguration routerConfiguration;
         private Mock<IClusterMembership> clusterMembership;
@@ -37,6 +39,8 @@ namespace kino.Tests.Connectivity
             clusterMessageSender = new Mock<IClusterMessageSender>();
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             logger = new Mock<ILogger>();
+            securityProvider = new Mock<ISecurityProvider>();
+            securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(true);
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
@@ -68,6 +72,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
                                                                     performanceCounterManager.Object,
+                                                                    securityProvider.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -91,6 +96,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
                                                                     performanceCounterManager.Object,
+                                                                    securityProvider.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -125,6 +131,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
                                                                     performanceCounterManager.Object,
+                                                                    securityProvider.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -165,6 +172,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
                                                                     performanceCounterManager.Object,
+                                                                    securityProvider.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -189,8 +197,20 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void IfPongMessageComesFromUnknownNode_RequestNodeMessageRoutesMessageSent()
+        public void IfPongMessageComesFromUnknownNodeInSupportedDomain_RequestNodeMessageRoutesMessageSent()
         {
+            SendPongMessageFromFromUnknownNode(true, Times.Once);
+        }
+
+        [Test]
+        public void IfPongMessageComesFromUnknownNodeInNonSupportedDomain_NoRequestNodeMessageRoutesMessageSent()
+        {
+            SendPongMessageFromFromUnknownNode(false, Times.Never);
+        }
+
+        private void SendPongMessageFromFromUnknownNode(bool domainIsSupported, Func<Times> times)
+        {
+            securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(domainIsSupported);
             var sourceNode = new SocketEndpoint(new Uri("tpc://127.0.0.3:7000"), SocketIdentifier.CreateIdentity());
 
             clusterMembership.Setup(m => m.KeepAlive(sourceNode)).Returns(false);
@@ -202,6 +222,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
                                                                     performanceCounterManager.Object,
+                                                                    securityProvider.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -227,9 +248,8 @@ namespace kino.Tests.Connectivity
 
             clusterMembership.Verify(m => m.KeepAlive(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == sourceNode.Uri.ToSocketAddress()
                                                                                  && Unsafe.Equals(e.Identity, sourceNode.Identity))),
-                                     Times.Once());
-            clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => RoutesRequestMessage(msg, routesRequestMessage))), Times.Once);
-            Assert.IsNotNull(routesRequestMessage);
+                                     times);
+            clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => RoutesRequestMessage(msg, routesRequestMessage))), times);
         }
 
         [Test]
@@ -242,6 +262,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
                                                                     performanceCounterManager.Object,
+                                                                    securityProvider.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
@@ -293,12 +314,12 @@ namespace kino.Tests.Connectivity
         [Test]
         public void UnregisterNodeMessageRouteMessage_IsForwardedToMessageRouter()
         {
-            var payload = new UnregisterNodeMessageRouteMessage
+            var payload = new UnregisterNodeMessage
                           {
                               Uri = "tcp://127.0.0.3:6000",
                               SocketIdentity = SocketIdentifier.CreateIdentity()
                           };
-            MessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterNodeMessageRoute);
+            MessageIsForwardedToMessageRouter(payload, KinoMessages.UnregisterNode);
         }
 
         [Test]
@@ -333,6 +354,7 @@ namespace kino.Tests.Connectivity
                                                                     clusterMembership.Object,
                                                                     clusterMembershipConfiguration,
                                                                     performanceCounterManager.Object,
+                                                                    securityProvider.Object,
                                                                     logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
