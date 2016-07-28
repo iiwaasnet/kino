@@ -44,6 +44,7 @@ namespace kino.Core.Messaging
                 frames.Add(callback.Identity);
             }
             //TODO: Optimize calculation of body, callbacks and routing frames offsets
+            frames.Add(GetSecurityDomainFrame(message)); // 15
             frames.Add(GetSignatureFrame(message)); // 14
             frames.Add(GetRoutingDescriptionFrame(message)); // 13
             frames.Add(GetCallbackDescriptionFrame(message)); // 12
@@ -129,6 +130,9 @@ namespace kino.Core.Messaging
             return (ushort) (callbacksStartFrameIndex + callbacksFrameCount);
         }
 
+        private byte[] GetSecurityDomainFrame(Message message)
+            => message.SecurityDomain.GetBytes();
+
         private byte[] GetSignatureFrame(Message message)
             => message.Signature ?? EmptyFrame;
 
@@ -194,6 +198,9 @@ namespace kino.Core.Messaging
             traceOptions = (MessageTraceOptions) v1;
             distributionPattern = (DistributionPattern) v2;
         }
+
+        internal string GetSecurityDomain()
+            => frames[frames.Count - ReversedFramesV4.SecurityDomain].GetString();
 
         internal byte[] GetSignature()
             => frames[frames.Count - ReversedFramesV4.Signature];

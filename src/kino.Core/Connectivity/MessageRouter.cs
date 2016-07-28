@@ -95,7 +95,7 @@ namespace kino.Core.Connectivity
                             message = (Message) scaleOutFrontend.ReceiveMessage(token);
                             if (message != null)
                             {
-                                securityProvider.VerifyDomainSignature(message, new MessageIdentifier(message.Identity));
+                                message.VerifySignature(securityProvider);
 
                                 message.SetSocketIdentity(localSocketIdentity);
                                 scaleOutFrontend.SendMessage(message);
@@ -233,7 +233,7 @@ namespace kino.Core.Connectivity
                     message.AddHop();
                     message.PushRouterAddress(routerConfiguration.ScaleOutAddress);
 
-                    message.SignMessage(securityProvider.CreateDomainSignature(new MessageIdentifier(message.Identity), message));
+                    message.SignMessage(securityProvider);
 
                     scaleOutBackend.SendMessage(message);
 
@@ -363,9 +363,15 @@ namespace kino.Core.Connectivity
             return routerConfiguration;
         }
 
-        private static void CallbackSecurityException(ISocket scaleOutFrontend, Exception err, Message messageIn, byte[] localSocketIdentity)
+        private void CallbackSecurityException(ISocket scaleOutFrontend, Exception err, Message messageIn, byte[] localSocketIdentity)
         {
-            var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err, StackTrace = err.StackTrace});
+            var messageOut = Message.Create(new ExceptionMessage
+                                            {
+                                                Exception = err,
+                                                StackTrace = err.StackTrace
+                                            },
+                                            securityProvider.GetSecurityDomain(KinoMessages.Exception.Identity))
+                                    .As<Message>();
             messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageRouting(messageIn.GetMessageRouting());

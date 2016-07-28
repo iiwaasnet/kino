@@ -58,20 +58,26 @@ namespace kino.Core.Connectivity
                     {
                         foreach (var messageIdentifier in missingRoutes)
                         {
-                            var message = Message.Create(new DiscoverMessageRouteMessage
-                                                         {
-                                                             RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                                             RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                                             MessageContract = new MessageContract
-                                                                               {
-                                                                                   Version = messageIdentifier.Version,
-                                                                                   Identity = messageIdentifier.Identity,
-                                                                                   Partition = messageIdentifier.Partition
-                                                                               }
-                                                         },
-                                                         securityProvider.GetSecurityDomain(messageIdentifier.Identity));
-                            message.As<Message>().SignMessage(securityProvider);
-                            clusterMessageSender.EnqueueMessage(message);
+                            var securityDomains = messageIdentifier.IsMessageHub()
+                                                      ? securityProvider.GetAllowedSecurityDomains()
+                                                      : new[] {securityProvider.GetSecurityDomain(messageIdentifier.Identity)};
+                            foreach (var securityDomain in securityDomains)
+                            {
+                                var message = Message.Create(new DiscoverMessageRouteMessage
+                                                             {
+                                                                 RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                                                 RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                                                 MessageContract = new MessageContract
+                                                                                   {
+                                                                                       Version = messageIdentifier.Version,
+                                                                                       Identity = messageIdentifier.Identity,
+                                                                                       Partition = messageIdentifier.Partition
+                                                                                   }
+                                                             },
+                                                             securityDomain);
+                                message.As<Message>().SignMessage(securityProvider);
+                                clusterMessageSender.EnqueueMessage(message);
+                            }
                         }
                     }
 

@@ -1,4 +1,5 @@
-﻿using kino.Core.Diagnostics;
+﻿using System.Linq;
+using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -40,10 +41,12 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                                                                   messageContract.Partition);
                     if (internalRoutingTable.CanRouteMessage(messageIdentifier))
                     {
-                        var securityDomain = securityProvider.GetSecurityDomain(messageIdentifier.Identity);
-                        if (securityDomain == message.SecurityDomain)
+                        var securityDomains = messageIdentifier.IsMessageHub()
+                                                  ? securityProvider.GetAllowedSecurityDomains()
+                                                  : new[] {securityProvider.GetSecurityDomain(messageIdentifier.Identity)};
+                        if (securityDomains.Contains(message.SecurityDomain))
                         {
-                            clusterMonitor.RegisterSelf(new[] {messageIdentifier}, securityDomain);
+                            clusterMonitor.RegisterSelf(new[] {messageIdentifier}, message.SecurityDomain);
                         }
                         else
                         {

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
@@ -12,12 +14,15 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
     {
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ISecurityProvider securityProvider;
+        private readonly ILogger logger;
 
         public MessageRouteUnregistrationHandler(IExternalRoutingTable externalRoutingTable,
-                                                 ISecurityProvider securityProvider)
+                                                 ISecurityProvider securityProvider,
+                                                 ILogger logger)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.securityProvider = securityProvider;
+            this.logger = logger;
         }
 
         public bool Handle(IMessage message, ISocket forwardingSocket)
@@ -30,21 +35,34 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                     message.As<Message>().VerifySignature(securityProvider);
 
                     var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-                    //TODO: Check if messages belong to same Domain as stated
-                    var messageIdentifiers = payload.MessageContracts
-                                                    .Select(mh => new MessageIdentifier(mh.Version,
-                                                                                        mh.Identity,
-                                                                                        mh.Partition));
+                    var messageContracts = payload.MessageContracts
+                                                  .Select(mh => new MessageIdentifier(mh.Version,
+                                                                                      mh.Identity,
+                                                                                      mh.Partition));
+                    var messageIdentifiers = messageContracts
+                        .Where(mi => securityProvider.GetSecurityDomain(mi.Identity) == message.SecurityDomain);
                     var connectionAction = externalRoutingTable.RemoveMessageRoute(messageIdentifiers,
                                                                                    new SocketIdentifier(payload.SocketIdentity));
                     if (connectionAction == PeerConnectionAction.Disconnect)
                     {
                         forwardingSocket.SafeDisconnect(new Uri(payload.Uri));
                     }
+                    LogIfMessagesBelongToOtherDomain(messageIdentifiers, messageContracts, message.SecurityDomain);
                 }
             }
 
             return shouldHandle;
+        }
+
+        private void LogIfMessagesBelongToOtherDomain(IEnumerable<MessageIdentifier> messageIdentifiers,
+                                                      IEnumerable<MessageIdentifier> messageContracts,
+                                                      string securityDomain)
+        {
+            foreach (var messageContract in messageContracts.Where(mc => !messageIdentifiers.Contains(mc)))
+            {
+                logger.Warn($"MessageIdentity {messageContract.Identity.GetString()} doesn't belong to requested " +
+                            $"SecurityDomain {securityDomain}!");
+            }
         }
 
         private bool IsUnregisterMessageRouting(IMessage message)

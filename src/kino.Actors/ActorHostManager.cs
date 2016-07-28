@@ -5,6 +5,7 @@ using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace kino.Actors
@@ -13,6 +14,7 @@ namespace kino.Actors
     {
         private readonly ISocketFactory socketFactory;
         private readonly RouterConfiguration routerConfiguration;
+        private readonly ISecurityProvider securityProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILogger logger;
         private readonly IList<IActorHost> actorHosts;
@@ -21,11 +23,13 @@ namespace kino.Actors
 
         public ActorHostManager(ISocketFactory socketFactory,
                                 RouterConfiguration routerConfiguration,
+                                ISecurityProvider securityProvider,
                                 IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                 ILogger logger)
         {
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
+            this.securityProvider = securityProvider;
             this.performanceCounterManager = performanceCounterManager;
             this.logger = logger;
             actorHosts = new List<IActorHost>();
@@ -62,6 +66,7 @@ namespace kino.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           routerConfiguration,
+                                          securityProvider,
                                           performanceCounterManager,
                                           logger);
                 actorHost.Start();

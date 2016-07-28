@@ -9,6 +9,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace kino.Actors
@@ -23,6 +24,7 @@ namespace kino.Actors
         private readonly IAsyncQueue<AsyncMessageContext> asyncQueue;
         private readonly ISocketFactory socketFactory;
         private readonly RouterConfiguration routerConfiguration;
+        private readonly ISecurityProvider securityProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly IAsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>> actorRegistrationsQueue;
         private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
@@ -34,6 +36,7 @@ namespace kino.Actors
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
                          IAsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>> actorRegistrationsQueue,
                          RouterConfiguration routerConfiguration,
+                         ISecurityProvider securityProvider,
                          IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                          ILogger logger)
         {
@@ -42,6 +45,7 @@ namespace kino.Actors
             localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.socketFactory = socketFactory;
             this.routerConfiguration = routerConfiguration;
+            this.securityProvider = securityProvider;
             this.performanceCounterManager = performanceCounterManager;
             this.asyncQueue = asyncQueue;
             this.actorRegistrationsQueue = actorRegistrationsQueue;
@@ -114,7 +118,7 @@ namespace kino.Actors
             }
         }
 
-        private static void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<ActorMessageHandlerIdentifier> registrations)
+        private void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<ActorMessageHandlerIdentifier> registrations)
         {
             var payload = new RegisterInternalMessageRouteMessage
                           {
@@ -137,7 +141,8 @@ namespace kino.Actors
                                                                     .ToArray()
                           };
 
-            socket.SendMessage(Message.Create(payload));
+            var message = Message.Create(payload, securityProvider.GetSecurityDomain(KinoMessages.RegisterInternalMessageRoute.Identity));
+            socket.SendMessage(message);
         }
 
         private void ProcessAsyncResponses(CancellationToken token)
@@ -249,9 +254,15 @@ namespace kino.Actors
             }
         }
 
-        private static void CallbackException(ISocket localSocket, Exception err, Message messageIn)
+        private void CallbackException(ISocket localSocket, Exception err, Message messageIn)
         {
-            var messageOut = (Message) Message.Create(new ExceptionMessage {Exception = err, StackTrace = err.StackTrace});
+            var messageOut = Message.Create(new ExceptionMessage
+                                            {
+                                                Exception = err,
+                                                StackTrace = err.StackTrace
+                                            },
+                                            securityProvider.GetSecurityDomain(KinoMessages.Exception.Identity))
+                                    .As<Message>();
             messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
@@ -274,14 +285,15 @@ namespace kino.Actors
             asyncQueue.Enqueue(asyncMessageContext, token);
         }
 
-        private static IActorResult CreateTaskResultMessage(Task<IActorResult> task)
+        private IActorResult CreateTaskResultMessage(Task<IActorResult> task)
         {
             if (task.IsCanceled)
             {
                 return new ActorResult(Message.Create(new ExceptionMessage
                                                       {
                                                           Exception = new OperationCanceledException()
-                                                      }));
+                                                      },
+                                                      securityProvider.GetSecurityDomain(KinoMessages.Exception.Identity)));
             }
             if (task.IsFaulted)
             {
@@ -291,7 +303,8 @@ namespace kino.Actors
                                                       {
                                                           Exception = err,
                                                           StackTrace = err?.StackTrace
-                                                      }));
+                                                      },
+                                                      securityProvider.GetSecurityDomain(KinoMessages.Exception.Identity)));
             }
 
             return task.Result ?? ActorResult.Empty;

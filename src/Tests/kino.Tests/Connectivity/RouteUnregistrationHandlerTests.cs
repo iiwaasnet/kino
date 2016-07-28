@@ -19,6 +19,7 @@ namespace kino.Tests.Connectivity
         private Mock<ISecurityProvider> securityProvider;
         private Mock<IClusterMembership> clusterMembership;
         private IExternalRoutingTable externalRoutingTable;
+        private string securityDomain;
 
         [SetUp]
         public void Setup()
@@ -26,8 +27,11 @@ namespace kino.Tests.Connectivity
             logger = new Mock<ILogger>();
             clusterMembership = new Mock<IClusterMembership>();
             externalRoutingTable = new ExternalRoutingTable(logger.Object);
+            securityDomain = Guid.NewGuid().ToString();
             securityProvider = new Mock<ISecurityProvider>();
             securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(true);
+            securityProvider.Setup(m => m.GetAllowedSecurityDomains()).Returns(new[] {securityDomain});
+            securityProvider.Setup(m => m.GetSecurityDomain(It.IsAny<byte[]>())).Returns(securityDomain);
         }
 
         [Test]
@@ -56,7 +60,8 @@ namespace kino.Tests.Connectivity
                                                                     }
                                                                 },
                                              SocketIdentity = peerSocketIdentity
-                                         });
+                                         },
+                                         securityDomain);
 
             registrationHandler.Handle(message, socket.Object);
             socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never());
@@ -67,7 +72,7 @@ namespace kino.Tests.Connectivity
                                                                       clusterMembership.Object,
                                                                       securityProvider.Object);
 
-            message = Message.Create(new UnregisterNodeMessage {Uri = peerUri, SocketIdentity = peerSocketIdentity});
+            message = Message.Create(new UnregisterNodeMessage {Uri = peerUri, SocketIdentity = peerSocketIdentity}, securityDomain);
             unregistrationHandler.Handle(message, socket.Object);
 
             socket.Verify(m => m.Disconnect(It.IsAny<Uri>()), Times.Never());
@@ -99,7 +104,8 @@ namespace kino.Tests.Connectivity
                                                                     }
                                                                 },
                                              SocketIdentity = peerSocketIdentity
-                                         });
+                                         },
+                                         securityDomain);
 
             registrationHandler.Handle(message, socket.Object);
 
@@ -107,7 +113,7 @@ namespace kino.Tests.Connectivity
                                                                       clusterMembership.Object,
                                                                       securityProvider.Object);
 
-            message = Message.Create(new UnregisterNodeMessage {Uri = peerUri, SocketIdentity = peerSocketIdentity});
+            message = Message.Create(new UnregisterNodeMessage {Uri = peerUri, SocketIdentity = peerSocketIdentity}, securityDomain);
             unregistrationHandler.Handle(message, socket.Object);
 
             socket.Verify(m => m.Disconnect(It.IsAny<Uri>()), Times.Once());

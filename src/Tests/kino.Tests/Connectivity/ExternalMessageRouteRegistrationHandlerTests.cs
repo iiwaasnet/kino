@@ -16,13 +16,17 @@ namespace kino.Tests.Connectivity
     {
         private Mock<ILogger> logger;
         private Mock<ISecurityProvider> securityProvider;
+        private string securityDomain;
 
         [SetUp]
         public void Setup()
         {
             logger = new Mock<ILogger>();
+            securityDomain = Guid.NewGuid().ToString();
             securityProvider = new Mock<ISecurityProvider>();
             securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(true);
+            securityProvider.Setup(m => m.GetAllowedSecurityDomains()).Returns(new[] {securityDomain});
+            securityProvider.Setup(m => m.GetSecurityDomain(It.IsAny<byte[]>())).Returns(securityDomain);
         }
 
         [Test]
@@ -80,7 +84,8 @@ namespace kino.Tests.Connectivity
                                                                     }
                                                                 },
                                              SocketIdentity = Guid.NewGuid().ToByteArray()
-                                         });
+                                         },
+                                         securityDomain);
 
             handler.Handle(message, socket.Object);
 

@@ -17,5 +17,6 @@ namespace kino.Core.Messaging.Messages
         public static readonly MessageIdentifier RendezvousNotLeader = MessageIdentifier.Create<RendezvousNotLeaderMessage>();
         public static readonly MessageIdentifier RendezvousConfigurationChanged = MessageIdentifier.Create<RendezvousConfigurationChangedMessage>();
         public static readonly MessageIdentifier Exception = MessageIdentifier.Create<ExceptionMessage>();
+        public static readonly MessageIdentifier RequestKnownMessageRoutes = MessageIdentifier.Create<RequestKnownMessageRoutesMessage>();
     }
 }

@@ -32,11 +32,15 @@ namespace kino.Tests.Connectivity
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private Mock<IRouteDiscovery> routeDiscovery;
         private Mock<ISecurityProvider> securityProvider;
+        private string securityDomain;
 
         [SetUp]
         public void Setup()
         {
             securityProvider = new Mock<ISecurityProvider>();
+            securityDomain = Guid.NewGuid().ToString();
+            securityProvider.Setup(m => m.GetAllowedSecurityDomains()).Returns(new[] {securityDomain});
+            securityProvider.Setup(m => m.GetSecurityDomain(It.IsAny<byte[]>())).Returns(securityDomain);
             clusterMonitorSocketFactory = new ClusterMonitorSocketFactory();
             logger = new Mock<ILogger>();
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
@@ -97,7 +101,8 @@ namespace kino.Tests.Connectivity
                 clusterMonitor.Start(StartTimeout);
 
                 var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-                clusterMonitor.RegisterSelf(new[] {messageIdentifier});
+                var messageContract = Guid.NewGuid().ToString();
+                clusterMonitor.RegisterSelf(new[] {messageIdentifier}, messageContract);
 
                 var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
                 var message = socket.GetSentMessages().BlockingLast(AsyncOp);

@@ -22,7 +22,7 @@ namespace kino.Core.Messaging
 
         private Message(IPayload payload, string securityDomain)
         {
-            SecurityDomain = securityDomain;
+            SecurityDomain = securityDomain ?? string.Empty;
             WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
             CallbackPoint = Enumerable.Empty<MessageIdentifier>();
@@ -43,7 +43,7 @@ namespace kino.Core.Messaging
                    CorrelationId = GenerateCorrelationId()
                };
 
-        public static IMessage Create(IPayload payload,
+        internal static IMessage Create(IPayload payload,
                                       DistributionPattern distributionPattern = DistributionPattern.Unicast)
             => new Message(payload, null)
                {
@@ -79,6 +79,7 @@ namespace kino.Core.Messaging
             TTL = multipartMessage.GetMessageTTL();
             CorrelationId = multipartMessage.GetCorrelationId();
             Signature = multipartMessage.GetSignature();
+            SecurityDomain = multipartMessage.GetSecurityDomain();
 
             MessageTraceOptions traceOptions;
             DistributionPattern distributionPattern;
@@ -266,6 +267,6 @@ namespace kino.Core.Messaging
 
         public int WireFormatVersion { get; private set; }
 
-        public string SecurityDomain { get; }
+        public string SecurityDomain { get; private set; }
     }
 }

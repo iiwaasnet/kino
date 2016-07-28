@@ -43,19 +43,27 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
 
                     var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
                     var uri = new Uri(payload.Uri);
-                    //TODO: Check if all payload.MessageContracts belong to the same SecurityDomain
                     foreach (var registration in payload.MessageContracts)
                     {
                         try
                         {
-                            var messageHandlerIdentifier = new MessageIdentifier(registration.Version,
-                                                                                 registration.Identity,
-                                                                                 registration.Partition);
-                            var peerConnection = externalRoutingTable.AddMessageRoute(messageHandlerIdentifier, handlerSocketIdentifier, uri);
-                            if (!config.DeferPeerConnection && !peerConnection.Connected)
+                            var messageIdentifier = new MessageIdentifier(registration.Version,
+                                                                          registration.Identity,
+                                                                          registration.Partition);
+                            //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
+                            if (messageIdentifier.IsMessageHub() || securityProvider.GetSecurityDomain(messageIdentifier.Identity) == message.SecurityDomain)
                             {
-                                forwardingSocket.Connect(uri);
-                                peerConnection.Connected = true;
+                                var peerConnection = externalRoutingTable.AddMessageRoute(messageIdentifier, handlerSocketIdentifier, uri);
+                                if (!config.DeferPeerConnection && !peerConnection.Connected)
+                                {
+                                    forwardingSocket.Connect(uri);
+                                    peerConnection.Connected = true;
+                                }
+                            }
+                            else
+                            {
+                                logger.Warn($"MessageIdentity {messageIdentifier.Identity.GetString()} doesn't belong to requested " +
+                                            $"SecurityDomain {message.SecurityDomain}!");
                             }
                         }
                         catch (Exception err)

@@ -5,6 +5,7 @@ using kino.Core.Connectivity;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 
 namespace kino.Actors.Diagnostics
 {
@@ -13,23 +14,28 @@ namespace kino.Actors.Diagnostics
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly RouterConfiguration routerConfiguration;
+        private readonly ISecurityProvider securityProvider;
+        private static readonly MessageIdentifier KnownMessageRoutes = MessageIdentifier.Create<KnownMessageRoutesMessage>();
 
         public KnownMessageRoutesActor(IExternalRoutingTable externalRoutingTable,
                                        IInternalRoutingTable internalRoutingTable,
-                                       RouterConfiguration routerConfiguration)
+                                       RouterConfiguration routerConfiguration,
+                                       ISecurityProvider securityProvider)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.internalRoutingTable = internalRoutingTable;
             this.routerConfiguration = routerConfiguration;
+            this.securityProvider = securityProvider;
         }
 
-        [MessageHandlerDefinition(typeof (RequestKnownMessageRoutesMessage))]
+        [MessageHandlerDefinition(typeof(RequestKnownMessageRoutesMessage))]
         private async Task<IActorResult> Handler(IMessage message)
             => new ActorResult(Message.Create(new KnownMessageRoutesMessage
                                               {
                                                   ExternalRoutes = GetExternalRoutes(),
                                                   InternalRoutes = GetInternalRoutes()
-                                              }));
+                                              },
+                                              securityProvider.GetSecurityDomain(KnownMessageRoutes.Identity)));
 
         private MessageRoute GetInternalRoutes()
             => new MessageRoute

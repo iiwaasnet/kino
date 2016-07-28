@@ -9,6 +9,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace kino.Client
@@ -24,6 +25,7 @@ namespace kino.Client
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
         private readonly MessageHubConfiguration config;
+        private readonly ISecurityProvider securityProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
@@ -32,12 +34,14 @@ namespace kino.Client
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
                           MessageHubConfiguration config,
+                          ISecurityProvider securityProvider,
                           IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                           ILogger logger)
         {
             this.logger = logger;
             this.socketFactory = socketFactory;
             this.config = config;
+            this.securityProvider = securityProvider;
             this.performanceCounterManager = performanceCounterManager;
             receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             hubRegistered = new ManualResetEventSlim();
@@ -192,7 +196,8 @@ namespace kino.Client
                                                                                  Identity = receivingSocketIdentity
                                                                              }
                                                                          }
-                                            });
+                                            },
+                                            securityProvider.GetSecurityDomain(KinoMessages.RegisterInternalMessageRoute.Identity));
             socket.SendMessage(rdyMessage);
 
             hubRegistered.Set();

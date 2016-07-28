@@ -9,7 +9,6 @@ using Autofac.kino;
 using Client.Messages;
 using kino.Client;
 using kino.Core.Connectivity;
-using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
 using kino.Core.Security;
@@ -48,6 +47,8 @@ namespace Client
 
             //var receiverIdentity = FindReceiver(messageHub);
 
+            var securityProvider = container.Resolve<ISecurityProvider>();
+            var helloMessageIdentity = MessageIdentifier.Create<HelloMessage>();
             while (true)
             {
                 var promises = new List<IPromise>(runs);
@@ -57,7 +58,8 @@ namespace Client
 
                 for (var i = 0; i < runs; i++)
                 {
-                    var request = Message.CreateFlowStartMessage(new HelloMessage {Greeting = Guid.NewGuid().ToString()});
+                    var request = Message.CreateFlowStartMessage(new HelloMessage {Greeting = Guid.NewGuid().ToString()},
+                                                                 securityProvider.GetSecurityDomain(helloMessageIdentity.Identity));
                     request.TraceOptions = MessageTraceOptions.None;
                     //request.SetReceiverNode(receiverIdentity);
                     var callbackPoint = CallbackPoint.Create<GroupCharsResponseMessage>();
@@ -103,17 +105,16 @@ namespace Client
             WriteLine("Client stopped.");
         }
 
-        private static void TryEncryptDecrypt()
-        {
-            var securityProvider = new SampleSecurityProvider();
-            var message = Message.Create(new EhlloMessage {Ehllo = new string('D', 1000)}).As<Message>();
-            message.SignMessage(securityProvider.CreateOwnedDomainSignature(message));
-            securityProvider.VerifyOwnedDomainSignature(message);
-        }
+        //private static void TryEncryptDecrypt()
+        //{
+        //    var securityProvider = new SampleSecurityProvider();
+        //    var message = Message.Create(new EhlloMessage {Ehllo = new string('D', 1000)}).As<Message>();
+        //    message.SignMessage(securityProvider.CreateOwnedDomainSignature(message));
+        //    securityProvider.VerifyOwnedDomainSignature(message);
+        //}
 
         public static void SignFile(byte[] key, String sourceFile, String destFile)
         {
-            
             // Initialize the keyed hash object.
             using (var hmac = new HMACSHA256(key))
             {
@@ -133,7 +134,6 @@ namespace Client
                 timer.Stop();
                 WriteLine($"Hash computed in {timer.ElapsedMilliseconds} ms");
             }
-            
         }
 
         private static SocketIdentifier FindReceiver(IMessageHub messageHub)

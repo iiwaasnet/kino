@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using kino.Core.Diagnostics;
+using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
 using kino.Core.Security;
@@ -41,15 +42,24 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                 }
                 if (payload.GlobalMessageContracts != null)
                 {
-                    var messageGroups = UpdateLocalRoutingTable(handlerSocketIdentifier, payload.GlobalMessageContracts)
-                        .Select(mh => new { Message = mh, SecurityDomain = securityProvider.GetSecurityDomain(mh.Identity)})
-                        .GroupBy(mh => mh.SecurityDomain);
+                    var newRoutes = UpdateLocalRoutingTable(handlerSocketIdentifier, payload.GlobalMessageContracts);
+                    var messageHubs = newRoutes.Where(mi => mi.IsMessageHub()).ToList();
+                    var messageGroups = newRoutes
+                        .Where(mi => !mi.IsMessageHub())
+                        .Select(mh => new {Message = mh, SecurityDomain = securityProvider.GetSecurityDomain(mh.Identity)})
+                        .GroupBy(mh => mh.SecurityDomain)
+                        .ToList();
 
-                    foreach (var group in messageGroups)
+                    foreach (var securityDomain in securityProvider.GetAllowedSecurityDomains())
                     {
-                        clusterMonitor.RegisterSelf(group.Select(g => g.Message), group.Key);
+                        var contracts = messageGroups.Where(g => g.Key == securityDomain)
+                                                     .SelectMany(g => g.Select(_ => _.Message))
+                                                     .Concat(messageHubs);
+                        if (contracts.Any())
+                        {
+                            clusterMonitor.RegisterSelf(contracts, securityDomain);
+                        }
                     }
-                    
                 }
             }
 

@@ -31,6 +31,7 @@ namespace kino.Tests.Connectivity
         private Mock<IClusterMessageSender> clusterMessageSender;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private ClusterMembershipConfiguration clusterMembershipConfiguration;
+        private string securityDomain;
 
         [SetUp]
         public void Setup()
@@ -39,8 +40,12 @@ namespace kino.Tests.Connectivity
             clusterMessageSender = new Mock<IClusterMessageSender>();
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             logger = new Mock<ILogger>();
+
+            securityDomain = Guid.NewGuid().ToString();
             securityProvider = new Mock<ISecurityProvider>();
             securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(true);
+            securityProvider.Setup(m => m.GetAllowedSecurityDomains()).Returns(new[] {securityDomain});
+
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);

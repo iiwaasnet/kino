@@ -61,9 +61,9 @@ namespace kino
             var serviceMessageHandlers = new IServiceMessageHandler[]
                                          {
                                              new ExternalMessageRouteRegistrationHandler(externalRoutingTable, clusterMembership, routerConfiguration, securityProvider, logger),
-                                             new InternalMessageRouteRegistrationHandler(clusterMonitorProvider, internalRoutingTable, logger),
-                                             new MessageRouteDiscoveryHandler(clusterMonitorProvider, internalRoutingTable, securityProvider),
-                                             new MessageRouteUnregistrationHandler(externalRoutingTable, securityProvider),
+                                             new InternalMessageRouteRegistrationHandler(clusterMonitorProvider, internalRoutingTable, securityProvider, logger),
+                                             new MessageRouteDiscoveryHandler(clusterMonitorProvider, internalRoutingTable, securityProvider, logger),
+                                             new MessageRouteUnregistrationHandler(externalRoutingTable, securityProvider, logger),
                                              new ClusterMessageRoutesRequestHandler(clusterMonitorProvider, internalRoutingTable, securityProvider),
                                              new NodeMessageRoutesRequestHandler(clusterMonitorProvider, internalRoutingTable, securityProvider),
                                              new NodeUnregistrationHandler(externalRoutingTable, clusterMembership, securityProvider),
@@ -84,10 +84,12 @@ namespace kino
         public IMessageHub BuildMessageHub(MessageHubConfiguration messageHubConfiguration, ILogger logger)
         {
             var callbackHandlerStack = new CallbackHandlerStack();
+            var securityProvider = new NullSecurityProvider();
 
             return new MessageHub(socketFactory,
                                   callbackHandlerStack,
                                   messageHubConfiguration,
+                                  securityProvider,
                                   null,
                                   logger);
         }
@@ -95,8 +97,11 @@ namespace kino
         public IActorHostManager BuildActorHostManager(RouterConfiguration routerConfiguration,
                                                        ILogger logger)
         {
+            var securityProvider = new NullSecurityProvider();
+
             return new ActorHostManager(socketFactory,
                                         routerConfiguration,
+                                        securityProvider,
                                         null,
                                         logger);
         }
