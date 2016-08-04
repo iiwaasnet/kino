@@ -3,7 +3,9 @@ using System.Linq;
 using kino.Core.Connectivity;
 using kino.Core.Framework;
 using kino.Core.Messaging;
+using kino.Core.Security;
 using kino.Tests.Actors.Setup;
+using kino.Tests.Helpers;
 using NUnit.Framework;
 
 namespace kino.Tests.Messaging
@@ -11,6 +13,14 @@ namespace kino.Tests.Messaging
     [TestFixture]
     public class MessageTests
     {
+        private ISecurityProvider securityProvider;
+
+        [SetUp]
+        public void Setup()
+        {
+            securityProvider = new TestSecurityProvider();
+        }
+
         [Test]
         public void FlowStartMessage_HasCorrelationIdSet()
         {
@@ -43,7 +53,7 @@ namespace kino.Tests.Messaging
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
-            CollectionAssert.Contains(Enum.GetValues(typeof (DistributionPattern)), message.Distribution);
+            CollectionAssert.Contains(Enum.GetValues(typeof(DistributionPattern)), message.Distribution);
         }
 
         [Test]
@@ -302,6 +312,32 @@ namespace kino.Tests.Messaging
             message = new Message(multipart);
 
             Assert.AreEqual(ttl, message.TTL);
+        }
+
+        [Test]
+        public void SecurityDomain_IsConsistentlyTransferredViaMultipartMessage()
+        {
+            var securityDomain = Guid.NewGuid().ToString();
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage(), securityDomain);
+
+            var multipart = new MultipartMessage(message);
+            message = new Message(multipart);
+
+            Assert.AreEqual(securityDomain, message.SecurityDomain);
+        }
+
+        [Test]
+        public void MessageSignature_IsConsistentlyTransferredViaMultipartMessage()
+        {
+            var simpleMessage = new SimpleMessage();
+            var securityDomain = securityProvider.GetSecurityDomain(simpleMessage.Identity);
+            var message = (Message) Message.CreateFlowStartMessage(simpleMessage, securityDomain);
+            message.SignMessage(securityProvider);
+
+            var multipart = new MultipartMessage(message);
+            message = new Message(multipart);
+
+            message.VerifySignature(securityProvider);
         }
 
         [Test]

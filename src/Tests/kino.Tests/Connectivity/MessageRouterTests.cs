@@ -64,7 +64,7 @@ namespace kino.Tests.Connectivity
             serviceMessageHandlers = Enumerable.Empty<IServiceMessageHandler>();
             securityDomain = Guid.NewGuid().ToString();
             securityProvider = new Mock<ISecurityProvider>();
-            securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(true);
+            securityProvider.Setup(m => m.SecurityDomainIsAllowed(securityDomain)).Returns(true);
             securityProvider.Setup(m => m.GetAllowedSecurityDomains()).Returns(new[] {securityDomain});
             securityProvider.Setup(m => m.GetSecurityDomain(It.IsAny<byte[]>())).Returns(securityDomain);
         }
@@ -240,6 +240,18 @@ namespace kino.Tests.Connectivity
         [Test]
         public void GlobalActorRegistrations_AreBroadcastedToOtherNodes()
         {
+            TestGlobalActorRegistrationsBroadcast(new[] {securityDomain}, Times.Once());
+        }
+
+        [Test]
+        public void IfNoAllowedSecurityDomainsConfigured_GlobalActorRegistrationsAreNotBroadcastedToOtherNodes()
+        {
+            TestGlobalActorRegistrationsBroadcast(Enumerable.Empty<string>(), Times.Never());
+        }
+
+        private void TestGlobalActorRegistrationsBroadcast(IEnumerable<string> allowedDomains, Times times)
+        {
+            securityProvider.Setup(m => m.GetAllowedSecurityDomains()).Returns(allowedDomains);
             var internalRoutingTable = new InternalRoutingTable();
             serviceMessageHandlers = new[]
                                      {
@@ -281,7 +293,7 @@ namespace kino.Tests.Connectivity
                 CollectionAssert.AreEqual(socketIdentity, identifier.Identity);
 
                 var messageIdentifiers = new[] {new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty)};
-                clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageIdentifier>>(handlers => messageIdentifiers.SequenceEqual(handlers)), securityDomain), Times.Once);
+                clusterMonitor.Verify(m => m.RegisterSelf(It.IsAny<IEnumerable<MessageIdentifier>>(), It.IsAny<string>()), times);
             }
             finally
             {
@@ -670,17 +682,33 @@ namespace kino.Tests.Connectivity
         [Test]
         public void MessageReceivedFromOtherNode_ForwardedToLocalRouterSocket()
         {
+            var messageSignature = Guid.NewGuid().ToByteArray();
+            TestMessageReceivedFromOtherNode(messageSignature, messageSignature, MessageIdentifier.Create<SimpleMessage>());
+        }
+
+        [Test]
+        public void MessageReceivedFromOtherNodeNotForwardedToLocalRouterSocket_IfMessageSignatureDoesntMatch()
+        {
+            TestMessageReceivedFromOtherNode(Guid.NewGuid().ToByteArray(), Guid.NewGuid().ToByteArray(), KinoMessages.Exception);
+        }
+
+        private void TestMessageReceivedFromOtherNode(byte[] messageSignature, byte[] generatedSignature, MessageIdentifier expected)
+        {
             var router = CreateMessageRouter();
             try
             {
                 StartMessageRouter(router);
 
-                var message = Message.Create(new SimpleMessage());
+                var message = Message.Create(new SimpleMessage(), securityDomain);
+                securityProvider.Setup(m => m.CreateSignature(It.IsAny<string>(), It.IsAny<byte[]>())).Returns(messageSignature);
+                message.As<Message>().SignMessage(securityProvider.Object);
+
+                securityProvider.Setup(m => m.CreateSignature(It.IsAny<string>(), It.IsAny<byte[]>())).Returns(generatedSignature);
                 messageRouterSocketFactory.GetScaleoutFrontendSocket().DeliverMessage(message);
 
                 var messageOut = messageRouterSocketFactory.GetScaleoutFrontendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
-                Assert.AreEqual(message, messageOut);
+                Assert.AreEqual(expected, new MessageIdentifier(messageOut));
             }
             finally
             {
@@ -915,7 +943,18 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void UnregisterMessageRouteMessage_DeletesClusterMember()
+        public void UnregisterMessageRouteMessageForAllowedDomain_DeletesClusterMember()
+        {
+            TestUnregisterMessageRouteMessage(securityDomain, Times.Once());
+        }
+
+        [Test]
+        public void UnregisterMessageRouteMessageForNotAllowedDomain_DoesntDeletesClusterMember()
+        {
+            TestUnregisterMessageRouteMessage(Guid.NewGuid().ToString(), Times.Never());
+        }
+
+        private void TestUnregisterMessageRouteMessage(string securityDomain, Times times)
         {
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
             serviceMessageHandlers = new[]
@@ -936,12 +975,12 @@ namespace kino.Tests.Connectivity
                                   Uri = "tcp://127.0.0.1:5000",
                                   SocketIdentity = SocketIdentifier.CreateIdentity()
                               };
-                socket.DeliverMessage(Message.Create(message));
+                socket.DeliverMessage(Message.Create(message, securityDomain));
                 Thread.Sleep(AsyncOp);
 
                 clusterMembership.Verify(m => m.DeleteClusterMember(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == message.Uri
                                                                                                && Unsafe.Equals(e.Identity, message.SocketIdentity))),
-                                         Times.Once());
+                                         times);
             }
             finally
             {
