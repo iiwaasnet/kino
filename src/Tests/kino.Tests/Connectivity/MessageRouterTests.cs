@@ -1044,6 +1044,7 @@ namespace kino.Tests.Connectivity
             }
         }
 
+        //TODO: Add tests without SecurityDomain
         [Test]
         public void IfUnregisterNodeMessageRouteMessageAndConnectionWasEstablished_SocketIsDisconnected()
         {
@@ -1073,7 +1074,7 @@ namespace kino.Tests.Connectivity
                                              {
                                                  Uri = uri.ToSocketAddress(),
                                                  SocketIdentity = socketIdentity.Identity
-                                             });
+                                             }, securityDomain);
 
                 CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -1088,6 +1089,7 @@ namespace kino.Tests.Connectivity
             }
         }
 
+        //TODO: Add tests without SecurityDomain
         [Test]
         public void IfUnregisterNodeMessageRouteMessage_AllRoutesAreRemovedFromExternalRoutingTable()
         {
@@ -1117,7 +1119,7 @@ namespace kino.Tests.Connectivity
                                              {
                                                  Uri = uri.ToSocketAddress(),
                                                  SocketIdentity = socketIdentity.Identity
-                                             });
+                                             }, securityDomain);
 
                 CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
