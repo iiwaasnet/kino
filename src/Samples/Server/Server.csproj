@@ -75,6 +75,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Client\DomainPrivateKeyProvider.cs">
+      <Link>DomainPrivateKeyProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Client\DomainScopeResolver.cs">
+      <Link>DomainScopeResolver.cs</Link>
+    </Compile>
     <Compile Include="Actors\GroupCharsActor.cs" />
     <Compile Include="Actors\RevertStringActor.cs" />
     <Compile Include="ApplicationConfiguration.cs" />
@@ -88,7 +94,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RendezvousNode.cs" />
-    <Compile Include="SampleSecurityProvider.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

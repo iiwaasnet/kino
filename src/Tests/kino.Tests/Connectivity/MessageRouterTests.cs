@@ -64,7 +64,7 @@ namespace kino.Tests.Connectivity
             serviceMessageHandlers = Enumerable.Empty<IServiceMessageHandler>();
             domain = Guid.NewGuid().ToString();
             securityProvider = new Mock<ISecurityProvider>();
-            securityProvider.Setup(m => m.DomainIsAllowed(securityDomain)).Returns(true);
+            securityProvider.Setup(m => m.DomainIsAllowed(domain)).Returns(true);
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(new[] {domain});
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
         }
@@ -240,7 +240,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void GlobalActorRegistrations_AreBroadcastedToOtherNodes()
         {
-            TestGlobalActorRegistrationsBroadcast(new[] {securityDomain}, Times.Once());
+            TestGlobalActorRegistrationsBroadcast(new[] {domain}, Times.Once());
         }
 
         [Test]
@@ -251,7 +251,7 @@ namespace kino.Tests.Connectivity
 
         private void TestGlobalActorRegistrationsBroadcast(IEnumerable<string> allowedDomains, Times times)
         {
-            securityProvider.Setup(m => m.GetAllowedSecurityDomains()).Returns(allowedDomains);
+            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             var internalRoutingTable = new InternalRoutingTable();
             serviceMessageHandlers = new[]
                                      {
@@ -699,7 +699,7 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var message = Message.Create(new SimpleMessage(), securityDomain);
+                var message = Message.Create(new SimpleMessage(), domain);
                 securityProvider.Setup(m => m.CreateSignature(It.IsAny<string>(), It.IsAny<byte[]>())).Returns(messageSignature);
                 message.As<Message>().SignMessage(securityProvider.Object);
 
@@ -945,7 +945,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void UnregisterMessageRouteMessageForAllowedDomain_DeletesClusterMember()
         {
-            TestUnregisterMessageRouteMessage(securityDomain, Times.Once());
+            TestUnregisterMessageRouteMessage(domain, Times.Once());
         }
 
         [Test]
@@ -1074,7 +1074,7 @@ namespace kino.Tests.Connectivity
                                              {
                                                  Uri = uri.ToSocketAddress(),
                                                  SocketIdentity = socketIdentity.Identity
-                                             }, securityDomain);
+                                             }, domain);
 
                 CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);

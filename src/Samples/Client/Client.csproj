@@ -77,6 +77,8 @@
   <ItemGroup>
     <Compile Include="ApplicationConfiguration.cs" />
     <Compile Include="ConfigurationProvider.cs" />
+    <Compile Include="DomainPrivateKeyProvider.cs" />
+    <Compile Include="DomainScopeResolver.cs" />
     <Compile Include="IConfigurationProvider.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Messages\GroupCharsResponseMessage.cs" />

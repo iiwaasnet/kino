@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Security.Cryptography;
 using kino.Core.Connectivity;
 using kino.Core.Framework;
 using kino.Core.Messaging;
@@ -18,7 +19,7 @@ namespace kino.Tests.Messaging
         [SetUp]
         public void Setup()
         {
-            securityProvider = new TestSecurityProvider();
+            securityProvider = new SecurityProvider(HMACMD5.Create, new DomainScopeResolver(), new DomainPrivateKeyProvider());
         }
 
         [Test]
@@ -323,14 +324,14 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            Assert.AreEqual(securityDomain, message.SecurityDomain);
+            Assert.AreEqual(securityDomain, message.Domain);
         }
 
         [Test]
         public void MessageSignature_IsConsistentlyTransferredViaMultipartMessage()
         {
             var simpleMessage = new SimpleMessage();
-            var securityDomain = securityProvider.GetSecurityDomain(simpleMessage.Identity);
+            var securityDomain = securityProvider.GetDomain(simpleMessage.Identity);
             var message = (Message) Message.CreateFlowStartMessage(simpleMessage, securityDomain);
             message.SignMessage(securityProvider);
 

@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
 using Autofac;
+using Client;
 using kino.Actors;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
+using kino.Core.Security;
 using Server.Actors;
 using TypedConfigProvider;
 
@@ -50,6 +54,22 @@ namespace Server
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterTimingConfiguration())
                    .As<ClusterMembershipConfiguration>()
+                   .SingleInstance();
+
+            builder.RegisterType<SecurityProvider>()
+                   .As<ISecurityProvider>()
+                   .SingleInstance();
+
+            builder.RegisterType<DomainPrivateKeyProvider>()
+                   .As<IDomainPrivateKeyProvider>()
+                   .SingleInstance();
+
+            builder.RegisterType<DomainScopeResolver>()
+                   .As<IDomainScopeResolver>()
+                   .SingleInstance();
+
+            builder.Register(m => HMACMD5.Create())
+                   .As<Func<HMAC>>()
                    .SingleInstance();
         }
     }

@@ -17,9 +17,7 @@ namespace Server
             var builder = new ContainerBuilder();
             builder.RegisterModule<MainModule>();
             builder.RegisterModule<KinoModule>();
-            builder.RegisterType<SampleSecurityProvider>()
-                   .As<ISecurityProvider>()
-                   .SingleInstance();
+            
             var container = builder.Build();
 
             var messageRouter = container.Resolve<IMessageRouter>();

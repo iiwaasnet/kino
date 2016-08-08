@@ -5,6 +5,7 @@ using kino.Core.Connectivity;
 using kino.Core.Connectivity.ServiceMessageHandlers;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
+using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace Autofac.kino

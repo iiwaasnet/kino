@@ -96,6 +96,8 @@
     <Compile Include="Consensus\Setup\RoundBasedRegisterTestSetup.cs" />
     <Compile Include="Framework\HashedQueueTests.cs" />
     <Compile Include="Helpers\ClusterMonitorSocketFactory.cs" />
+    <Compile Include="Helpers\DomainPrivateKeyProvider.cs" />
+    <Compile Include="Helpers\DomainScopeResolver.cs" />
     <Compile Include="Helpers\IntercomMessageHubSocketFactory.cs" />
     <Compile Include="Helpers\MessageHubSocketFactory.cs" />
     <Compile Include="Helpers\ActorHostSocketFactory.cs" />
@@ -109,7 +111,6 @@
     <Compile Include="Client\CallbackHandlerStackTests.cs" />
     <Compile Include="Client\MessagHubTests.cs" />
     <Compile Include="Helpers\BlockingCollectionExtensions.cs" />
-    <Compile Include="Helpers\TestSecurityProvider.cs" />
     <Compile Include="Messaging\MessageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UriExtensionsTests.cs" />
