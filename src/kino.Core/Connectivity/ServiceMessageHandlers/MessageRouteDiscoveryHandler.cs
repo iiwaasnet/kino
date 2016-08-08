@@ -31,7 +31,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             var shouldHandle = IsDiscoverMessageRouteRequest(message);
             if (shouldHandle)
             {
-                if (securityProvider.SecurityDomainIsAllowed(message.SecurityDomain))
+                if (securityProvider.DomainIsAllowed(message.Domain))
                 {
                     message.As<Message>().VerifySignature(securityProvider);
 
@@ -41,17 +41,17 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                                                                   messageContract.Partition);
                     if (internalRoutingTable.CanRouteMessage(messageIdentifier))
                     {
-                        var securityDomains = messageIdentifier.IsMessageHub()
-                                                  ? securityProvider.GetAllowedSecurityDomains()
-                                                  : new[] {securityProvider.GetSecurityDomain(messageIdentifier.Identity)};
-                        if (securityDomains.Contains(message.SecurityDomain))
+                        var domains = messageIdentifier.IsMessageHub()
+                                                  ? securityProvider.GetAllowedDomains()
+                                                  : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};
+                        if (domains.Contains(message.Domain))
                         {
-                            clusterMonitor.RegisterSelf(new[] {messageIdentifier}, message.SecurityDomain);
+                            clusterMonitor.RegisterSelf(new[] {messageIdentifier}, message.Domain);
                         }
                         else
                         {
                             logger.Warn($"MessageIdentity {messageIdentifier.Identity.GetString()} doesn't belong to requested " +
-                                        $"SecurityDomain {message.SecurityDomain}!");
+                                        $"Domain {message.Domain}!");
                         }
                     }
                 }

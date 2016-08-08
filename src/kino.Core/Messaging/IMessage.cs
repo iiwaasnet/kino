@@ -27,6 +27,6 @@ namespace kino.Core.Messaging
 
         ushort Hops { get; }
 
-        string SecurityDomain { get; }
+        string Domain { get; }
     }
 }

@@ -37,7 +37,7 @@ namespace kino.Tests.Connectivity
         private IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
         private Mock<IClusterMembership> clusterMembership;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
-        private string securityDomain;
+        private string domain;
 
         [SetUp]
         public void Setup()
@@ -62,11 +62,11 @@ namespace kino.Tests.Connectivity
             socketFactory.Setup(m => m.GetSocketDefaultConfiguration()).Returns(new SocketConfiguration());
             logger = new Mock<ILogger>();
             serviceMessageHandlers = Enumerable.Empty<IServiceMessageHandler>();
-            securityDomain = Guid.NewGuid().ToString();
+            domain = Guid.NewGuid().ToString();
             securityProvider = new Mock<ISecurityProvider>();
-            securityProvider.Setup(m => m.SecurityDomainIsAllowed(securityDomain)).Returns(true);
-            securityProvider.Setup(m => m.GetAllowedSecurityDomains()).Returns(new[] {securityDomain});
-            securityProvider.Setup(m => m.GetSecurityDomain(It.IsAny<byte[]>())).Returns(securityDomain);
+            securityProvider.Setup(m => m.DomainIsAllowed(securityDomain)).Returns(true);
+            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(new[] {domain});
+            securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
         }
 
         [Test]
@@ -156,7 +156,7 @@ namespace kino.Tests.Connectivity
                 var version = Guid.NewGuid().ToByteArray();
                 var socketIdentity = Guid.NewGuid().ToByteArray();
                 var partition = Guid.NewGuid().ToByteArray();
-                var securityDomain = Guid.NewGuid().ToString();
+                var domain = Guid.NewGuid().ToString();
                 var message = Message.Create(new RegisterInternalMessageRouteMessage
                                              {
                                                  SocketIdentity = socketIdentity,
@@ -170,7 +170,7 @@ namespace kino.Tests.Connectivity
                                                                              }
                                                                          }
                                              },
-                                             securityDomain);
+                                             domain);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOpCompletionDelay);
@@ -179,7 +179,7 @@ namespace kino.Tests.Connectivity
 
                 Assert.IsNotNull(identifier);
 
-                clusterMonitor.Verify(m => m.RegisterSelf(It.IsAny<IEnumerable<MessageIdentifier>>(), securityDomain), Times.Never);
+                clusterMonitor.Verify(m => m.RegisterSelf(It.IsAny<IEnumerable<MessageIdentifier>>(), domain), Times.Never);
             }
             finally
             {
@@ -281,7 +281,7 @@ namespace kino.Tests.Connectivity
                                                                               }
                                                                           }
                                              },
-                                             securityDomain);
+                                             domain);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOpCompletionDelay);
@@ -427,7 +427,7 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var message = Message.Create(new SimpleMessage(), securityDomain);
+                var message = Message.Create(new SimpleMessage(), domain);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 var messageOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
@@ -444,7 +444,7 @@ namespace kino.Tests.Connectivity
         public void IfReceivingNodeIsSet_MessageAlwaysRoutedToOtherNodes()
         {
             var externalNode = new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity())};
-            var message = Message.Create(new SimpleMessage(), securityDomain);
+            var message = Message.Create(new SimpleMessage(), domain);
             message.SetReceiverNode(new SocketIdentifier(externalNode.Node.SocketIdentity));
 
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
@@ -516,7 +516,7 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var message = Message.CreateFlowStartMessage(new SimpleMessage(), securityDomain);
+                var message = Message.CreateFlowStartMessage(new SimpleMessage(), domain);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
                 Assert.AreEqual(0, message.Hops);
 
@@ -547,7 +547,7 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var message = Message.Create(new SimpleMessage(), securityDomain, DistributionPattern.Broadcast);
+                var message = Message.Create(new SimpleMessage(), domain, DistributionPattern.Broadcast);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 var messageScaleOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
@@ -608,7 +608,7 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var message = Message.Create(new SimpleMessage(), securityDomain, DistributionPattern.Broadcast);
+                var message = Message.Create(new SimpleMessage(), domain, DistributionPattern.Broadcast);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 var messageScaleOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
@@ -664,7 +664,7 @@ namespace kino.Tests.Connectivity
                 Assert.IsFalse(peerConnection.Connected);
                 var socket = messageRouterSocketFactory.GetScaleoutBackendSocket();
                 Assert.IsFalse(socket.IsConnected());
-                var message = Message.Create(new SimpleMessage(), securityDomain);
+                var message = Message.Create(new SimpleMessage(), domain);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 var messageOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
@@ -773,7 +773,7 @@ namespace kino.Tests.Connectivity
                 StartMessageRouter(router);
 
                 var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-                var securityDomain = Guid.NewGuid().ToString();
+                var domain = Guid.NewGuid().ToString();
                 var message = Message.Create(new DiscoverMessageRouteMessage
                                              {
                                                  MessageContract = new MessageContract
@@ -783,13 +783,13 @@ namespace kino.Tests.Connectivity
                                                                        Partition = messageIdentifier.Partition
                                                                    }
                                              },
-                                             securityDomain);
+                                             domain);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
 
                 Assert.IsFalse(internalRoutingTable.CanRouteMessage(messageIdentifier));
-                clusterMonitor.Verify(m => m.RegisterSelf(It.IsAny<IEnumerable<MessageIdentifier>>(), securityDomain), Times.Never());
+                clusterMonitor.Verify(m => m.RegisterSelf(It.IsAny<IEnumerable<MessageIdentifier>>(), domain), Times.Never());
             }
             finally
             {
@@ -825,14 +825,14 @@ namespace kino.Tests.Connectivity
                                                                        Partition = messageIdentifier.Partition
                                                                    }
                                              },
-                                             securityDomain);
+                                             domain);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
 
                 Assert.IsTrue(internalRoutingTable.CanRouteMessage(messageIdentifier));
                 clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageIdentifier>>(ids => ids.First().Equals(messageIdentifier)),
-                                                          securityDomain),
+                                                          domain),
                                       Times.Once());
             }
             finally
@@ -877,7 +877,7 @@ namespace kino.Tests.Connectivity
                                                                                                         Partition = mi.Partition
                                                                                                     }).ToArray()
                                              },
-                                             securityDomain);
+                                             domain);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
@@ -927,7 +927,7 @@ namespace kino.Tests.Connectivity
                                                                                                         Partition = mi.Partition
                                                                                                     }).ToArray()
                                              },
-                                             securityDomain);
+                                             domain);
 
                 CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -1029,7 +1029,7 @@ namespace kino.Tests.Connectivity
                                                                                                         Partition = mi.Partition
                                                                                                     }).ToArray()
                                              },
-                                             securityDomain);
+                                             domain);
 
                 CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
@@ -1119,7 +1119,7 @@ namespace kino.Tests.Connectivity
                                              {
                                                  Uri = uri.ToSocketAddress(),
                                                  SocketIdentity = socketIdentity.Identity
-                                             }, securityDomain);
+                                             }, domain);
 
                 CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);

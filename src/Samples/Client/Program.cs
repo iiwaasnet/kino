@@ -59,7 +59,7 @@ namespace Client
                 for (var i = 0; i < runs; i++)
                 {
                     var request = Message.CreateFlowStartMessage(new HelloMessage {Greeting = Guid.NewGuid().ToString()},
-                                                                 securityProvider.GetSecurityDomain(helloMessageIdentity.Identity));
+                                                                 securityProvider.GetDomain(helloMessageIdentity.Identity));
                     request.TraceOptions = MessageTraceOptions.None;
                     //request.SetReceiverNode(receiverIdentity);
                     var callbackPoint = CallbackPoint.Create<GroupCharsResponseMessage>();

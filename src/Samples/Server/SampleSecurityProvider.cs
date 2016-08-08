@@ -101,13 +101,13 @@ namespace Server
         public byte[] CreateSignature(string domain, byte[] buffer)
             => CreateDomainSignature(FindDomain(domain), buffer);
 
-        public string GetSecurityDomain(byte[] messageIdentity)
+        public string GetDomain(byte[] messageIdentity)
             => FindDomain(new MessageIdentifier(messageIdentity)).Name;
 
-        public bool SecurityDomainIsAllowed(string domain)
+        public bool DomainIsAllowed(string domain)
             => nameToDomainMap.ContainsKey(domain);
 
-        public IEnumerable<string> GetAllowedSecurityDomains()
+        public IEnumerable<string> GetAllowedDomains()
             => nameToDomainMap.Keys;
 
         private byte[] CreateDomainSignature(Domain domain, byte[] buffer)

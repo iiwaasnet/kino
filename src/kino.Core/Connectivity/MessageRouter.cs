@@ -370,7 +370,7 @@ namespace kino.Core.Connectivity
                                                 Exception = err,
                                                 StackTrace = err.StackTrace
                                             },
-                                            securityProvider.GetSecurityDomain(KinoMessages.Exception.Identity))
+                                            securityProvider.GetDomain(KinoMessages.Exception.Identity))
                                     .As<Message>();
             messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
             messageOut.SetCorrelationId(messageIn.CorrelationId);

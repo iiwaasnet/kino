@@ -349,7 +349,7 @@ namespace kino.Core.Connectivity
 
         private void SendPong(ulong pingId)
         {
-            foreach (var securityDomain in securityProvider.GetAllowedSecurityDomains())
+            foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var message = Message.Create(new PongMessage
                                              {
@@ -357,7 +357,7 @@ namespace kino.Core.Connectivity
                                                  SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
                                                  PingId = pingId
                                              },
-                                             securityDomain);
+                                             domain);
                 message.As<Message>().SignMessage(securityProvider);
 
                 clusterMessageSender.EnqueueMessage(message);
@@ -379,7 +379,7 @@ namespace kino.Core.Connectivity
 
         private void ProcessPongMessage(IMessage message)
         {
-            if (securityProvider.SecurityDomainIsAllowed(message.SecurityDomain))
+            if (securityProvider.DomainIsAllowed(message.Domain))
             {
                 message.As<Message>().VerifySignature(securityProvider);
 
@@ -394,14 +394,14 @@ namespace kino.Core.Connectivity
 
         private void RequestNodeMessageHandlersRouting(PongMessage payload)
         {
-            foreach (var securityDomain in securityProvider.GetAllowedSecurityDomains())
+            foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var request = Message.Create(new RequestNodeMessageRoutesMessage
                                              {
                                                  TargetNodeIdentity = payload.SocketIdentity,
                                                  TargetNodeUri = payload.Uri
                                              },
-                                             securityDomain);
+                                             domain);
                 request.As<Message>().SignMessage(securityProvider);
                 clusterMessageSender.EnqueueMessage(request);
             }

@@ -70,14 +70,14 @@ namespace kino.Core.Connectivity
 
         private void UnregisterRoutingSelf(ISocket clusterMonitorSendingSocket)
         {
-            foreach (var securityDomain in securityProvider.GetAllowedSecurityDomains())
+            foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var message = Message.Create(new UnregisterNodeMessage
                                              {
                                                  Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
                                                  SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
                                              },
-                                             securityDomain);
+                                             domain);
                 message.As<Message>().SignMessage(securityProvider);
 
                 clusterMonitorSendingSocket.SendMessage(message);

@@ -30,7 +30,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             var shouldHandle = IsUnregisterMessageRouting(message);
             if (shouldHandle)
             {
-                if (securityProvider.SecurityDomainIsAllowed(message.SecurityDomain))
+                if (securityProvider.DomainIsAllowed(message.Domain))
                 {
                     message.As<Message>().VerifySignature(securityProvider);
 
@@ -40,14 +40,14 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                                                                                       mh.Identity,
                                                                                       mh.Partition));
                     var messageIdentifiers = messageContracts
-                        .Where(mi => securityProvider.GetSecurityDomain(mi.Identity) == message.SecurityDomain);
+                        .Where(mi => securityProvider.GetDomain(mi.Identity) == message.Domain);
                     var connectionAction = externalRoutingTable.RemoveMessageRoute(messageIdentifiers,
                                                                                    new SocketIdentifier(payload.SocketIdentity));
                     if (connectionAction == PeerConnectionAction.Disconnect)
                     {
                         forwardingSocket.SafeDisconnect(new Uri(payload.Uri));
                     }
-                    LogIfMessagesBelongToOtherDomain(messageIdentifiers, messageContracts, message.SecurityDomain);
+                    LogIfMessagesBelongToOtherDomain(messageIdentifiers, messageContracts, message.Domain);
                 }
             }
 
@@ -56,12 +56,12 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
 
         private void LogIfMessagesBelongToOtherDomain(IEnumerable<MessageIdentifier> messageIdentifiers,
                                                       IEnumerable<MessageIdentifier> messageContracts,
-                                                      string securityDomain)
+                                                      string domain)
         {
             foreach (var messageContract in messageContracts.Where(mc => !messageIdentifiers.Contains(mc)))
             {
                 logger.Warn($"MessageIdentity {messageContract.Identity.GetString()} doesn't belong to requested " +
-                            $"SecurityDomain {securityDomain}!");
+                            $"Domain {domain}!");
             }
         }
 

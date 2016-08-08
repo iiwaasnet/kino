@@ -9,7 +9,7 @@ namespace kino.Core.Connectivity
 
         void Stop();
 
-        void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers, string securityDomain);
+        void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers, string domain);
 
         void RequestClusterRoutes();
 

@@ -32,15 +32,15 @@ namespace kino.Tests.Connectivity
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private Mock<IRouteDiscovery> routeDiscovery;
         private Mock<ISecurityProvider> securityProvider;
-        private string securityDomain;
+        private string domain;
 
         [SetUp]
         public void Setup()
         {
             securityProvider = new Mock<ISecurityProvider>();
-            securityDomain = Guid.NewGuid().ToString();
-            securityProvider.Setup(m => m.GetAllowedSecurityDomains()).Returns(new[] {securityDomain});
-            securityProvider.Setup(m => m.GetSecurityDomain(It.IsAny<byte[]>())).Returns(securityDomain);
+            domain = Guid.NewGuid().ToString();
+            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(new[] {domain});
+            securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
             clusterMonitorSocketFactory = new ClusterMonitorSocketFactory();
             logger = new Mock<ILogger>();
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();

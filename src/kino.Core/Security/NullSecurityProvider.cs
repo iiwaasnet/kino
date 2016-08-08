@@ -12,16 +12,16 @@ namespace kino.Core.Security
             allowedDomains = new[] {string.Empty};
         }
 
-        public byte[] CreateSignature(string securityDomain, byte[] buffer)
+        public byte[] CreateSignature(string domain, byte[] buffer)
             => IdentityExtensions.Empty;
 
-        public string GetSecurityDomain(byte[] messageIdentity)
+        public string GetDomain(byte[] messageIdentity)
             => string.Empty;
 
-        public bool SecurityDomainIsAllowed(string domain)
+        public bool DomainIsAllowed(string domain)
             => true;
 
-        public IEnumerable<string> GetAllowedSecurityDomains()
+        public IEnumerable<string> GetAllowedDomains()
             => allowedDomains;
     }
 }

@@ -197,7 +197,7 @@ namespace kino.Client
                                                                              }
                                                                          }
                                             },
-                                            securityProvider.GetSecurityDomain(KinoMessages.RegisterInternalMessageRoute.Identity));
+                                            securityProvider.GetDomain(KinoMessages.RegisterInternalMessageRoute.Identity));
             socket.SendMessage(rdyMessage);
 
             hubRegistered.Set();

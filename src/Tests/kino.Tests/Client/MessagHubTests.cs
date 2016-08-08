@@ -46,7 +46,7 @@ namespace kino.Tests.Client
                          RouterUri = new Uri(localhost)
                      };
             securityProvider = new Mock<ISecurityProvider>();
-            securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(true);
+            securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
         }
 
         [Test]

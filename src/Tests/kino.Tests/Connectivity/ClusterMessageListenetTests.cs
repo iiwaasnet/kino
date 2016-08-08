@@ -31,7 +31,7 @@ namespace kino.Tests.Connectivity
         private Mock<IClusterMessageSender> clusterMessageSender;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private ClusterMembershipConfiguration clusterMembershipConfiguration;
-        private string securityDomain;
+        private string domain;
 
         [SetUp]
         public void Setup()
@@ -41,10 +41,10 @@ namespace kino.Tests.Connectivity
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             logger = new Mock<ILogger>();
 
-            securityDomain = Guid.NewGuid().ToString();
+            domain = Guid.NewGuid().ToString();
             securityProvider = new Mock<ISecurityProvider>();
-            securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(true);
-            securityProvider.Setup(m => m.GetAllowedSecurityDomains()).Returns(new[] {securityDomain});
+            securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
+            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(new[] {domain});
 
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
@@ -215,7 +215,7 @@ namespace kino.Tests.Connectivity
 
         private void SendPongMessageFromFromUnknownNode(bool domainIsSupported, Func<Times> times)
         {
-            securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(domainIsSupported);
+            securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(domainIsSupported);
             var sourceNode = new SocketEndpoint(new Uri("tpc://127.0.0.3:7000"), SocketIdentifier.CreateIdentity());
 
             clusterMembership.Setup(m => m.KeepAlive(sourceNode)).Returns(false);

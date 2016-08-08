@@ -34,7 +34,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             var shouldHandle = IsExternalRouteRegistration(message);
             if (shouldHandle)
             {
-                if (securityProvider.SecurityDomainIsAllowed(message.SecurityDomain))
+                if (securityProvider.DomainIsAllowed(message.Domain))
                 {
                     message.As<Message>().VerifySignature(securityProvider);
 
@@ -51,7 +51,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                                                                           registration.Identity,
                                                                           registration.Partition);
                             //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
-                            if (messageIdentifier.IsMessageHub() || securityProvider.GetSecurityDomain(messageIdentifier.Identity) == message.SecurityDomain)
+                            if (messageIdentifier.IsMessageHub() || securityProvider.GetDomain(messageIdentifier.Identity) == message.Domain)
                             {
                                 var peerConnection = externalRoutingTable.AddMessageRoute(messageIdentifier, handlerSocketIdentifier, uri);
                                 if (!config.DeferPeerConnection && !peerConnection.Connected)
@@ -63,7 +63,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                             else
                             {
                                 logger.Warn($"MessageIdentity {messageIdentifier.Identity.GetString()} doesn't belong to requested " +
-                                            $"SecurityDomain {message.SecurityDomain}!");
+                                            $"Domain {message.Domain}!");
                             }
                         }
                         catch (Exception err)

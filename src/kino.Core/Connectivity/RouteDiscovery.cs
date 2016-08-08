@@ -58,10 +58,10 @@ namespace kino.Core.Connectivity
                     {
                         foreach (var messageIdentifier in missingRoutes)
                         {
-                            var securityDomains = messageIdentifier.IsMessageHub()
-                                                      ? securityProvider.GetAllowedSecurityDomains()
-                                                      : new[] {securityProvider.GetSecurityDomain(messageIdentifier.Identity)};
-                            foreach (var securityDomain in securityDomains)
+                            var domains = messageIdentifier.IsMessageHub()
+                                                      ? securityProvider.GetAllowedDomains()
+                                                      : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};
+                            foreach (var domain in domains)
                             {
                                 var message = Message.Create(new DiscoverMessageRouteMessage
                                                              {
@@ -74,7 +74,7 @@ namespace kino.Core.Connectivity
                                                                                        Partition = messageIdentifier.Partition
                                                                                    }
                                                              },
-                                                             securityDomain);
+                                                             domain);
                                 message.As<Message>().SignMessage(securityProvider);
                                 clusterMessageSender.EnqueueMessage(message);
                             }

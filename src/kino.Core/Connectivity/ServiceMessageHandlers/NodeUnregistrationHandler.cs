@@ -27,7 +27,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             var shouldHandle = IsUnregisterRouting(message);
             if (shouldHandle)
             {
-                if (securityProvider.SecurityDomainIsAllowed(message.SecurityDomain))
+                if (securityProvider.DomainIsAllowed(message.Domain))
                 {
                     message.As<Message>().VerifySignature(securityProvider);
 

@@ -26,7 +26,7 @@ namespace Server.Actors
             var reversedString = new string(hello.Greeting.Reverse().ToArray());
 
             return new ActorResult(Message.Create(new EhlloMessage {Ehllo = reversedString},
-                                                  securityProvider.GetSecurityDomain(Ehhlo.Identity)));
+                                                  securityProvider.GetDomain(Ehhlo.Identity)));
         }
     }
 }

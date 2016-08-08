@@ -18,11 +18,11 @@
             internal const int CallbackDescription = 12;
             internal const int RoutingDescription = 13;
             internal const int Signature = 14;
-            internal const int SecurityDomain = 15;
+            internal const int Domain = 15;
         }
 
         internal static ushort GetLastFixedFrameIndex()
-            => ReversedFramesV4.SecurityDomain;
+            => ReversedFramesV4.Domain;
 
         private class ForwardFrames
         {

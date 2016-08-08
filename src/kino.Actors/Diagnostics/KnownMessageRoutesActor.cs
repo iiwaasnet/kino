@@ -35,7 +35,7 @@ namespace kino.Actors.Diagnostics
                                                   ExternalRoutes = GetExternalRoutes(),
                                                   InternalRoutes = GetInternalRoutes()
                                               },
-                                              securityProvider.GetSecurityDomain(KnownMessageRoutes.Identity)));
+                                              securityProvider.GetDomain(KnownMessageRoutes.Identity)));
 
         private MessageRoute GetInternalRoutes()
             => new MessageRoute

@@ -20,9 +20,9 @@ namespace kino.Core.Messaging
         private byte[] receiverNodeIdentity;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
-        private Message(IPayload payload, string securityDomain)
+        private Message(IPayload payload, string domain)
         {
-            SecurityDomain = securityDomain ?? string.Empty;
+            Domain = domain ?? string.Empty;
             WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
             CallbackPoint = Enumerable.Empty<MessageIdentifier>();
@@ -36,8 +36,8 @@ namespace kino.Core.Messaging
             TraceOptions = MessageTraceOptions.None;
         }
 
-        public static IMessage CreateFlowStartMessage(IPayload payload, string securityDomain = null)
-            => new Message(payload, securityDomain)
+        public static IMessage CreateFlowStartMessage(IPayload payload, string domain = null)
+            => new Message(payload, domain)
                {
                    Distribution = DistributionPattern.Unicast,
                    CorrelationId = GenerateCorrelationId()
@@ -52,9 +52,9 @@ namespace kino.Core.Messaging
                };
 
         public static IMessage Create(IPayload payload,
-                                      string securityDomain,
+                                      string domain,
                                       DistributionPattern distributionPattern = DistributionPattern.Unicast)
-            => new Message(payload, securityDomain)
+            => new Message(payload, domain)
                {
                    Distribution = distributionPattern,
                    CorrelationId = EmptyCorrelationId
@@ -79,7 +79,7 @@ namespace kino.Core.Messaging
             TTL = multipartMessage.GetMessageTTL();
             CorrelationId = multipartMessage.GetCorrelationId();
             Signature = multipartMessage.GetSignature();
-            SecurityDomain = multipartMessage.GetSecurityDomain();
+            Domain = multipartMessage.GetDomain();
 
             MessageTraceOptions traceOptions;
             DistributionPattern distributionPattern;
@@ -154,14 +154,14 @@ namespace kino.Core.Messaging
 
         internal void SignMessage(ISignatureProvider signatureProvider)
         {
-            AssertSecurityDomainIsSet();
+            AssertDomainIsSet();
 
-            Signature = signatureProvider.CreateSignature(SecurityDomain, GetSignatureFields());
+            Signature = signatureProvider.CreateSignature(Domain, GetSignatureFields());
         }
 
         internal void VerifySignature(ISignatureProvider signatureProvider)
         {
-            var mac = signatureProvider.CreateSignature(SecurityDomain, GetSignatureFields());
+            var mac = signatureProvider.CreateSignature(Domain, GetSignatureFields());
 
             if (!Unsafe.Equals(Signature, mac))
             {
@@ -169,11 +169,11 @@ namespace kino.Core.Messaging
             }
         }
 
-        private void AssertSecurityDomainIsSet()
+        private void AssertDomainIsSet()
         {
-            if (string.IsNullOrWhiteSpace(SecurityDomain))
+            if (string.IsNullOrWhiteSpace(Domain))
             {
-                throw new SecurityException($"{nameof(SecurityDomain)} is not set!");
+                throw new SecurityException($"{nameof(Domain)} is not set!");
             }
         }
 
@@ -267,6 +267,6 @@ namespace kino.Core.Messaging
 
         public int WireFormatVersion { get; private set; }
 
-        public string SecurityDomain { get; private set; }
+        public string Domain { get; private set; }
     }
 }

@@ -40,7 +40,7 @@ namespace kino.Tests.Actors
                                       RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity())
                                   };
             securityProvider = new Mock<ISecurityProvider>();
-            securityProvider.Setup(m => m.SecurityDomainIsAllowed(It.IsAny<string>())).Returns(true);
+            securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
         }
 
         [Test(Description = "Assigning several actors, handling the same message type, should not throw exception.")]

@@ -2,6 +2,6 @@
 {
     public interface ISignatureProvider
     {
-        byte[] CreateSignature(string securityDomain, byte[] buffer);
+        byte[] CreateSignature(string domain, byte[] buffer);
     }
 }

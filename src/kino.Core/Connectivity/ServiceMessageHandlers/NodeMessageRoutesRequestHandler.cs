@@ -27,7 +27,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             var shouldHandle = IsMessageRoutesRequest(message);
             if (shouldHandle)
             {
-                if (securityProvider.SecurityDomainIsAllowed(message.SecurityDomain))
+                if (securityProvider.DomainIsAllowed(message.Domain))
                 {
                     message.As<Message>().VerifySignature(securityProvider);
 
@@ -36,13 +36,13 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                                                         .ToList();
                     //TODO: Refactor, hence !mi.IsMessageHub() should be first condition
                     var contracts = messageIdentifiers.Where(mi => !mi.IsMessageHub() &&
-                                                                   securityProvider.GetSecurityDomain(mi.Identity) == message.SecurityDomain)
+                                                                   securityProvider.GetDomain(mi.Identity) == message.Domain)
                                                       .Concat(messageHubs)
                                                       .ToList();
 
                     if (contracts.Any())
                     {
-                        clusterMonitor.RegisterSelf(contracts, message.SecurityDomain);
+                        clusterMonitor.RegisterSelf(contracts, message.Domain);
                     }
                 }
             }

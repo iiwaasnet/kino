@@ -46,18 +46,18 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                     var messageHubs = newRoutes.Where(mi => mi.IsMessageHub()).ToList();
                     var messageGroups = newRoutes
                         .Where(mi => !mi.IsMessageHub())
-                        .Select(mh => new {Message = mh, SecurityDomain = securityProvider.GetSecurityDomain(mh.Identity)})
-                        .GroupBy(mh => mh.SecurityDomain)
+                        .Select(mh => new {Message = mh, Domain = securityProvider.GetDomain(mh.Identity)})
+                        .GroupBy(mh => mh.Domain)
                         .ToList();
 
-                    foreach (var securityDomain in securityProvider.GetAllowedSecurityDomains())
+                    foreach (var domain in securityProvider.GetAllowedDomains())
                     {
-                        var contracts = messageGroups.Where(g => g.Key == securityDomain)
+                        var contracts = messageGroups.Where(g => g.Key == domain)
                                                      .SelectMany(g => g.Select(_ => _.Message))
                                                      .Concat(messageHubs);
                         if (contracts.Any())
                         {
-                            clusterMonitor.RegisterSelf(contracts, securityDomain);
+                            clusterMonitor.RegisterSelf(contracts, domain);
                         }
                     }
                 }

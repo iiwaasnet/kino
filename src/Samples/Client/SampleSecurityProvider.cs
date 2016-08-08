@@ -11,6 +11,30 @@ using kino.Core.Security;
 
 namespace Client
 {
+    public class DomainPrivateKey
+    {
+        public string Domain { get; set; }
+
+        public byte[] PrivateKey { get; set; }
+    }
+
+    public interface IDomainPrivateKeyProvider
+    {
+        IEnumerable<DomainPrivateKey> GetDomainKeys();
+    }
+
+    public class DomainMessageIdentity
+    {
+        public string Domain { get; set; }
+
+        public IEnumerable<byte[]> MessageIdentities { get; set; }
+    }
+
+    public interface IDomainMessageIdentityResolver
+    {
+        IEnumerable<DomainMessageIdentity> GetDomainMessageIdentities(IEnumerable<string> domains);
+    }
+
     public class SampleSecurityProvider : ISecurityProvider
     {
         private readonly Domain serverDomain;
@@ -25,7 +49,9 @@ namespace Client
         private readonly object decryptLock = new object();
         private const int DefaultMACBufferSize = 2 * 1024;
 
-        public SampleSecurityProvider()
+        public SampleSecurityProvider(Func<HMAC> macImplFactory,
+                                      IDomainMessageIdentityResolver domainMessageIdentityResolver,
+                                      IDomainPrivateKeyProvider domainPrivateKeyProvider)
         {
             var domains = CreateDomains();
             serverDomain = domains.First();
@@ -101,13 +127,13 @@ namespace Client
         public byte[] CreateSignature(string domain, byte[] buffer)
             => CreateDomainSignature(FindDomain(domain), buffer);
 
-        public string GetSecurityDomain(byte[] messageIdentity)
+        public string GetDomain(byte[] messageIdentity)
             => FindDomain(new MessageIdentifier(messageIdentity)).Name;
 
-        public bool SecurityDomainIsAllowed(string domain)
+        public bool DomainIsAllowed(string domain)
             => nameToDomainMap.ContainsKey(domain);
 
-        public IEnumerable<string> GetAllowedSecurityDomains()
+        public IEnumerable<string> GetAllowedDomains()
             => nameToDomainMap.Keys;
 
         private byte[] CreateDomainSignature(Domain domain, byte[] buffer)

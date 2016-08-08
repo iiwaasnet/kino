@@ -78,7 +78,7 @@ namespace kino.Core.Connectivity
             StartProcessingClusterMessages(TimeSpan.FromMilliseconds(-1));
         }
 
-        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers, string securityDomain)
+        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers, string domain)
         {
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
@@ -91,7 +91,7 @@ namespace kino.Core.Connectivity
                                                                                                  Partition = mi.Partition
                                                                                              }).ToArray()
                                          },
-                                         securityDomain);
+                                         domain);
             message.As<Message>().SignMessage(securityProvider);
             clusterMessageSender.EnqueueMessage(message);
         }
@@ -106,9 +106,9 @@ namespace kino.Core.Connectivity
                                                                                   Version = mi.Version,
                                                                                   Partition = mi.Partition
                                                                               },
-                                                                    SecurityDomain = securityProvider.GetSecurityDomain(mi.Identity)
+                                                                    Domain = securityProvider.GetDomain(mi.Identity)
                                                                 })
-                                                  .GroupBy(mh => mh.SecurityDomain);
+                                                  .GroupBy(mh => mh.Domain);
 
             foreach (var group in messageGroups)
             {
@@ -127,14 +127,14 @@ namespace kino.Core.Connectivity
 
         public void RequestClusterRoutes()
         {
-            foreach (var securityDomain in securityProvider.GetAllowedSecurityDomains())
+            foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var message = Message.Create(new RequestClusterMessageRoutesMessage
                                              {
                                                  RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
                                                  RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()
                                              },
-                                             securityDomain);
+                                             domain);
                 message.As<Message>().SignMessage(securityProvider);
 
                 clusterMessageSender.EnqueueMessage(message);

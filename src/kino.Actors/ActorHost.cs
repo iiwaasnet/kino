@@ -141,7 +141,7 @@ namespace kino.Actors
                                                                     .ToArray()
                           };
 
-            var message = Message.Create(payload, securityProvider.GetSecurityDomain(KinoMessages.RegisterInternalMessageRoute.Identity));
+            var message = Message.Create(payload, securityProvider.GetDomain(KinoMessages.RegisterInternalMessageRoute.Identity));
             socket.SendMessage(message);
         }
 
@@ -261,7 +261,7 @@ namespace kino.Actors
                                                 Exception = err,
                                                 StackTrace = err.StackTrace
                                             },
-                                            securityProvider.GetSecurityDomain(KinoMessages.Exception.Identity))
+                                            securityProvider.GetDomain(KinoMessages.Exception.Identity))
                                     .As<Message>();
             messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
@@ -293,7 +293,7 @@ namespace kino.Actors
                                                       {
                                                           Exception = new OperationCanceledException()
                                                       },
-                                                      securityProvider.GetSecurityDomain(KinoMessages.Exception.Identity)));
+                                                      securityProvider.GetDomain(KinoMessages.Exception.Identity)));
             }
             if (task.IsFaulted)
             {
@@ -304,7 +304,7 @@ namespace kino.Actors
                                                           Exception = err,
                                                           StackTrace = err?.StackTrace
                                                       },
-                                                      securityProvider.GetSecurityDomain(KinoMessages.Exception.Identity)));
+                                                      securityProvider.GetDomain(KinoMessages.Exception.Identity)));
             }
 
             return task.Result ?? ActorResult.Empty;
