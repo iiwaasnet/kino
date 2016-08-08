@@ -23,16 +23,79 @@ namespace Client
         IEnumerable<DomainPrivateKey> GetDomainKeys();
     }
 
+    class DomainPrivateKeyProvider : IDomainPrivateKeyProvider
+    {
+        public IEnumerable<DomainPrivateKey> GetDomainKeys()
+        {
+            foreach (var ch in "AB".ToCharArray())
+            {
+                yield return new DomainPrivateKey
+                             {
+                                 Domain = new string(ch, 30),
+                                 PrivateKey = new string(ch, 16).GetBytes().Take(16).ToArray()
+                             };
+            }
+        }
+    }
+
     public class DomainMessageIdentity
     {
         public string Domain { get; set; }
 
-        public IEnumerable<byte[]> MessageIdentities { get; set; }
+        public IEnumerable<string> MessageIdentities { get; set; }
     }
 
     public interface IDomainMessageIdentityResolver
     {
         IEnumerable<DomainMessageIdentity> GetDomainMessageIdentities(IEnumerable<string> domains);
+    }
+
+    class DomainMessageIdentityResolver : IDomainMessageIdentityResolver
+    {
+        public IEnumerable<DomainMessageIdentity> GetDomainMessageIdentities(IEnumerable<string> domains)
+        {
+            var serverDomain = domains.First();
+            var kinoDomain = domains.Second();
+
+            var domainMessageMappings = new List<DomainMessageIdentity>();
+
+            foreach (var domain in domains)
+            {
+                var messageIdentities = new List<string>();
+                var domainMessages = new DomainMessageIdentity {MessageIdentities = messageIdentities};
+
+                for (var i = 0; i < 30; i++)
+                {
+                    messageIdentities.Add(Guid.NewGuid().ToString());
+                }
+                if (domain == serverDomain)
+                {
+                    messageIdentities.Add(new EhlloMessage().Identity.GetString());
+                    messageIdentities.Add(new EhlloMessage().Identity.GetString());
+                    messageIdentities.Add(new GroupCharsResponseMessage().Identity.GetString());
+                    messageIdentities.Add(new HelloMessage().Identity.GetString());
+                }
+                if (domain == kinoDomain)
+                {
+                    messageIdentities.Add(KinoMessages.Pong.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.RegisterInternalMessageRoute.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.DiscoverMessageRoute.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.Exception.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.RegisterExternalMessageRoute.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.RequestClusterMessageRoutes.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.RequestNodeMessageRoutes.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.UnregisterMessageRoute.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.UnregisterNode.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.UnregisterNode.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.RegisterInternalMessageRoute.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.RequestKnownMessageRoutes.Identity.GetString());
+                }
+
+                domainMessageMappings.Add(domainMessages);
+            }
+
+            return domainMessageMappings;
+        }
     }
 
     public class SampleSecurityProvider : ISecurityProvider
@@ -108,7 +171,7 @@ namespace Client
             return mapping;
         }
 
-        private IDictionary<string, Domain> CreateDomainMapping(IEnumerable<Domain> domains)
+        private System.Collections.Generic.IDictionary<string, Domain> CreateDomainMapping(IEnumerable<Domain> domains)
             => domains.ToDictionary(d => d.Name, d => d);
 
         private IEnumerable<Domain> CreateDomains()
