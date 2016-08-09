@@ -1,8 +1,5 @@
-﻿using System;
-using System.Security.Cryptography;
-using Autofac;
+﻿using Autofac;
 using Autofac.kino;
-using kino.Core.Security;
 using TypedConfigProvider;
 
 namespace Client
@@ -40,22 +37,6 @@ namespace Client
                    .SingleInstance();
 
             builder.RegisterClusterMembershipConfiguration(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())
-                   .SingleInstance();
-
-            builder.RegisterType<SecurityProvider>()
-                   .As<ISecurityProvider>()
-                   .SingleInstance();
-
-            builder.RegisterType<DomainPrivateKeyProvider>()
-                   .As<IDomainPrivateKeyProvider>()
-                   .SingleInstance();
-
-            builder.RegisterType<DomainScopeResolver>()
-                   .As<IDomainScopeResolver>()
-                   .SingleInstance();
-
-            builder.Register(m => HMACMD5.Create())
-                   .As<Func<HMAC>>()
                    .SingleInstance();
         }
     }

@@ -5,7 +5,6 @@ using Autofac;
 using Autofac.kino;
 using kino.Actors;
 using kino.Core.Connectivity;
-using kino.Core.Security;
 using static System.Console;
 
 namespace Server
@@ -17,7 +16,8 @@ namespace Server
             var builder = new ContainerBuilder();
             builder.RegisterModule<MainModule>();
             builder.RegisterModule<KinoModule>();
-            
+            builder.RegisterModule<SecurityModule>();
+
             var container = builder.Build();
 
             var messageRouter = container.Resolve<IMessageRouter>();

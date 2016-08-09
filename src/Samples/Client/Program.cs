@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using Autofac;
@@ -28,6 +29,7 @@ namespace Client
             var builder = new ContainerBuilder();
             builder.RegisterModule<MainModule>();
             builder.RegisterModule<KinoModule>();            
+            builder.RegisterModule<SecurityModule>();            
             var container = builder.Build();
 
             var messageRouter = container.Resolve<IMessageRouter>();
