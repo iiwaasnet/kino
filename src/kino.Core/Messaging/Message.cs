@@ -13,7 +13,6 @@ namespace kino.Core.Messaging
     {
         public static readonly byte[] CurrentVersion = "1.0".GetBytes();
         public static readonly string KinoMessageNamespace = "KINO";
-        private const int DefaultMACBufferSize = 2 * 1024;
 
         private object payload;
         private List<SocketEndpoint> routing;
@@ -44,7 +43,7 @@ namespace kino.Core.Messaging
                };
 
         internal static IMessage Create(IPayload payload,
-                                      DistributionPattern distributionPattern = DistributionPattern.Unicast)
+                                        DistributionPattern distributionPattern = DistributionPattern.Unicast)
             => new Message(payload, null)
                {
                    Distribution = distributionPattern,
@@ -179,13 +178,18 @@ namespace kino.Core.Messaging
 
         private byte[] GetSignatureFields()
         {
-            using (var stream = new MemoryStream(DefaultMACBufferSize))
+            var callbackReceiverIdentity = CallbackReceiverIdentity ?? IdentityExtensions.Empty;
+            var capacity = Identity.Length
+                           + Version.Length
+                           + Partition.Length
+                           + Body.Length
+                           + callbackReceiverIdentity.Length;
+            using (var stream = new MemoryStream(capacity))
             {
                 stream.Write(Identity, 0, Identity.Length);
                 stream.Write(Version, 0, Version.Length);
                 stream.Write(Partition, 0, Partition.Length);
                 stream.Write(Body, 0, Body.Length);
-                var callbackReceiverIdentity = CallbackReceiverIdentity ?? IdentityExtensions.Empty;
                 stream.Write(callbackReceiverIdentity, 0, callbackReceiverIdentity.Length);
                 return stream.GetBuffer();
             }
