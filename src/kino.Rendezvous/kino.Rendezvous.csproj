@@ -44,12 +44,12 @@
       <HintPath>..\packages\AsyncIO.0.1.26.0\lib\net40\AsyncIO.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
+    <Reference Include="Autofac, Version=4.0.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\packages\Autofac.4.0.0\lib\net451\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Autofac.kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.kino.0.0.0.4-beta\lib\net46\Autofac.kino.dll</HintPath>
+      <HintPath>..\packages\Autofac.kino.0.0.0.5-alpha\lib\net46\Autofac.kino.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="C5, Version=2.4.5947.17248, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
@@ -57,19 +57,19 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.18-beta\lib\net46\kino.dll</HintPath>
+      <HintPath>..\packages\kino.0.0.1.19-alpha\lib\net46\kino.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="kino.Actors, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.18-beta\lib\net46\kino.Actors.dll</HintPath>
+      <HintPath>..\packages\kino.0.0.1.19-alpha\lib\net46\kino.Actors.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="kino.Client, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.18-beta\lib\net46\kino.Client.dll</HintPath>
+      <HintPath>..\packages\kino.0.0.1.19-alpha\lib\net46\kino.Client.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="kino.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.18-beta\lib\net46\kino.Core.dll</HintPath>
+      <HintPath>..\packages\kino.0.0.1.19-alpha\lib\net46\kino.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
