@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Core.Diagnostics;
@@ -58,26 +59,7 @@ namespace kino.Core.Connectivity
                     {
                         foreach (var messageIdentifier in missingRoutes)
                         {
-                            var domains = messageIdentifier.IsMessageHub()
-                                                      ? securityProvider.GetAllowedDomains()
-                                                      : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};
-                            foreach (var domain in domains)
-                            {
-                                var message = Message.Create(new DiscoverMessageRouteMessage
-                                                             {
-                                                                 RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                                                 RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                                                 MessageContract = new MessageContract
-                                                                                   {
-                                                                                       Version = messageIdentifier.Version,
-                                                                                       Identity = messageIdentifier.Identity,
-                                                                                       Partition = messageIdentifier.Partition
-                                                                                   }
-                                                             },
-                                                             domain);
-                                message.As<Message>().SignMessage(securityProvider);
-                                clusterMessageSender.EnqueueMessage(message);
-                            }
+                            SendDiscoverMessageRouteMessage(messageIdentifier);
                         }
                     }
 
@@ -92,6 +74,37 @@ namespace kino.Core.Connectivity
                 {
                     logger.Error(err);
                 }
+            }
+        }
+
+        private void SendDiscoverMessageRouteMessage(MessageIdentifier messageIdentifier)
+        {
+            try
+            {
+                var domains = messageIdentifier.IsMessageHub()
+                                  ? securityProvider.GetAllowedDomains()
+                                  : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};
+                foreach (var domain in domains)
+                {
+                    var message = Message.Create(new DiscoverMessageRouteMessage
+                                                 {
+                                                     RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                                     RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                                     MessageContract = new MessageContract
+                                                                       {
+                                                                           Version = messageIdentifier.Version,
+                                                                           Identity = messageIdentifier.Identity,
+                                                                           Partition = messageIdentifier.Partition
+                                                                       }
+                                                 },
+                                                 domain);
+                    message.As<Message>().SignMessage(securityProvider);
+                    clusterMessageSender.EnqueueMessage(message);
+                }
+            }
+            catch (SecurityException err)
+            {
+                logger.Error(err);
             }
         }
 

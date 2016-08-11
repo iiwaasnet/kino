@@ -56,5 +56,13 @@ namespace kino.Core.Framework
                 collection.RemoveAll(items);
             }
         }
+
+        public void TryDelete(T item)
+        {
+            lock (@lock)
+            {
+                collection.Remove(item);
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security;
 using System.Threading;
 using kino.Client;
 using kino.Core.Connectivity;
@@ -67,6 +68,8 @@ namespace kino.Tests.Connectivity
             securityProvider.Setup(m => m.DomainIsAllowed(domain)).Returns(true);
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(new[] {domain});
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
+            securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(domain, It.IsAny<byte[]>())).Returns(new byte[0]);
+            securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(It.Is<string>(d => d != domain), It.IsAny<byte[]>())).Throws<SecurityException>();
         }
 
         [Test]
@@ -156,7 +159,6 @@ namespace kino.Tests.Connectivity
                 var version = Guid.NewGuid().ToByteArray();
                 var socketIdentity = Guid.NewGuid().ToByteArray();
                 var partition = Guid.NewGuid().ToByteArray();
-                var domain = Guid.NewGuid().ToString();
                 var message = Message.Create(new RegisterInternalMessageRouteMessage
                                              {
                                                  SocketIdentity = socketIdentity,
@@ -292,7 +294,7 @@ namespace kino.Tests.Connectivity
                 Assert.IsTrue(identifier.Equals(new SocketIdentifier(socketIdentity)));
                 CollectionAssert.AreEqual(socketIdentity, identifier.Identity);
 
-                var messageIdentifiers = new[] {new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty)};
+                var _ = new[] {new MessageIdentifier(version, messageIdentity, IdentityExtensions.Empty)};
                 clusterMonitor.Verify(m => m.RegisterSelf(It.IsAny<IEnumerable<MessageIdentifier>>(), It.IsAny<string>()), times);
             }
             finally
@@ -388,7 +390,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void MessageIsRouted_BasedOnHandler_IdentityVersionPartition()
+        public void MessageIsRouted_BasedOnHandler_Identity_Version_Partition()
         {
             var actorSocketIdentity = new SocketIdentifier(Guid.NewGuid().ToString().GetBytes());
             var partition = Guid.NewGuid().ToByteArray();
@@ -416,7 +418,23 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void IfLocalRoutingTableHasNoMessageHandlerRegistration_MessageRoutedToOtherNodes()
+        public void IfLocalRoutingTableHasNoMessageHandlerRegistrationAndMessageDomainIsAllowed_MessageRoutedToOtherNodes()
+        {
+            var message = Message.Create(new SimpleMessage(), domain);
+            var messageOut = TestLocalRoutingTableHasNoMessageHandlerRegistration(message);
+
+            Assert.AreEqual(message, messageOut);
+        }
+
+        [Test]
+        public void IfLocalRoutingTableHasNoMessageHandlerRegistrationAndMessageDomainIsNotAllowed_ThrowsSecurityExceptionAndMessageNotRoutedToOtherNodes()
+        {
+            var message = Message.Create(new SimpleMessage(), Guid.NewGuid().ToString());
+
+            Assert.Throws<InvalidOperationException>(() => TestLocalRoutingTableHasNoMessageHandlerRegistration(message));
+        }
+
+        private IMessage TestLocalRoutingTableHasNoMessageHandlerRegistration(IMessage message)
         {
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
             externalRoutingTable.Setup(m => m.FindRoute(It.IsAny<MessageIdentifier>(), null))
@@ -427,12 +445,9 @@ namespace kino.Tests.Connectivity
             {
                 StartMessageRouter(router);
 
-                var message = Message.Create(new SimpleMessage(), domain);
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
-                var messageOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
-
-                Assert.AreEqual(message, messageOut);
+                return messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
             }
             finally
             {
@@ -441,10 +456,24 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void IfReceivingNodeIsSet_MessageAlwaysRoutedToOtherNodes()
+        public void IfReceivingNodeIsSetForMessageFromAllowedDomain_MessageAlwaysRoutedToOtherNodes()
+        {
+            var message = Message.Create(new SimpleMessage(), domain);
+            var messageOut = TestMessageAlwaysRoutedToReceivingNode(message);
+
+            Assert.AreEqual(message, messageOut);
+        }
+
+        [Test]
+        public void IfReceivingNodeIsSetForMessageFromNotAllowedDomain_MessageNotRoutedToOtherNodes()
+        {
+            var message = Message.Create(new SimpleMessage(), Guid.NewGuid().ToString());
+            Assert.Throws<InvalidOperationException>(() => TestMessageAlwaysRoutedToReceivingNode(message));
+        }
+
+        private IMessage TestMessageAlwaysRoutedToReceivingNode(IMessage message)
         {
             var externalNode = new PeerConnection {Node = new Node("tcp://127.0.0.1", SocketIdentifier.CreateIdentity())};
-            var message = Message.Create(new SimpleMessage(), domain);
             message.SetReceiverNode(new SocketIdentifier(externalNode.Node.SocketIdentity));
 
             var externalRoutingTable = new Mock<IExternalRoutingTable>();
@@ -462,9 +491,7 @@ namespace kino.Tests.Connectivity
 
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
-                var messageOut = messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
-
-                Assert.AreEqual(message, messageOut);
+                return messageRouterSocketFactory.GetScaleoutBackendSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
             }
             finally
             {
@@ -773,7 +800,6 @@ namespace kino.Tests.Connectivity
                 StartMessageRouter(router);
 
                 var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-                var domain = Guid.NewGuid().ToString();
                 var message = Message.Create(new DiscoverMessageRouteMessage
                                              {
                                                  MessageContract = new MessageContract
@@ -841,6 +867,7 @@ namespace kino.Tests.Connectivity
             }
         }
 
+        //TODO: Test for allowed and not allowed domain
         [Test]
         public void IfRegisterExternalMessageRouteMessageReceived_AllRoutesAreAddedToExternalRoutingTable()
         {
@@ -891,6 +918,7 @@ namespace kino.Tests.Connectivity
             }
         }
 
+        //TODO: Test for allowed and not allowed domain
         [Test]
         public void IfUnregisterMessageRouteMessage_RoutesAreRemovedFromExternalRoutingTable()
         {
@@ -1044,9 +1072,19 @@ namespace kino.Tests.Connectivity
             }
         }
 
-        //TODO: Add tests without SecurityDomain
         [Test]
-        public void IfUnregisterNodeMessageRouteMessageAndConnectionWasEstablished_SocketIsDisconnected()
+        public void IfUnregisterNodeMessageArrivesFromAllowedDomain_AndConnectionWasEstablished_SocketIsDisconnected()
+        {
+            TestUnregisterNodeMessageRouteMessageDisconnectsSocket(domain, false);
+        }
+
+        [Test]
+        public void IfUnregisterNodeMessageArrivesFromNotAllowedDomain_SocketIsNotDisconnected()
+        {
+            TestUnregisterNodeMessageRouteMessageDisconnectsSocket(Guid.NewGuid().ToString(), true);
+        }
+
+        private void TestUnregisterNodeMessageRouteMessageDisconnectsSocket(string domain, bool connected)
         {
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
             serviceMessageHandlers = new[]
@@ -1074,14 +1112,15 @@ namespace kino.Tests.Connectivity
                                              {
                                                  Uri = uri.ToSocketAddress(),
                                                  SocketIdentity = socketIdentity.Identity
-                                             }, domain);
+                                             },
+                                             domain);
 
                 CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
 
-                Assert.IsFalse(backEndScoket.IsConnected());
+                Assert.AreEqual(connected, backEndScoket.IsConnected());
             }
             finally
             {
@@ -1089,9 +1128,19 @@ namespace kino.Tests.Connectivity
             }
         }
 
-        //TODO: Add tests without SecurityDomain
         [Test]
-        public void IfUnregisterNodeMessageRouteMessage_AllRoutesAreRemovedFromExternalRoutingTable()
+        public void IfUnregisterNodeMessageArrivesFromAllowedDomain_AllRoutesAreRemovedFromExternalRoutingTable()
+        {
+            TestUnregisterNodeMessageRemovesRoutesFromExternalRoutingTable(domain, true);
+        }
+
+        [Test]
+        public void IfUnregisterNodeMessageArrivesFromNotAllowedDomain_RoutesAreNotRemovedFromExternalRoutingTable()
+        {
+            TestUnregisterNodeMessageRemovesRoutesFromExternalRoutingTable(Guid.NewGuid().ToString(), false);
+        }
+
+        private void TestUnregisterNodeMessageRemovesRoutesFromExternalRoutingTable(string domain, bool externalRoutesEmpty)
         {
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
             serviceMessageHandlers = new[]
@@ -1119,14 +1168,15 @@ namespace kino.Tests.Connectivity
                                              {
                                                  Uri = uri.ToSocketAddress(),
                                                  SocketIdentity = socketIdentity.Identity
-                                             }, domain);
+                                             },
+                                             domain);
 
                 CollectionAssert.IsNotEmpty(externalRoutingTable.GetAllRoutes());
                 messageRouterSocketFactory.GetRouterSocket().DeliverMessage(message);
 
                 Thread.Sleep(AsyncOp);
 
-                CollectionAssert.IsEmpty(externalRoutingTable.GetAllRoutes());
+                Assert.AreEqual(externalRoutesEmpty, !externalRoutingTable.GetAllRoutes().Any());
             }
             finally
             {
