@@ -867,7 +867,6 @@ namespace kino.Tests.Connectivity
             }
         }
 
-        //TODO: Test for allowed and not allowed domain
         [Test]
         public void IfRegisterExternalMessageRouteMessageReceived_AllRoutesAreAddedToExternalRoutingTable()
         {
@@ -918,7 +917,6 @@ namespace kino.Tests.Connectivity
             }
         }
 
-        //TODO: Test for allowed and not allowed domain
         [Test]
         public void IfUnregisterMessageRouteMessage_RoutesAreRemovedFromExternalRoutingTable()
         {

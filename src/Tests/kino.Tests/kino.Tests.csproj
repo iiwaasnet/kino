@@ -92,6 +92,7 @@
     <Compile Include="Connectivity\ClusterConfigurationTests.cs" />
     <Compile Include="Connectivity\ClusterMonitorTests.cs" />
     <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
+    <Compile Include="Connectivity\MessageRouteUnregistrationHandlerTests.cs" />
     <Compile Include="Connectivity\RouteDiscoveryTests.cs" />
     <Compile Include="Connectivity\RouteUnregistrationHandlerTests.cs" />
     <Compile Include="Connectivity\SocketEndpointTests.cs" />

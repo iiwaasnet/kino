@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Sockets;
 using System.Security;
 using kino.Core.Connectivity;
 using kino.Core.Connectivity.ServiceMessageHandlers;
@@ -23,11 +24,13 @@ namespace kino.Tests.Connectivity
         private RouterConfiguration config;
         private ExternalMessageRouteRegistrationHandler handler;
         private byte[] messageIdentity;
+        private Mock<ISocket> socket;
 
         [SetUp]
         public void Setup()
         {
             logger = new Mock<ILogger>();
+            socket = new Mock<ISocket>();
             externalRoutingTable = new Mock<IExternalRoutingTable>();
             externalRoutingTable.Setup(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(), It.IsAny<SocketIdentifier>(), It.IsAny<Uri>()))
                                 .Returns(new PeerConnection {Connected = false});
@@ -52,7 +55,6 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfPeerConnectionIsDeferred_NoConnectionMadeToRemotePeer()
         {
-            var socket = new Mock<ISocket>();
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
                                              Uri = "tcp://127.0.0.1:80",
@@ -82,7 +84,6 @@ namespace kino.Tests.Connectivity
         public void IfPeerConnectionIsNotDeferred_ConnectionMadeToRemotePeer()
         {
             config.DeferPeerConnection = false;
-            var socket = new Mock<ISocket>();
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
                                              Uri = "tcp://127.0.0.1:80",
@@ -115,7 +116,6 @@ namespace kino.Tests.Connectivity
                                 .Returns(new PeerConnection {Connected = true});
             config.DeferPeerConnection = false;
 
-            var socket = new Mock<ISocket>();
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
                                              Uri = "tcp://127.0.0.1:80",
@@ -144,7 +144,6 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfDomainIsNotAllowed_ClusterMemberIsNotAdded()
         {
-            var socket = new Mock<ISocket>();
             var domain = Guid.NewGuid().ToString();
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
@@ -175,7 +174,6 @@ namespace kino.Tests.Connectivity
         public void IfMessageIdentityDoesntBelongToAllowedDomain_NoConnectionMadeToRemotePeer()
         {
             var messageIdentity = Guid.NewGuid().ToByteArray();
-            var socket = new Mock<ISocket>();
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
                                              Uri = "tcp://127.0.0.1:80",
@@ -206,7 +204,6 @@ namespace kino.Tests.Connectivity
         public void IfDomainIsAllowed_MessageHubIdentityAlwaysAddedToClusterMembers()
         {
             var messageIdentity = Guid.NewGuid().ToByteArray();
-            var socket = new Mock<ISocket>();
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
                                              Uri = "tcp://127.0.0.1:80",

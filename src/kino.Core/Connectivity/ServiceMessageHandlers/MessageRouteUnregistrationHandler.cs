@@ -39,8 +39,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                                                   .Select(mh => new MessageIdentifier(mh.Version,
                                                                                       mh.Identity,
                                                                                       mh.Partition));
-                    var messageIdentifiers = messageContracts
-                        .Where(mi => securityProvider.GetDomain(mi.Identity) == message.Domain);
+                    var messageIdentifiers = messageContracts.Where(mi => securityProvider.GetDomain(mi.Identity) == message.Domain);
                     var connectionAction = externalRoutingTable.RemoveMessageRoute(messageIdentifiers,
                                                                                    new SocketIdentifier(payload.SocketIdentity));
                     if (connectionAction == PeerConnectionAction.Disconnect)
