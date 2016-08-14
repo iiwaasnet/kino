@@ -24,7 +24,9 @@ namespace kino.Core.Connectivity
             uriReferenceCount = new HashDictionary<string, int>();
         }
 
-        public PeerConnection AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri)
+        public PeerConnection AddMessageRoute(MessageIdentifier messageIdentifier,
+                                              SocketIdentifier socketIdentifier,
+                                              Uri uri)
         {
             var peerConnection = new PeerConnection
                                  {

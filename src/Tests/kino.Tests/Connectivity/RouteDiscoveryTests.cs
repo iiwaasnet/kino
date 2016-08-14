@@ -49,7 +49,6 @@ namespace kino.Tests.Connectivity
             securityProvider = new Mock<ISecurityProvider>();
             securityProvider.Setup(m => m.DomainIsAllowed(domain)).Returns(true);
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(new[] {domain});
-
             securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(domain, It.IsAny<byte[]>())).Returns(new byte[0]);
             securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(It.Is<string>(d => d != domain), It.IsAny<byte[]>())).Throws<SecurityException>();
             routerDiscovery = new RouteDiscovery(clusterMessageSender.Object,

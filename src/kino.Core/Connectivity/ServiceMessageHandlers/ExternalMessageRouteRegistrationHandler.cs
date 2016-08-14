@@ -39,10 +39,10 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                     message.As<Message>().VerifySignature(securityProvider);
 
                     var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
-                    clusterMembership.AddClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
-
-                    var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
                     var uri = new Uri(payload.Uri);
+                    var memberAdded = false;
+                    var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+
                     foreach (var registration in payload.MessageContracts)
                     {
                         try
@@ -53,6 +53,11 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                             //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
                             if (messageIdentifier.IsMessageHub() || securityProvider.GetDomain(messageIdentifier.Identity) == message.Domain)
                             {
+                                if (!memberAdded)
+                                {
+                                    clusterMembership.AddClusterMember(new SocketEndpoint(uri, payload.SocketIdentity));
+                                    memberAdded = true;
+                                }
                                 var peerConnection = externalRoutingTable.AddMessageRoute(messageIdentifier, handlerSocketIdentifier, uri);
                                 if (!config.DeferPeerConnection && !peerConnection.Connected)
                                 {

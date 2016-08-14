@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security;
 using kino.Core.Connectivity;
 using kino.Core.Connectivity.ServiceMessageHandlers;
 using kino.Core.Diagnostics;
@@ -17,29 +18,40 @@ namespace kino.Tests.Connectivity
         private Mock<ILogger> logger;
         private Mock<ISecurityProvider> securityProvider;
         private string domain;
+        private Mock<IClusterMembership> clusterMembership;
+        private Mock<IExternalRoutingTable> externalRoutingTable;
+        private RouterConfiguration config;
+        private ExternalMessageRouteRegistrationHandler handler;
+        private byte[] messageIdentity;
 
         [SetUp]
         public void Setup()
         {
             logger = new Mock<ILogger>();
+            externalRoutingTable = new Mock<IExternalRoutingTable>();
+            externalRoutingTable.Setup(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(), It.IsAny<SocketIdentifier>(), It.IsAny<Uri>()))
+                                .Returns(new PeerConnection {Connected = false});
+            config = new RouterConfiguration {DeferPeerConnection = true};
+            clusterMembership = new Mock<IClusterMembership>();
             domain = Guid.NewGuid().ToString();
+            messageIdentity = Guid.NewGuid().ToByteArray();
             securityProvider = new Mock<ISecurityProvider>();
-            securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
+            securityProvider.Setup(m => m.GetDomain(messageIdentity)).Returns(domain);
+            securityProvider.Setup(m => m.DomainIsAllowed(domain)).Returns(true);
+            securityProvider.Setup(m => m.DomainIsAllowed(It.Is<string>(d => d != domain))).Returns(false);
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(new[] {domain});
-            securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
+            securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(domain, It.IsAny<byte[]>())).Returns(new byte[0]);
+            securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(It.Is<string>(d => d != domain), It.IsAny<byte[]>())).Throws<SecurityException>();
+            handler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable.Object,
+                                                                  clusterMembership.Object,
+                                                                  config,
+                                                                  securityProvider.Object,
+                                                                  logger.Object);
         }
 
         [Test]
         public void IfPeerConnectionIsDeferred_NoConnectionMadeToRemotePeer()
         {
-            var externalRoutingTable = new ExternalRoutingTable(logger.Object);
-            var clusterMembership = new Mock<IClusterMembership>();
-            var config = new RouterConfiguration {DeferPeerConnection = true};
-            var handler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable,
-                                                                      clusterMembership.Object,
-                                                                      config,
-                                                                      securityProvider.Object,
-                                                                      logger.Object);
             var socket = new Mock<ISocket>();
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
@@ -48,63 +60,28 @@ namespace kino.Tests.Connectivity
                                                                 {
                                                                     new MessageContract
                                                                     {
-                                                                        Identity = Guid.NewGuid().ToByteArray(),
-                                                                        Version = Guid.NewGuid().ToByteArray()
-                                                                    }
-                                                                },
-                                             SocketIdentity = Guid.NewGuid().ToByteArray()
-                                         });
-
-            handler.Handle(message, socket.Object);
-
-            socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never);
-        }
-
-        [Test]
-        public void IfPeerConnectionIsNotDeferred_ConnectionMadeToRemotePeer()
-        {
-            var externalRoutingTable = new ExternalRoutingTable(logger.Object);
-            var clusterMembership = new Mock<IClusterMembership>();
-            var config = new RouterConfiguration {DeferPeerConnection = false};
-            var handler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable,
-                                                                      clusterMembership.Object,
-                                                                      config,
-                                                                      securityProvider.Object,
-                                                                      logger.Object);
-            var socket = new Mock<ISocket>();
-            var message = Message.Create(new RegisterExternalMessageRouteMessage
-                                         {
-                                             Uri = "tcp://127.0.0.1:80",
-                                             MessageContracts = new[]
-                                                                {
-                                                                    new MessageContract
-                                                                    {
-                                                                        Identity = Guid.NewGuid().ToByteArray(),
+                                                                        Identity = messageIdentity,
                                                                         Version = Guid.NewGuid().ToByteArray()
                                                                     }
                                                                 },
                                              SocketIdentity = Guid.NewGuid().ToByteArray()
                                          },
                                          domain);
-
+            //
             handler.Handle(message, socket.Object);
-
-            socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Once);
+            //
+            clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Once);
+            externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
+                                                               It.IsAny<SocketIdentifier>(),
+                                                               It.IsAny<Uri>()),
+                                        Times.Once);
+            socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never);
         }
 
         [Test]
-        public void IfPeerConnectionIsNotDeferredButPeerIsAlreadyConnected_NoConnectionMadeToRemotePeer()
+        public void IfPeerConnectionIsNotDeferred_ConnectionMadeToRemotePeer()
         {
-            var externalRoutingTable = new Mock<IExternalRoutingTable>();
-            externalRoutingTable.Setup(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(), It.IsAny<SocketIdentifier>(), It.IsAny<Uri>()))
-                                .Returns(new PeerConnection {Connected = true});
-            var clusterMembership = new Mock<IClusterMembership>();
-            var config = new RouterConfiguration {DeferPeerConnection = false};
-            var handler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable.Object,
-                                                                      clusterMembership.Object,
-                                                                      config,
-                                                                      securityProvider.Object,
-                                                                      logger.Object);
+            config.DeferPeerConnection = false;
             var socket = new Mock<ISocket>();
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
@@ -113,16 +90,144 @@ namespace kino.Tests.Connectivity
                                                                 {
                                                                     new MessageContract
                                                                     {
-                                                                        Identity = Guid.NewGuid().ToByteArray(),
+                                                                        Identity = messageIdentity,
                                                                         Version = Guid.NewGuid().ToByteArray()
                                                                     }
                                                                 },
                                              SocketIdentity = Guid.NewGuid().ToByteArray()
-                                         });
-
+                                         },
+                                         domain);
+            //
             handler.Handle(message, socket.Object);
+            //
+            clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Once);
+            externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
+                                                               It.IsAny<SocketIdentifier>(),
+                                                               It.IsAny<Uri>()),
+                                        Times.Once);
+            socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Once);
+        }
 
+        [Test]
+        public void IfPeerConnectionIsNotDeferredButPeerIsAlreadyConnected_NoConnectionMadeToRemotePeer()
+        {
+            externalRoutingTable.Setup(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(), It.IsAny<SocketIdentifier>(), It.IsAny<Uri>()))
+                                .Returns(new PeerConnection {Connected = true});
+            config.DeferPeerConnection = false;
+
+            var socket = new Mock<ISocket>();
+            var message = Message.Create(new RegisterExternalMessageRouteMessage
+                                         {
+                                             Uri = "tcp://127.0.0.1:80",
+                                             MessageContracts = new[]
+                                                                {
+                                                                    new MessageContract
+                                                                    {
+                                                                        Identity = messageIdentity,
+                                                                        Version = Guid.NewGuid().ToByteArray()
+                                                                    }
+                                                                },
+                                             SocketIdentity = Guid.NewGuid().ToByteArray()
+                                         },
+                                         domain);
+            //
+            handler.Handle(message, socket.Object);
+            //
+            clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Once);
+            externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
+                                                               It.IsAny<SocketIdentifier>(),
+                                                               It.IsAny<Uri>()),
+                                        Times.Once);
             socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never);
+        }
+
+        [Test]
+        public void IfDomainIsNotAllowed_ClusterMemberIsNotAdded()
+        {
+            var socket = new Mock<ISocket>();
+            var domain = Guid.NewGuid().ToString();
+            var message = Message.Create(new RegisterExternalMessageRouteMessage
+                                         {
+                                             Uri = "tcp://127.0.0.1:80",
+                                             MessageContracts = new[]
+                                                                {
+                                                                    new MessageContract
+                                                                    {
+                                                                        Identity = messageIdentity,
+                                                                        Version = Guid.NewGuid().ToByteArray()
+                                                                    }
+                                                                },
+                                             SocketIdentity = Guid.NewGuid().ToByteArray()
+                                         },
+                                         domain);
+            //
+            handler.Handle(message, socket.Object);
+            //
+            clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Never);
+            externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
+                                                               It.IsAny<SocketIdentifier>(),
+                                                               It.IsAny<Uri>()),
+                                        Times.Never);
+            socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never);
+        }
+
+        [Test]
+        public void IfMessageIdentityDoesntBelongToAllowedDomain_NoConnectionMadeToRemotePeer()
+        {
+            var messageIdentity = Guid.NewGuid().ToByteArray();
+            var socket = new Mock<ISocket>();
+            var message = Message.Create(new RegisterExternalMessageRouteMessage
+                                         {
+                                             Uri = "tcp://127.0.0.1:80",
+                                             MessageContracts = new[]
+                                                                {
+                                                                    new MessageContract
+                                                                    {
+                                                                        Identity = messageIdentity,
+                                                                        Version = Guid.NewGuid().ToByteArray()
+                                                                    }
+                                                                },
+                                             SocketIdentity = Guid.NewGuid().ToByteArray()
+                                         },
+                                         domain);
+            //
+            handler.Handle(message, socket.Object);
+            //
+            clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Never);
+            externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
+                                                               It.IsAny<SocketIdentifier>(),
+                                                               It.IsAny<Uri>()),
+                                        Times.Never);
+            socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never);
+            logger.Verify(m => m.Warn(It.IsAny<object>()), Times.Once);
+        }
+
+        [Test]
+        public void IfDomainIsAllowed_MessageHubIdentityAlwaysAddedToClusterMembers()
+        {
+            var messageIdentity = Guid.NewGuid().ToByteArray();
+            var socket = new Mock<ISocket>();
+            var message = Message.Create(new RegisterExternalMessageRouteMessage
+                                         {
+                                             Uri = "tcp://127.0.0.1:80",
+                                             MessageContracts = new[]
+                                                                {
+                                                                    new MessageContract
+                                                                    {
+                                                                        Identity = messageIdentity
+                                                                    }
+                                                                },
+                                             SocketIdentity = Guid.NewGuid().ToByteArray()
+                                         },
+                                         domain);
+            //
+            handler.Handle(message, socket.Object);
+            //
+            clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Once);
+            externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
+                                                               It.IsAny<SocketIdentifier>(),
+                                                               It.IsAny<Uri>()),
+                                        Times.Once);
         }
     }
 }
