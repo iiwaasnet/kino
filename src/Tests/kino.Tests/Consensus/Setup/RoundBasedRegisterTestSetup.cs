@@ -30,6 +30,6 @@ namespace kino.Tests.Consensus.Setup
             => RoundBasedRegister?.Dispose();
 
         public void WaitUntilStarted()
-            => (maxLeaseTimeSpan + TimeSpan.FromMilliseconds(1500)).Sleep();
+            => (maxLeaseTimeSpan + TimeSpan.FromMilliseconds(1000)).Sleep();
     }
 }

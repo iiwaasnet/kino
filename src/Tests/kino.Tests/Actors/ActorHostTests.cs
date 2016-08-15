@@ -531,6 +531,13 @@ namespace kino.Tests.Actors
             }
         }
 
+        //TODO: Add test
+        [Test]
+        public void ExceptionMessage_HasDomainSet()
+        {
+            throw new NotImplementedException();
+        }
+
         private static bool IsAsyncMessage(AsyncMessageContext amc)
             => amc.OutMessages.First().Equals(MessageIdentifier.Create<AsyncMessage>());
 

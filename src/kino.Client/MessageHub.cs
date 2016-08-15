@@ -185,6 +185,8 @@ namespace kino.Client
 
         private void RegisterMessageHub(ISocket socket, byte[] receivingSocketIdentity)
         {
+            //TODO: Domain may be skipped here
+            //TODO: var message = Message.Create(payload);
             var rdyMessage = Message.Create(new RegisterInternalMessageRouteMessage
                                             {
                                                 SocketIdentity = receivingSocketIdentity,

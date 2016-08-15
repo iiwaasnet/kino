@@ -201,14 +201,28 @@ namespace kino.Tests.Connectivity
                                      Times.Once());
         }
 
+        //TODO: Test
         [Test]
-        public void IfPongMessageComesFromUnknownNodeInSupportedDomain_RequestNodeMessageRoutesMessageSent()
+        public void IfPongMessageComesFromNodeInNotAllowedDomain_LifetimeForThisNodeIsNotProlonged()
+        {
+            throw new NotImplementedException();
+        }
+
+        //TODO: Test method RequestNodeMessageHandlersRouting
+        [Test]
+        public void RequestNodeMessageRoutesMessage_IsSentOnceForEachAllowedDomain()
+        {
+            throw new NotImplementedException();
+        }
+
+        [Test]
+        public void IfPongMessageComesFromUnknownNodeInAllowedDomain_RequestNodeMessageRoutesMessageSent()
         {
             SendPongMessageFromFromUnknownNode(true, Times.Once);
         }
 
         [Test]
-        public void IfPongMessageComesFromUnknownNodeInNonSupportedDomain_NoRequestNodeMessageRoutesMessageSent()
+        public void IfPongMessageComesFromUnknownNodeInNotAllowedDomain_NoRequestNodeMessageRoutesMessageSent()
         {
             SendPongMessageFromFromUnknownNode(false, Times.Never);
         }

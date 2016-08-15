@@ -224,5 +224,19 @@ namespace kino.Tests.Connectivity
                 clusterMonitor.Stop();
             }
         }
+
+        //TODO: Write test
+        [Test]
+        public void UnregisterSelf_SendsUnregisterMessagesForAllIdentitiesGroupedByDomain()
+        {
+            throw new NotImplementedException();
+        }
+
+        //TODO: Test RequestClusterRoutes
+        [Test]
+        public void RequestClusterMessageRoutesMessage_IsSentOncePerEachAllowedDomain()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

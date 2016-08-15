@@ -86,7 +86,9 @@
     <Compile Include="Actors\Setup\LocalMessage.cs" />
     <Compile Include="Connectivity\ClusterMessageListenetTests.cs" />
     <Compile Include="Connectivity\ClusterMessageRoutesRequestHandlerTests.cs" />
+    <Compile Include="Connectivity\ClusterMessageSenderTests.cs" />
     <Compile Include="Connectivity\ExternalMessageRouteRegistrationHandlerTests.cs" />
+    <Compile Include="Connectivity\InternalMessageRouteRegistrationHandlerTests.cs" />
     <Compile Include="Connectivity\MessageIdentifierTests.cs" />
     <Compile Include="Connectivity\MessageRouteDiscoveryHandlerTests.cs" />
     <Compile Include="Connectivity\MessageRouterTests.cs" />

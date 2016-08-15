@@ -140,7 +140,8 @@ namespace kino.Actors
                                                                                   })
                                                                     .ToArray()
                           };
-
+            //TODO: Domain may be skipped here
+            //TODO: var message = Message.Create(payload);
             var message = Message.Create(payload, securityProvider.GetDomain(KinoMessages.RegisterInternalMessageRoute.Identity));
             socket.SendMessage(message);
         }
