@@ -85,6 +85,7 @@
     <Compile Include="Actors\Setup\NullMessage.cs" />
     <Compile Include="Actors\Setup\LocalMessage.cs" />
     <Compile Include="Connectivity\ClusterMessageListenetTests.cs" />
+    <Compile Include="Connectivity\ClusterMessageRoutesRequestHandlerTests.cs" />
     <Compile Include="Connectivity\ExternalMessageRouteRegistrationHandlerTests.cs" />
     <Compile Include="Connectivity\MessageIdentifierTests.cs" />
     <Compile Include="Connectivity\MessageRouteDiscoveryHandlerTests.cs" />
