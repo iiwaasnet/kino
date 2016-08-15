@@ -93,9 +93,11 @@
     <Compile Include="Connectivity\ClusterMonitorTests.cs" />
     <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
     <Compile Include="Connectivity\MessageRouteUnregistrationHandlerTests.cs" />
+    <Compile Include="Connectivity\NodeMessageRoutesRequestHandlerTests.cs" />
     <Compile Include="Connectivity\RouteDiscoveryTests.cs" />
     <Compile Include="Connectivity\RouteUnregistrationHandlerTests.cs" />
     <Compile Include="Connectivity\SocketEndpointTests.cs" />
+    <Compile Include="Connectivity\UnreachableNodeUnregistrationHandlerTests.cs" />
     <Compile Include="Consensus\BallotGeneratorTests.cs" />
     <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR4.cs" />
     <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR2.cs" />
