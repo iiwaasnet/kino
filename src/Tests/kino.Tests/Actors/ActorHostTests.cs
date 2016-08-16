@@ -531,11 +531,37 @@ namespace kino.Tests.Actors
             }
         }
 
-        //TODO: Add test
         [Test]
         public void ExceptionMessage_HasDomainSet()
         {
-            throw new NotImplementedException();
+            var kinoDomain = Guid.NewGuid().ToString();
+            securityProvider.Setup(m => m.GetDomain(KinoMessages.Exception.Identity)).Returns(kinoDomain);
+
+            var actorHost = new ActorHost(socketFactory.Object,
+                                          actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
+                                          routerConfiguration,
+                                          securityProvider.Object,
+                                          performanceCounterManager.Object,
+                                          logger);
+            actorHost.AssignActor(new ExceptionActor());
+            try
+            {
+                StartActorHost(actorHost);
+
+                var messageIn = Message.CreateFlowStartMessage(new SimpleMessage());
+                var socket = actorHostSocketFactory.GetRoutableSocket();
+                socket.DeliverMessage(messageIn);
+
+                var messageOut = socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
+
+                Assert.AreEqual(kinoDomain, messageOut.Domain);
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
         }
 
         private static bool IsAsyncMessage(AsyncMessageContext amc)
