@@ -232,11 +232,22 @@ namespace kino.Tests.Connectivity
             throw new NotImplementedException();
         }
 
-        //TODO: Test RequestClusterRoutes
         [Test]
         public void RequestClusterMessageRoutesMessage_IsSentOncePerEachAllowedDomain()
         {
-            throw new NotImplementedException();
+            var allowedDomains = new[] {domain, Guid.NewGuid().ToString(), Guid.NewGuid().ToString()};
+            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
+            var clusterMessageSender = new Mock<IClusterMessageSender>();
+            var clusterMonitor = new ClusterMonitor(routerConfiguration,
+                                                    clusterMembership.Object,
+                                                    clusterMessageSender.Object,
+                                                    clusterMessageListener,
+                                                    routeDiscovery.Object,
+                                                    securityProvider.Object);
+            //
+            clusterMonitor.RequestClusterRoutes();
+            //
+            clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => allowedDomains.Contains(msg.Domain))), Times.Exactly(allowedDomains.Length));
         }
     }
 }
