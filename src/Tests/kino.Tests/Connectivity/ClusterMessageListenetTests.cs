@@ -43,7 +43,8 @@ namespace kino.Tests.Connectivity
 
             domain = Guid.NewGuid().ToString();
             securityProvider = new Mock<ISecurityProvider>();
-            securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
+            securityProvider.Setup(m => m.DomainIsAllowed(domain)).Returns(true);
+            securityProvider.Setup(m => m.DomainIsAllowed(It.Is<string>(d => d != domain))).Returns(false);
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(new[] {domain});
 
             socketFactory = new Mock<ISocketFactory>();
@@ -190,7 +191,7 @@ namespace kino.Tests.Connectivity
                            SocketIdentity = sourceNode.Identity,
                            Uri = sourceNode.Uri.ToSocketAddress()
                        };
-            socket.DeliverMessage(Message.Create(pong));
+            socket.DeliverMessage(Message.Create(pong, domain));
             Thread.Sleep(AsyncOp);
 
             cancellationSource.Cancel();
@@ -201,18 +202,86 @@ namespace kino.Tests.Connectivity
                                      Times.Once());
         }
 
-        //TODO: Test
         [Test]
         public void IfPongMessageComesFromNodeInNotAllowedDomain_LifetimeForThisNodeIsNotProlonged()
         {
-            throw new NotImplementedException();
+            var domain = Guid.NewGuid().ToString();
+            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
+                                                                    socketFactory.Object,
+                                                                    routerConfiguration,
+                                                                    clusterMessageSender.Object,
+                                                                    clusterMembership.Object,
+                                                                    clusterMembershipConfiguration,
+                                                                    performanceCounterManager.Object,
+                                                                    securityProvider.Object,
+                                                                    logger.Object);
+
+            var cancellationSource = new CancellationTokenSource();
+            var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
+
+            var socket = clusterMonitorSocketFactory.GetClusterMonitorSubscriptionSocket();
+            var pong = new PongMessage
+                       {
+                           PingId = 1L,
+                           SocketIdentity = Guid.NewGuid().ToByteArray(),
+                           Uri = "tcp://localhost:80"
+                       };
+
+            Thread.Sleep(WaitLessThanPingSilenceFailover());
+            socket.DeliverMessage(Message.Create(pong, domain));
+            Thread.Sleep(AsyncOp);
+
+            cancellationSource.Cancel();
+            task.Wait();
+
+            clusterMembership.Verify(m => m.KeepAlive(It.IsAny<SocketEndpoint>()), Times.Never);
+            securityProvider.Verify(m => m.DomainIsAllowed(domain), Times.Once);
         }
 
-        //TODO: Test method RequestNodeMessageHandlersRouting
         [Test]
         public void RequestNodeMessageRoutesMessage_IsSentOnceForEachAllowedDomain()
         {
-            throw new NotImplementedException();
+            var allowedDomains = new[] {domain, Guid.NewGuid().ToString(), Guid.NewGuid().ToString()};
+            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
+            var sourceNode = new SocketEndpoint(new Uri("tpc://127.0.0.3:7000"), SocketIdentifier.CreateIdentity());
+
+            clusterMembership.Setup(m => m.KeepAlive(sourceNode)).Returns(false);
+
+            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
+                                                                    socketFactory.Object,
+                                                                    routerConfiguration,
+                                                                    clusterMessageSender.Object,
+                                                                    clusterMembership.Object,
+                                                                    clusterMembershipConfiguration,
+                                                                    performanceCounterManager.Object,
+                                                                    securityProvider.Object,
+                                                                    logger.Object);
+
+            var cancellationSource = new CancellationTokenSource();
+            var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
+
+            var socket = clusterMonitorSocketFactory.GetClusterMonitorSubscriptionSocket();
+            var pong = new PongMessage
+                       {
+                           PingId = 1L,
+                           SocketIdentity = sourceNode.Identity,
+                           Uri = sourceNode.Uri.ToSocketAddress()
+                       };
+            var routesRequestMessage = new RequestNodeMessageRoutesMessage
+                                       {
+                                           TargetNodeIdentity = pong.SocketIdentity,
+                                           TargetNodeUri = pong.Uri
+                                       };
+            socket.DeliverMessage(Message.Create(pong, domain));
+            Thread.Sleep(AsyncOp);
+
+            cancellationSource.Cancel();
+            task.Wait();
+
+            clusterMembership.Verify(m => m.KeepAlive(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == sourceNode.Uri.ToSocketAddress()
+                                                                                 && Unsafe.Equals(e.Identity, sourceNode.Identity))),
+                                     Times.Once);
+            clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => RoutesRequestMessage(msg, routesRequestMessage))), Times.Exactly(allowedDomains.Count()));
         }
 
         [Test]
