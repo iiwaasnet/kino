@@ -33,6 +33,7 @@ namespace kino.Tests.Connectivity
         private Mock<IRouteDiscovery> routeDiscovery;
         private Mock<ISecurityProvider> securityProvider;
         private string domain;
+        private ClusterMonitor clusterMonitor;
 
         [SetUp]
         public void Setup()
@@ -85,17 +86,17 @@ namespace kino.Tests.Connectivity
                                                                 performanceCounterManager.Object,
                                                                 securityProvider.Object,
                                                                 logger.Object);
+            clusterMonitor = new ClusterMonitor(routerConfiguration,
+                                                clusterMembership.Object,
+                                                clusterMessageSender,
+                                                clusterMessageListener,
+                                                routeDiscovery.Object,
+                                                securityProvider.Object);
         }
 
         [Test]
         public void RegisterSelf_SendRegistrationMessageToRendezvous()
         {
-            var clusterMonitor = new ClusterMonitor(routerConfiguration,
-                                                    clusterMembership.Object,
-                                                    clusterMessageSender,
-                                                    clusterMessageListener,
-                                                    routeDiscovery.Object,
-                                                    securityProvider.Object);
             try
             {
                 clusterMonitor.Start(StartTimeout);
@@ -125,12 +126,6 @@ namespace kino.Tests.Connectivity
         [Test]
         public void UnregisterSelf_SendUnregisterMessageRouteMessageToRendezvous()
         {
-            var clusterMonitor = new ClusterMonitor(routerConfiguration,
-                                                    clusterMembership.Object,
-                                                    clusterMessageSender,
-                                                    clusterMessageListener,
-                                                    routeDiscovery.Object,
-                                                    securityProvider.Object);
             try
             {
                 clusterMonitor.Start(StartTimeout);
@@ -159,12 +154,6 @@ namespace kino.Tests.Connectivity
         [Test]
         public void RequestClusterRoutes_SendRequestClusterMessageRoutesMessageToRendezvous()
         {
-            var clusterMonitor = new ClusterMonitor(routerConfiguration,
-                                                    clusterMembership.Object,
-                                                    clusterMessageSender,
-                                                    clusterMessageListener,
-                                                    routeDiscovery.Object,
-                                                    securityProvider.Object);
             try
             {
                 clusterMonitor.Start(StartTimeout);
@@ -225,11 +214,101 @@ namespace kino.Tests.Connectivity
             }
         }
 
-        //TODO: Write test
         [Test]
         public void UnregisterSelf_SendsUnregisterMessagesForAllIdentitiesGroupedByDomain()
         {
-            throw new NotImplementedException();
+            var messageHubs = new[]
+                              {
+                                  new MessageIdentifier(Guid.NewGuid().ToByteArray()),
+                                  new MessageIdentifier(Guid.NewGuid().ToByteArray()),
+                                  new MessageIdentifier(Guid.NewGuid().ToByteArray())
+                              };
+            var messageHandlers = new[]
+                                  {
+                                      MessageIdentifier.Create<SimpleMessage>(),
+                                      MessageIdentifier.Create<AsyncMessage>()
+                                  };
+            var allowedDomains = new[]
+                                 {
+                                     Guid.NewGuid().ToString(),
+                                     Guid.NewGuid().ToString(),
+                                     Guid.NewGuid().ToString(),
+                                     Guid.NewGuid().ToString()
+                                 };
+            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
+            foreach (var domain in allowedDomains)
+            {
+                securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(domain, It.IsAny<byte[]>())).Returns(new byte[0]);
+            }
+            securityProvider.Setup(m => m.GetDomain(messageHandlers.First().Identity)).Returns(allowedDomains.First());
+            securityProvider.Setup(m => m.GetDomain(messageHandlers.Second().Identity)).Returns(allowedDomains.Second());
+            var clusterMessageSender = new Mock<IClusterMessageSender>();
+            var clusterMonitor = new ClusterMonitor(routerConfiguration,
+                                                    clusterMembership.Object,
+                                                    clusterMessageSender.Object,
+                                                    clusterMessageListener,
+                                                    routeDiscovery.Object,
+                                                    securityProvider.Object);
+            //
+            clusterMonitor.UnregisterSelf(messageHandlers.Concat(messageHubs));
+            //
+            clusterMessageSender.Verify(m => m.EnqueueMessage(It.IsAny<IMessage>()), Times.Exactly(allowedDomains.Count()));
+            foreach (var domain in allowedDomains)
+            {
+                clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => msg.Domain == domain)));
+            }
+        }
+
+        [Test]
+        public void UnregisterSelf_SendsUnregistrationMessageForEachMessageHubAndDomain()
+        {
+            var messageHubs = new[]
+                              {
+                                  new MessageIdentifier(Guid.NewGuid().ToByteArray()),
+                                  new MessageIdentifier(Guid.NewGuid().ToByteArray()),
+                                  new MessageIdentifier(Guid.NewGuid().ToByteArray())
+                              };
+            var messageHandlers = new[]
+                                  {
+                                      MessageIdentifier.Create<SimpleMessage>(),
+                                      MessageIdentifier.Create<AsyncMessage>()
+                                  };
+            var allowedDomains = new[] {Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), Guid.NewGuid().ToString()};
+            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
+            foreach (var domain in allowedDomains)
+            {
+                securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(domain, It.IsAny<byte[]>())).Returns(new byte[0]);
+            }
+            securityProvider.Setup(m => m.GetDomain(messageHandlers.First().Identity)).Returns(allowedDomains.First());
+            securityProvider.Setup(m => m.GetDomain(messageHandlers.Second().Identity)).Returns(allowedDomains.Second());
+            var clusterMessageSender = new Mock<IClusterMessageSender>();
+            var clusterMonitor = new ClusterMonitor(routerConfiguration,
+                                                    clusterMembership.Object,
+                                                    clusterMessageSender.Object,
+                                                    clusterMessageListener,
+                                                    routeDiscovery.Object,
+                                                    securityProvider.Object);
+            //
+            clusterMonitor.UnregisterSelf(messageHandlers.Concat(messageHubs));
+            //
+            foreach (var domain in allowedDomains)
+            {
+                foreach (var messageHub in messageHubs)
+                {
+                    clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => AreEqual(msg, domain, messageHub))));
+                }
+            }
+
+            clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => AreEqual(msg, allowedDomains.First(), messageHandlers.First()))));
+            clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => AreEqual(msg, allowedDomains.Second(), messageHandlers.Second()))));
+        }
+
+        private static bool AreEqual(IMessage msg, string domain, MessageIdentifier messageHub)
+        {
+            return msg.GetPayload<UnregisterMessageRouteMessage>()
+                      .MessageContracts
+                      .Any(mc => Unsafe.Equals(mc.Identity, messageHub.Identity))
+                   && msg.Domain == domain;
         }
 
         [Test]

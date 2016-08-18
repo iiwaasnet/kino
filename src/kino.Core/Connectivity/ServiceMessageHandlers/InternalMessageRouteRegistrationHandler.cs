@@ -43,12 +43,12 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                 if (payload.GlobalMessageContracts != null)
                 {
                     var newRoutes = UpdateLocalRoutingTable(handlerSocketIdentifier, payload.GlobalMessageContracts);
-                    var messageHubs = newRoutes.Where(mi => mi.IsMessageHub()).ToList();
-                    var messageGroups = newRoutes
-                        .Where(mi => !mi.IsMessageHub())
-                        .Select(mh => new {Message = mh, Domain = securityProvider.GetDomain(mh.Identity)})
-                        .GroupBy(mh => mh.Domain)
-                        .ToList();
+                    var messageHubs = newRoutes.Where(mi => mi.IsMessageHub())
+                                               .ToList();
+                    var messageGroups = newRoutes.Where(mi => !mi.IsMessageHub())
+                                                 .Select(mh => new {Message = mh, Domain = securityProvider.GetDomain(mh.Identity)})
+                                                 .GroupBy(mh => mh.Domain)
+                                                 .ToList();
 
                     foreach (var domain in securityProvider.GetAllowedDomains())
                     {

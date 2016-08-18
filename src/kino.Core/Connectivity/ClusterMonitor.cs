@@ -98,17 +98,8 @@ namespace kino.Core.Connectivity
 
         public void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers)
         {
-            var messageGroups = messageIdentifiers.Select(mi => new
-                                                                {
-                                                                    Message = new MessageContract
-                                                                              {
-                                                                                  Identity = mi.Identity,
-                                                                                  Version = mi.Version,
-                                                                                  Partition = mi.Partition
-                                                                              },
-                                                                    Domain = securityProvider.GetDomain(mi.Identity)
-                                                                })
-                                                  .GroupBy(mh => mh.Domain);
+            var messageGroups = GetMessageHubs(messageIdentifiers).Concat(GetMessageHandlers(messageIdentifiers))
+                                                                  .GroupBy(mh => mh.Domain);
 
             foreach (var group in messageGroups)
             {
@@ -124,6 +115,33 @@ namespace kino.Core.Connectivity
                 clusterMessageSender.EnqueueMessage(message);
             }
         }
+
+        private IEnumerable<MessageDomainMap> GetMessageHandlers(IEnumerable<MessageIdentifier> messageIdentifiers)
+            => messageIdentifiers.Where(mi => !mi.IsMessageHub())
+                                 .Select(mi => new MessageDomainMap
+                                               {
+                                                   Message = new MessageContract
+                                                             {
+                                                                 Identity = mi.Identity,
+                                                                 Version = mi.Version,
+                                                                 Partition = mi.Partition
+                                                             },
+                                                   Domain = securityProvider.GetDomain(mi.Identity)
+                                               });
+
+        private IEnumerable<MessageDomainMap> GetMessageHubs(IEnumerable<MessageIdentifier> messageIdentifiers)
+            => messageIdentifiers.Where(mi => mi.IsMessageHub())
+                                 .SelectMany(mi => securityProvider.GetAllowedDomains().Select(dom =>
+                                                                                               new MessageDomainMap
+                                                                                               {
+                                                                                                   Message = new MessageContract
+                                                                                                             {
+                                                                                                                 Identity = mi.Identity,
+                                                                                                                 Version = mi.Version,
+                                                                                                                 Partition = mi.Partition
+                                                                                                             },
+                                                                                                   Domain = dom
+                                                                                               }));
 
         public void RequestClusterRoutes()
         {
@@ -146,5 +164,12 @@ namespace kino.Core.Connectivity
 
         public void DiscoverMessageRoute(MessageIdentifier messageIdentifier)
             => routeDiscovery.RequestRouteDiscovery(messageIdentifier);
+    }
+
+    internal class MessageDomainMap
+    {
+        internal MessageContract Message { get; set; }
+
+        internal string Domain { get; set; }
     }
 }
