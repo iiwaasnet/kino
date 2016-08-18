@@ -43,6 +43,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                 if (payload.GlobalMessageContracts != null)
                 {
                     var newRoutes = UpdateLocalRoutingTable(handlerSocketIdentifier, payload.GlobalMessageContracts);
+                    //TODO: Check ClusterMonitor.GetMessageHubs method
                     var messageHubs = newRoutes.Where(mi => mi.IsMessageHub())
                                                .ToList();
                     var messageGroups = newRoutes.Where(mi => !mi.IsMessageHub())
