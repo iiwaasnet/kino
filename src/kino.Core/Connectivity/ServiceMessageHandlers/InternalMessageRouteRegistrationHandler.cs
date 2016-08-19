@@ -49,17 +49,6 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                     {
                         clusterMonitor.RegisterSelf(group.Select(g => g.Message).ToList(), group.Key);
                     }
-
-                    //foreach (var domain in securityProvider.GetAllowedDomains())
-                    //{
-                    //    var contracts = messageGroups.Where(g => g.Key == domain)
-                    //                                 .SelectMany(g => g.Select(_ => _.Message))
-                    //                                 .Concat(messageHubs);
-                    //    if (contracts.Any())
-                    //    {
-                    //        clusterMonitor.RegisterSelf(contracts, domain);
-                    //    }
-                    //}
                 }
             }
 
