@@ -65,7 +65,7 @@ namespace kino.Tests.Connectivity
             }
 
             var cancellationTokenSource = new CancellationTokenSource();
-            var task = Task.Factory.StartNew(() => clusterMessageSender.StartBlockingSendMessages(cancellationTokenSource.Token, new Barrier(1)), cancellationTokenSource.Token);
+            var task = Task.Factory.StartNew(() => clusterMessageSender.StartBlockingSendMessages(cancellationTokenSource.Token, new Barrier(1)));
             cancellationTokenSource.CancelAfter(AsyncOp);
 
             await task;

@@ -43,32 +43,36 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                 if (payload.GlobalMessageContracts != null)
                 {
                     var newRoutes = UpdateLocalRoutingTable(handlerSocketIdentifier, payload.GlobalMessageContracts);
-                    //TODO: Check ClusterMonitor.GetMessageHubs method
-                    var messageHubs = newRoutes.Where(mi => mi.IsMessageHub())
-                                               .ToList();
-                    var messageGroups = newRoutes.Where(mi => !mi.IsMessageHub())
-                                                 .Select(mh => new {Message = mh, Domain = securityProvider.GetDomain(mh.Identity)})
-                                                 .GroupBy(mh => mh.Domain)
-                                                 .ToList();
-
-                    foreach (var domain in securityProvider.GetAllowedDomains())
+                    var messageGroups = GetMessageHandlers(newRoutes).Concat(GetMessageHubs(newRoutes))
+                                                                     .GroupBy(mh => mh.Domain);
+                    foreach (var group in messageGroups)
                     {
-                        var contracts = messageGroups.Where(g => g.Key == domain)
-                                                     .SelectMany(g => g.Select(_ => _.Message))
-                                                     .Concat(messageHubs);
-                        if (contracts.Any())
-                        {
-                            clusterMonitor.RegisterSelf(contracts, domain);
-                        }
+                        clusterMonitor.RegisterSelf(group.Select(g => g.Message).ToList(), group.Key);
                     }
+
+                    //foreach (var domain in securityProvider.GetAllowedDomains())
+                    //{
+                    //    var contracts = messageGroups.Where(g => g.Key == domain)
+                    //                                 .SelectMany(g => g.Select(_ => _.Message))
+                    //                                 .Concat(messageHubs);
+                    //    if (contracts.Any())
+                    //    {
+                    //        clusterMonitor.RegisterSelf(contracts, domain);
+                    //    }
+                    //}
                 }
             }
 
             return shouldHandle;
         }
 
-        private static bool IsInternalMessageRoutingRegistration(IMessage message)
-            => message.Equals(KinoMessages.RegisterInternalMessageRoute);
+        private IEnumerable<IdentityDomainMap> GetMessageHandlers(IEnumerable<MessageIdentifier> newRoutes)
+            => newRoutes.Where(mi => !mi.IsMessageHub())
+                        .Select(mh => new IdentityDomainMap {Message = mh, Domain = securityProvider.GetDomain(mh.Identity)});
+
+        private IEnumerable<IdentityDomainMap> GetMessageHubs(IEnumerable<MessageIdentifier> newRoutes)
+            => newRoutes.Where(mi => mi.IsMessageHub())
+                        .SelectMany(mi => securityProvider.GetAllowedDomains().Select(dom => new IdentityDomainMap {Message = mi, Domain = dom}));
 
         private IEnumerable<MessageIdentifier> UpdateLocalRoutingTable(SocketIdentifier socketIdentifier, MessageContract[] messageContracts)
         {
@@ -92,5 +96,15 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
 
             return handlers;
         }
+
+        private static bool IsInternalMessageRoutingRegistration(IMessage message)
+            => message.Equals(KinoMessages.RegisterInternalMessageRoute);
+    }
+
+    internal class IdentityDomainMap
+    {
+        internal MessageIdentifier Message { get; set; }
+
+        internal string Domain { get; set; }
     }
 }
