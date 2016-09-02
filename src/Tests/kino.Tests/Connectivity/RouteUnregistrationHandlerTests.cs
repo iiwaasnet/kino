@@ -20,6 +20,9 @@ namespace kino.Tests.Connectivity
         private Mock<IClusterMembership> clusterMembership;
         private IExternalRoutingTable externalRoutingTable;
         private string domain;
+        private RouterConfiguration config;
+        private Mock<IRouterConfigurationProvider> routerConfigurationProvider;
+        private ExternalMessageRouteRegistrationHandler registrationHandler;
 
         [SetUp]
         public void Setup()
@@ -32,17 +35,20 @@ namespace kino.Tests.Connectivity
             securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(new[] {domain});
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
+            config = new RouterConfiguration {DeferPeerConnection = true};
+            routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(config);
+            registrationHandler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable,
+                                                                              clusterMembership.Object,
+                                                                              routerConfigurationProvider.Object,
+                                                                              securityProvider.Object,
+                                                                              logger.Object);
         }
 
         [Test]
         public void DisconnectNotCalled_IfConnectWasNotCalledBefore()
         {
-            var config = new RouterConfiguration {DeferPeerConnection = true};
-            var registrationHandler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable,
-                                                                                  clusterMembership.Object,
-                                                                                  config,
-                                                                                  securityProvider.Object,
-                                                                                  logger.Object);
+            config = new RouterConfiguration {DeferPeerConnection = true};
             var socket = new Mock<ISocket>();
             var peerUri = "tcp://127.0.0.1:80";
             var peerSocketIdentity = Guid.NewGuid().ToByteArray();
@@ -81,12 +87,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void DisconnectCalled_IfConnectWasCalledBefore()
         {
-            var config = new RouterConfiguration {DeferPeerConnection = false};
-            var registrationHandler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable,
-                                                                                  clusterMembership.Object,
-                                                                                  config,
-                                                                                  securityProvider.Object,
-                                                                                  logger.Object);
+            config = new RouterConfiguration {DeferPeerConnection = false};
             var socket = new Mock<ISocket>();
             var peerUri = "tcp://127.0.0.1:80";
             var peerSocketIdentity = Guid.NewGuid().ToByteArray();

@@ -814,11 +814,13 @@ namespace kino.Tests.Connectivity
         {
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
             var config = new RouterConfiguration {DeferPeerConnection = true};
+            var routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(config);
             serviceMessageHandlers = new[]
                                      {
                                          new ExternalMessageRouteRegistrationHandler(externalRoutingTable,
                                                                                      clusterMembership.Object,
-                                                                                     config,
+                                                                                     routerConfigurationProvider.Object,
                                                                                      securityProvider.Object,
                                                                                      logger.Object)
                                      };

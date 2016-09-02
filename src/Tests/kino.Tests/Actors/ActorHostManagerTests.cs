@@ -17,7 +17,6 @@ namespace kino.Tests.Actors
     public class ActorHostManagerTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
-        private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
         private ILogger logger;
         private Mock<ISocketFactory> socketFactory;
@@ -25,6 +24,8 @@ namespace kino.Tests.Actors
         private ActorHostSocketFactory actorHostSocketFactory;
         private const int NumberOfDealerSocketsPerActorHost = 3;
         private Mock<ISecurityProvider> securityProvider;
+        private Mock<IRouterConfigurationProvider> routerConfigurationProvider;
+        private ActorHostManager actorHostManager;
 
         [SetUp]
         public void Setup()
@@ -34,25 +35,24 @@ namespace kino.Tests.Actors
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(actorHostSocketFactory.CreateSocket);
-            routerConfiguration = new RouterConfiguration
-                                  {
-                                      //TODO: Review
-                                      //ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity()),
-                                      RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity())
-                                  };
+            var routerConfiguration = new RouterConfiguration
+                                      {
+                                          RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
+                                      };
+            routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(routerConfiguration);
             securityProvider = new Mock<ISecurityProvider>();
             securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
+            actorHostManager = new ActorHostManager(socketFactory.Object,
+                                                    routerConfigurationProvider.Object,
+                                                    securityProvider.Object,
+                                                    performanceCounterManager.Object,
+                                                    logger);
         }
 
         [Test(Description = "Assigning several actors, handling the same message type, should not throw exception.")]
         public void AssignActorWithSameInterfaceTwice_ThrowsNoException()
         {
-            var actorHostManager = new ActorHostManager(socketFactory.Object,
-                                                        routerConfiguration,
-                                                        securityProvider.Object,
-                                                        performanceCounterManager.Object,
-                                                        logger);
-
             var numberOfActors = 2;
             for (var i = 0; i < numberOfActors; i++)
             {
@@ -67,12 +67,6 @@ namespace kino.Tests.Actors
         [Test]
         public void IfActorHostInstancePolicyIsAlwaysCreateNew_NewActorHostIsCreatedForEachActor()
         {
-            var actorHostManager = new ActorHostManager(socketFactory.Object,
-                                                        routerConfiguration,
-                                                        securityProvider.Object,
-                                                        performanceCounterManager.Object,
-                                                        logger);
-
             actorHostManager.AssignActor(new EchoActor(), ActorHostInstancePolicy.AlwaysCreateNew);
             actorHostManager.AssignActor(new ExceptionActor(), ActorHostInstancePolicy.AlwaysCreateNew);
 
@@ -84,12 +78,6 @@ namespace kino.Tests.Actors
         [Test]
         public void IfActorHostInstancePolicyIsTryReuseExisting_NewDifferentActorsAreHostedInOneActorHost()
         {
-            var actorHostManager = new ActorHostManager(socketFactory.Object,
-                                                        routerConfiguration,
-                                                        securityProvider.Object,
-                                                        performanceCounterManager.Object,
-                                                        logger);
-
             actorHostManager.AssignActor(new EchoActor());
             actorHostManager.AssignActor(new NullActor());
 

@@ -13,19 +13,19 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ILogger logger;
         private readonly IClusterMembership clusterMembership;
-        private readonly RouterConfiguration config;
+        private readonly IRouterConfigurationProvider routerConfigurationProvider;
         private readonly ISecurityProvider securityProvider;
 
         public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable,
                                                        IClusterMembership clusterMembership,
-                                                       RouterConfiguration config,
+                                                       IRouterConfigurationProvider routerConfigurationProvider,
                                                        ISecurityProvider securityProvider,
                                                        ILogger logger)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.logger = logger;
             this.clusterMembership = clusterMembership;
-            this.config = config;
+            this.routerConfigurationProvider = routerConfigurationProvider;
             this.securityProvider = securityProvider;
         }
 
@@ -42,6 +42,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                     var uri = new Uri(payload.Uri);
                     var memberAdded = false;
                     var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+                    var config = routerConfigurationProvider.GetRouterConfiguration().Result;
 
                     foreach (var registration in payload.MessageContracts)
                     {

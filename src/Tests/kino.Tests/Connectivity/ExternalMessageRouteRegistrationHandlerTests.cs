@@ -25,6 +25,7 @@ namespace kino.Tests.Connectivity
         private ExternalMessageRouteRegistrationHandler handler;
         private byte[] messageIdentity;
         private Mock<ISocket> socket;
+        private Mock<IRouterConfigurationProvider> routerConfigurationProvider;
 
         [SetUp]
         public void Setup()
@@ -35,6 +36,8 @@ namespace kino.Tests.Connectivity
             externalRoutingTable.Setup(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(), It.IsAny<SocketIdentifier>(), It.IsAny<Uri>()))
                                 .Returns(new PeerConnection {Connected = false});
             config = new RouterConfiguration {DeferPeerConnection = true};
+            routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(config);
             clusterMembership = new Mock<IClusterMembership>();
             domain = Guid.NewGuid().ToString();
             messageIdentity = Guid.NewGuid().ToByteArray();
@@ -47,7 +50,7 @@ namespace kino.Tests.Connectivity
             securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(It.Is<string>(d => d != domain), It.IsAny<byte[]>())).Throws<SecurityException>();
             handler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable.Object,
                                                                   clusterMembership.Object,
-                                                                  config,
+                                                                  routerConfigurationProvider.Object,
                                                                   securityProvider.Object,
                                                                   logger.Object);
         }

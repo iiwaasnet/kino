@@ -13,7 +13,7 @@ namespace kino.Actors
     public class ActorHostManager : IActorHostManager
     {
         private readonly ISocketFactory socketFactory;
-        private readonly RouterConfiguration routerConfiguration;
+        private readonly IRouterConfigurationProvider routerConfigurationProvider;
         private readonly ISecurityProvider securityProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILogger logger;
@@ -22,13 +22,13 @@ namespace kino.Actors
         private bool isDisposed = false;
 
         public ActorHostManager(ISocketFactory socketFactory,
-                                RouterConfiguration routerConfiguration,
+                                IRouterConfigurationProvider routerConfigurationProvider,
                                 ISecurityProvider securityProvider,
                                 IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                 ILogger logger)
         {
             this.socketFactory = socketFactory;
-            this.routerConfiguration = routerConfiguration;
+            this.routerConfigurationProvider = routerConfigurationProvider;
             this.securityProvider = securityProvider;
             this.performanceCounterManager = performanceCounterManager;
             this.logger = logger;
@@ -61,6 +61,7 @@ namespace kino.Actors
                 || !actorHosts.Any()
                 || actorHost == null)
             {
+                var routerConfiguration = routerConfigurationProvider.GetRouterConfiguration().Result;
                 actorHost = new ActorHost(socketFactory,
                                           new ActorHandlerMap(),
                                           new AsyncQueue<AsyncMessageContext>(),
