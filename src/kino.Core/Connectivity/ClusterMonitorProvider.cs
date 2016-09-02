@@ -7,7 +7,7 @@ namespace kino.Core.Connectivity
         private readonly IClusterMonitor clusterMonitor;
 
         public ClusterMonitorProvider(ClusterMembershipConfiguration membershipConfiguration,
-                                      RouterConfiguration routerConfiguration,
+                                      IRouterConfigurationProvider routerConfigurationProvider,
                                       IClusterMembership clusterMembership,
                                       IClusterMessageSender clusterMessageSender,
                                       IClusterMessageListener clusterMessageListener,
@@ -16,7 +16,7 @@ namespace kino.Core.Connectivity
         {
             clusterMonitor = membershipConfiguration.RunAsStandalone
                                  ? (IClusterMonitor) new LoopbackClusterMonitor()
-                                 : new ClusterMonitor(routerConfiguration,
+                                 : new ClusterMonitor(routerConfigurationProvider,
                                                       clusterMembership,
                                                       clusterMessageSender,
                                                       clusterMessageListener,

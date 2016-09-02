@@ -77,6 +77,8 @@
     <Compile Include="Connectivity\IClusterMessageListener.cs" />
     <Compile Include="Connectivity\IClusterMessageSender.cs" />
     <Compile Include="Connectivity\IRouteDiscovery.cs" />
+    <Compile Include="Connectivity\IRouterConfigurationManager.cs" />
+    <Compile Include="Connectivity\IRouterConfigurationProvider.cs" />
     <Compile Include="Connectivity\MessageHandlerDefinitionAttribute.cs" />
     <Compile Include="Connectivity\MessageRouter.Tracing.cs" />
     <Compile Include="Connectivity\PeerConnection.cs" />
@@ -86,6 +88,8 @@
     <Compile Include="Connectivity\RendezvousClusterConfiguration.cs" />
     <Compile Include="Connectivity\RouteDiscovery.cs" />
     <Compile Include="Connectivity\RouteDiscoveryConfiguration.cs" />
+    <Compile Include="Connectivity\RouterConfigurationManager.cs" />
+    <Compile Include="Connectivity\ScaleOutSocketConfiguration.cs" />
     <Compile Include="Connectivity\ServiceMessageHandlers\NodeMessageRoutesRequestHandler.cs" />
     <Compile Include="Connectivity\ServiceMessageHandlers\ExternalMessageRouteRegistrationHandler.cs" />
     <Compile Include="Connectivity\ServiceMessageHandlers\InternalMessageRouteRegistrationHandler.cs" />

@@ -1,4 +1,5 @@
-﻿using kino.Actors;
+﻿using System.Collections.Generic;
+using kino.Actors;
 using kino.Actors.Diagnostics;
 using kino.Client;
 using kino.Core.Connectivity;
@@ -16,6 +17,7 @@ namespace Autofac.kino
         {
             RegisterServiceMessageHandlers(builder);
             RegisterFrameworkActors(builder);
+            RegisterConfigurations(builder);
 
             builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
                    .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
@@ -83,6 +85,42 @@ namespace Autofac.kino
 
             builder.RegisterType<NullSecurityProvider>()
                    .As<ISecurityProvider>()
+                   .SingleInstance();
+
+            builder.RegisterType<RouterConfigurationManager>()
+                   .As<IRouterConfigurationProvider>()
+                   .As<IRouterConfigurationManager>()
+                   .SingleInstance();
+        }
+
+        private void RegisterConfigurations(ContainerBuilder builder)
+        {
+            builder.RegisterType<ConfigurationProvider>()
+                   .As<IConfigurationProvider>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRouterConfiguration())
+                   .As<RouterConfiguration>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
+                   .As<IEnumerable<RendezvousEndpoint>>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterTimingConfiguration())
+                   .As<ClusterMembershipConfiguration>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetScaleOutConfiguration())
+                   .As<ScaleOutSocketConfiguration>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())
+                   .As<ClusterMembershipConfiguration>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetMessageHubConfiguration())
+                   .As<MessageHubConfiguration>()
                    .SingleInstance();
         }
 

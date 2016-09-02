@@ -25,13 +25,14 @@ namespace kino.Tests.Connectivity
         private Mock<ILogger> logger;
         private Mock<ISecurityProvider> securityProvider;
         private Mock<ISocketFactory> socketFactory;
-        private RouterConfiguration routerConfiguration;
         private Mock<IClusterMembership> clusterMembership;
         private Mock<IRendezvousCluster> rendezvousCluster;
         private Mock<IClusterMessageSender> clusterMessageSender;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private ClusterMembershipConfiguration clusterMembershipConfiguration;
         private string domain;
+        private ClusterMessageListener clusterMessageListener;
+        private Mock<IRouterConfigurationProvider> routerConfigurationProvider;
 
         [SetUp]
         public void Setup()
@@ -51,11 +52,6 @@ namespace kino.Tests.Connectivity
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
             rendezvousCluster = new Mock<IRendezvousCluster>();
-            routerConfiguration = new RouterConfiguration
-                                  {
-                                      ScaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity()),
-                                      RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
-                                  };
             var rendezvousEndpoint = new RendezvousEndpoint(new Uri("tcp://127.0.0.1:5000"),
                                                             new Uri("tcp://127.0.0.1:5000"));
             rendezvousCluster.Setup(m => m.GetCurrentRendezvousServer()).Returns(rendezvousEndpoint);
@@ -66,21 +62,29 @@ namespace kino.Tests.Connectivity
                                                  PingSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(4),
                                                  PongSilenceBeforeRouteDeletion = TimeSpan.FromMilliseconds(8)
                                              };
+            var routerConfiguration = new RouterConfiguration
+                                      {
+                                          RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
+                                      };
+            var scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity());
+            routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(routerConfiguration);
+            routerConfigurationProvider.Setup(m => m.GetScaleOutAddress()).ReturnsAsync(scaleOutAddress);
+
+            clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
+                                                                socketFactory.Object,
+                                                                routerConfigurationProvider.Object,
+                                                                clusterMessageSender.Object,
+                                                                clusterMembership.Object,
+                                                                clusterMembershipConfiguration,
+                                                                performanceCounterManager.Object,
+                                                                securityProvider.Object,
+                                                                logger.Object);
         }
 
         [Test]
         public void IfPingIsNotCommingInTime_SwitchToNextRendezvousServer()
         {
-            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
-                                                                    socketFactory.Object,
-                                                                    routerConfiguration,
-                                                                    clusterMessageSender.Object,
-                                                                    clusterMembership.Object,
-                                                                    clusterMembershipConfiguration,
-                                                                    performanceCounterManager.Object,
-                                                                    securityProvider.Object,
-                                                                    logger.Object);
-
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
 
@@ -95,16 +99,6 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfPingComesInTime_SwitchToNextRendezvousServerNeverHappens()
         {
-            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
-                                                                    socketFactory.Object,
-                                                                    routerConfiguration,
-                                                                    clusterMessageSender.Object,
-                                                                    clusterMembership.Object,
-                                                                    clusterMembershipConfiguration,
-                                                                    performanceCounterManager.Object,
-                                                                    securityProvider.Object,
-                                                                    logger.Object);
-
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
 
@@ -130,16 +124,6 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfNonLeaderMessageArrives_NewLeaderIsSelectedFromReceivedMessage()
         {
-            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
-                                                                    socketFactory.Object,
-                                                                    routerConfiguration,
-                                                                    clusterMessageSender.Object,
-                                                                    clusterMembership.Object,
-                                                                    clusterMembershipConfiguration,
-                                                                    performanceCounterManager.Object,
-                                                                    securityProvider.Object,
-                                                                    logger.Object);
-
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
 
@@ -171,16 +155,6 @@ namespace kino.Tests.Connectivity
 
             clusterMembership.Setup(m => m.KeepAlive(sourceNode)).Returns(true);
 
-            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
-                                                                    socketFactory.Object,
-                                                                    routerConfiguration,
-                                                                    clusterMessageSender.Object,
-                                                                    clusterMembership.Object,
-                                                                    clusterMembershipConfiguration,
-                                                                    performanceCounterManager.Object,
-                                                                    securityProvider.Object,
-                                                                    logger.Object);
-
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
 
@@ -206,15 +180,6 @@ namespace kino.Tests.Connectivity
         public void IfPongMessageComesFromNodeInNotAllowedDomain_LifetimeForThisNodeIsNotProlonged()
         {
             var domain = Guid.NewGuid().ToString();
-            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
-                                                                    socketFactory.Object,
-                                                                    routerConfiguration,
-                                                                    clusterMessageSender.Object,
-                                                                    clusterMembership.Object,
-                                                                    clusterMembershipConfiguration,
-                                                                    performanceCounterManager.Object,
-                                                                    securityProvider.Object,
-                                                                    logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
@@ -246,16 +211,6 @@ namespace kino.Tests.Connectivity
             var sourceNode = new SocketEndpoint(new Uri("tpc://127.0.0.3:7000"), SocketIdentifier.CreateIdentity());
 
             clusterMembership.Setup(m => m.KeepAlive(sourceNode)).Returns(false);
-
-            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
-                                                                    socketFactory.Object,
-                                                                    routerConfiguration,
-                                                                    clusterMessageSender.Object,
-                                                                    clusterMembership.Object,
-                                                                    clusterMembershipConfiguration,
-                                                                    performanceCounterManager.Object,
-                                                                    securityProvider.Object,
-                                                                    logger.Object);
 
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
@@ -303,16 +258,6 @@ namespace kino.Tests.Connectivity
 
             clusterMembership.Setup(m => m.KeepAlive(sourceNode)).Returns(false);
 
-            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
-                                                                    socketFactory.Object,
-                                                                    routerConfiguration,
-                                                                    clusterMessageSender.Object,
-                                                                    clusterMembership.Object,
-                                                                    clusterMembershipConfiguration,
-                                                                    performanceCounterManager.Object,
-                                                                    securityProvider.Object,
-                                                                    logger.Object);
-
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
 
@@ -343,16 +288,6 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfRendezvousReconfigurationMessageArrives_RendezvousClusterIsChanged()
         {
-            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
-                                                                    socketFactory.Object,
-                                                                    routerConfiguration,
-                                                                    clusterMessageSender.Object,
-                                                                    clusterMembership.Object,
-                                                                    clusterMembershipConfiguration,
-                                                                    performanceCounterManager.Object,
-                                                                    securityProvider.Object,
-                                                                    logger.Object);
-
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
 
@@ -435,16 +370,6 @@ namespace kino.Tests.Connectivity
         private void MessageIsForwardedToMessageRouter<TPayload>(TPayload payload, MessageIdentifier messageIdentity)
             where TPayload : IPayload
         {
-            var clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
-                                                                    socketFactory.Object,
-                                                                    routerConfiguration,
-                                                                    clusterMessageSender.Object,
-                                                                    clusterMembership.Object,
-                                                                    clusterMembershipConfiguration,
-                                                                    performanceCounterManager.Object,
-                                                                    securityProvider.Object,
-                                                                    logger.Object);
-
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
 

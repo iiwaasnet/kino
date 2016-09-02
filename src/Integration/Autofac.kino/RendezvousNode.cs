@@ -1,4 +1,4 @@
-﻿namespace Client
+﻿namespace Autofac.kino
 {
     public class RendezvousNode
     {

@@ -21,12 +21,12 @@ namespace kino.Tests.Connectivity
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
         private ClusterMessageSender clusterMessageSender;
         private Mock<IRendezvousCluster> rendezvousCluster;
-        private RouterConfiguration routerConfiguration;
         private Mock<ISocketFactory> socketFactory;
         private ClusterMonitorSocketFactory clusterMonitorSocketFactory;
         private Mock<ILogger> logger;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private Mock<ISecurityProvider> securityProvider;
+        private Mock<IRouterConfigurationProvider> routerConfigurationProvider;
 
         [SetUp]
         public void Setup()
@@ -37,17 +37,21 @@ namespace kino.Tests.Connectivity
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
             rendezvousCluster = new Mock<IRendezvousCluster>();
-            routerConfiguration = new RouterConfiguration
-                                  {
-                                      ScaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity()),
-                                      RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
-                                  };
+
             var rendezvousEndpoint = new RendezvousEndpoint(new Uri("tcp://127.0.0.1:5000"),
                                                             new Uri("tcp://127.0.0.1:5000"));
             rendezvousCluster.Setup(m => m.GetCurrentRendezvousServer()).Returns(rendezvousEndpoint);
             securityProvider = new Mock<ISecurityProvider>();
+            var routerConfiguration = new RouterConfiguration
+                                      {
+                                          RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
+                                      };
+            var scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity());
+            routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(routerConfiguration);
+            routerConfigurationProvider.Setup(m => m.GetScaleOutAddress()).ReturnsAsync(scaleOutAddress);
             clusterMessageSender = new ClusterMessageSender(rendezvousCluster.Object,
-                                                            routerConfiguration,
+                                                            routerConfigurationProvider.Object,
                                                             socketFactory.Object,
                                                             performanceCounterManager.Object,
                                                             securityProvider.Object,

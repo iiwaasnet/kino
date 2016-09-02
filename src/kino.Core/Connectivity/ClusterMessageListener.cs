@@ -17,7 +17,7 @@ namespace kino.Core.Connectivity
         private readonly ILogger logger;
         private readonly IRendezvousCluster rendezvousCluster;
         private readonly ISocketFactory socketFactory;
-        private readonly RouterConfiguration routerConfiguration;
+        private readonly IRouterConfigurationProvider routerConfigurationProvider;
         private readonly IClusterMessageSender clusterMessageSender;
         private readonly ManualResetEventSlim pingReceived;
         private readonly ManualResetEventSlim newRendezvousConfiguration;
@@ -28,7 +28,7 @@ namespace kino.Core.Connectivity
 
         public ClusterMessageListener(IRendezvousCluster rendezvousCluster,
                                       ISocketFactory socketFactory,
-                                      RouterConfiguration routerConfiguration,
+                                      IRouterConfigurationProvider routerConfigurationProvider,
                                       IClusterMessageSender clusterMessageSender,
                                       IClusterMembership clusterMembership,
                                       ClusterMembershipConfiguration membershipConfiguration,
@@ -42,14 +42,14 @@ namespace kino.Core.Connectivity
             this.securityProvider = securityProvider;
             this.rendezvousCluster = rendezvousCluster;
             this.socketFactory = socketFactory;
-            this.routerConfiguration = routerConfiguration;
+            this.routerConfigurationProvider = routerConfigurationProvider;
             this.clusterMessageSender = clusterMessageSender;
             this.clusterMembership = clusterMembership;
             pingReceived = new ManualResetEventSlim(false);
             newRendezvousConfiguration = new ManualResetEventSlim(false);
         }
 
-        public void StartBlockingListenMessages(Action restartRequestHandler, CancellationToken token, Barrier gateway)
+        public async void StartBlockingListenMessages(Action restartRequestHandler, CancellationToken token, Barrier gateway)
         {
             try
             {
@@ -57,7 +57,7 @@ namespace kino.Core.Connectivity
 
                 using (var clusterMonitorSubscriptionSocket = CreateClusterMonitorSubscriptionSocket())
                 {
-                    using (var routerNotificationSocket = CreateRouterCommunicationSocket())
+                    using (var routerNotificationSocket = await CreateRouterCommunicationSocket())
                     {
                         gateway.SignalAndWait(token);
 
@@ -136,8 +136,9 @@ namespace kino.Core.Connectivity
             return false;
         }
 
-        private ISocket CreateRouterCommunicationSocket()
+        private async Task<ISocket> CreateRouterCommunicationSocket()
         {
+            var routerConfiguration = await routerConfigurationProvider.GetRouterConfiguration();
             var socket = socketFactory.CreateDealerSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ClusterListenerInternalSocketSendRate);
             SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
@@ -345,16 +346,20 @@ namespace kino.Core.Connectivity
         }
 
         private bool ThisNodeSocket(byte[] socketIdentity)
-            => Unsafe.Equals(routerConfiguration.ScaleOutAddress.Identity, socketIdentity);
+        {
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+            return Unsafe.Equals(scaleOutAddress.Identity, socketIdentity);
+        }
 
         private void SendPong(ulong pingId)
         {
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
             foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var message = Message.Create(new PongMessage
                                              {
-                                                 Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                                 SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                                 Uri = scaleOutAddress.Uri.ToSocketAddress(),
+                                                 SocketIdentity = scaleOutAddress.Identity,
                                                  PingId = pingId
                                              },
                                              domain);

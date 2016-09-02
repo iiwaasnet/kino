@@ -6,12 +6,10 @@ namespace kino.Core.Connectivity
     {
         public SocketEndpoint RouterAddress { get; set; }
 
-        public SocketEndpoint ScaleOutAddress { get; set; }
-
         public bool DeferPeerConnection { get; set; }
 
         public int ScaleOutReceiveMessageQueueLength { get; set; }
 
         public TimeSpan ConnectionEstablishWaitTime { get; set; }
-    }
+    }    
 }

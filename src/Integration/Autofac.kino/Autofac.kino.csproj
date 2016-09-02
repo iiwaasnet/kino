@@ -34,8 +34,8 @@
       <HintPath>..\..\packages\AsyncIO.0.1.26.0\lib\net40\AsyncIO.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Autofac, Version=4.0.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Autofac.4.0.0\lib\net451\Autofac.dll</HintPath>
+    <Reference Include="Autofac, Version=4.1.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Autofac.4.1.0\lib\net45\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="C5, Version=2.4.5947.17248, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
@@ -81,9 +81,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApplicationConfiguration.cs" />
     <Compile Include="AutofacExtensions.cs" />
+    <Compile Include="ConfigurationProvider.cs" />
+    <Compile Include="IConfigurationProvider.cs" />
     <Compile Include="KinoModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RendezvousNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

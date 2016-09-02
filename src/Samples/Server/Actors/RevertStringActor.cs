@@ -23,9 +23,12 @@ namespace Server.Actors
         {
             var hello = message.GetPayload<HelloMessage>();
 
-            var reversedString = new string(hello.Greeting.Reverse().ToArray());
+            //var reversedString = new string(hello.Greeting.Reverse().ToArray());
 
-            return new ActorResult(Message.Create(new EhlloMessage {Ehllo = reversedString},
+            //return new ActorResult(Message.Create(new EhlloMessage {Ehllo = reversedString},
+            //                                      securityProvider.GetDomain(Ehhlo.Identity)));
+
+            return new ActorResult(Message.Create(new EhlloMessage {Ehllo = hello.Greeting},
                                                   securityProvider.GetDomain(Ehhlo.Identity)));
         }
     }

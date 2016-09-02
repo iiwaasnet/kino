@@ -24,6 +24,7 @@ namespace kino.Tests.Connectivity
         private Mock<ISecurityProvider> securityProvider;
         private string domain;
         private Mock<ILogger> logger;
+        private Mock<IRouterConfigurationProvider> routerConfigurationProvider;
 
         [SetUp]
         public void Setup()
@@ -38,11 +39,6 @@ namespace kino.Tests.Connectivity
                                                                MaxRequestsQueueLength = 1000
                                                            }
                                       };
-            routerConfiguration = new RouterConfiguration
-                                  {
-                                      ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity()),
-                                      RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity())
-                                  };
             clusterMessageSender = new Mock<IClusterMessageSender>();
             logger = new Mock<ILogger>();
             domain = Guid.NewGuid().ToString();
@@ -51,8 +47,16 @@ namespace kino.Tests.Connectivity
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(new[] {domain});
             securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(domain, It.IsAny<byte[]>())).Returns(new byte[0]);
             securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(It.Is<string>(d => d != domain), It.IsAny<byte[]>())).Throws<SecurityException>();
+            var routerConfiguration = new RouterConfiguration
+                                      {
+                                          RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
+                                      };
+            var scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity());
+            routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(routerConfiguration);
+            routerConfigurationProvider.Setup(m => m.GetScaleOutAddress()).ReturnsAsync(scaleOutAddress);
             routerDiscovery = new RouteDiscovery(clusterMessageSender.Object,
-                                                 routerConfiguration,
+                                                 routerConfigurationProvider.Object,
                                                  membershipConfiguration,
                                                  securityProvider.Object,
                                                  logger.Object);

@@ -46,7 +46,8 @@ namespace kino.Tests.Actors
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(actorHostSocketFactory.CreateSocket);
             routerConfiguration = new RouterConfiguration
                                   {
-                                      ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity()),
+                                      //TODO: Review
+                                      //ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity()),
                                       RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity())
                                   };
             securityProvider = new Mock<ISecurityProvider>();

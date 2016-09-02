@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using Autofac;
+﻿using Autofac;
+using Autofac.kino;
 using kino.Actors;
-using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
 using Server.Actors;
 using TypedConfigProvider;
@@ -34,22 +33,6 @@ namespace Server
 
             builder.Register(c => c.Resolve<IConfigProvider>().GetConfiguration<ApplicationConfiguration>())
                    .As<ApplicationConfiguration>()
-                   .SingleInstance();
-
-            builder.RegisterType<ConfigurationProvider>()
-                   .As<IConfigurationProvider>()
-                   .SingleInstance();
-
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRouterConfiguration())
-                   .As<RouterConfiguration>()
-                   .SingleInstance();
-
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
-                   .As<IEnumerable<RendezvousEndpoint>>()
-                   .SingleInstance();
-
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterTimingConfiguration())
-                   .As<ClusterMembershipConfiguration>()
                    .SingleInstance();
         }
     }

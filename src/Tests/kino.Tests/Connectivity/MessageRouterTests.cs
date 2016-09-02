@@ -26,7 +26,6 @@ namespace kino.Tests.Connectivity
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(4);
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(3);
-        private RouterConfiguration routerConfiguration;
         private readonly string localhost = "tcp://localhost:43";
         private Mock<ILogger> logger;
         private Mock<ISecurityProvider> securityProvider;
@@ -39,6 +38,7 @@ namespace kino.Tests.Connectivity
         private Mock<IClusterMembership> clusterMembership;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private string domain;
+        private Mock<IRouterConfigurationManager> routerConfigurationManager;
 
         [SetUp]
         public void Setup()
@@ -47,14 +47,20 @@ namespace kino.Tests.Connectivity
                                       {
                                           PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(10)
                                       };
-            routerConfiguration = new RouterConfiguration
-                                  {
-                                      ScaleOutAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity()),
-                                      RouterAddress = new SocketEndpoint(new Uri(localhost), SocketIdentifier.CreateIdentity())
-                                  };
+            var routerConfiguration = new RouterConfiguration
+                                      {
+                                          RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
+                                      };
+            var scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity());
+            routerConfigurationManager = new Mock<IRouterConfigurationManager>();
+            routerConfigurationManager.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(routerConfiguration);
+            routerConfigurationManager.Setup(m => m.GetScaleOutAddress()).ReturnsAsync(scaleOutAddress);
+            routerConfigurationManager.Setup(m => m.GetInactiveRouterConfiguration()).Returns(routerConfiguration);
+            routerConfigurationManager.Setup(m => m.GetScaleOutAddressRange()).Returns(new[] {scaleOutAddress});
+
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             clusterMembership = new Mock<IClusterMembership>();
-            messageRouterSocketFactory = new MessageRouterSocketFactory(routerConfiguration);
+            messageRouterSocketFactory = new MessageRouterSocketFactory(routerConfiguration, scaleOutAddress);
             clusterMonitor = new Mock<IClusterMonitor>();
             clusterMonitorProvider = new Mock<IClusterMonitorProvider>();
             clusterMonitorProvider.Setup(m => m.GetClusterMonitor()).Returns(clusterMonitor.Object);
@@ -1147,7 +1153,7 @@ namespace kino.Tests.Connectivity
             => new MessageRouter(socketFactory.Object,
                                  internalRoutingTable ?? new InternalRoutingTable(),
                                  externalRoutingTable ?? new ExternalRoutingTable(logger.Object),
-                                 routerConfiguration,
+                                 routerConfigurationManager.Object,
                                  clusterMonitorProvider.Object,
                                  serviceMessageHandlers,
                                  membershipConfiguration,

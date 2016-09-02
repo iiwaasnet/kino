@@ -23,7 +23,6 @@ namespace kino.Tests.Connectivity
         private ClusterMonitorSocketFactory clusterMonitorSocketFactory;
         private Mock<ILogger> logger;
         private Mock<ISocketFactory> socketFactory;
-        private RouterConfiguration routerConfiguration;
         private Mock<IClusterMembership> clusterMembership;
         private Mock<IRendezvousCluster> rendezvousCluster;
         private ClusterMembershipConfiguration clusterMembershipConfiguration;
@@ -34,6 +33,8 @@ namespace kino.Tests.Connectivity
         private Mock<ISecurityProvider> securityProvider;
         private string domain;
         private ClusterMonitor clusterMonitor;
+        private Mock<IRouterConfigurationProvider> routerConfigurationProvider;
+        private SocketEndpoint scaleOutAddress;
 
         [SetUp]
         public void Setup()
@@ -50,11 +51,6 @@ namespace kino.Tests.Connectivity
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(clusterMonitorSocketFactory.CreateSocket);
             rendezvousCluster = new Mock<IRendezvousCluster>();
-            routerConfiguration = new RouterConfiguration
-                                  {
-                                      ScaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity()),
-                                      RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
-                                  };
             var rendezvousEndpoint = new RendezvousEndpoint(new Uri("tcp://127.0.0.1:5000"),
                                                             new Uri("tcp://127.0.0.1:5000"));
             rendezvousCluster.Setup(m => m.GetCurrentRendezvousServer()).Returns(rendezvousEndpoint);
@@ -71,22 +67,30 @@ namespace kino.Tests.Connectivity
                                                                       SendingPeriod = TimeSpan.FromSeconds(1)
                                                                   }
                                              };
+            var routerConfiguration = new RouterConfiguration
+                                      {
+                                          RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
+                                      };
+            scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity());
+            routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(routerConfiguration);
+            routerConfigurationProvider.Setup(m => m.GetScaleOutAddress()).ReturnsAsync(scaleOutAddress);
             clusterMessageSender = new ClusterMessageSender(rendezvousCluster.Object,
-                                                            routerConfiguration,
+                                                            routerConfigurationProvider.Object,
                                                             socketFactory.Object,
                                                             performanceCounterManager.Object,
                                                             securityProvider.Object,
                                                             logger.Object);
             clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
                                                                 socketFactory.Object,
-                                                                routerConfiguration,
+                                                                routerConfigurationProvider.Object,
                                                                 clusterMessageSender,
                                                                 clusterMembership.Object,
                                                                 clusterMembershipConfiguration,
                                                                 performanceCounterManager.Object,
                                                                 securityProvider.Object,
                                                                 logger.Object);
-            clusterMonitor = new ClusterMonitor(routerConfiguration,
+            clusterMonitor = new ClusterMonitor(routerConfigurationProvider.Object,
                                                 clusterMembership.Object,
                                                 clusterMessageSender,
                                                 clusterMessageListener,
@@ -111,8 +115,8 @@ namespace kino.Tests.Connectivity
                 Assert.IsNotNull(message);
                 Assert.IsTrue(message.Equals(KinoMessages.RegisterExternalMessageRoute));
                 var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
-                Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
-                Assert.AreEqual(payload.Uri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
+                Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, scaleOutAddress.Identity));
+                Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
                 Assert.IsTrue(payload.MessageContracts.Any(mc => Unsafe.Equals(mc.Identity, messageIdentifier.Identity)
                                                                  && Unsafe.Equals(mc.Version, messageIdentifier.Version)
                                                                  && Unsafe.Equals(mc.Partition, messageIdentifier.Partition)));
@@ -139,8 +143,8 @@ namespace kino.Tests.Connectivity
                 Assert.IsNotNull(message);
                 Assert.IsTrue(message.Equals(KinoMessages.UnregisterMessageRoute));
                 var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-                Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
-                Assert.AreEqual(payload.Uri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
+                Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, scaleOutAddress.Identity));
+                Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
                 Assert.IsTrue(payload.MessageContracts.Any(mc => Unsafe.Equals(mc.Identity, messageIdentifier.Identity)
                                                                  && Unsafe.Equals(mc.Version, messageIdentifier.Version)
                                                                  && Unsafe.Equals(mc.Partition, messageIdentifier.Partition)));
@@ -179,12 +183,12 @@ namespace kino.Tests.Connectivity
             clusterMembershipConfiguration.PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(10);
             clusterMembershipConfiguration.RouteDiscovery.SendingPeriod = TimeSpan.FromMilliseconds(10);
 
-            var clusterMonitor = new ClusterMonitor(routerConfiguration,
+            var clusterMonitor = new ClusterMonitor(routerConfigurationProvider.Object,
                                                     clusterMembership.Object,
                                                     clusterMessageSender,
                                                     clusterMessageListener,
                                                     new RouteDiscovery(clusterMessageSender,
-                                                                       routerConfiguration,
+                                                                       routerConfigurationProvider.Object,
                                                                        clusterMembershipConfiguration,
                                                                        securityProvider.Object,
                                                                        logger.Object),
@@ -202,8 +206,8 @@ namespace kino.Tests.Connectivity
                 Assert.IsNotNull(message);
                 Assert.IsTrue(message.Equals(KinoMessages.DiscoverMessageRoute));
                 var payload = message.GetPayload<DiscoverMessageRouteMessage>();
-                Assert.IsTrue(Unsafe.Equals(payload.RequestorSocketIdentity, routerConfiguration.ScaleOutAddress.Identity));
-                Assert.AreEqual(payload.RequestorUri, routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress());
+                Assert.IsTrue(Unsafe.Equals(payload.RequestorSocketIdentity, scaleOutAddress.Identity));
+                Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
                 Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Identity, messageIdentifier.Identity));
                 Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Version, messageIdentifier.Version));
                 Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Partition, messageIdentifier.Partition));
@@ -243,7 +247,7 @@ namespace kino.Tests.Connectivity
             securityProvider.Setup(m => m.GetDomain(messageHandlers.First().Identity)).Returns(allowedDomains.First());
             securityProvider.Setup(m => m.GetDomain(messageHandlers.Second().Identity)).Returns(allowedDomains.Second());
             var clusterMessageSender = new Mock<IClusterMessageSender>();
-            var clusterMonitor = new ClusterMonitor(routerConfiguration,
+            var clusterMonitor = new ClusterMonitor(routerConfigurationProvider.Object,
                                                     clusterMembership.Object,
                                                     clusterMessageSender.Object,
                                                     clusterMessageListener,
@@ -282,7 +286,7 @@ namespace kino.Tests.Connectivity
             securityProvider.Setup(m => m.GetDomain(messageHandlers.First().Identity)).Returns(allowedDomains.First());
             securityProvider.Setup(m => m.GetDomain(messageHandlers.Second().Identity)).Returns(allowedDomains.Second());
             var clusterMessageSender = new Mock<IClusterMessageSender>();
-            var clusterMonitor = new ClusterMonitor(routerConfiguration,
+            var clusterMonitor = new ClusterMonitor(routerConfigurationProvider.Object,
                                                     clusterMembership.Object,
                                                     clusterMessageSender.Object,
                                                     clusterMessageListener,
@@ -317,7 +321,7 @@ namespace kino.Tests.Connectivity
             var allowedDomains = new[] {domain, Guid.NewGuid().ToString(), Guid.NewGuid().ToString()};
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             var clusterMessageSender = new Mock<IClusterMessageSender>();
-            var clusterMonitor = new ClusterMonitor(routerConfiguration,
+            var clusterMonitor = new ClusterMonitor(routerConfigurationProvider.Object,
                                                     clusterMembership.Object,
                                                     clusterMessageSender.Object,
                                                     clusterMessageListener,

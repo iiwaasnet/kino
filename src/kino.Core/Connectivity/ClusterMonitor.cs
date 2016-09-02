@@ -14,26 +14,26 @@ namespace kino.Core.Connectivity
     {
         private CancellationTokenSource messageProcessingToken;
         private readonly IClusterMembership clusterMembership;
-        private readonly RouterConfiguration routerConfiguration;
         private Task sendingMessages;
         private Task listenningMessages;
+        private readonly IRouterConfigurationProvider routerConfigurationProvider;
         private readonly IClusterMessageSender clusterMessageSender;
         private readonly IClusterMessageListener clusterMessageListener;
         private readonly IRouteDiscovery routeDiscovery;
         private readonly ISecurityProvider securityProvider;
 
-        public ClusterMonitor(RouterConfiguration routerConfiguration,
+        public ClusterMonitor(IRouterConfigurationProvider routerConfigurationProvider,
                               IClusterMembership clusterMembership,
                               IClusterMessageSender clusterMessageSender,
                               IClusterMessageListener clusterMessageListener,
                               IRouteDiscovery routeDiscovery,
                               ISecurityProvider securityProvider)
         {
+            this.routerConfigurationProvider = routerConfigurationProvider;
             this.clusterMessageSender = clusterMessageSender;
             this.clusterMessageListener = clusterMessageListener;
             this.routeDiscovery = routeDiscovery;
             this.securityProvider = securityProvider;
-            this.routerConfiguration = routerConfiguration;
             this.clusterMembership = clusterMembership;
         }
 
@@ -80,10 +80,12 @@ namespace kino.Core.Connectivity
 
         public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers, string domain)
         {
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
-                                             Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                             SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                             Uri = scaleOutAddress.Uri.ToSocketAddress(),
+                                             SocketIdentity = scaleOutAddress.Identity,
                                              MessageContracts = messageHandlers.Select(mi => new MessageContract
                                                                                              {
                                                                                                  Version = mi.Version,
@@ -98,6 +100,7 @@ namespace kino.Core.Connectivity
 
         public void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers)
         {
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
             var messageGroups = GetMessageHubs(messageIdentifiers).Concat(GetMessageHandlers(messageIdentifiers))
                                                                   .GroupBy(mh => mh.Domain);
 
@@ -105,8 +108,8 @@ namespace kino.Core.Connectivity
             {
                 var message = Message.Create(new UnregisterMessageRouteMessage
                                              {
-                                                 Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                                 SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                                 Uri = scaleOutAddress.Uri.ToSocketAddress(),
+                                                 SocketIdentity = scaleOutAddress.Identity,
                                                  MessageContracts = group.Select(g => g.Message).ToArray()
                                              },
                                              group.Key);
@@ -145,12 +148,13 @@ namespace kino.Core.Connectivity
 
         public void RequestClusterRoutes()
         {
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
             foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var message = Message.Create(new RequestClusterMessageRoutesMessage
                                              {
-                                                 RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                                 RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress()
+                                                 RequestorSocketIdentity = scaleOutAddress.Identity,
+                                                 RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
                                              },
                                              domain);
                 message.As<Message>().SignMessage(securityProvider);

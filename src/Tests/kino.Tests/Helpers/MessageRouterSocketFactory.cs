@@ -12,13 +12,15 @@ namespace kino.Tests.Helpers
     public class MessageRouterSocketFactory
     {
         private readonly RouterConfiguration config;
+        private readonly SocketEndpoint scaleOutAddress;
         private readonly ConcurrentBag<StubSocket> sockets;
         private readonly TimeSpan socketWaitTimeout;
         private readonly int socketWaitRetries = 5;
 
-        public MessageRouterSocketFactory(RouterConfiguration config)
+        public MessageRouterSocketFactory(RouterConfiguration config, SocketEndpoint scaleOutAddress)
         {
             this.config = config;
+            this.scaleOutAddress = scaleOutAddress;
             sockets = new ConcurrentBag<StubSocket>();
             socketWaitTimeout = TimeSpan.FromSeconds(5);
         }
@@ -52,7 +54,7 @@ namespace kino.Tests.Helpers
 
             while (retries-- > 0 && socket == null)
             {
-                socket = sockets.FirstOrDefault(s => s != null && Unsafe.Equals(s.GetIdentity(), config.ScaleOutAddress.Identity));
+                socket = sockets.FirstOrDefault(s => s != null && Unsafe.Equals(s.GetIdentity(), scaleOutAddress.Identity));
                 Wait(socket);
             }
 

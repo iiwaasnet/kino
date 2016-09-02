@@ -14,7 +14,7 @@ namespace kino.Core.Connectivity
     public class ClusterMessageSender : IClusterMessageSender
     {
         private readonly IRendezvousCluster rendezvousCluster;
-        private readonly RouterConfiguration routerConfiguration;
+        private readonly IRouterConfigurationProvider routerConfigurationProvider;
         private readonly ISocketFactory socketFactory;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ISecurityProvider securityProvider;
@@ -22,14 +22,14 @@ namespace kino.Core.Connectivity
         private readonly BlockingCollection<IMessage> outgoingMessages;
 
         public ClusterMessageSender(IRendezvousCluster rendezvousCluster,
-                                    RouterConfiguration routerConfiguration,
+                                    IRouterConfigurationProvider routerConfigurationProvider,
                                     ISocketFactory socketFactory,
                                     IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                     ISecurityProvider securityProvider,
                                     ILogger logger)
         {
             this.rendezvousCluster = rendezvousCluster;
-            this.routerConfiguration = routerConfiguration;
+            this.routerConfigurationProvider = routerConfigurationProvider;
             this.socketFactory = socketFactory;
             this.performanceCounterManager = performanceCounterManager;
             this.securityProvider = securityProvider;
@@ -70,12 +70,13 @@ namespace kino.Core.Connectivity
 
         private void UnregisterRoutingSelf(ISocket clusterMonitorSendingSocket)
         {
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
             foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var message = Message.Create(new UnregisterNodeMessage
                                              {
-                                                 Uri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
-                                                 SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
+                                                 Uri = scaleOutAddress.Uri.ToSocketAddress(),
+                                                 SocketIdentity = scaleOutAddress.Identity,
                                              },
                                              domain);
                 message.As<Message>().SignMessage(securityProvider);

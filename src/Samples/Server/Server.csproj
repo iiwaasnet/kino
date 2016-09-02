@@ -37,8 +37,8 @@
       <HintPath>..\..\packages\AsyncIO.0.1.26.0\lib\net40\AsyncIO.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Autofac, Version=4.0.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Autofac.4.0.0\lib\net451\Autofac.dll</HintPath>
+    <Reference Include="Autofac, Version=4.1.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Autofac.4.1.0\lib\net45\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="C5, Version=2.4.5947.17248, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
@@ -88,9 +88,6 @@
     </Compile>
     <Compile Include="Actors\GroupCharsActor.cs" />
     <Compile Include="Actors\RevertStringActor.cs" />
-    <Compile Include="ApplicationConfiguration.cs" />
-    <Compile Include="ConfigurationProvider.cs" />
-    <Compile Include="IConfigurationProvider.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Messages\GroupCharsResponseMessage.cs" />
     <Compile Include="MainModule.cs" />
@@ -98,7 +95,6 @@
     <Compile Include="Messages\HelloMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RendezvousNode.cs" />
     <Compile Include="SecurityModule.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -125,6 +121,10 @@
     <ProjectReference Include="..\..\kino.Actors\kino.Actors.csproj">
       <Project>{3231a7b7-c50a-4062-b5ed-ba00fce9a77b}</Project>
       <Name>kino.Actors</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Client\kino.Client.csproj">
+      <Project>{2C69BA32-DADC-4E4E-8D91-055FB9D35BFF}</Project>
+      <Name>kino.Client</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\kino.Core\kino.Core.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>

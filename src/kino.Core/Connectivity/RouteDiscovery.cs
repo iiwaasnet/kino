@@ -14,7 +14,7 @@ namespace kino.Core.Connectivity
     public class RouteDiscovery : IRouteDiscovery
     {
         private readonly IClusterMessageSender clusterMessageSender;
-        private readonly RouterConfiguration routerConfiguration;
+        private readonly IRouterConfigurationProvider routerConfigurationProvider;
         private readonly ISecurityProvider securityProvider;
         private readonly RouteDiscoveryConfiguration discoveryConfiguration;
         private readonly ILogger logger;
@@ -23,15 +23,15 @@ namespace kino.Core.Connectivity
         private CancellationTokenSource cancellationTokenSource;
 
         public RouteDiscovery(IClusterMessageSender clusterMessageSender,
-                              RouterConfiguration routerConfiguration,
+                              IRouterConfigurationProvider routerConfigurationProvider,
                               ClusterMembershipConfiguration clusterMembershipConfiguration,
                               ISecurityProvider securityProvider,
                               ILogger logger)
         {
-            this.routerConfiguration = routerConfiguration;
             this.securityProvider = securityProvider;
             discoveryConfiguration = clusterMembershipConfiguration.RouteDiscovery ?? DefaultConfiguration();
             this.clusterMessageSender = clusterMessageSender;
+            this.routerConfigurationProvider = routerConfigurationProvider;
             this.logger = logger;
             requests = new HashedQueue<MessageIdentifier>(discoveryConfiguration.MaxRequestsQueueLength);
         }
@@ -81,6 +81,7 @@ namespace kino.Core.Connectivity
         {
             try
             {
+                var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
                 var domains = messageIdentifier.IsMessageHub()
                                   ? securityProvider.GetAllowedDomains()
                                   : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};
@@ -88,8 +89,8 @@ namespace kino.Core.Connectivity
                 {
                     var message = Message.Create(new DiscoverMessageRouteMessage
                                                  {
-                                                     RequestorSocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                                                     RequestorUri = routerConfiguration.ScaleOutAddress.Uri.ToSocketAddress(),
+                                                     RequestorSocketIdentity = scaleOutAddress.Identity,
+                                                     RequestorUri = scaleOutAddress.Uri.ToSocketAddress(),
                                                      MessageContract = new MessageContract
                                                                        {
                                                                            Version = messageIdentifier.Version,

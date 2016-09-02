@@ -13,18 +13,18 @@ namespace kino.Actors.Diagnostics
     {
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IInternalRoutingTable internalRoutingTable;
-        private readonly RouterConfiguration routerConfiguration;
+        private readonly IRouterConfigurationProvider routerConfigurationProvider;
         private readonly ISecurityProvider securityProvider;
         private static readonly MessageIdentifier KnownMessageRoutes = MessageIdentifier.Create<KnownMessageRoutesMessage>();
 
         public KnownMessageRoutesActor(IExternalRoutingTable externalRoutingTable,
                                        IInternalRoutingTable internalRoutingTable,
-                                       RouterConfiguration routerConfiguration,
+                                       IRouterConfigurationProvider routerConfigurationProvider,
                                        ISecurityProvider securityProvider)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.internalRoutingTable = internalRoutingTable;
-            this.routerConfiguration = routerConfiguration;
+            this.routerConfigurationProvider = routerConfigurationProvider;
             this.securityProvider = securityProvider;
         }
 
@@ -38,21 +38,24 @@ namespace kino.Actors.Diagnostics
                                               securityProvider.GetDomain(KnownMessageRoutes.Identity)));
 
         private MessageRoute GetInternalRoutes()
-            => new MessageRoute
-               {
-                   SocketIdentity = routerConfiguration.ScaleOutAddress.Identity,
-                   Uri = routerConfiguration.ScaleOutAddress.Uri.AbsoluteUri,
-                   MessageContracts = internalRoutingTable
-                       .GetAllRoutes()
-                       .SelectMany(ir => ir.Messages)
-                       .Select(m => new MessageContract
-                                    {
-                                        Version = m.Version,
-                                        Identity = m.Identity,
-                                        Partition = m.Partition
-                                    })
-                       .ToArray()
-               };
+        {
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+            return new MessageRoute
+                   {
+                       SocketIdentity = scaleOutAddress.Identity,
+                       Uri = scaleOutAddress.Uri.AbsoluteUri,
+                       MessageContracts = internalRoutingTable
+                           .GetAllRoutes()
+                           .SelectMany(ir => ir.Messages)
+                           .Select(m => new MessageContract
+                                        {
+                                            Version = m.Version,
+                                            Identity = m.Identity,
+                                            Partition = m.Partition
+                                        })
+                           .ToArray()
+                   };
+        }
 
         private IEnumerable<MessageRoute> GetExternalRoutes()
             => externalRoutingTable
