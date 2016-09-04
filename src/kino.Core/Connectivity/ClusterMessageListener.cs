@@ -49,7 +49,7 @@ namespace kino.Core.Connectivity
             newRendezvousConfiguration = new ManualResetEventSlim(false);
         }
 
-        public async void StartBlockingListenMessages(Action restartRequestHandler, CancellationToken token, Barrier gateway)
+        public void StartBlockingListenMessages(Action restartRequestHandler, CancellationToken token, Barrier gateway)
         {
             try
             {
@@ -57,7 +57,7 @@ namespace kino.Core.Connectivity
 
                 using (var clusterMonitorSubscriptionSocket = CreateClusterMonitorSubscriptionSocket())
                 {
-                    using (var routerNotificationSocket = await CreateRouterCommunicationSocket())
+                    using (var routerNotificationSocket = CreateRouterCommunicationSocket())
                     {
                         gateway.SignalAndWait(token);
 
@@ -136,9 +136,9 @@ namespace kino.Core.Connectivity
             return false;
         }
 
-        private async Task<ISocket> CreateRouterCommunicationSocket()
+        private ISocket CreateRouterCommunicationSocket()
         {
-            var routerConfiguration = await routerConfigurationProvider.GetRouterConfiguration();
+            var routerConfiguration = routerConfigurationProvider.GetRouterConfiguration().Result;
             var socket = socketFactory.CreateDealerSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ClusterListenerInternalSocketSendRate);
             SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));

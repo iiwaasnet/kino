@@ -1139,7 +1139,7 @@ namespace kino.Tests.Connectivity
 
             var messageHub = new MessageHub(socketFactory.Object,
                                             new CallbackHandlerStack(),
-                                            new MessageHubConfiguration(),
+                                            routerConfigurationManager.Object,
                                             securityProvider.Object,
                                             performanceCounterManager.Object,
                                             logger.Object);

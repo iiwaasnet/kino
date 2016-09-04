@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using kino.Client;
 using kino.Core.Connectivity;
 
 namespace Autofac.kino
@@ -13,8 +12,6 @@ namespace Autofac.kino
         ScaleOutSocketConfiguration GetScaleOutConfiguration();
 
         ClusterMembershipConfiguration GetClusterMembershipConfiguration();
-
-        MessageHubConfiguration GetMessageHubConfiguration();
 
         ClusterMembershipConfiguration GetClusterTimingConfiguration();
     }

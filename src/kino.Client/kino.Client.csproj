@@ -59,7 +59,6 @@
     <Compile Include="IPromise.cs" />
     <Compile Include="MessageHub.Tracing.cs" />
     <Compile Include="MessageHub.cs" />
-    <Compile Include="MessageHubConfiguration.cs" />
     <Compile Include="Promise.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

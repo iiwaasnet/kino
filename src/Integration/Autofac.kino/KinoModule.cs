@@ -118,10 +118,6 @@ namespace Autofac.kino
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())
                    .As<ClusterMembershipConfiguration>()
                    .SingleInstance();
-
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetMessageHubConfiguration())
-                   .As<MessageHubConfiguration>()
-                   .SingleInstance();
         }
 
         private void RegisterFrameworkActors(ContainerBuilder builder)

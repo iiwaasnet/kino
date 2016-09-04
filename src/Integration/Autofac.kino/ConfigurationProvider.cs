@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Client;
 using kino.Core.Connectivity;
 
 namespace Autofac.kino
@@ -59,9 +58,6 @@ namespace Autofac.kino
                    PingSilenceBeforeRendezvousFailover = appConfig.PingSilenceBeforeRendezvousFailover,
                    RunAsStandalone = appConfig.RunAsStandalone
                };
-
-        public MessageHubConfiguration GetMessageHubConfiguration()
-            => new MessageHubConfiguration {RouterUri = new Uri(appConfig.RouterUri)};
 
         public ClusterMembershipConfiguration GetClusterTimingConfiguration()
             => new ClusterMembershipConfiguration

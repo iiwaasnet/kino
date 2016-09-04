@@ -79,11 +79,11 @@ namespace kino.Core.Connectivity
             clusterMonitor.Stop();
         }
 
-        private async void RoutePeerMessages(CancellationToken token)
+        private void RoutePeerMessages(CancellationToken token)
         {
             try
             {
-                using (var scaleOutFrontend = await CreateScaleOutFrontendSocket())
+                using (var scaleOutFrontend = CreateScaleOutFrontendSocket())
                 {
                     var localSocketIdentity = localSocketIdentityPromise.Task.Result;
 
@@ -295,9 +295,9 @@ namespace kino.Core.Connectivity
             return socket;
         }
 
-        private async Task<ISocket> CreateScaleOutFrontendSocket()
+        private ISocket CreateScaleOutFrontendSocket()
         {
-            var routerConfiguration = await routerConfigurationManager.GetRouterConfiguration();
+            var routerConfiguration = routerConfigurationManager.GetRouterConfiguration().Result;
 
             var socket = socketFactory.CreateRouterSocket();
             foreach (var scaleOutAddress in routerConfigurationManager.GetScaleOutAddressRange())

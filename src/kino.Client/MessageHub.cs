@@ -17,6 +17,7 @@ namespace kino.Client
     public partial class MessageHub : IMessageHub
     {
         private readonly ICallbackHandlerStack callbackHandlers;
+        private readonly IRouterConfigurationProvider routerConfigurationProvider;
         private readonly ISocketFactory socketFactory;
         private Task sending;
         private Task receiving;
@@ -24,7 +25,6 @@ namespace kino.Client
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
-        private readonly MessageHubConfiguration config;
         private readonly ISecurityProvider securityProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILogger logger;
@@ -33,19 +33,19 @@ namespace kino.Client
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
-                          MessageHubConfiguration config,
+                          IRouterConfigurationProvider routerConfigurationProvider,
                           ISecurityProvider securityProvider,
                           IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                           ILogger logger)
         {
             this.logger = logger;
             this.socketFactory = socketFactory;
-            this.config = config;
             this.securityProvider = securityProvider;
             this.performanceCounterManager = performanceCounterManager;
             receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             hubRegistered = new ManualResetEventSlim();
             this.callbackHandlers = callbackHandlers;
+            this.routerConfigurationProvider = routerConfigurationProvider;
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
             cancellationTokenSource = new CancellationTokenSource();
         }
@@ -166,19 +166,21 @@ namespace kino.Client
 
         private ISocket CreateOneWaySocket()
         {
+            var config = routerConfigurationProvider.GetRouterConfiguration().Result;
             var socket = socketFactory.CreateDealerSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageHubRequestSocketSendRate);
-            SocketHelper.SafeConnect(() => socket.Connect(config.RouterUri));
+            SocketHelper.SafeConnect(() => socket.Connect(config.RouterAddress.Uri));
 
             return socket;
         }
 
         private ISocket CreateRoutableSocket()
         {
+            var config = routerConfigurationProvider.GetRouterConfiguration().Result;
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(SocketIdentifier.CreateIdentity());
             socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageHubResponseSocketReceiveRate);
-            SocketHelper.SafeConnect(() => socket.Connect(config.RouterUri));
+            SocketHelper.SafeConnect(() => socket.Connect(config.RouterAddress.Uri));
 
             return socket;
         }

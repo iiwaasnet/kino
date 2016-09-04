@@ -48,7 +48,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void DisconnectNotCalled_IfConnectWasNotCalledBefore()
         {
-            config = new RouterConfiguration {DeferPeerConnection = true};
+            config.DeferPeerConnection = true;
             var socket = new Mock<ISocket>();
             var peerUri = "tcp://127.0.0.1:80";
             var peerSocketIdentity = Guid.NewGuid().ToByteArray();
@@ -87,7 +87,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void DisconnectCalled_IfConnectWasCalledBefore()
         {
-            config = new RouterConfiguration {DeferPeerConnection = false};
+            config.DeferPeerConnection = false;
             var socket = new Mock<ISocket>();
             var peerUri = "tcp://127.0.0.1:80";
             var peerSocketIdentity = Guid.NewGuid().ToByteArray();
