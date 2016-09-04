@@ -68,8 +68,8 @@ namespace kino.Tests.Connectivity
                                       };
             var scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity());
             routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
-            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(routerConfiguration);
-            routerConfigurationProvider.Setup(m => m.GetScaleOutAddress()).ReturnsAsync(scaleOutAddress);
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).Returns(routerConfiguration);
+            routerConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
 
             clusterMessageListener = new ClusterMessageListener(rendezvousCluster.Object,
                                                                 socketFactory.Object,

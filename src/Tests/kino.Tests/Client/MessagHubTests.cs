@@ -47,7 +47,7 @@ namespace kino.Tests.Client
                                           RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
                                       };
             routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
-            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(routerConfiguration);
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).Returns(routerConfiguration);
             securityProvider = new Mock<ISecurityProvider>();
             securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
             messageHub = new MessageHub(socketFactory.Object,

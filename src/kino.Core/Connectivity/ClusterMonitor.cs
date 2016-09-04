@@ -80,7 +80,7 @@ namespace kino.Core.Connectivity
 
         public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers, string domain)
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
 
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
@@ -100,7 +100,7 @@ namespace kino.Core.Connectivity
 
         public void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers)
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
             var messageGroups = GetMessageHubs(messageIdentifiers).Concat(GetMessageHandlers(messageIdentifiers))
                                                                   .GroupBy(mh => mh.Domain);
 
@@ -148,7 +148,7 @@ namespace kino.Core.Connectivity
 
         public void RequestClusterRoutes()
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
             foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var message = Message.Create(new RequestClusterMessageRoutesMessage

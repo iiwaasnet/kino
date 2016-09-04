@@ -70,7 +70,7 @@ namespace kino.Core.Connectivity
 
         private void UnregisterRoutingSelf(ISocket clusterMonitorSendingSocket)
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
             foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var message = Message.Create(new UnregisterNodeMessage

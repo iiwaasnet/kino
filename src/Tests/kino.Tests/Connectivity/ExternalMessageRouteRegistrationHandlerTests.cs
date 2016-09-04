@@ -37,7 +37,7 @@ namespace kino.Tests.Connectivity
                                 .Returns(new PeerConnection {Connected = false});
             config = new RouterConfiguration {DeferPeerConnection = true};
             routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
-            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(config);
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).Returns(config);
             clusterMembership = new Mock<IClusterMembership>();
             domain = Guid.NewGuid().ToString();
             messageIdentity = Guid.NewGuid().ToByteArray();

@@ -53,8 +53,8 @@ namespace kino.Tests.Connectivity
                                       };
             var scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity());
             routerConfigurationManager = new Mock<IRouterConfigurationManager>();
-            routerConfigurationManager.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(routerConfiguration);
-            routerConfigurationManager.Setup(m => m.GetScaleOutAddress()).ReturnsAsync(scaleOutAddress);
+            routerConfigurationManager.Setup(m => m.GetRouterConfiguration()).Returns(routerConfiguration);
+            routerConfigurationManager.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
             routerConfigurationManager.Setup(m => m.GetInactiveRouterConfiguration()).Returns(routerConfiguration);
             routerConfigurationManager.Setup(m => m.GetScaleOutAddressRange()).Returns(new[] {scaleOutAddress});
 
@@ -815,7 +815,7 @@ namespace kino.Tests.Connectivity
             var externalRoutingTable = new ExternalRoutingTable(logger.Object);
             var config = new RouterConfiguration {DeferPeerConnection = true};
             var routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
-            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(config);
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).Returns(config);
             serviceMessageHandlers = new[]
                                      {
                                          new ExternalMessageRouteRegistrationHandler(externalRoutingTable,

@@ -81,7 +81,7 @@ namespace kino.Core.Connectivity
         {
             try
             {
-                var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+                var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
                 var domains = messageIdentifier.IsMessageHub()
                                   ? securityProvider.GetAllowedDomains()
                                   : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};

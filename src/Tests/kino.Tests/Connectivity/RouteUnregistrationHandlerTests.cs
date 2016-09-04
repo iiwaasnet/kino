@@ -37,7 +37,7 @@ namespace kino.Tests.Connectivity
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
             config = new RouterConfiguration {DeferPeerConnection = true};
             routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
-            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).ReturnsAsync(config);
+            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).Returns(config);
             registrationHandler = new ExternalMessageRouteRegistrationHandler(externalRoutingTable,
                                                                               clusterMembership.Object,
                                                                               routerConfigurationProvider.Object,

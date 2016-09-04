@@ -7,36 +7,38 @@ namespace kino.Core.Connectivity
     public class RouterConfigurationManager : IRouterConfigurationManager
     {
         private readonly ScaleOutSocketConfiguration scaleOutConfig;
-        private readonly TaskCompletionSource<SocketEndpoint> scaleOutAddress;
-        private readonly TaskCompletionSource<RouterConfiguration> activeRouterConfig;
-        private readonly RouterConfiguration routerConfig;
+        private readonly TaskCompletionSource<SocketEndpoint> scaleOutAddressSource;
+        private SocketEndpoint scaleOutAddress;
+        private readonly TaskCompletionSource<RouterConfiguration> activeRouterConfigSource;
+        private RouterConfiguration activeRouterConfig;
+        private RouterConfiguration routerConfig;
 
         public RouterConfigurationManager(RouterConfiguration routerConfig,
                                           ScaleOutSocketConfiguration scaleOutConfig)
         {
-            scaleOutAddress = new TaskCompletionSource<SocketEndpoint>();
-            activeRouterConfig = new TaskCompletionSource<RouterConfiguration>();
+            scaleOutAddressSource = new TaskCompletionSource<SocketEndpoint>();
+            activeRouterConfigSource = new TaskCompletionSource<RouterConfiguration>();
             this.scaleOutConfig = scaleOutConfig;
             this.routerConfig = SetDefaultsForMissingMembers(routerConfig);
         }
 
-        public Task<RouterConfiguration> GetRouterConfiguration()
-            => activeRouterConfig.Task;
+        public RouterConfiguration GetRouterConfiguration()
+            => routerConfig ?? (routerConfig = activeRouterConfigSource.Task.Result);
 
-        public Task<SocketEndpoint> GetScaleOutAddress()
-            => scaleOutAddress.Task;
+        public SocketEndpoint GetScaleOutAddress()
+            => scaleOutAddress ?? (scaleOutAddress = scaleOutAddressSource.Task.Result);
 
         public IEnumerable<SocketEndpoint> GetScaleOutAddressRange()
             => scaleOutConfig.AddressRange;
 
         public void SetActiveScaleOutAddress(SocketEndpoint activeAddress)
-            => scaleOutAddress.SetResult(activeAddress);
+            => scaleOutAddressSource.SetResult(activeAddress);
 
         public RouterConfiguration GetInactiveRouterConfiguration()
             => routerConfig;
 
         public void SetMessageRouterConfigurationActive()
-            => activeRouterConfig.SetResult(routerConfig);
+            => activeRouterConfigSource.SetResult(routerConfig);
 
         private RouterConfiguration SetDefaultsForMissingMembers(RouterConfiguration routerConfiguration)
         {

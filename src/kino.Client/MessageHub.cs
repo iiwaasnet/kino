@@ -166,7 +166,7 @@ namespace kino.Client
 
         private ISocket CreateOneWaySocket()
         {
-            var config = routerConfigurationProvider.GetRouterConfiguration().Result;
+            var config = routerConfigurationProvider.GetRouterConfiguration();
             var socket = socketFactory.CreateDealerSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageHubRequestSocketSendRate);
             SocketHelper.SafeConnect(() => socket.Connect(config.RouterAddress.Uri));
@@ -176,7 +176,7 @@ namespace kino.Client
 
         private ISocket CreateRoutableSocket()
         {
-            var config = routerConfigurationProvider.GetRouterConfiguration().Result;
+            var config = routerConfigurationProvider.GetRouterConfiguration();
             var socket = socketFactory.CreateDealerSocket();
             socket.SetIdentity(SocketIdentifier.CreateIdentity());
             socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageHubResponseSocketReceiveRate);

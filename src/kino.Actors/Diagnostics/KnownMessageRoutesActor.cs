@@ -39,7 +39,7 @@ namespace kino.Actors.Diagnostics
 
         private MessageRoute GetInternalRoutes()
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
             return new MessageRoute
                    {
                        SocketIdentity = scaleOutAddress.Identity,

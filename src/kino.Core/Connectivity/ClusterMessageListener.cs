@@ -138,7 +138,7 @@ namespace kino.Core.Connectivity
 
         private ISocket CreateRouterCommunicationSocket()
         {
-            var routerConfiguration = routerConfigurationProvider.GetRouterConfiguration().Result;
+            var routerConfiguration = routerConfigurationProvider.GetRouterConfiguration();
             var socket = socketFactory.CreateDealerSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ClusterListenerInternalSocketSendRate);
             SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
@@ -347,13 +347,13 @@ namespace kino.Core.Connectivity
 
         private bool ThisNodeSocket(byte[] socketIdentity)
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
             return Unsafe.Equals(scaleOutAddress.Identity, socketIdentity);
         }
 
         private void SendPong(ulong pingId)
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress().Result;
+            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
             foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var message = Message.Create(new PongMessage

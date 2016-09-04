@@ -42,7 +42,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                     var uri = new Uri(payload.Uri);
                     var memberAdded = false;
                     var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
-                    var config = routerConfigurationProvider.GetRouterConfiguration().Result;
+                    var config = routerConfigurationProvider.GetRouterConfiguration();
 
                     foreach (var registration in payload.MessageContracts)
                     {

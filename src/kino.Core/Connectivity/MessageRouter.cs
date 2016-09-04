@@ -218,7 +218,7 @@ namespace kino.Core.Connectivity
                 .Where(h => h != null)
                 .ToList();
 
-            var routerConfiguration = routerConfigurationManager.GetRouterConfiguration().Result;
+            var routerConfiguration = routerConfigurationManager.GetRouterConfiguration();
             foreach (var route in routes)
             {
                 try
@@ -232,7 +232,7 @@ namespace kino.Core.Connectivity
 
                     message.SetSocketIdentity(route.Node.SocketIdentity);
                     message.AddHop();
-                    message.PushRouterAddress(routerConfigurationManager.GetScaleOutAddress().Result);
+                    message.PushRouterAddress(routerConfigurationManager.GetScaleOutAddress());
 
                     message.SignMessage(securityProvider);
 
@@ -297,7 +297,7 @@ namespace kino.Core.Connectivity
 
         private ISocket CreateScaleOutFrontendSocket()
         {
-            var routerConfiguration = routerConfigurationManager.GetRouterConfiguration().Result;
+            var routerConfiguration = routerConfigurationManager.GetRouterConfiguration();
 
             var socket = socketFactory.CreateRouterSocket();
             foreach (var scaleOutAddress in routerConfigurationManager.GetScaleOutAddressRange())

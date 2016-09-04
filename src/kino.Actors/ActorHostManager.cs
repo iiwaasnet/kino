@@ -61,7 +61,7 @@ namespace kino.Actors
                 || !actorHosts.Any()
                 || actorHost == null)
             {
-                var routerConfiguration = routerConfigurationProvider.GetRouterConfiguration().Result;
+                var routerConfiguration = routerConfigurationProvider.GetRouterConfiguration();
                 actorHost = new ActorHost(socketFactory,
                                           new ActorHandlerMap(),
                                           new AsyncQueue<AsyncMessageContext>(),
