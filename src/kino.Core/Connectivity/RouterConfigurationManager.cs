@@ -11,7 +11,7 @@ namespace kino.Core.Connectivity
         private SocketEndpoint scaleOutAddress;
         private readonly TaskCompletionSource<RouterConfiguration> activeRouterConfigSource;
         private RouterConfiguration activeRouterConfig;
-        private RouterConfiguration routerConfig;
+        private readonly RouterConfiguration inactiveRouterConfig;
 
         public RouterConfigurationManager(RouterConfiguration routerConfig,
                                           ScaleOutSocketConfiguration scaleOutConfig)
@@ -19,11 +19,11 @@ namespace kino.Core.Connectivity
             scaleOutAddressSource = new TaskCompletionSource<SocketEndpoint>();
             activeRouterConfigSource = new TaskCompletionSource<RouterConfiguration>();
             this.scaleOutConfig = scaleOutConfig;
-            this.routerConfig = SetDefaultsForMissingMembers(routerConfig);
+            inactiveRouterConfig = SetDefaultsForMissingMembers(routerConfig);
         }
 
         public RouterConfiguration GetRouterConfiguration()
-            => routerConfig ?? (routerConfig = activeRouterConfigSource.Task.Result);
+            => activeRouterConfig ?? (activeRouterConfig = activeRouterConfigSource.Task.Result);
 
         public SocketEndpoint GetScaleOutAddress()
             => scaleOutAddress ?? (scaleOutAddress = scaleOutAddressSource.Task.Result);
@@ -35,12 +35,12 @@ namespace kino.Core.Connectivity
             => scaleOutAddressSource.SetResult(activeAddress);
 
         public RouterConfiguration GetInactiveRouterConfiguration()
-            => routerConfig;
+            => inactiveRouterConfig;
 
         public void SetMessageRouterConfigurationActive()
-            => activeRouterConfigSource.SetResult(routerConfig);
+            => activeRouterConfigSource.SetResult(inactiveRouterConfig);
 
-        private RouterConfiguration SetDefaultsForMissingMembers(RouterConfiguration routerConfiguration)
+        private static RouterConfiguration SetDefaultsForMissingMembers(RouterConfiguration routerConfiguration)
         {
             routerConfiguration.ConnectionEstablishWaitTime = routerConfiguration.ConnectionEstablishWaitTime <= TimeSpan.Zero
                                                                   ? TimeSpan.FromMilliseconds(200)

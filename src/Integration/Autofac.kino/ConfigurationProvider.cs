@@ -33,10 +33,11 @@ namespace Autofac.kino
             }
             var host = $"{addressParts[0]}:{addressParts[1]}";
             var ports = GetPortRange(addressParts[2]);
+            var socketIdentifier = SocketIdentifier.CreateIdentity();
+
             return new ScaleOutSocketConfiguration
                    {
-                       //TODO: Use internal constructor and provide always the same Identity for SocketEndpoint
-                       AddressRange = ports.Select(p => new SocketEndpoint($"{host}:{p}"))
+                       AddressRange = ports.Select(p => new SocketEndpoint($"{host}:{p}", socketIdentifier))
                                            .ToList()
                    };
         }

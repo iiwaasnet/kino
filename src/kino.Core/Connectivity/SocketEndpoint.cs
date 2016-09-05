@@ -12,6 +12,11 @@ namespace kino.Core.Connectivity
         {
         }
 
+        public SocketEndpoint(string uri, byte[] identity)
+            : this(uri.ParseAddress(), identity)
+        {
+        }
+
         internal SocketEndpoint(Uri uri, byte[] identity)
         {
             Uri = uri;
