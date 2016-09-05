@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using kino.Core.Framework;
 
 namespace kino.Core.Connectivity
 {
@@ -32,7 +34,17 @@ namespace kino.Core.Connectivity
             => scaleOutConfig.AddressRange;
 
         public void SetActiveScaleOutAddress(SocketEndpoint activeAddress)
-            => scaleOutAddressSource.SetResult(activeAddress);
+        {
+            if (scaleOutConfig.AddressRange.Contains(activeAddress))
+            {
+                scaleOutAddressSource.SetResult(activeAddress);
+            }
+            else
+            {
+                throw new Exception($"SocketEndpoint {activeAddress.Uri.ToSocketAddress()} is not configured!");
+            }
+        }
+            
 
         public RouterConfiguration GetInactiveRouterConfiguration()
             => inactiveRouterConfig;

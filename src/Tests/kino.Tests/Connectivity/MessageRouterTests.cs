@@ -39,6 +39,7 @@ namespace kino.Tests.Connectivity
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private string domain;
         private Mock<IRouterConfigurationManager> routerConfigurationManager;
+        private SocketEndpoint scaleOutAddress;
 
         [SetUp]
         public void Setup()
@@ -51,7 +52,7 @@ namespace kino.Tests.Connectivity
                                       {
                                           RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
                                       };
-            var scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity());
+            scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), SocketIdentifier.CreateIdentity());
             routerConfigurationManager = new Mock<IRouterConfigurationManager>();
             routerConfigurationManager.Setup(m => m.GetRouterConfiguration()).Returns(routerConfiguration);
             routerConfigurationManager.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
@@ -1080,6 +1081,86 @@ namespace kino.Tests.Connectivity
         public void IfUnregisterNodeMessageArrivesFromNotAllowedDomain_RoutesAreNotRemovedFromExternalRoutingTable()
         {
             TestUnregisterNodeMessageRemovesRoutesFromExternalRoutingTable(Guid.NewGuid().ToString(), false);
+        }
+
+        [Test]
+        public void SetMessageRouterConfigurationActiveIsNotCalled_IfMessageRouterIsNotStarted()
+        {
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            var router = CreateMessageRouter(internalRoutingTable.Object);
+            //
+            routerConfigurationManager.Verify(m => m.SetMessageRouterConfigurationActive(), Times.Never);
+        }
+
+        [Test]
+        public void SetActiveScaleOutAddressIsNotCalled_IfMessageRouterIsNotStarted()
+        {
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            var router = CreateMessageRouter(internalRoutingTable.Object);
+            //
+            routerConfigurationManager.Verify(m => m.SetActiveScaleOutAddress(It.IsAny<SocketEndpoint>()), Times.Never);
+            routerConfigurationManager.Verify(m => m.GetScaleOutAddressRange(), Times.Never);
+        }
+
+        [Test]
+        public void SetMessageRouterConfigurationActiveIsCalled_AfterMessageRouterIsStarted()
+        {
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            var router = CreateMessageRouter(internalRoutingTable.Object);
+            try
+            {
+                //
+                StartMessageRouter(router);
+                //
+                routerConfigurationManager.Verify(m => m.SetMessageRouterConfigurationActive(), Times.Once);
+                routerConfigurationManager.Verify(m => m.GetInactiveRouterConfiguration(), Times.Once);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void SetActiveScaleOutAddressIsCalled_AfterMessageRouterIsStarted()
+        {
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            var router = CreateMessageRouter(internalRoutingTable.Object);
+            try
+            {
+                //
+                StartMessageRouter(router);
+                //
+                routerConfigurationManager.Verify(m => m.SetActiveScaleOutAddress(scaleOutAddress), Times.Once);
+                routerConfigurationManager.Verify(m => m.GetScaleOutAddressRange(), Times.Once);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void IfBindOnScaleOutFrontendSocketThrowsException_ConnectonScaleOutFrontendSocketIsNotCalled()
+        {
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            var router = CreateMessageRouter(internalRoutingTable.Object);
+            //TODO: Create other implementation of ClusterMonitorSocketFactory to create Mock<ISocket>  instead of StubSocket and setup mock
+
+            try
+            {
+                //
+                StartMessageRouter(router);
+                //
+                var scaleOutFrontEndSocket = messageRouterSocketFactory.GetScaleoutFrontendSocket();
+
+                routerConfigurationManager.Verify(m => m.SetActiveScaleOutAddress(scaleOutAddress), Times.Once);
+                routerConfigurationManager.Verify(m => m.GetScaleOutAddressRange(), Times.Once);
+            }
+            finally
+            {
+                router.Stop();
+            }
         }
 
         private void TestUnregisterNodeMessageRemovesRoutesFromExternalRoutingTable(string domain, bool externalRoutesEmpty)
