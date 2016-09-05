@@ -9,27 +9,27 @@ namespace kino.Tests.Helpers
 {
     public class MessageHubSocketFactory
     {
-        private readonly ConcurrentBag<StubSocket> sockets;
+        private readonly ConcurrentBag<MockSocket> sockets;
         private readonly TimeSpan socketWaitTimeout;
         private readonly int socketWaitRetries = 5;
 
         public MessageHubSocketFactory()
         {
-            sockets = new ConcurrentBag<StubSocket>();
+            sockets = new ConcurrentBag<MockSocket>();
             socketWaitTimeout = TimeSpan.FromSeconds(5);
         }
 
         public ISocket CreateSocket()
         {
-            var socket = new StubSocket();
+            var socket = new MockSocket();
             sockets.Add(socket);
 
             return socket;
         }
 
-        public StubSocket GetReceivingSocket()
+        public MockSocket GetReceivingSocket()
         {
-            StubSocket socket = null;
+            MockSocket socket = null;
             var retries = socketWaitRetries;
             Func<bool> socketIsMissing = () => socket == null;
 
@@ -41,9 +41,9 @@ namespace kino.Tests.Helpers
             return socket;
         }
 
-        public StubSocket GetSendingSocket()
+        public MockSocket GetSendingSocket()
         {
-            StubSocket socket = null;
+            MockSocket socket = null;
             var retries = socketWaitRetries;
             Func<bool> socketIsMissing = () => socket == null;
 

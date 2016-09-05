@@ -23,7 +23,7 @@ namespace kino.Tests.Helpers
 
         public ISocket CreateSocket()
         {
-            var socket = new StubSocket();
+            var socket = new MockSocket();
             sockets.Add(new SocketMeta
                         {
                             Socket = socket,
@@ -41,9 +41,9 @@ namespace kino.Tests.Helpers
                        .FirstOrDefault(sf => sf.GetMethod().Name == ActorRegistrationMethod) != null;
         }
 
-        public StubSocket GetRoutableSocket()
+        public MockSocket GetRoutableSocket()
         {
-            StubSocket socket = null;
+            MockSocket socket = null;
             var retries = socketWaitRetries;
             Func<bool> socketIsMissing = () => socket == null;
 
@@ -55,9 +55,9 @@ namespace kino.Tests.Helpers
             return socket;
         }
 
-        public StubSocket GetRegistrationSocket()
+        public MockSocket GetRegistrationSocket()
         {
-            StubSocket socket = null;
+            MockSocket socket = null;
             var retries = socketWaitRetries;
             Func<bool> socketIsMissing = () => socket == null;
 
@@ -69,9 +69,9 @@ namespace kino.Tests.Helpers
             return socket;
         }
 
-        public StubSocket GetAsyncCompletionSocket()
+        public MockSocket GetAsyncCompletionSocket()
         {
-            StubSocket socket = null;
+            MockSocket socket = null;
             var retries = socketWaitRetries;
             Func<bool> socketIsMissing = () => socket == null;
 
@@ -93,7 +93,7 @@ namespace kino.Tests.Helpers
 
         private class SocketMeta
         {
-            internal StubSocket Socket { get; set; }
+            internal MockSocket Socket { get; set; }
             internal bool IsRegistrationSocket { get; set; }
         }
     }

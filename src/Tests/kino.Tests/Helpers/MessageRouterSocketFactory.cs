@@ -13,7 +13,7 @@ namespace kino.Tests.Helpers
     {
         private readonly RouterConfiguration config;
         private readonly SocketEndpoint scaleOutAddress;
-        private readonly ConcurrentBag<StubSocket> sockets;
+        private readonly ConcurrentBag<MockSocket> sockets;
         private readonly TimeSpan socketWaitTimeout;
         private readonly int socketWaitRetries = 5;
 
@@ -21,21 +21,21 @@ namespace kino.Tests.Helpers
         {
             this.config = config;
             this.scaleOutAddress = scaleOutAddress;
-            sockets = new ConcurrentBag<StubSocket>();
+            sockets = new ConcurrentBag<MockSocket>();
             socketWaitTimeout = TimeSpan.FromSeconds(5);
         }
 
         public ISocket CreateSocket()
         {
-            var socket = new StubSocket();
+            var socket = new MockSocket();
             sockets.Add(socket);
 
             return socket;
         }
 
-        public StubSocket GetRouterSocket()
+        public MockSocket GetRouterSocket()
         {
-            StubSocket socket = null;
+            MockSocket socket = null;
             var retries = socketWaitRetries;
 
             while (retries-- > 0 && socket == null)
@@ -47,9 +47,9 @@ namespace kino.Tests.Helpers
             return socket;
         }
 
-        public StubSocket GetScaleoutFrontendSocket()
+        public MockSocket GetScaleoutFrontendSocket()
         {
-            StubSocket socket = null;
+            MockSocket socket = null;
             var retries = socketWaitRetries;
 
             while (retries-- > 0 && socket == null)
@@ -61,9 +61,9 @@ namespace kino.Tests.Helpers
             return socket;
         }
 
-        public StubSocket GetScaleoutBackendSocket()
+        public MockSocket GetScaleoutBackendSocket()
         {
-            StubSocket socket = null;
+            MockSocket socket = null;
             var retries = socketWaitRetries;
 
             while (retries-- > 0 && socket == null)
@@ -75,7 +75,7 @@ namespace kino.Tests.Helpers
             return socket;
         }
 
-        private void Wait(StubSocket socket)
+        private void Wait(MockSocket socket)
         {
             if (socket == null)
             {

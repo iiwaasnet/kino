@@ -1007,6 +1007,7 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOp);
 
+                backEndScoket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never);
                 Assert.IsFalse(backEndScoket.IsConnected());
             }
             finally
@@ -1212,7 +1213,7 @@ namespace kino.Tests.Connectivity
             var performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             var logger = new Mock<ILogger>();
             var socketFactory = new Mock<ISocketFactory>();
-            var socket = new StubSocket();
+            var socket = new MockSocket();
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket);
 
             var message = Message.CreateFlowStartMessage(new SimpleMessage());

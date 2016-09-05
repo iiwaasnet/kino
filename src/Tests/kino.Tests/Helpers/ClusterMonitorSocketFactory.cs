@@ -26,7 +26,7 @@ namespace kino.Tests.Helpers
 
         public ISocket CreateSocket()
         {
-            var socket = new StubSocket();
+            var socket = new MockSocket();
             sockets.Add(new SocketMeta
                         {
                             Socket = socket,
@@ -40,18 +40,15 @@ namespace kino.Tests.Helpers
         private SocketPurpose GetSocketPurpose()
         {
             var stackFrames = new StackTrace(1).GetFrames();
-            if (stackFrames
-                    .FirstOrDefault(sf => sf.GetMethod().Name == CreateClusterMonitorSendingSocketMethod) != null)
+            if (stackFrames.FirstOrDefault(sf => sf.GetMethod().Name == CreateClusterMonitorSendingSocketMethod) != null)
             {
                 return SocketPurpose.ClusterMonitorSendingSocket;
             }
-            if (stackFrames
-                    .FirstOrDefault(sf => sf.GetMethod().Name == CreateClusterMonitorSubscriptionSocketMethod) != null)
+            if (stackFrames.FirstOrDefault(sf => sf.GetMethod().Name == CreateClusterMonitorSubscriptionSocketMethod) != null)
             {
                 return SocketPurpose.ClusterMonitorSubscriptionSocket;
             }
-            if (stackFrames
-                    .FirstOrDefault(sf => sf.GetMethod().Name == CreateRouterCommunicationSocketMethod) != null)
+            if (stackFrames.FirstOrDefault(sf => sf.GetMethod().Name == CreateRouterCommunicationSocketMethod) != null)
             {
                 return SocketPurpose.RouterCommunicationSocket;
             }
@@ -59,9 +56,9 @@ namespace kino.Tests.Helpers
             throw new Exception($"Socket creation method is unexpected: {string.Join(" @ ", stackFrames.Select(sf => sf.ToString()))}");
         }
 
-        private StubSocket GetSocket(SocketPurpose socketPurpose)
+        private MockSocket GetSocket(SocketPurpose socketPurpose)
         {
-            StubSocket socket = null;
+            MockSocket socket = null;
             var retries = socketWaitRetries;
             Func<bool> socketIsMissing = () => socket == null;
 
@@ -73,17 +70,17 @@ namespace kino.Tests.Helpers
             return socket;
         }
 
-        public StubSocket GetClusterMonitorSubscriptionSocket()
+        public MockSocket GetClusterMonitorSubscriptionSocket()
         {
             return GetSocket(SocketPurpose.ClusterMonitorSubscriptionSocket);
         }
 
-        public StubSocket GetRouterCommunicationSocket()
+        public MockSocket GetRouterCommunicationSocket()
         {
             return GetSocket(SocketPurpose.RouterCommunicationSocket);
         }
 
-        public StubSocket GetClusterMonitorSendingSocket()
+        public MockSocket GetClusterMonitorSendingSocket()
         {
             return GetSocket(SocketPurpose.ClusterMonitorSendingSocket);
         }
@@ -98,7 +95,7 @@ namespace kino.Tests.Helpers
 
         private class SocketMeta
         {
-            internal StubSocket Socket { get; set; }
+            internal MockSocket Socket { get; set; }
             internal SocketPurpose Purpose { get; set; }
         }
 
