@@ -78,8 +78,9 @@ namespace kino.Tests.Connectivity
             var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
             var messages = socket.GetSentMessages().BlockingAll(AsyncOp);
 
-            Assert.AreEqual(allowedDomains.Count(), messages.Count());
-            Assert.IsTrue(messages.All(m => Unsafe.Equals(m.Identity, KinoMessages.UnregisterNode.Identity)));
+            Assert.AreEqual(allowedDomains.Count(), messages.Count(m => Unsafe.Equals(m.Identity, KinoMessages.UnregisterNode.Identity)));
+            //NOTE: REQCLUSTROUTES will also be sent for each allowedDomains. That's why the following condition is wrong until RequestClusterRoutes() call is removed
+            //Assert.IsTrue(messages.All(m => Unsafe.Equals(m.Identity, KinoMessages.UnregisterNode.Identity)));
             Assert.IsTrue(messages.All(m => allowedDomains.Contains(m.Domain)));
         }
 
