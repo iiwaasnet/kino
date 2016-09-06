@@ -6,6 +6,7 @@ using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
+using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
 using kino.Core.Security;
 using kino.Core.Sockets;
@@ -81,5 +82,25 @@ namespace kino.Tests.Connectivity
             Assert.IsTrue(messages.All(m => Unsafe.Equals(m.Identity, KinoMessages.UnregisterNode.Identity)));
             Assert.IsTrue(messages.All(m => allowedDomains.Contains(m.Domain)));
         }
+
+
+        //TODO: Implement the below test here
+        //[Test]
+        //public void RequestClusterMessageRoutesMessage_IsSentOncePerEachAllowedDomain()
+        //{
+        //    var allowedDomains = new[] {domain, Guid.NewGuid().ToString(), Guid.NewGuid().ToString()};
+        //    securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
+        //    var clusterMessageSender = new Mock<IClusterMessageSender>();
+        //    var clusterMonitor = new ClusterMonitor(routerConfigurationProvider.Object,
+        //                                            clusterMembership.Object,
+        //                                            clusterMessageSender.Object,
+        //                                            clusterMessageListener,
+        //                                            routeDiscovery.Object,
+        //                                            securityProvider.Object);
+        //    //
+        //    clusterMonitor.RequestClusterRoutes();
+        //    //
+        //    clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => allowedDomains.Contains(msg.Domain))), Times.Exactly(allowedDomains.Length));
+        //}
     }
 }

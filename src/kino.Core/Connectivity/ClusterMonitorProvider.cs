@@ -1,4 +1,5 @@
-﻿using kino.Core.Security;
+﻿using kino.Core.Diagnostics;
+using kino.Core.Security;
 
 namespace kino.Core.Connectivity
 {

@@ -128,7 +128,6 @@ namespace kino.Core.Connectivity
                 using (var localSocket = CreateRouterSocket())
                 {
                     localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
-                    clusterMonitor.RequestClusterRoutes();
 
                     using (var scaleOutBackend = CreateScaleOutBackendSocket())
                     {

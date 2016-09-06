@@ -156,27 +156,6 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void RequestClusterRoutes_SendRequestClusterMessageRoutesMessageToRendezvous()
-        {
-            try
-            {
-                clusterMonitor.Start(StartTimeout);
-
-                clusterMonitor.RequestClusterRoutes();
-
-                var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
-                var message = socket.GetSentMessages().BlockingLast(AsyncOp);
-
-                Assert.IsNotNull(message);
-                Assert.IsTrue(message.Equals(KinoMessages.RequestClusterMessageRoutes));
-            }
-            finally
-            {
-                clusterMonitor.Stop();
-            }
-        }
-
-        [Test]
         public void DiscoverMessageRoute_SendDiscoverMessageRouteMessageToRendezvous()
         {
             clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
@@ -313,24 +292,6 @@ namespace kino.Tests.Connectivity
                       .MessageContracts
                       .Any(mc => Unsafe.Equals(mc.Identity, messageHub.Identity))
                    && msg.Domain == domain;
-        }
-
-        [Test]
-        public void RequestClusterMessageRoutesMessage_IsSentOncePerEachAllowedDomain()
-        {
-            var allowedDomains = new[] {domain, Guid.NewGuid().ToString(), Guid.NewGuid().ToString()};
-            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
-            var clusterMessageSender = new Mock<IClusterMessageSender>();
-            var clusterMonitor = new ClusterMonitor(routerConfigurationProvider.Object,
-                                                    clusterMembership.Object,
-                                                    clusterMessageSender.Object,
-                                                    clusterMessageListener,
-                                                    routeDiscovery.Object,
-                                                    securityProvider.Object);
-            //
-            clusterMonitor.RequestClusterRoutes();
-            //
-            clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => allowedDomains.Contains(msg.Domain))), Times.Exactly(allowedDomains.Length));
         }
     }
 }

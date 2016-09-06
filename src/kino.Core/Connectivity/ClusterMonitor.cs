@@ -51,8 +51,9 @@ namespace kino.Core.Connectivity
             {
                 sendingMessages = Task.Factory.StartNew(_ => clusterMessageSender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
                                                         TaskCreationOptions.LongRunning);
-                listenningMessages = Task.Factory.StartNew(_ => clusterMessageListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
-                                                           TaskCreationOptions.LongRunning);
+                listenningMessages =
+                    Task.Factory.StartNew(_ => clusterMessageListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
+                                          TaskCreationOptions.LongRunning);
                 var started = gateway.SignalAndWait(startTimeout, messageProcessingToken.Token);
                 if (started)
                 {
@@ -145,23 +146,6 @@ namespace kino.Core.Connectivity
                                                                                                              },
                                                                                                    Domain = dom
                                                                                                }));
-
-        public void RequestClusterRoutes()
-        {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
-            foreach (var domain in securityProvider.GetAllowedDomains())
-            {
-                var message = Message.Create(new RequestClusterMessageRoutesMessage
-                                             {
-                                                 RequestorSocketIdentity = scaleOutAddress.Identity,
-                                                 RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
-                                             },
-                                             domain);
-                message.As<Message>().SignMessage(securityProvider);
-
-                clusterMessageSender.EnqueueMessage(message);
-            }
-        }
 
         public IEnumerable<SocketEndpoint> GetClusterMembers()
             => clusterMembership.GetClusterMembers();

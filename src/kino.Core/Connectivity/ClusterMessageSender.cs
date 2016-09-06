@@ -44,6 +44,10 @@ namespace kino.Core.Connectivity
                 using (var clusterMonitorSendingSocket = CreateClusterMonitorSendingSocket())
                 {
                     gateway.SignalAndWait(token);
+                    //TODO: In case of Rendezvous leader change, this will lead to storm of cluster routes discovery messages
+                    //TODO: Check if this call really needed
+                    RequestClusterRoutes(clusterMonitorSendingSocket);
+
                     try
                     {
                         foreach (var messageOut in outgoingMessages.GetConsumingEnumerable(token))
@@ -60,6 +64,32 @@ namespace kino.Core.Connectivity
 
                     UnregisterRoutingSelf(clusterMonitorSendingSocket);
                     //TODO: Sending is async, probably a short delay needed to allow messages to be sent
+                }
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
+        }
+
+        private void RequestClusterRoutes(ISocket clusterMonitorSendingSocket)
+        {
+            try
+            {
+                var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
+                foreach (var domain in securityProvider.GetAllowedDomains())
+                {
+                    var message = Message.Create(new RequestClusterMessageRoutesMessage
+                    {
+                        RequestorSocketIdentity = scaleOutAddress.Identity,
+                        RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
+                    },
+                                                 domain);
+                    message.As<Message>().SignMessage(securityProvider);
+
+                    clusterMonitorSendingSocket.SendMessage(message);
+
+                    logger.Info($"Request to discover cluster routes for Domain [{domain}] sent.");
                 }
             }
             catch (Exception err)
