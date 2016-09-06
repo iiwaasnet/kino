@@ -154,7 +154,6 @@
     <Compile Include="Actors\Setup\ExceptionActor.cs" />
     <Compile Include="Actors\Setup\EchoActor.cs" />
     <Compile Include="Actors\Setup\SimpleMessage.cs" />
-    <Compile Include="Actors\Setup\StubSocket.cs" />
     <Compile Include="Client\CallbackHandlerStackTests.cs" />
     <Compile Include="Client\MessagHubTests.cs" />
     <Compile Include="Helpers\BlockingCollectionExtensions.cs" />

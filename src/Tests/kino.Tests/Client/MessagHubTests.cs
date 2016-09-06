@@ -161,7 +161,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void WhenPromiseIsDisposed_ItsCallbackIsRemoved()
+        public void WhenResultMessageIsDelivered_PromiseIsDisposedAndItsCallbackIsRemoved()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
             messageHub = new MessageHub(socketFactory.Object,
@@ -176,12 +176,15 @@ namespace kino.Tests.Client
 
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
                 var callback = CallbackPoint.Create<SimpleMessage>();
-
+                //
                 var promise = messageHub.EnqueueRequest(message, callback);
-                Thread.Sleep(AsyncOpCompletionDelay);
 
+                Thread.Sleep(AsyncOpCompletionDelay);
+                
                 messageHubSocketFactory.GetReceivingSocket().DeliverMessage(message);
 
+                Thread.Sleep(AsyncOpCompletionDelay);
+                //
                 Assert.IsNull(callbackHandlerStack.Pop(new CallbackHandlerKey
                                                        {
                                                            Version = callback.MessageIdentifiers.Single().Version,

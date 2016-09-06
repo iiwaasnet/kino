@@ -40,6 +40,7 @@ namespace kino.Tests.Connectivity
         private string domain;
         private Mock<IRouterConfigurationManager> routerConfigurationManager;
         private SocketEndpoint scaleOutAddress;
+        private RouterConfiguration routerConfiguration;
 
         [SetUp]
         public void Setup()
@@ -48,7 +49,7 @@ namespace kino.Tests.Connectivity
                                       {
                                           PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(10)
                                       };
-            var routerConfiguration = new RouterConfiguration
+            routerConfiguration = new RouterConfiguration
                                       {
                                           RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
                                       };
@@ -1007,7 +1008,6 @@ namespace kino.Tests.Connectivity
 
                 Thread.Sleep(AsyncOp);
 
-                backEndScoket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never);
                 Assert.IsFalse(backEndScoket.IsConnected());
             }
             finally
@@ -1146,17 +1146,43 @@ namespace kino.Tests.Connectivity
         {
             var internalRoutingTable = new Mock<IInternalRoutingTable>();
             var router = CreateMessageRouter(internalRoutingTable.Object);
-            //TODO: Create other implementation of ClusterMonitorSocketFactory to create Mock<ISocket>  instead of StubSocket and setup mock
-
+            messageRouterSocketFactory.SocketCreated += socket => { socket.Setup(m => m.Bind(scaleOutAddress.Uri)).Throws<Exception>(); };
             try
             {
                 //
                 StartMessageRouter(router);
                 //
-                var scaleOutFrontEndSocket = messageRouterSocketFactory.GetScaleoutFrontendSocket();
-
-                routerConfigurationManager.Verify(m => m.SetActiveScaleOutAddress(scaleOutAddress), Times.Once);
                 routerConfigurationManager.Verify(m => m.GetScaleOutAddressRange(), Times.Once);
+                routerConfigurationManager.Verify(m => m.SetActiveScaleOutAddress(scaleOutAddress), Times.Never);
+                var scaleOutFrontEndSocket = messageRouterSocketFactory.GetScaleoutFrontendSocket();
+                scaleOutFrontEndSocket.Verify(m => m.Connect(routerConfiguration.RouterAddress.Uri), Times.Never);
+            }
+            finally
+            {
+                router.Stop();
+            }
+        }
+
+        [Test]
+        public void IfBindOneScaleOutFrontendSocketThrowsException_BindIsRetriedWithOtherEndpoints()
+        {
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            var router = CreateMessageRouter(internalRoutingTable.Object);
+            var failingScaleOutAddress = new SocketEndpoint("tcp://127.0.0.124:50000");
+            routerConfigurationManager.Setup(m => m.GetScaleOutAddressRange()).Returns(new[] { failingScaleOutAddress, scaleOutAddress });
+
+            messageRouterSocketFactory.SocketCreated += socket => { socket.Setup(m => m.Bind(failingScaleOutAddress.Uri)).Throws<Exception>(); };
+            try
+            {
+                //
+                StartMessageRouter(router);
+                //
+                routerConfigurationManager.Verify(m => m.GetScaleOutAddressRange(), Times.Once);
+                routerConfigurationManager.Verify(m => m.SetActiveScaleOutAddress(scaleOutAddress), Times.Once);
+                routerConfigurationManager.Verify(m => m.SetActiveScaleOutAddress(failingScaleOutAddress), Times.Never);
+                var scaleOutFrontEndSocket = messageRouterSocketFactory.GetScaleoutFrontendSocket();
+                scaleOutFrontEndSocket.Verify(m => m.Bind(It.IsAny<Uri>()), Times.Exactly(2));
+                scaleOutFrontEndSocket.Verify(m => m.Connect(routerConfiguration.RouterAddress.Uri), Times.Once);
             }
             finally
             {

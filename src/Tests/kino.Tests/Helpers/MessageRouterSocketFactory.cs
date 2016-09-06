@@ -9,6 +9,8 @@ using kino.Tests.Actors.Setup;
 
 namespace kino.Tests.Helpers
 {
+    public delegate void SocketCreationHandler(MockSocket socket);
+
     public class MessageRouterSocketFactory
     {
         private readonly RouterConfiguration config;
@@ -30,6 +32,8 @@ namespace kino.Tests.Helpers
             var socket = new MockSocket();
             sockets.Add(socket);
 
+            OnSocketCreated(socket);
+
             return socket;
         }
 
@@ -40,12 +44,15 @@ namespace kino.Tests.Helpers
 
             while (retries-- > 0 && socket == null)
             {
-                socket = sockets.FirstOrDefault(s => s != null && Unsafe.Equals(s.GetIdentity(), config.RouterAddress.Identity));
+                socket = sockets.FirstOrDefault(IsRouterSocket);
                 Wait(socket);
             }
 
             return socket;
         }
+
+        private bool IsRouterSocket(MockSocket s)
+            => Unsafe.Equals(s?.GetIdentity(), config.RouterAddress.Identity);
 
         public MockSocket GetScaleoutFrontendSocket()
         {
@@ -54,12 +61,15 @@ namespace kino.Tests.Helpers
 
             while (retries-- > 0 && socket == null)
             {
-                socket = sockets.FirstOrDefault(s => s != null && Unsafe.Equals(s.GetIdentity(), scaleOutAddress.Identity));
+                socket = sockets.FirstOrDefault(IsScaleOutFrontendSocket);
                 Wait(socket);
             }
 
             return socket;
         }
+
+        private bool IsScaleOutFrontendSocket(MockSocket s)
+            => Unsafe.Equals(s?.GetIdentity(), scaleOutAddress.Identity);
 
         public MockSocket GetScaleoutBackendSocket()
         {
@@ -68,12 +78,15 @@ namespace kino.Tests.Helpers
 
             while (retries-- > 0 && socket == null)
             {
-                socket = sockets.FirstOrDefault(s => s.GetIdentity() == null);
+                socket = sockets.FirstOrDefault(IsScaleOutBackendSocket);
                 Wait(socket);
             }
 
             return socket;
         }
+
+        private static bool IsScaleOutBackendSocket(MockSocket s)
+            => s.GetIdentity() == null;
 
         private void Wait(MockSocket socket)
         {
@@ -82,5 +95,10 @@ namespace kino.Tests.Helpers
                 Thread.Sleep(socketWaitTimeout);
             }
         }
+
+        private void OnSocketCreated(MockSocket socket)
+            => SocketCreated?.Invoke(socket);
+
+        public event SocketCreationHandler SocketCreated;
     }
 }
