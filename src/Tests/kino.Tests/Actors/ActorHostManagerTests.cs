@@ -4,6 +4,7 @@ using kino.Actors;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
+using kino.Core.Framework;
 using kino.Core.Security;
 using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
@@ -59,7 +60,7 @@ namespace kino.Tests.Actors
                 Assert.DoesNotThrow(() => actorHostManager.AssignActor(new EchoActor()));
             }
 
-            Thread.Sleep(AsyncOp);
+            AsyncOp.Sleep();
 
             socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost * numberOfActors));
         }
@@ -70,7 +71,7 @@ namespace kino.Tests.Actors
             actorHostManager.AssignActor(new EchoActor(), ActorHostInstancePolicy.AlwaysCreateNew);
             actorHostManager.AssignActor(new ExceptionActor(), ActorHostInstancePolicy.AlwaysCreateNew);
 
-            Thread.Sleep(AsyncOp);
+            AsyncOp.Sleep();
 
             socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost * 2));
         }
@@ -81,7 +82,7 @@ namespace kino.Tests.Actors
             actorHostManager.AssignActor(new EchoActor());
             actorHostManager.AssignActor(new NullActor());
 
-            Thread.Sleep(AsyncOp);
+            AsyncOp.Sleep();
 
             socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost));
         }

@@ -88,7 +88,7 @@ namespace kino.Tests.Connectivity
             var cancellationSource = new CancellationTokenSource();
             var task = StartListeningMessages(clusterMessageListener, cancellationSource.Token);
 
-            Thread.Sleep(WaitLongerThanPingSilenceFailover());
+            WaitLongerThanPingSilenceFailover().Sleep();
             cancellationSource.Cancel();
             task.Wait();
 
@@ -109,9 +109,9 @@ namespace kino.Tests.Connectivity
                            PingInterval = TimeSpan.FromSeconds(2)
                        };
 
-            Thread.Sleep(WaitLessThanPingSilenceFailover());
+            WaitLessThanPingSilenceFailover().Sleep();
             socket.DeliverMessage(Message.Create(ping));
-            Thread.Sleep(AsyncOp);
+            AsyncOp.Sleep();
 
             cancellationSource.Cancel();
             task.Wait();
@@ -137,7 +137,7 @@ namespace kino.Tests.Connectivity
                                                    }
                                    };
             socket.DeliverMessage(Message.Create(notLeaderMessage));
-            Thread.Sleep(AsyncOp);
+            AsyncOp.Sleep();
 
             cancellationSource.Cancel();
             task.Wait();
@@ -166,7 +166,7 @@ namespace kino.Tests.Connectivity
                            Uri = sourceNode.Uri.ToSocketAddress()
                        };
             socket.DeliverMessage(Message.Create(pong, domain));
-            Thread.Sleep(AsyncOp);
+            AsyncOp.Sleep();
 
             cancellationSource.Cancel();
             task.Wait();
@@ -192,9 +192,9 @@ namespace kino.Tests.Connectivity
                            Uri = "tcp://localhost:80"
                        };
 
-            Thread.Sleep(WaitLessThanPingSilenceFailover());
+            WaitLessThanPingSilenceFailover().Sleep();
             socket.DeliverMessage(Message.Create(pong, domain));
-            Thread.Sleep(AsyncOp);
+            AsyncOp.Sleep();
 
             cancellationSource.Cancel();
             task.Wait();
@@ -228,7 +228,7 @@ namespace kino.Tests.Connectivity
                                            TargetNodeUri = pong.Uri
                                        };
             socket.DeliverMessage(Message.Create(pong, domain));
-            Thread.Sleep(AsyncOp);
+            AsyncOp.Sleep();
 
             cancellationSource.Cancel();
             task.Wait();
@@ -274,7 +274,7 @@ namespace kino.Tests.Connectivity
                                            TargetNodeUri = pong.Uri
                                        };
             socket.DeliverMessage(Message.Create(pong));
-            Thread.Sleep(AsyncOp);
+            AsyncOp.Sleep();
 
             cancellationSource.Cancel();
             task.Wait();
@@ -307,7 +307,7 @@ namespace kino.Tests.Connectivity
 
             var socket = clusterMonitorSocketFactory.GetClusterMonitorSubscriptionSocket();
             socket.DeliverMessage(message);
-            Thread.Sleep(AsyncOp);
+            AsyncOp.Sleep();
 
             cancellationSource.Cancel();
             task.Wait();

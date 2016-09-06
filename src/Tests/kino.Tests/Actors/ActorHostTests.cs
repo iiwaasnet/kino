@@ -285,7 +285,7 @@ namespace kino.Tests.Actors
                 var messageIn = Message.CreateFlowStartMessage(asyncMessage);
                 actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
 
-                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
+                (AsyncOpCompletionDelay + AsyncOp).Sleep();
 
                 var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
@@ -325,7 +325,7 @@ namespace kino.Tests.Actors
                 var messageIn = Message.CreateFlowStartMessage(asyncMessage);
                 actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
 
-                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
+                (AsyncOpCompletionDelay + AsyncOp).Sleep();
 
                 var messageOut = actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
@@ -363,7 +363,7 @@ namespace kino.Tests.Actors
                 var messageIn = Message.CreateFlowStartMessage(asyncMessage);
                 actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
 
-                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
+                (AsyncOpCompletionDelay + AsyncOp).Sleep();
 
                 messageCompletionQueue.Verify(m => m.Enqueue(It.Is<AsyncMessageContext>(amc => IsAsyncMessage(amc)),
                                                              It.IsAny<CancellationToken>()),
@@ -434,7 +434,7 @@ namespace kino.Tests.Actors
 
                 actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
 
-                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
+                (AsyncOpCompletionDelay + AsyncOp).Sleep();
 
                 var messageOut = (Message) actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
@@ -515,7 +515,7 @@ namespace kino.Tests.Actors
 
                 actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
 
-                Thread.Sleep(AsyncOpCompletionDelay + AsyncOp);
+                (AsyncOpCompletionDelay + AsyncOp).Sleep();
 
                 var messageOut = (Message) actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
 
@@ -569,7 +569,7 @@ namespace kino.Tests.Actors
         private static void StartActorHost(IActorHost actorHost)
         {
             actorHost.Start();
-            Thread.Sleep(AsyncOpCompletionDelay);
+            AsyncOpCompletionDelay.Sleep();
         }
     }
 }

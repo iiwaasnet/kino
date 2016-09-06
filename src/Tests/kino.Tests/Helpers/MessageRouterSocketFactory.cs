@@ -92,7 +92,7 @@ namespace kino.Tests.Helpers
         {
             if (socket == null)
             {
-                Thread.Sleep(socketWaitTimeout);
+                socketWaitTimeout.Sleep();
             }
         }
 

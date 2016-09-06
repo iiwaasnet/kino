@@ -3,6 +3,7 @@ using System.Security;
 using System.Threading;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
+using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Security;
 using kino.Tests.Actors.Setup;
@@ -86,7 +87,7 @@ namespace kino.Tests.Connectivity
                 {
                     routerDiscovery.RequestRouteDiscovery(messageIdentifier);
                 }
-                Thread.Sleep(AsyncOp);
+                AsyncOp.Sleep();
 
                 clusterMessageSender.Verify(m => m.EnqueueMessage(It.IsAny<IMessage>()), Times.Exactly(messageIdentifiers.Length));
                 logger.Verify(m => m.Error(It.IsAny<MessageNotSupportedException>()), Times.Once);
@@ -114,7 +115,7 @@ namespace kino.Tests.Connectivity
                 //
                 routerDiscovery.RequestRouteDiscovery(messageHubIdentifier);
                 //
-                Thread.Sleep(AsyncOp);
+                AsyncOp.Sleep();
 
                 clusterMessageSender.Verify(m => m.EnqueueMessage(It.IsAny<IMessage>()), Times.Exactly(domains.Length));
             }

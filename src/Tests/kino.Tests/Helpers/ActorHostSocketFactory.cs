@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using kino.Core.Framework;
 using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
 
@@ -87,7 +88,7 @@ namespace kino.Tests.Helpers
         {
             if (waitIf())
             {
-                Thread.Sleep(socketWaitTimeout);
+                socketWaitTimeout.Sleep();
             }
         }
 

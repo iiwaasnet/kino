@@ -95,7 +95,7 @@ namespace kino.Tests.Client
 
                 messageHub.EnqueueRequest(message, callback);
 
-                Thread.Sleep(AsyncOp);
+                AsyncOp.Sleep();
 
                 callbackHandlerStack.Verify(m => m.Push(It.Is<CorrelationId>(c => Unsafe.Equals(c.Value, message.CorrelationId)),
                                                         It.IsAny<IPromise>(),
@@ -120,7 +120,7 @@ namespace kino.Tests.Client
 
                 messageHub.EnqueueRequest(message, callback);
 
-                Thread.Sleep(AsyncOp);
+                AsyncOp.Sleep();
 
                 var messageOut = (Message) messageHubSocketFactory.GetSendingSocket().GetSentMessages().Last();
                 var receivingSocket = messageHubSocketFactory.GetReceivingSocket();
@@ -179,11 +179,11 @@ namespace kino.Tests.Client
                 //
                 var promise = messageHub.EnqueueRequest(message, callback);
 
-                Thread.Sleep(AsyncOpCompletionDelay);
+                AsyncOpCompletionDelay.Sleep();
                 
                 messageHubSocketFactory.GetReceivingSocket().DeliverMessage(message);
 
-                Thread.Sleep(AsyncOpCompletionDelay);
+                AsyncOpCompletionDelay.Sleep();
                 //
                 Assert.IsNull(callbackHandlerStack.Pop(new CallbackHandlerKey
                                                        {
@@ -217,7 +217,7 @@ namespace kino.Tests.Client
                 var callback = CallbackPoint.Create<SimpleMessage>();
 
                 var promise = messageHub.EnqueueRequest(message, callback);
-                Thread.Sleep(AsyncOpCompletionDelay);
+                AsyncOpCompletionDelay.Sleep();
 
                 promise.Dispose();
 
@@ -277,7 +277,7 @@ namespace kino.Tests.Client
                 callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns((IPromise) null);
                 messageHubSocketFactory.GetReceivingSocket().DeliverMessage(message);
 
-                Thread.Sleep(AsyncOpCompletionDelay);
+                AsyncOpCompletionDelay.Sleep();
 
                 Assert.IsFalse(promise.GetResponse().Wait(AsyncOpCompletionDelay));
             }

@@ -2,6 +2,7 @@
 using System.Threading;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
+using kino.Core.Framework;
 using Moq;
 using NUnit.Framework;
 
@@ -72,7 +73,7 @@ namespace kino.Tests.Connectivity
 
             var pingTime = DateTime.UtcNow;
             var pingDelay = TimeSpan.FromSeconds(3);
-            Thread.Sleep(membershipConfiguration.PongSilenceBeforeRouteDeletion + pingDelay);
+            (membershipConfiguration.PongSilenceBeforeRouteDeletion + pingDelay).Sleep();
 
             config.KeepAlive(ep1);
             
