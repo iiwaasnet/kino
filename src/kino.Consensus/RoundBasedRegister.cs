@@ -23,7 +23,6 @@ namespace kino.Consensus
         private readonly ILogger logger;
         //TODO: Move to config file later
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(10);
-
         private readonly IObservable<IMessage> ackReadStream;
         private readonly IObservable<IMessage> nackReadStream;
         private readonly IObservable<IMessage> ackWriteStream;

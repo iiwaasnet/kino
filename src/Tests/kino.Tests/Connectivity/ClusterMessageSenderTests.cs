@@ -6,7 +6,6 @@ using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
-using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
 using kino.Core.Security;
 using kino.Core.Sockets;
@@ -19,7 +18,7 @@ namespace kino.Tests.Connectivity
     [TestFixture]
     public class ClusterMessageSenderTests
     {
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
         private ClusterMessageSender clusterMessageSender;
         private Mock<IRendezvousCluster> rendezvousCluster;
         private Mock<ISocketFactory> socketFactory;

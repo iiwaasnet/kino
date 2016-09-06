@@ -14,7 +14,7 @@ namespace kino.Core.Sockets
                 try
                 {
                     action();
-                    retries = 0;
+                    return;
                 }
                 catch (EndpointNotFoundException)
                 {

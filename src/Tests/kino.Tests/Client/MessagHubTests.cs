@@ -59,7 +59,7 @@ namespace kino.Tests.Client
         }
 
         [Test]
-        public void OnMessageHubStart_RegisterationMessageIsSentAsGlobalRegistration()
+        public void WhenMessageHubStart_RegistrationMessageIsSentAsGlobalRegistration()
         {
             try
             {
