@@ -59,7 +59,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public async void WhenClusterMessageSenderStops_UnregisterNodeMessageIsSentOncePerEachAllowedDomain()
+        public void WhenClusterMessageSenderStops_UnregisterNodeMessageIsSentOncePerEachAllowedDomain()
         {
             var allowedDomains = new[] {Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), Guid.NewGuid().ToString()};
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
@@ -72,7 +72,7 @@ namespace kino.Tests.Connectivity
             var task = Task.Factory.StartNew(() => clusterMessageSender.StartBlockingSendMessages(cancellationTokenSource.Token, new Barrier(1)));
             cancellationTokenSource.CancelAfter(AsyncOp);
 
-            await task;
+            task.Wait();
 
             var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
             var messages = socket.GetSentMessages().BlockingAll(AsyncOp);

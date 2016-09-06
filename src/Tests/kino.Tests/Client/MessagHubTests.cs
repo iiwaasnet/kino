@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using kino.Client;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
@@ -31,7 +30,6 @@ namespace kino.Tests.Client
         private Mock<ICallbackHandlerStack> callbackHandlerStack;
         private Mock<ISecurityProvider> securityProvider;
         private Mock<IRouterConfigurationProvider> routerConfigurationProvider;
-        private MessageHub messageHub;
 
         [SetUp]
         public void Setup()
@@ -50,17 +48,13 @@ namespace kino.Tests.Client
             routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).Returns(routerConfiguration);
             securityProvider = new Mock<ISecurityProvider>();
             securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
-            messageHub = new MessageHub(socketFactory.Object,
-                                        callbackHandlerStack.Object,
-                                        routerConfigurationProvider.Object,
-                                        securityProvider.Object,
-                                        performanceCounterManager.Object,
-                                        logger);
+            CreateMessageHub();
         }
 
         [Test]
         public void WhenMessageHubStart_RegistrationMessageIsSentAsGlobalRegistration()
         {
+            var messageHub = CreateMessageHub();
             try
             {
                 messageHub.Start();
@@ -86,6 +80,7 @@ namespace kino.Tests.Client
         [Test]
         public void EnqueueRequest_RegistersMessageAndExceptionHandlers()
         {
+            var messageHub = CreateMessageHub();
             try
             {
                 messageHub.Start();
@@ -111,6 +106,7 @@ namespace kino.Tests.Client
         [Test]
         public void EnqueueRequest_SendsMessageWithCallbackReceiverIdentityEqualsToReceivingSocketIdentity()
         {
+            var messageHub = CreateMessageHub();
             try
             {
                 messageHub.Start();
@@ -138,6 +134,7 @@ namespace kino.Tests.Client
         [Test]
         public void WhenMessageReceived_CorrespondingPromiseResultSet()
         {
+            var messageHub = CreateMessageHub();
             try
             {
                 messageHub.Start();
@@ -164,12 +161,12 @@ namespace kino.Tests.Client
         public void WhenResultMessageIsDelivered_PromiseIsDisposedAndItsCallbackIsRemoved()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
-            messageHub = new MessageHub(socketFactory.Object,
-                                        callbackHandlerStack,
-                                        routerConfigurationProvider.Object,
-                                        securityProvider.Object,
-                                        performanceCounterManager.Object,
-                                        logger);
+            var messageHub = new MessageHub(socketFactory.Object,
+                                            callbackHandlerStack,
+                                            routerConfigurationProvider.Object,
+                                            securityProvider.Object,
+                                            performanceCounterManager.Object,
+                                            logger);
             try
             {
                 messageHub.Start();
@@ -180,7 +177,7 @@ namespace kino.Tests.Client
                 var promise = messageHub.EnqueueRequest(message, callback);
 
                 AsyncOpCompletionDelay.Sleep();
-                
+
                 messageHubSocketFactory.GetReceivingSocket().DeliverMessage(message);
 
                 AsyncOpCompletionDelay.Sleep();
@@ -203,12 +200,12 @@ namespace kino.Tests.Client
         public void WhenPromiseResultIsSet_ItsCallbackIsRemoved()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
-            messageHub = new MessageHub(socketFactory.Object,
-                                        callbackHandlerStack,
-                                        routerConfigurationProvider.Object,
-                                        securityProvider.Object,
-                                        performanceCounterManager.Object,
-                                        logger);
+            var messageHub = new MessageHub(socketFactory.Object,
+                                            callbackHandlerStack,
+                                            routerConfigurationProvider.Object,
+                                            securityProvider.Object,
+                                            performanceCounterManager.Object,
+                                            logger);
             try
             {
                 messageHub.Start();
@@ -238,6 +235,7 @@ namespace kino.Tests.Client
         [Test]
         public void WhenExceptionMessageReceived_PromiseThrowsException()
         {
+            var messageHub = CreateMessageHub();
             try
             {
                 messageHub.Start();
@@ -266,6 +264,7 @@ namespace kino.Tests.Client
         [Test]
         public void WhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
         {
+            var messageHub = CreateMessageHub();
             try
             {
                 messageHub.Start();
@@ -286,6 +285,14 @@ namespace kino.Tests.Client
                 messageHub.Stop();
             }
         }
+
+        private IMessageHub CreateMessageHub()
+            => new MessageHub(socketFactory.Object,
+                              callbackHandlerStack.Object,
+                              routerConfigurationProvider.Object,
+                              securityProvider.Object,
+                              performanceCounterManager.Object,
+                              logger);
 
         private static bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageIdentifier> registrations)
             => registrations.Any(h => Unsafe.Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
