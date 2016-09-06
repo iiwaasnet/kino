@@ -20,6 +20,8 @@ namespace kino.Core.Connectivity
         private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
         private readonly BlockingCollection<IMessage> outgoingMessages;
+        //TODO: Move to config
+        private readonly TimeSpan UnregisterMessageSendTimeout = TimeSpan.FromMilliseconds(500);
 
         public ClusterMessageSender(IRendezvousCluster rendezvousCluster,
                                     IRouterConfigurationProvider routerConfigurationProvider,
@@ -63,7 +65,6 @@ namespace kino.Core.Connectivity
                     }
 
                     UnregisterRoutingSelf(clusterMonitorSendingSocket);
-                    //TODO: Sending is async, probably a short delay needed to allow messages to be sent
                 }
             }
             catch (Exception err)
@@ -113,6 +114,8 @@ namespace kino.Core.Connectivity
 
                 clusterMonitorSendingSocket.SendMessage(message);
             }
+            
+            UnregisterMessageSendTimeout.Sleep();
         }
 
         private ISocket CreateClusterMonitorSendingSocket()
