@@ -49,7 +49,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Autofac.kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.kino.0.0.0.5-alpha\lib\net46\Autofac.kino.dll</HintPath>
+      <HintPath>..\packages\Autofac.kino.0.0.0.6-alpha\lib\net46\Autofac.kino.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="C5, Version=2.4.5947.17248, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
@@ -57,19 +57,23 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.19-alpha\lib\net46\kino.dll</HintPath>
+      <HintPath>..\packages\kino.0.0.1.20-alpha\lib\net46\kino.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="kino.Actors, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.19-alpha\lib\net46\kino.Actors.dll</HintPath>
+      <HintPath>..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Actors.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="kino.Client, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.19-alpha\lib\net46\kino.Client.dll</HintPath>
+      <HintPath>..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Client.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="kino.Consensus, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\kino.Consensus.0.0.1.20-alpha\lib\net46\kino.Consensus.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="kino.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.19-alpha\lib\net46\kino.Core.dll</HintPath>
+      <HintPath>..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
@@ -94,6 +98,18 @@
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Reactive.Core, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Core.2.2.5\lib\net45\System.Reactive.Core.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Interfaces, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Interfaces.2.2.5\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=2.2.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Rx-Linq.2.2.5\lib\net45\System.Reactive.Linq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
@@ -135,13 +151,9 @@
     <None Include="config\Application.config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\kino.Consensus\kino.Consensus.csproj">
-      <Project>{1143ea92-6006-4fa1-b844-1e7078d5cbda}</Project>
-      <Name>kino.Consensus</Name>
-    </ProjectReference>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
