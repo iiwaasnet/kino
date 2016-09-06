@@ -49,7 +49,7 @@ namespace kino.Core.Connectivity
                         foreach (var messageOut in outgoingMessages.GetConsumingEnumerable(token))
                         {
                             clusterMonitorSendingSocket.SendMessage(messageOut);
-                            // TODO: Block immediatelly for the response
+                            // TODO: Block immediately for the response
                             // Otherwise, consider the RS dead and switch to failover partner
                             //sendingSocket.ReceiveMessage(token);
                         }
