@@ -18,7 +18,7 @@ namespace kino.Tests.Connectivity
     [TestFixture]
     public class ClusterMessageSenderTests
     {
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(1000);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
         private ClusterMessageSender clusterMessageSender;
         private Mock<IRendezvousCluster> rendezvousCluster;
         private Mock<ISocketFactory> socketFactory;
