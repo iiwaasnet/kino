@@ -31,10 +31,12 @@ n-12		1-16	Callback Start Frame Offset			Offset of the first callback frame
 			17-32	Callback Entry Count				Number of callback entries
 			33-48	Callback Frame Divisor				Number of frames per one callback entry
 
-n-11				Receiver ID							Socket Identity of the receiver of the message. Empty frame, for the non-specific receiver
+n-11				Direct Receiver Socket ID			Socket Identity of the direct receiver of the message. 
+                                                        This value overrules data from RoutingTable, i.e. Receiver Socket ID frame.
+                                                        Empty frame, for the non-specific receiver
 n-10				Callback Receiver ID				Value from this field will be copied to Receiver ID
 														when Message ID becomes equal to Callback Message ID
-n-9					Receiver Node ID					MessageRouter Socket Identity to which the message should be routed
+n-9					Receiver Socket ID					MessageRouter Socket Identity to which the message should be routed
 n-8					Partition							Message Partition
 n-7					Version								Message Version
 n-6					Message ID							Message Identity
