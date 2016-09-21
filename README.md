@@ -8,13 +8,38 @@
 
 Kino
 ------------------------
-Building a Web service is one of the ways to implement a component, accessible over the network. But what if the functionality we would like to expose is too small for a stand-alone service?  Although, WS might still be a proper design choice, let's try something else...
-
-**Kino** is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)-like* framework for implementing and hosting components, accessible over the network. In other words, **kino** allows to build *networks* of components. It is a foundation for your applications based on Microservices architecture, but can be small enough to be used just within one process.
+**Kino** is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)* framework, designed for message-based communication. It is a foundation for your applications based on Microservices architecture, but can be small enough to be used just within one process.
 
 Fault-tolerance and load scale-out by redundant deployment of actors, possibility to broadcast messages – everything without additional infrastructure dependencies. Rendezvous service provides actors auto-discovery and reduces amount of required configuration.
 
 Platform requirements: Windows with .NET 4.6+.
+
+It is simple!
+-------------------------------------
+#### Define an Actor:
+
+```csharp
+public class MyMessageProcessor : Actor
+{
+    [MessageHandlerDefinition(typeof (MyMessage))]
+    public async Task<IActorResult> MyMessageHandler(IMessage message)
+    {
+        // method body
+    }
+}
+```
+#### Send a Message:
+
+```csharp
+// Just create a message you would like to send
+IMessage request = Message.CreateFlowStartMessage(new MyMessage());
+// Define result message you would like to receive
+ICallbackPoint callbackPoint = CallbackPoint.Create<ResultMessage>();
+// Now, send the message. No need to know actor address, ID or anything else!
+IPromise promise = messageHub.EnqueueRequest(request, callbackPoint);
+// Wait for result
+ResultMessage result = promise.GetResponse().Result.GetPayload<ResultMessage>();
+```
 
 Tell me more!
 -------------------------------------
