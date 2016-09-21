@@ -8,7 +8,7 @@
 
 Kino
 ------------------------
-**Kino** is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)* framework, designed on message-driven communication. It is a foundation for your applications based on Microservices architecture, but can be small enough to be used just within one process.
+**Kino** is an *[Actor] (https://en.wikipedia.org/wiki/Actor_model)* framework, based on message-driven communication.
 
 Fault-tolerance and load scale-out by redundant deployment of actors, possibility to broadcast messages – everything without additional infrastructure dependencies. Rendezvous service provides actors auto-discovery and reduces amount of required configuration.
 
