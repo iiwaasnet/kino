@@ -122,7 +122,7 @@ namespace kino.Rendezvous
         private bool NodeIsLeader()
         {
             var lease = leaseProvider.GetLease(leaderPayload);
-            return lease != null && Unsafe.Equals(lease.OwnerIdentity, localNode.SocketIdentity);
+            return lease != null && Unsafe.ArraysEqual(lease.OwnerIdentity, localNode.SocketIdentity);
         }
 
         private void ProcessMessages(CancellationToken token, Barrier gateway)

@@ -51,7 +51,8 @@ namespace kino.Actors.Diagnostics
                                         {
                                             Version = m.Version,
                                             Identity = m.Identity,
-                                            Partition = m.Partition
+                                            Partition = m.Partition,
+                                            IsAnyIdentifier = m is AnyIdentifier
                                         })
                            .ToArray()
                    };
@@ -70,7 +71,8 @@ namespace kino.Actors.Diagnostics
                                                                     {
                                                                         Version = m.Version,
                                                                         Identity = m.Identity,
-                                                                        Partition = m.Partition
+                                                                        Partition = m.Partition,
+                                                                        IsAnyIdentifier = m is AnyIdentifier
                                                                     })
                                                        .ToArray()
                               });

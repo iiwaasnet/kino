@@ -18,7 +18,7 @@ namespace kino.Core.Connectivity
         private readonly ISecurityProvider securityProvider;
         private readonly RouteDiscoveryConfiguration discoveryConfiguration;
         private readonly ILogger logger;
-        private readonly HashedQueue<MessageIdentifier> requests;
+        private readonly HashedQueue<Identifier> requests;
         private Task sendingMessages;
         private CancellationTokenSource cancellationTokenSource;
 
@@ -33,7 +33,7 @@ namespace kino.Core.Connectivity
             this.clusterMessageSender = clusterMessageSender;
             this.routerConfigurationProvider = routerConfigurationProvider;
             this.logger = logger;
-            requests = new HashedQueue<MessageIdentifier>(discoveryConfiguration.MaxRequestsQueueLength);
+            requests = new HashedQueue<Identifier>(discoveryConfiguration.MaxRequestsQueueLength);
         }
 
         public void Start()
@@ -54,7 +54,7 @@ namespace kino.Core.Connectivity
             {
                 try
                 {
-                    IList<MessageIdentifier> missingRoutes;
+                    IList<Identifier> missingRoutes;
                     if (requests.TryPeek(out missingRoutes, discoveryConfiguration.RequestsPerSend))
                     {
                         foreach (var messageIdentifier in missingRoutes)
@@ -77,7 +77,7 @@ namespace kino.Core.Connectivity
             }
         }
 
-        private void SendDiscoverMessageRouteMessage(MessageIdentifier messageIdentifier)
+        private void SendDiscoverMessageRouteMessage(Identifier messageIdentifier)
         {
             try
             {
@@ -95,7 +95,8 @@ namespace kino.Core.Connectivity
                                                                        {
                                                                            Version = messageIdentifier.Version,
                                                                            Identity = messageIdentifier.Identity,
-                                                                           Partition = messageIdentifier.Partition
+                                                                           Partition = messageIdentifier.Partition,
+                                                                           IsAnyIdentifier = messageIdentifier is AnyIdentifier
                                                                        }
                                                  },
                                                  domain);
@@ -109,7 +110,7 @@ namespace kino.Core.Connectivity
             }
         }
 
-        public void RequestRouteDiscovery(MessageIdentifier messageIdentifier)
+        public void RequestRouteDiscovery(Identifier messageIdentifier)
             => requests.TryEnqueue(messageIdentifier);
 
         private RouteDiscoveryConfiguration DefaultConfiguration()

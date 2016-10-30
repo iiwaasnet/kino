@@ -21,7 +21,7 @@ namespace kino.Core.Messaging.Messages
         [ProtoMember(2)]
         public string StackTrace { get; set; }
 
-        public override byte[] Version => Message.CurrentVersion;
+        public override ushort Version => Message.CurrentVersion;
 
         public override byte[] Identity => MessageIdentity;
     }

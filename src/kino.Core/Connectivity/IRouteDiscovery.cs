@@ -1,8 +1,10 @@
-﻿namespace kino.Core.Connectivity
+﻿using kino.Core.Messaging;
+
+namespace kino.Core.Connectivity
 {
     public interface IRouteDiscovery
     {
-        void RequestRouteDiscovery(MessageIdentifier messageIdentifier);
+        void RequestRouteDiscovery(Identifier messageIdentifier);
 
         void Start();
 

@@ -6,12 +6,12 @@ namespace kino.Core.Messaging.Messages
     public class RendezvousNotLeaderMessage : Payload
     {
         private static readonly byte[] MessageIdentity = BuildFullIdentity("RNDZVNOTLEADER");
-        private static readonly byte[] MessageVersion = Message.CurrentVersion;
+        private static readonly ushort MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
         public RendezvousNode NewLeader { get; set; }
 
-        public override byte[] Version => MessageVersion;
+        public override ushort Version => MessageVersion;
 
         public override byte[] Identity => MessageIdentity;
     }

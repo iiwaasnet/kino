@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using Client.Messages;
 using kino.Core.Connectivity;
 using kino.Core.Framework;
+using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
 using kino.Core.Security;
 
@@ -16,7 +17,7 @@ namespace Client
         private readonly Domain serverDomain;
         private readonly Domain kinoDomain;
         private readonly IDictionary<string, Domain> nameToDomainMap;
-        private readonly IDictionary<MessageIdentifier, Domain> messageToDomainMap;
+        private readonly IDictionary<Identifier, Domain> messageToDomainMap;
         private readonly AesCryptoServiceProvider encrypt;
         private readonly AesCryptoServiceProvider decrypt;
         private readonly HashAlgorithm encryptMac;
@@ -48,36 +49,36 @@ namespace Client
             decryptMac = new HMACMD5();
         }
 
-        private IDictionary<MessageIdentifier, Domain> CreateMessageMapping(IEnumerable<Domain> domains)
+        private IDictionary<Identifier, Domain> CreateMessageMapping(IEnumerable<Domain> domains)
         {
-            var mapping = new Dictionary<MessageIdentifier, Domain>();
+            var mapping = new Dictionary<Identifier, Domain>();
 
             foreach (var domain in domains)
             {
                 for (var i = 0; i < 30; i++)
                 {
-                    mapping[new MessageIdentifier(Guid.NewGuid().ToByteArray())] = domain;
+                    mapping[new AnyIdentifier(Guid.NewGuid().ToByteArray())] = domain;
                 }
                 if (domain.Name == serverDomain.Name)
                 {
-                    mapping[new MessageIdentifier(new EhlloMessage().Identity)] = domain;
-                    mapping[new MessageIdentifier(new GroupCharsResponseMessage().Identity)] = domain;
-                    mapping[new MessageIdentifier(new HelloMessage().Identity)] = domain;
+                    mapping[new AnyIdentifier(new EhlloMessage().Identity)] = domain;
+                    mapping[new AnyIdentifier(new GroupCharsResponseMessage().Identity)] = domain;
+                    mapping[new AnyIdentifier(new HelloMessage().Identity)] = domain;
                 }
                 if (domain.Name == kinoDomain.Name)
                 {
-                    mapping[new MessageIdentifier(KinoMessages.Pong.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.RegisterInternalMessageRoute.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.DiscoverMessageRoute.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.Exception.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.RegisterExternalMessageRoute.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.RequestClusterMessageRoutes.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.RequestNodeMessageRoutes.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.UnregisterMessageRoute.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.UnregisterNode.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.UnregisterNode.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.RegisterInternalMessageRoute.Identity)] = domain;
-                    mapping[new MessageIdentifier(KinoMessages.RequestKnownMessageRoutes.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.Pong.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.RegisterInternalMessageRoute.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.DiscoverMessageRoute.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.Exception.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.RegisterExternalMessageRoute.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.RequestClusterMessageRoutes.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.RequestNodeMessageRoutes.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.UnregisterMessageRoute.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.UnregisterNode.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.UnregisterNode.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.RegisterInternalMessageRoute.Identity)] = domain;
+                    mapping[new AnyIdentifier(KinoMessages.RequestKnownMessageRoutes.Identity)] = domain;
                 }
             }
 
@@ -104,7 +105,7 @@ namespace Client
             => CreateDomainSignature(FindDomain(domain), buffer);
 
         public string GetDomain(byte[] messageIdentity)
-            => FindDomain(new MessageIdentifier(messageIdentity)).Name;
+            => FindDomain(new AnyIdentifier(messageIdentity)).Name;
 
         public bool DomainIsAllowed(string domain)
             => nameToDomainMap.ContainsKey(domain);
@@ -175,7 +176,7 @@ namespace Client
         //    }
         //}
 
-        private Domain FindDomain(MessageIdentifier identity)
+        private Domain FindDomain(Identifier identity)
         {
             Domain domain;
             if (messageToDomainMap.TryGetValue(identity, out domain))

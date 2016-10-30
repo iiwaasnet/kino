@@ -47,7 +47,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                                                                      .GroupBy(mh => mh.Domain);
                     foreach (var group in messageGroups)
                     {
-                        clusterMonitor.RegisterSelf(group.Select(g => g.Message).ToList(), group.Key);
+                        clusterMonitor.RegisterSelf(group.Select(g => g.Identity).ToList(), group.Key);
                     }
                 }
             }
@@ -55,25 +55,27 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             return shouldHandle;
         }
 
-        private IEnumerable<IdentityDomainMap> GetMessageHandlers(IEnumerable<MessageIdentifier> newRoutes)
+        private IEnumerable<IdentityDomainMap> GetMessageHandlers(IEnumerable<Identifier> newRoutes)
             => newRoutes.Where(mi => !mi.IsMessageHub())
-                        .Select(mh => new IdentityDomainMap {Message = mh, Domain = securityProvider.GetDomain(mh.Identity)});
+                        .Select(mh => new IdentityDomainMap {Identity = mh, Domain = securityProvider.GetDomain(mh.Identity)});
 
-        private IEnumerable<IdentityDomainMap> GetMessageHubs(IEnumerable<MessageIdentifier> newRoutes)
+        private IEnumerable<IdentityDomainMap> GetMessageHubs(IEnumerable<Identifier> newRoutes)
             => newRoutes.Where(mi => mi.IsMessageHub())
-                        .SelectMany(mi => securityProvider.GetAllowedDomains().Select(dom => new IdentityDomainMap {Message = mi, Domain = dom}));
+                        .SelectMany(mi => securityProvider.GetAllowedDomains().Select(dom => new IdentityDomainMap {Identity = mi, Domain = dom}));
 
-        private IEnumerable<MessageIdentifier> UpdateLocalRoutingTable(SocketIdentifier socketIdentifier, MessageContract[] messageContracts)
+        private IEnumerable<Identifier> UpdateLocalRoutingTable(SocketIdentifier socketIdentifier, MessageContract[] messageContracts)
         {
-            var handlers = new List<MessageIdentifier>();
+            var handlers = new List<Identifier>();
 
             foreach (var registration in messageContracts)
             {
                 try
                 {
-                    var messageIdentifier = new MessageIdentifier(registration.Version,
-                                                                  registration.Identity,
-                                                                  registration.Partition);
+                    var messageIdentifier = registration.IsAnyIdentifier
+                                                ? (Identifier) new AnyIdentifier(registration.Identity)
+                                                : (Identifier) new MessageIdentifier(registration.Identity,
+                                                                                     registration.Version,
+                                                                                     registration.Partition);
                     internalRoutingTable.AddMessageRoute(messageIdentifier, socketIdentifier);
                     handlers.Add(messageIdentifier);
                 }
@@ -92,7 +94,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
 
     internal class IdentityDomainMap
     {
-        internal MessageIdentifier Message { get; set; }
+        internal Identifier Identity { get; set; }
 
         internal string Domain { get; set; }
     }

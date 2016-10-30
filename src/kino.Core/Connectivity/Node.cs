@@ -51,7 +51,7 @@ namespace kino.Core.Connectivity
         }
 
         private bool StructuralCompare(Node other)
-            => Unsafe.Equals(SocketIdentity, other.SocketIdentity)
+            => Unsafe.ArraysEqual(SocketIdentity, other.SocketIdentity)
                && Uri.AbsoluteUri == other.Uri.AbsoluteUri;
 
         public override int GetHashCode()

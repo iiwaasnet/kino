@@ -55,7 +55,7 @@ namespace kino.Core.Connectivity
         }
 
         private bool StructuralCompare(SocketIdentifier other)
-            => Unsafe.Equals(Identity, other.Identity);
+            => Unsafe.ArraysEqual(Identity, other.Identity);
 
         public byte[] Identity { get; }
     }

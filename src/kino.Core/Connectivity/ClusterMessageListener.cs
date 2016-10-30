@@ -348,7 +348,7 @@ namespace kino.Core.Connectivity
         private bool ThisNodeSocket(byte[] socketIdentity)
         {
             var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
-            return Unsafe.Equals(scaleOutAddress.Identity, socketIdentity);
+            return Unsafe.ArraysEqual(scaleOutAddress.Identity, socketIdentity);
         }
 
         private void SendPong(ulong pingId)

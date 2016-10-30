@@ -79,7 +79,7 @@ namespace kino.Core.Connectivity
             StartProcessingClusterMessages(TimeSpan.FromMilliseconds(-1));
         }
 
-        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers, string domain)
+        public void RegisterSelf(IEnumerable<Identifier> messageHandlers, string domain)
         {
             var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
 
@@ -91,7 +91,8 @@ namespace kino.Core.Connectivity
                                                                                              {
                                                                                                  Version = mi.Version,
                                                                                                  Identity = mi.Identity,
-                                                                                                 Partition = mi.Partition
+                                                                                                 Partition = mi.Partition,
+                                                                                                 IsAnyIdentifier = mi is AnyIdentifier
                                                                                              }).ToArray()
                                          },
                                          domain);
@@ -99,7 +100,7 @@ namespace kino.Core.Connectivity
             clusterMessageSender.EnqueueMessage(message);
         }
 
-        public void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers)
+        public void UnregisterSelf(IEnumerable<Identifier> messageIdentifiers)
         {
             var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
             var messageGroups = GetMessageHubs(messageIdentifiers).Concat(GetMessageHandlers(messageIdentifiers))
@@ -120,7 +121,7 @@ namespace kino.Core.Connectivity
             }
         }
 
-        private IEnumerable<MessageDomainMap> GetMessageHandlers(IEnumerable<MessageIdentifier> messageIdentifiers)
+        private IEnumerable<MessageDomainMap> GetMessageHandlers(IEnumerable<Identifier> messageIdentifiers)
             => messageIdentifiers.Where(mi => !mi.IsMessageHub())
                                  .Select(mi => new MessageDomainMap
                                                {
@@ -128,29 +129,31 @@ namespace kino.Core.Connectivity
                                                              {
                                                                  Identity = mi.Identity,
                                                                  Version = mi.Version,
-                                                                 Partition = mi.Partition
+                                                                 Partition = mi.Partition,
+                                                                 IsAnyIdentifier = false
                                                              },
                                                    Domain = securityProvider.GetDomain(mi.Identity)
                                                });
 
-        private IEnumerable<MessageDomainMap> GetMessageHubs(IEnumerable<MessageIdentifier> messageIdentifiers)
+        private IEnumerable<MessageDomainMap> GetMessageHubs(IEnumerable<Identifier> messageIdentifiers)
             => messageIdentifiers.Where(mi => mi.IsMessageHub())
                                  .SelectMany(mi => securityProvider.GetAllowedDomains().Select(dom =>
-                                                                                               new MessageDomainMap
-                                                                                               {
-                                                                                                   Message = new MessageContract
-                                                                                                             {
-                                                                                                                 Identity = mi.Identity,
-                                                                                                                 Version = mi.Version,
-                                                                                                                 Partition = mi.Partition
-                                                                                                             },
-                                                                                                   Domain = dom
-                                                                                               }));
+                                                                                                   new MessageDomainMap
+                                                                                                   {
+                                                                                                       Message = new MessageContract
+                                                                                                                 {
+                                                                                                                     Identity = mi.Identity,
+                                                                                                                     Version = mi.Version,
+                                                                                                                     Partition = mi.Partition,
+                                                                                                                     IsAnyIdentifier = true
+                                                                                                                 },
+                                                                                                       Domain = dom
+                                                                                                   }));
 
         public IEnumerable<SocketEndpoint> GetClusterMembers()
             => clusterMembership.GetClusterMembers();
 
-        public void DiscoverMessageRoute(MessageIdentifier messageIdentifier)
+        public void DiscoverMessageRoute(Identifier messageIdentifier)
             => routeDiscovery.RequestRouteDiscovery(messageIdentifier);
     }
 

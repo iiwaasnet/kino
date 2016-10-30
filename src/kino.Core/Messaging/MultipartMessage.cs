@@ -40,7 +40,7 @@ namespace kino.Core.Messaging
             {
                 // NOTE: New frames come here
                 frames.Add(callback.Partition);
-                frames.Add(callback.Version);
+                frames.Add(callback.Version.GetBytes());
                 frames.Add(callback.Identity);
             }
             //TODO: Optimize calculation of body, callbacks and routing frames offsets
@@ -155,7 +155,7 @@ namespace kino.Core.Messaging
             => message.TTL.GetBytes();
 
         private byte[] GetVersionFrame(IMessage message)
-            => message.Version;
+            => message.Version.GetBytes();
 
         private byte[] GetMessageBodyFrame(IMessage message)
             => message.Body;
@@ -238,10 +238,10 @@ namespace kino.Core.Messaging
                 while (startIndex > endIndex)
                 {
                     var identity = frames[startIndex];
-                    var version = frames[startIndex - 1];
+                    var version = frames[startIndex - 1].GetUShort();
                     var partition = frames[startIndex - 2];
 
-                    callbacks.Add(new MessageIdentifier(version, identity, partition));
+                    callbacks.Add(new MessageIdentifier(identity, version, partition));
 
                     startIndex -= frameDivisor;
                 }

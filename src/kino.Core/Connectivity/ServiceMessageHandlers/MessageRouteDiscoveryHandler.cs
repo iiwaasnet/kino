@@ -36,9 +36,8 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                     message.As<Message>().VerifySignature(securityProvider);
 
                     var messageContract = message.GetPayload<DiscoverMessageRouteMessage>().MessageContract;
-                    var messageIdentifier = new MessageIdentifier(messageContract.Version,
-                                                                  messageContract.Identity,
-                                                                  messageContract.Partition);
+                    var messageIdentifier = new MessageIdentifier(messageContract.Identity,
+                                                                  messageContract.Version, messageContract.Partition);
                     if (internalRoutingTable.CanRouteMessage(messageIdentifier))
                     {
                         var domains = messageIdentifier.IsMessageHub()

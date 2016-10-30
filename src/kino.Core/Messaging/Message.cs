@@ -11,7 +11,7 @@ namespace kino.Core.Messaging
 {
     public class Message : IMessage
     {
-        public static readonly byte[] CurrentVersion = "1.0".GetBytes();
+        public static readonly ushort CurrentVersion = 1;
         public static readonly string KinoMessageNamespace = "KINO";
 
         private object payload;
@@ -64,7 +64,7 @@ namespace kino.Core.Messaging
             => Guid.NewGuid().ToString().GetBytes();
 
         public bool Equals(MessageIdentifier messageIdentifier)
-            => messageIdentifier.Equals(new MessageIdentifier(Version, Identity, Partition));
+            => messageIdentifier.Equals(new MessageIdentifier(Identity, Version, Partition));
 
         internal Message(MultipartMessage multipartMessage)
         {
@@ -87,7 +87,7 @@ namespace kino.Core.Messaging
             Distribution = distributionPattern;
 
             Identity = multipartMessage.GetMessageIdentity();
-            Version = multipartMessage.GetMessageVersion();
+            Version = multipartMessage.GetMessageVersion().GetUShort();
             Partition = multipartMessage.GetMessagePartition();
             receiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
@@ -114,9 +114,9 @@ namespace kino.Core.Messaging
             CallbackReceiverIdentity = callbackReceiverIdentity;
             CallbackPoint = callbackMessageIdentifiers;
 
-            if (CallbackPoint.Any(identifier => Unsafe.Equals(Identity, identifier.Identity)
-                                                && Unsafe.Equals(Version, identifier.Version)
-                                                && Unsafe.Equals(Partition, identifier.Partition)))
+            if (CallbackPoint.Any(identifier => Unsafe.ArraysEqual(Identity, identifier.Identity)
+                                                && Version == identifier.Version
+                                                && Unsafe.ArraysEqual(Partition, identifier.Partition)))
             {
                 ReceiverIdentity = CallbackReceiverIdentity;
             }
@@ -162,7 +162,7 @@ namespace kino.Core.Messaging
         {
             var mac = signatureProvider.CreateSignature(Domain, GetSignatureFields());
 
-            if (!Unsafe.Equals(Signature, mac))
+            if (!Unsafe.ArraysEqual(Signature, mac))
             {
                 throw new WrongMessageSignatureException();
             }
@@ -178,16 +178,17 @@ namespace kino.Core.Messaging
 
         private byte[] GetSignatureFields()
         {
+            var version = Version.GetBytes();
             var callbackReceiverIdentity = CallbackReceiverIdentity ?? IdentityExtensions.Empty;
             var capacity = Identity.Length
-                           + Version.Length
+                           + version.Length
                            + Partition.Length
                            + Body.Length
                            + callbackReceiverIdentity.Length;
             using (var stream = new MemoryStream(capacity))
             {
                 stream.Write(Identity, 0, Identity.Length);
-                stream.Write(Version, 0, Version.Length);
+                stream.Write(version, 0, version.Length);
                 stream.Write(Partition, 0, Partition.Length);
                 stream.Write(Body, 0, Body.Length);
                 stream.Write(callbackReceiverIdentity, 0, callbackReceiverIdentity.Length);
@@ -236,7 +237,7 @@ namespace kino.Core.Messaging
 
         public override string ToString()
             => $"{nameof(Identity)}[{Identity?.GetAnyString()}]-" +
-               $"{nameof(Version)}[{Version?.GetAnyString()}]-" +
+               $"{nameof(Version)}[{Version}]-" +
                $"{nameof(Partition)}[{Partition?.GetAnyString()}] " +
                $"{nameof(CorrelationId)}[{CorrelationId?.GetAnyString()}] " +
                $"{Distribution}";
@@ -247,7 +248,7 @@ namespace kino.Core.Messaging
 
         public byte[] Partition { get; private set; }
 
-        public byte[] Version { get; private set; }
+        public ushort Version { get; private set; }
 
         public TimeSpan TTL { get; set; }
 

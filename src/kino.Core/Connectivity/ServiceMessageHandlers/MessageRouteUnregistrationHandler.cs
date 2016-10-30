@@ -36,9 +36,8 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
 
                     var payload = message.GetPayload<UnregisterMessageRouteMessage>();
                     var messageContracts = payload.MessageContracts
-                                                  .Select(mh => new MessageIdentifier(mh.Version,
-                                                                                      mh.Identity,
-                                                                                      mh.Partition));
+                                                  .Select(mh => new MessageIdentifier(mh.Identity,
+                                                                                      mh.Version, mh.Partition));
                     var messageIdentifiers = messageContracts.Where(mi => securityProvider.GetDomain(mi.Identity) == message.Domain);
                     var connectionAction = externalRoutingTable.RemoveMessageRoute(messageIdentifiers,
                                                                                    new SocketIdentifier(payload.SocketIdentity));

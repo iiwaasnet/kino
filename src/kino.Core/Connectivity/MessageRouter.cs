@@ -176,7 +176,7 @@ namespace kino.Core.Connectivity
             return handled || ProcessUnhandledMessage(message, messageHandlerIdentifier);
         }
 
-        private bool HandleMessageLocally(MessageIdentifier messageIdentifier, Message message, ISocket localSocket)
+        private bool HandleMessageLocally(Identifier messageIdentifier, Message message, ISocket localSocket)
         {
             var handlers = (message.Distribution == DistributionPattern.Unicast
                                 ? new[] {internalRoutingTable.FindRoute(messageIdentifier)}
@@ -206,7 +206,7 @@ namespace kino.Core.Connectivity
             return handlers.Any();
         }
 
-        private bool ForwardMessageAway(MessageIdentifier messageIdentifier, Message message, ISocket scaleOutBackend)
+        private bool ForwardMessageAway(Identifier messageIdentifier, Message message, ISocket scaleOutBackend)
         {
             var receiverNodeIdentity = message.PopReceiverNode();
             var routes = (message.Distribution == DistributionPattern.Unicast
@@ -254,7 +254,7 @@ namespace kino.Core.Connectivity
             return routes.Any();
         }
 
-        private bool ProcessUnhandledMessage(Message message, MessageIdentifier messageIdentifier)
+        private bool ProcessUnhandledMessage(Message message, Identifier messageIdentifier)
         {
             clusterMonitor.DiscoverMessageRoute(messageIdentifier);
 
@@ -323,7 +323,7 @@ namespace kino.Core.Connectivity
                     logger.Info($"Failed to bind to {scaleOutAddress.Uri.ToSocketAddress()}, retrying with next endpoint...");
                 }
             }
-            
+
             throw new Exception($"Failed to bind to any of the configured ScaleOut endpoints!");
         }
 
@@ -368,10 +368,10 @@ namespace kino.Core.Connectivity
             return handled;
         }
 
-        private static MessageIdentifier CreateMessageHandlerIdentifier(Message message)
+        private static Identifier CreateMessageHandlerIdentifier(Message message)
             => message.ReceiverIdentity.IsSet()
-                   ? new MessageIdentifier(message.ReceiverIdentity)
-                   : new MessageIdentifier(message);
+                   ? (Identifier) new AnyIdentifier(message.ReceiverIdentity)
+                   : (Identifier) new MessageIdentifier(message);
 
         private void CallbackSecurityException(ISocket scaleOutFrontend, Exception err, Message messageIn, byte[] localSocketIdentity)
         {

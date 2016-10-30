@@ -52,7 +52,7 @@ namespace kino.Core.Messaging
         }
 
         private bool StructuralCompare(CorrelationId other)
-            => Unsafe.Equals(Value, other.Value);
+            => Unsafe.ArraysEqual(Value, other.Value);
 
         public override string ToString()
             => Value?.GetAnyString() ?? string.Empty;

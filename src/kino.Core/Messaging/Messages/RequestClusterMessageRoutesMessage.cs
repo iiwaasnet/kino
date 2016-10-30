@@ -6,7 +6,7 @@ namespace kino.Core.Messaging.Messages
     public class RequestClusterMessageRoutesMessage : Payload
     {
         private static readonly byte[] MessageIdentity = BuildFullIdentity("REQCLUSTROUTES");
-        private static readonly byte[] MessageVersion = Message.CurrentVersion;
+        private static readonly ushort MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
         public string RequestorUri { get; set; }
@@ -14,7 +14,7 @@ namespace kino.Core.Messaging.Messages
         [ProtoMember(2)]
         public byte[] RequestorSocketIdentity { get; set; }
 
-        public override byte[] Version => MessageVersion;
+        public override ushort Version => MessageVersion;
 
         public override byte[] Identity => MessageIdentity;
     }

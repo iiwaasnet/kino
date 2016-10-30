@@ -2,7 +2,7 @@
 {
     public class CallbackHandlerKey
     {
-        public byte[] Version { get; set; }
+        public ushort Version { get; set; }
 
         public byte[] Identity { get; set; }
 

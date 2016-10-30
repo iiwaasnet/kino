@@ -196,8 +196,8 @@ namespace kino.Client
                                                                          {
                                                                              new MessageContract
                                                                              {
-                                                                                 Version = IdentityExtensions.Empty,
-                                                                                 Identity = receivingSocketIdentity
+                                                                                 Identity = receivingSocketIdentity,
+                                                                                 IsAnyIdentifier = true
                                                                              }
                                                                          }
                                             },

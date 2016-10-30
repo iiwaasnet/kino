@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using kino.Core.Messaging;
 
 namespace kino.Core.Connectivity
 {
@@ -6,6 +7,6 @@ namespace kino.Core.Connectivity
     {
         public PeerConnection Connection { get; set; }
 
-        public IEnumerable<MessageIdentifier> Messages { get; set; }
+        public IEnumerable<Identifier> Messages { get; set; }
     }
 }

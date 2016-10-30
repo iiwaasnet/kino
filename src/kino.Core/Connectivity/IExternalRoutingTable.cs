@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using kino.Core.Messaging;
 
 namespace kino.Core.Connectivity
 {
     public interface IExternalRoutingTable
     {
-        PeerConnection AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri);
-        PeerConnection FindRoute(MessageIdentifier messageIdentifier, byte[] receiverNodeIdentity);
+        PeerConnection AddMessageRoute(Identifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri);
+
+        PeerConnection FindRoute(Identifier messageIdentifier, byte[] receiverNodeIdentity);
+
         PeerConnectionAction RemoveNodeRoute(SocketIdentifier socketIdentifier);
-        PeerConnectionAction RemoveMessageRoute(IEnumerable<MessageIdentifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier);
-        IEnumerable<PeerConnection> FindAllRoutes(MessageIdentifier messageIdentifier);
+
+        PeerConnectionAction RemoveMessageRoute(IEnumerable<Identifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier);
+
+        IEnumerable<PeerConnection> FindAllRoutes(Identifier messageIdentifier);
+
         IEnumerable<ExternalRoute> GetAllRoutes();
     }
 }

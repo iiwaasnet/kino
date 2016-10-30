@@ -1,8 +1,8 @@
 ﻿namespace kino.Core.Messaging
 {
-    public interface IMessageIdentifier
+    public interface IIdentifier
     {
-        byte[] Version { get; }
+        ushort Version { get; }
 
         byte[] Identity { get; }
 

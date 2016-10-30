@@ -16,7 +16,7 @@ namespace Client.Messages
     [ProtoMember(2)]
     public string Text { get; set; }
 
-        public override byte[] Version => Message.CurrentVersion;
+        public override ushort Version => Message.CurrentVersion;
         public override byte[] Identity => MessageIdentity;
     }
 

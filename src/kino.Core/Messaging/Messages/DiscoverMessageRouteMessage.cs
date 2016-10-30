@@ -6,7 +6,7 @@ namespace kino.Core.Messaging.Messages
     public class DiscoverMessageRouteMessage : Payload
     {
         private static readonly byte[] MessageIdentity = BuildFullIdentity("DISCOVMSGROUTE");
-        private static readonly byte[] MessageVersion = Message.CurrentVersion;
+        private static readonly ushort MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
         public byte[] RequestorSocketIdentity { get; set; }
@@ -17,7 +17,7 @@ namespace kino.Core.Messaging.Messages
         [ProtoMember(3)]
         public MessageContract MessageContract { get; set; }
 
-        public override byte[] Version => MessageVersion;
+        public override ushort Version => MessageVersion;
 
         public override byte[] Identity => MessageIdentity;
     }

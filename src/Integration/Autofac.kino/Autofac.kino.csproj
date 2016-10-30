@@ -42,22 +42,6 @@
       <HintPath>..\..\packages\C5.2.4.5947.17249\lib\net45\C5.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.0.0.1.20-alpha\lib\net46\kino.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Actors, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Actors.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Client, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Client.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="NetMQ, Version=4.0.0.0, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\NetMQ.4.0.0-rc5\lib\net40\NetMQ.dll</HintPath>
       <Private>True</Private>
@@ -91,6 +75,20 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\kino.Actors\kino.Actors.csproj">
+      <Project>{3231A7B7-C50A-4062-B5ED-BA00FCE9A77B}</Project>
+      <Name>kino.Actors</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Client\kino.Client.csproj">
+      <Project>{2C69BA32-DADC-4E4E-8D91-055FB9D35BFF}</Project>
+      <Name>kino.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Core\kino.Core.csproj">
+      <Project>{AC984F96-6D8F-466B-B6A7-B241A7C5DEC1}</Project>
+      <Name>kino.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

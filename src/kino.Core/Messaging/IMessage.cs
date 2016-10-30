@@ -3,7 +3,7 @@ using kino.Core.Connectivity;
 
 namespace kino.Core.Messaging
 {
-    public interface IMessage : IMessageIdentifier
+    public interface IMessage : IIdentifier
     {
         T GetPayload<T>() where T : IPayload, new();
 

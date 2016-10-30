@@ -128,7 +128,8 @@ namespace kino.Actors
                                                                                  {
                                                                                      Identity = mh.Identifier.Identity,
                                                                                      Version = mh.Identifier.Version,
-                                                                                     Partition = mh.Identifier.Partition
+                                                                                     Partition = mh.Identifier.Partition,
+                                                                                     IsAnyIdentifier = false
                                                                                  })
                                                                    .ToArray(),
                               GlobalMessageContracts = registrations.Where(mh => !mh.KeepRegistrationLocal)
@@ -136,7 +137,8 @@ namespace kino.Actors
                                                                                   {
                                                                                       Identity = mh.Identifier.Identity,
                                                                                       Version = mh.Identifier.Version,
-                                                                                      Partition = mh.Identifier.Partition
+                                                                                      Partition = mh.Identifier.Partition,
+                                                                                      IsAnyIdentifier = false
                                                                                   })
                                                                     .ToArray()
                           };

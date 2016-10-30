@@ -27,7 +27,7 @@ namespace kino.Core.Messaging
         public virtual byte[] Serialize()
             => messageSerializer.Serialize(this);
 
-        public abstract byte[] Version { get; }
+        public abstract ushort Version { get; }
 
         public abstract byte[] Identity { get; }
 

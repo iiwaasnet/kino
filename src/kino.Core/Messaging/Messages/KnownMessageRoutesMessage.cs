@@ -7,7 +7,7 @@ namespace kino.Core.Messaging.Messages
     public class KnownMessageRoutesMessage : Payload
     {
         private static readonly byte[] MessageIdentity = BuildFullIdentity("KNOWNMSGROUTES");
-        private static readonly byte[] MessageVersion = Message.CurrentVersion;
+        private static readonly ushort MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
         public MessageRoute InternalRoutes { get; set; }
@@ -15,7 +15,7 @@ namespace kino.Core.Messaging.Messages
         [ProtoMember(2)]
         public IEnumerable<MessageRoute> ExternalRoutes { get; set; }
 
-        public override byte[] Version => MessageVersion;
+        public override ushort Version => MessageVersion;
 
         public override byte[] Identity => MessageIdentity;
     }

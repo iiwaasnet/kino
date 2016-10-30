@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using kino.Core.Messaging;
 
 namespace kino.Core.Connectivity
 {
@@ -13,7 +14,7 @@ namespace kino.Core.Connectivity
         {
         }
 
-        public void RegisterSelf(IEnumerable<MessageIdentifier> messageHandlers, string domain)
+        public void RegisterSelf(IEnumerable<Identifier> messageHandlers, string domain)
         {
         }
 
@@ -21,14 +22,14 @@ namespace kino.Core.Connectivity
         {
         }
 
-        public void UnregisterSelf(IEnumerable<MessageIdentifier> messageIdentifiers)
+        public void UnregisterSelf(IEnumerable<Identifier> messageIdentifiers)
         {
         }
 
         public IEnumerable<SocketEndpoint> GetClusterMembers()
             => Enumerable.Empty<SocketEndpoint>();
 
-        public void DiscoverMessageRoute(MessageIdentifier messageIdentifier)
+        public void DiscoverMessageRoute(Identifier messageIdentifier)
         {
         }
     }

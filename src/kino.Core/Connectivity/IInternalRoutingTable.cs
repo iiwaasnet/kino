@@ -1,21 +1,22 @@
 using System.Collections.Generic;
+using kino.Core.Messaging;
 
 namespace kino.Core.Connectivity
 {
     public interface IInternalRoutingTable
     {
-        void AddMessageRoute(MessageIdentifier messageIdentifier, SocketIdentifier socketIdentifier);
+        void AddMessageRoute(Identifier messageIdentifier, SocketIdentifier socketIdentifier);
 
-        SocketIdentifier FindRoute(MessageIdentifier messageIdentifier);
+        SocketIdentifier FindRoute(Identifier messageIdentifier);
 
-        IEnumerable<SocketIdentifier> FindAllRoutes(MessageIdentifier messageIdentifier);
+        IEnumerable<SocketIdentifier> FindAllRoutes(Identifier messageIdentifier);
 
-        IEnumerable<MessageIdentifier> GetMessageIdentifiers();
+        IEnumerable<Identifier> GetMessageIdentifiers();
 
-        IEnumerable<MessageIdentifier> RemoveActorHostRoute(SocketIdentifier socketIdentifier);
+        IEnumerable<Identifier> RemoveActorHostRoute(SocketIdentifier socketIdentifier);
 
         IEnumerable<InternalRoute> GetAllRoutes();
 
-        bool CanRouteMessage(MessageIdentifier messageIdentifier);
+        bool CanRouteMessage(Identifier messageIdentifier);
     }
 }

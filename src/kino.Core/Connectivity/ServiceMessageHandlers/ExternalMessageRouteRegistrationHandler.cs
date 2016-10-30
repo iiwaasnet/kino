@@ -48,9 +48,11 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                     {
                         try
                         {
-                            var messageIdentifier = new MessageIdentifier(registration.Version,
-                                                                          registration.Identity,
-                                                                          registration.Partition);
+                            var messageIdentifier = registration.IsAnyIdentifier
+                                                        ? (Identifier) new AnyIdentifier(registration.Identity)
+                                                        : (Identifier) new MessageIdentifier(registration.Identity,
+                                                                                             registration.Version,
+                                                                                             registration.Partition);
                             //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
                             if (messageIdentifier.IsMessageHub() || securityProvider.GetDomain(messageIdentifier.Identity) == message.Domain)
                             {
