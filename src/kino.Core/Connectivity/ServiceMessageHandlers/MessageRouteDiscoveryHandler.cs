@@ -38,7 +38,7 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                     var messageContract = message.GetPayload<DiscoverMessageRouteMessage>().MessageContract;
                     var messageIdentifier = new MessageIdentifier(messageContract.Identity,
                                                                   messageContract.Version, messageContract.Partition);
-                    if (internalRoutingTable.CanRouteMessage(messageIdentifier))
+                    if (internalRoutingTable.MessageHandlerRegisteredExternaly(messageIdentifier))
                     {
                         var domains = messageIdentifier.IsMessageHub()
                                                   ? securityProvider.GetAllowedDomains()

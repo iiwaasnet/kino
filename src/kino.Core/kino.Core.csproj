@@ -77,6 +77,7 @@
     <Compile Include="Connectivity\ClusterMonitorProvider.cs" />
     <Compile Include="Connectivity\IClusterMessageListener.cs" />
     <Compile Include="Connectivity\IClusterMessageSender.cs" />
+    <Compile Include="Connectivity\IdentityRegistration.cs" />
     <Compile Include="Connectivity\IRouteDiscovery.cs" />
     <Compile Include="Connectivity\IRouterConfigurationManager.cs" />
     <Compile Include="Connectivity\IRouterConfigurationProvider.cs" />

@@ -76,7 +76,8 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                                                 : (Identifier) new MessageIdentifier(registration.Identity,
                                                                                      registration.Version,
                                                                                      registration.Partition);
-                    internalRoutingTable.AddMessageRoute(messageIdentifier, socketIdentifier);
+                    internalRoutingTable.AddMessageRoute(new IdentityRegistration(messageIdentifier, registration.KeepRegistrationLocal),
+                                                         socketIdentifier);
                     handlers.Add(messageIdentifier);
                 }
                 catch (Exception err)

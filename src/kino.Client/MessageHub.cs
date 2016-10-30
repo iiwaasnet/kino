@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
-using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
-using kino.Core.Security;
 using kino.Core.Sockets;
 
 namespace kino.Client
@@ -25,22 +23,20 @@ namespace kino.Client
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
-        private readonly ISecurityProvider securityProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception);
 
+        //TODO: Add parameters for local MessageHub registrations, either via ctor or via Start method
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
                           IRouterConfigurationProvider routerConfigurationProvider,
-                          ISecurityProvider securityProvider,
                           IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                           ILogger logger)
         {
             this.logger = logger;
             this.socketFactory = socketFactory;
-            this.securityProvider = securityProvider;
             this.performanceCounterManager = performanceCounterManager;
             receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             hubRegistered = new ManualResetEventSlim();
@@ -187,8 +183,6 @@ namespace kino.Client
 
         private void RegisterMessageHub(ISocket socket, byte[] receivingSocketIdentity)
         {
-            //TODO: Domain may be skipped here
-            //TODO: var message = Message.Create(payload);
             var rdyMessage = Message.Create(new RegisterInternalMessageRouteMessage
                                             {
                                                 SocketIdentity = receivingSocketIdentity,
@@ -200,8 +194,7 @@ namespace kino.Client
                                                                                  IsAnyIdentifier = true
                                                                              }
                                                                          }
-                                            },
-                                            securityProvider.GetDomain(KinoMessages.RegisterInternalMessageRoute.Identity));
+                                            });
             socket.SendMessage(rdyMessage);
 
             hubRegistered.Set();

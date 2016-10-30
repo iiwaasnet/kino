@@ -5,18 +5,18 @@ namespace kino.Core.Connectivity
 {
     public interface IInternalRoutingTable
     {
-        void AddMessageRoute(Identifier messageIdentifier, SocketIdentifier socketIdentifier);
+        void AddMessageRoute(IdentityRegistration identityRegistration, SocketIdentifier socketIdentifier);
 
-        SocketIdentifier FindRoute(Identifier messageIdentifier);
+        SocketIdentifier FindRoute(Identifier identifier);
 
-        IEnumerable<SocketIdentifier> FindAllRoutes(Identifier messageIdentifier);
+        IEnumerable<SocketIdentifier> FindAllRoutes(Identifier identifier);
 
-        IEnumerable<Identifier> GetMessageIdentifiers();
+        IEnumerable<IdentityRegistration> GetMessageRegistrations();
 
-        IEnumerable<Identifier> RemoveActorHostRoute(SocketIdentifier socketIdentifier);
+        IEnumerable<IdentityRegistration> RemoveActorHostRoute(SocketIdentifier socketIdentifier);
 
         IEnumerable<InternalRoute> GetAllRoutes();
 
-        bool CanRouteMessage(Identifier messageIdentifier);
+        bool MessageHandlerRegisteredExternaly(Identifier identifier);
     }
 }

@@ -31,11 +31,13 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                 {
                     message.As<Message>().VerifySignature(securityProvider);
 
-                    var messageIdentifiers = internalRoutingTable.GetMessageIdentifiers();
-                    var messageHubs = messageIdentifiers.Where(mi => mi.IsMessageHub());
+                    var messageIdentifiers = internalRoutingTable.GetMessageRegistrations();
+                    var messageHubs = messageIdentifiers.Where(mi => mi.Identifier.IsMessageHub())
+                                                        .Select(mi => mi.Identifier);
                     //TODO: Refactor, hence !mi.IsMessageHub() should be first condition
-                    var contracts = messageIdentifiers.Where(mi => !mi.IsMessageHub() &&
-                                                                   securityProvider.GetDomain(mi.Identity) == message.Domain)
+                    var contracts = messageIdentifiers.Where(mi => !mi.Identifier.IsMessageHub() &&
+                                                                   securityProvider.GetDomain(mi.Identifier.Identity) == message.Domain)
+                                                      .Select(mi => mi.Identifier)
                                                       .Concat(messageHubs)
                                                       .ToList();
 

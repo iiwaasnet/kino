@@ -197,7 +197,7 @@ namespace kino.Core.Connectivity
                     var removedHandlerIdentifiers = internalRoutingTable.RemoveActorHostRoute(handler);
                     if (removedHandlerIdentifiers.Any())
                     {
-                        clusterMonitor.UnregisterSelf(removedHandlerIdentifiers);
+                        clusterMonitor.UnregisterSelf(removedHandlerIdentifiers.Select(hi => hi.Identifier));
                     }
                     logger.Error(err);
                 }

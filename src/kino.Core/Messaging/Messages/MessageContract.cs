@@ -16,5 +16,8 @@ namespace kino.Core.Messaging.Messages
 
         [ProtoMember(4)]
         public bool IsAnyIdentifier { get; set; }
+
+        [ProtoMember(5)]
+        public bool KeepRegistrationLocal { get; set; }
     }
 }
