@@ -24,20 +24,22 @@ namespace kino.Client
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
+        private readonly bool keepRegistrationLocal;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception);
 
-        //TODO: Add parameters for local MessageHub registrations, either via ctor or via Start method
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
                           IRouterConfigurationProvider routerConfigurationProvider,
                           IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
+                          bool keepRegistrationLocal,
                           ILogger logger)
         {
             this.logger = logger;
             this.socketFactory = socketFactory;
             this.performanceCounterManager = performanceCounterManager;
+            this.keepRegistrationLocal = keepRegistrationLocal;
             receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             hubRegistered = new ManualResetEventSlim();
             this.callbackHandlers = callbackHandlers;
@@ -110,9 +112,7 @@ namespace kino.Client
         }
 
         private bool CallbackRequired(CallbackRegistration callbackRegistration)
-        {
-            return callbackRegistration.Promise != null && callbackRegistration.CallbackPoint != null;
-        }
+            => callbackRegistration.Promise != null && callbackRegistration.CallbackPoint != null;
 
         private void ReadReplies(CancellationToken token)
         {
@@ -191,7 +191,8 @@ namespace kino.Client
                                                                              new MessageContract
                                                                              {
                                                                                  Identity = receivingSocketIdentity,
-                                                                                 IsAnyIdentifier = true
+                                                                                 IsAnyIdentifier = true,
+                                                                                 KeepRegistrationLocal = keepRegistrationLocal
                                                                              }
                                                                          }
                                             });
@@ -201,14 +202,10 @@ namespace kino.Client
         }
 
         public IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint)
-        {
-            return InternalEnqueueRequest(message, callbackPoint);
-        }
+            => InternalEnqueueRequest(message, callbackPoint);
 
         public void SendOneWay(IMessage message)
-        {
-            registrationsQueue.Add(new CallbackRegistration {Message = message});
-        }
+            => registrationsQueue.Add(new CallbackRegistration {Message = message});
 
         private IPromise InternalEnqueueRequest(IMessage message, ICallbackPoint callbackPoint)
         {

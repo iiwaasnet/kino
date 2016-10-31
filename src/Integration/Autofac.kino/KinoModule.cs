@@ -4,6 +4,7 @@ using kino.Actors.Diagnostics;
 using kino.Client;
 using kino.Core.Connectivity;
 using kino.Core.Connectivity.ServiceMessageHandlers;
+using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Core.Security;
@@ -71,7 +72,12 @@ namespace Autofac.kino
                    .As<ICallbackHandlerStack>()
                    .SingleInstance();
 
-            builder.RegisterType<MessageHub>()
+            builder.Register(c => new MessageHub(c.Resolve<ISocketFactory>(),
+                                                 c.Resolve<ICallbackHandlerStack>(),
+                                                 c.Resolve<IRouterConfigurationProvider>(),
+                                                 c.Resolve<IPerformanceCounterManager<KinoPerformanceCounters>>(),
+                                                 false,
+                                                 c.Resolve<ILogger>()))
                    .As<IMessageHub>()
                    .SingleInstance();
 
