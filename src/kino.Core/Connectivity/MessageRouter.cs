@@ -382,7 +382,7 @@ namespace kino.Core.Connectivity
                                             },
                                             securityProvider.GetDomain(KinoMessages.Exception.Identity))
                                     .As<Message>();
-            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
+            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint, messageIn.CallbackKey);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
             messageOut.TraceOptions |= messageIn.TraceOptions;

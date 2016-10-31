@@ -8,6 +8,6 @@
 
         public byte[] Partition { get; set; }
 
-        public byte[] Correlation { get; set; }
+        public long CallbackKey { get; set; }
     }
 }

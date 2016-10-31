@@ -92,7 +92,8 @@ namespace kino.Core.Messaging
             receiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
-            CallbackPoint = multipartMessage.GetCallbackPoints(WireFormatVersion);
+            CallbackPoint = multipartMessage.GetCallbackPoints();
+            CallbackKey = multipartMessage.GetCallbackKey();
 
             ushort hops;
             routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting(out hops));
@@ -100,19 +101,16 @@ namespace kino.Core.Messaging
         }
 
         private void ReadWireFormatVersion(MultipartMessage multipartMessage)
-        {
-            WireFormatVersion = multipartMessage.GetWireFormatVersion().GetInt();
-        }
+            => WireFormatVersion = multipartMessage.GetWireFormatVersion().GetInt();
 
-        internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, MessageIdentifier callbackMessageIdentifier)
-        {
-            RegisterCallbackPoint(callbackReceiverIdentity, new[] {callbackMessageIdentifier});
-        }
+        internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, MessageIdentifier callbackMessageIdentifier, long callbackKey)
+            => RegisterCallbackPoint(callbackReceiverIdentity, new[] {callbackMessageIdentifier}, callbackKey);
 
-        internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, IEnumerable<MessageIdentifier> callbackMessageIdentifiers)
+        internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, IEnumerable<MessageIdentifier> callbackMessageIdentifiers, long callbackKey)
         {
             CallbackReceiverIdentity = callbackReceiverIdentity;
             CallbackPoint = callbackMessageIdentifiers;
+            CallbackKey = callbackKey;
 
             if (CallbackPoint.Any(identifier => Unsafe.ArraysEqual(Identity, identifier.Identity)
                                                 && Version == identifier.Version
@@ -216,14 +214,14 @@ namespace kino.Core.Messaging
 
         public T GetPayload<T>()
             where T : IPayload, new()
-            => (T) (payload ?? (payload = Deserialize<T>(Body)));
+        => (T) (payload ?? (payload = Deserialize<T>(Body)));
 
         private byte[] Serialize(IPayload payload)
             => payload.Serialize();
 
         private T Deserialize<T>(byte[] content)
             where T : IPayload, new()
-            => new T().Deserialize<T>(content);
+        => new T().Deserialize<T>(content);
 
         public void EncryptPayload()
         {
@@ -259,6 +257,8 @@ namespace kino.Core.Messaging
         public byte[] Signature { get; private set; }
 
         public IEnumerable<MessageIdentifier> CallbackPoint { get; private set; }
+
+        public long CallbackKey { get; private set; }
 
         public byte[] CallbackReceiverIdentity { get; private set; }
 

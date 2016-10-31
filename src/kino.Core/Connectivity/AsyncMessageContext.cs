@@ -13,6 +13,8 @@ namespace kino.Core.Connectivity
 
         public byte[] CallbackReceiverIdentity { get; internal set; }
 
+        public long CallbackKey { get; internal set; }
+
         public IEnumerable<SocketEndpoint> MessageHops { get; internal set; }
 
         public MessageTraceOptions TraceOptions { get; set; }

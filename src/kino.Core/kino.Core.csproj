@@ -117,6 +117,7 @@
     <Compile Include="Framework\IConfigurationStorage.cs" />
     <Compile Include="Framework\SyntacticSugar.cs" />
     <Compile Include="Framework\ThreadExtensions.cs" />
+    <Compile Include="Messaging\CallbackKey.cs" />
     <Compile Include="Messaging\Identifier.cs" />
     <Compile Include="Messaging\IIdentifier.cs" />
     <Compile Include="Messaging\Messages\DiscoverMessageRouteMessage.cs" />

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
+using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
 using kino.Core.Sockets;
@@ -28,6 +29,7 @@ namespace kino.Client
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception);
+        private long lastCallbackKey = 0;
 
         public MessageHub(ISocketFactory socketFactory,
                           ICallbackHandlerStack callbackHandlers,
@@ -83,10 +85,10 @@ namespace kino.Client
                             {
                                 var promise = callbackRegistration.Promise;
                                 var callbackPoint = callbackRegistration.CallbackPoint;
+                                var callbackKey = lastCallbackKey++;
+                                message.RegisterCallbackPoint(receivingSocketIdentity, callbackPoint.MessageIdentifiers, callbackKey);
 
-                                message.RegisterCallbackPoint(receivingSocketIdentity, callbackPoint.MessageIdentifiers);
-
-                                callbackHandlers.Push(new CorrelationId(message.CorrelationId),
+                                callbackHandlers.Push(callbackKey,
                                                       promise,
                                                       callbackPoint.MessageIdentifiers.Concat(new[] {ExceptionMessageIdentifier}));
                                 CallbackRegistered(message);
@@ -126,15 +128,15 @@ namespace kino.Client
                     {
                         try
                         {
-                            var message = socket.ReceiveMessage(token);
+                            var message = socket.ReceiveMessage(token).As<Message>();
                             if (message != null)
                             {
                                 var callback = (Promise) callbackHandlers.Pop(new CallbackHandlerKey
                                                                               {
                                                                                   Version = message.Version,
                                                                                   Identity = message.Identity,
-                                                                                  Correlation = message.CorrelationId,
-                                                                                  Partition = message.Partition
+                                                                                  Partition = message.Partition,
+                                                                                  CallbackKey = message.CallbackKey
                                                                               });
                                 if (callback != null)
                                 {
@@ -201,13 +203,13 @@ namespace kino.Client
             hubRegistered.Set();
         }
 
-        public IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint)
+        public IPromise EnqueueRequest(IMessage message, CallbackPoint callbackPoint)
             => InternalEnqueueRequest(message, callbackPoint);
 
         public void SendOneWay(IMessage message)
             => registrationsQueue.Add(new CallbackRegistration {Message = message});
 
-        private IPromise InternalEnqueueRequest(IMessage message, ICallbackPoint callbackPoint)
+        private IPromise InternalEnqueueRequest(IMessage message, CallbackPoint callbackPoint)
         {
             hubRegistered.Wait();
 

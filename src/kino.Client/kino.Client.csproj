@@ -54,7 +54,6 @@
     <Compile Include="CallbackPoint.cs" />
     <Compile Include="CallbackRegistration.cs" />
     <Compile Include="ICallbackHandlerStack.cs" />
-    <Compile Include="ICallbackPoint.cs" />
     <Compile Include="IMessageHub.cs" />
     <Compile Include="IPromise.cs" />
     <Compile Include="MessageHub.Tracing.cs" />

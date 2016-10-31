@@ -19,10 +19,11 @@
             internal const int RoutingDescription = 13;
             internal const int Signature = 14;
             internal const int Domain = 15;
+            internal const int CallbackKey = 16;
         }
 
         internal static ushort GetLastFixedFrameIndex()
-            => ReversedFramesV4.Domain;
+            => ReversedFramesV4.CallbackKey;
 
         private class ForwardFrames
         {

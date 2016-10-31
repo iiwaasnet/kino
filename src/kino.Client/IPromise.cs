@@ -8,6 +8,6 @@ namespace kino.Client
     {
         Task<IMessage> GetResponse();
 
-        CorrelationId CorrelationId { get; }
+        CallbackKey CallbackKey { get; }
     }
 }
