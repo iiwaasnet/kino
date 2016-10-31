@@ -10,7 +10,7 @@ using kino.Core.Sockets;
 
 namespace kino.Core.Connectivity.ServiceMessageHandlers
 {
-    public class InternalMessageRouteRegistrationHandler : IServiceMessageHandler
+    public class InternalMessageRouteRegistrationHandler
     {
         private readonly IClusterMonitor clusterMonitor;
         private readonly IInternalRoutingTable internalRoutingTable;
@@ -28,31 +28,27 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             this.logger = logger;
         }
 
-        public bool Handle(IMessage message, ISocket forwardingSocket)
+        public bool Handle(InternalRouteRegistration routeRegistration)
         {
-            var shouldHandle = IsInternalMessageRoutingRegistration(message);
-            if (shouldHandle)
-            {
-                var payload = message.GetPayload<RegisterInternalMessageRouteMessage>();
-                var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+            //var shouldHandle = IsInternalMessageRoutingRegistration(message);
+            //if (shouldHandle)
+            //{
+            //var payload = message.GetPayload<RegisterInternalMessageRouteMessage>();
+            //var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
 
-                if (payload.LocalMessageContracts != null)
+            if (routeRegistration.MessageContracts != null)
+            {
+                var newRoutes = UpdateLocalRoutingTable(routeRegistration);
+                var messageGroups = GetMessageHandlers(newRoutes).Concat(GetMessageHubs(newRoutes))
+                                                                 .GroupBy(mh => mh.Domain);
+                foreach (var group in messageGroups)
                 {
-                    UpdateLocalRoutingTable(handlerSocketIdentifier, payload.LocalMessageContracts);
-                }
-                if (payload.GlobalMessageContracts != null)
-                {
-                    var newRoutes = UpdateLocalRoutingTable(handlerSocketIdentifier, payload.GlobalMessageContracts);
-                    var messageGroups = GetMessageHandlers(newRoutes).Concat(GetMessageHubs(newRoutes))
-                                                                     .GroupBy(mh => mh.Domain);
-                    foreach (var group in messageGroups)
-                    {
-                        clusterMonitor.RegisterSelf(group.Select(g => g.Identity).ToList(), group.Key);
-                    }
+                    clusterMonitor.RegisterSelf(group.Select(g => g.Identity).ToList(), group.Key);
                 }
             }
+            //}
 
-            return shouldHandle;
+            return true;
         }
 
         private IEnumerable<IdentityDomainMap> GetMessageHandlers(IEnumerable<Identifier> newRoutes)
@@ -63,22 +59,25 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             => newRoutes.Where(mi => mi.IsMessageHub())
                         .SelectMany(mi => securityProvider.GetAllowedDomains().Select(dom => new IdentityDomainMap {Identity = mi, Domain = dom}));
 
-        private IEnumerable<Identifier> UpdateLocalRoutingTable(SocketIdentifier socketIdentifier, MessageContract[] messageContracts)
+        private IEnumerable<Identifier> UpdateLocalRoutingTable(InternalRouteRegistration routeRegistration)
         {
             var handlers = new List<Identifier>();
 
-            foreach (var registration in messageContracts)
+            foreach (var registration in routeRegistration.MessageContracts)
             {
                 try
                 {
-                    var messageIdentifier = registration.IsAnyIdentifier
-                                                ? (Identifier) new AnyIdentifier(registration.Identity)
-                                                : (Identifier) new MessageIdentifier(registration.Identity,
-                                                                                     registration.Version,
-                                                                                     registration.Partition);
-                    internalRoutingTable.AddMessageRoute(new IdentityRegistration(messageIdentifier, registration.KeepRegistrationLocal),
-                                                         socketIdentifier);
-                    handlers.Add(messageIdentifier);
+                    //var messageIdentifier = registration.IsAnyIdentifier
+                    //                            ? (Identifier) new AnyIdentifier(registration.Identity)
+                    //                            : (Identifier) new MessageIdentifier(registration.Identity,
+                    //                                                                 registration.Version,
+                    //                                                                 registration.Partition);
+                    internalRoutingTable.AddMessageRoute(new IdentityRegistration(registration.Identifier, registration.KeepRegistrationLocal),
+                                                         routeRegistration.DestinationSocket);
+                    if (!registration.KeepRegistrationLocal)
+                    {
+                        handlers.Add(registration.Identifier);
+                    }
                 }
                 catch (Exception err)
                 {

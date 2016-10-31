@@ -47,7 +47,7 @@ namespace kino.Actors.Diagnostics
                        MessageContracts = internalRoutingTable
                            .GetAllRoutes()
                            .SelectMany(ir => ir.Messages)
-                           .Select(m => new MessageContract
+                           .Select(m => new Core.Messaging.Messages.MessageContract
                                         {
                                             Version = m.Version,
                                             Identity = m.Identity,
@@ -67,7 +67,7 @@ namespace kino.Actors.Diagnostics
                                   Uri = mr.Connection.Node.Uri.ToSocketAddress(),
                                   Connected = mr.Connection.Connected,
                                   MessageContracts = mr.Messages
-                                                       .Select(m => new MessageContract
+                                                       .Select(m => new Core.Messaging.Messages.MessageContract
                                                                     {
                                                                         Version = m.Version,
                                                                         Identity = m.Identity,

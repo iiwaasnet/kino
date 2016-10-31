@@ -7,6 +7,7 @@ using kino.Core.Connectivity.ServiceMessageHandlers;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
+using kino.Core.Messaging;
 using kino.Core.Security;
 using kino.Core.Sockets;
 
@@ -19,9 +20,14 @@ namespace Autofac.kino
             RegisterServiceMessageHandlers(builder);
             RegisterFrameworkActors(builder);
             RegisterConfigurations(builder);
+            RegisterLocalSockets(builder);
 
             builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
                    .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
+                   .SingleInstance();
+
+            builder.RegisterType<LocalSocketFactory>()
+                   .As<ILocalSocketFactory>()
                    .SingleInstance();
 
             builder.RegisterType<InstanceNameResolver>()
@@ -72,10 +78,11 @@ namespace Autofac.kino
                    .As<ICallbackHandlerStack>()
                    .SingleInstance();
 
-            builder.Register(c => new MessageHub(c.Resolve<ISocketFactory>(),
-                                                 c.Resolve<ICallbackHandlerStack>(),
-                                                 c.Resolve<IRouterConfigurationProvider>(),
+            builder.Register(c => new MessageHub(c.Resolve<ICallbackHandlerStack>(),
                                                  c.Resolve<IPerformanceCounterManager<KinoPerformanceCounters>>(),
+                                                 c.Resolve<ILocalSocket<IMessage>>(),
+                                                 c.Resolve<ILocalSendingSocket<InternalRouteRegistration>>(),
+                                                 c.Resolve<ILocalSocketFactory>(),
                                                  false,
                                                  c.Resolve<ILogger>()))
                    .As<IMessageHub>()
@@ -96,6 +103,18 @@ namespace Autofac.kino
             builder.RegisterType<RouterConfigurationManager>()
                    .As<IRouterConfigurationProvider>()
                    .As<IRouterConfigurationManager>()
+                   .SingleInstance();
+        }
+
+        private void RegisterLocalSockets(ContainerBuilder builder)
+        {
+            builder.RegisterType<LocalSocket<IMessage>>()
+                   .As<ILocalSocket<IMessage>>()
+                   .SingleInstance();
+
+            builder.RegisterType<LocalSocket<InternalRouteRegistration>>()
+                   .As<ILocalSendingSocket<InternalRouteRegistration>>()
+                   .As<ILocalReceivingSocket<InternalRouteRegistration>>()
                    .SingleInstance();
         }
 
@@ -148,7 +167,7 @@ namespace Autofac.kino
                    .SingleInstance();
 
             builder.RegisterType<InternalMessageRouteRegistrationHandler>()
-                   .As<IServiceMessageHandler>()
+                   .As<InternalMessageRouteRegistrationHandler>()
                    .SingleInstance();
 
             builder.RegisterType<MessageRouteDiscoveryHandler>()

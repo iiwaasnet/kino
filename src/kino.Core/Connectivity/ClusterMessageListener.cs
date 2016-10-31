@@ -25,6 +25,7 @@ namespace kino.Core.Connectivity
         private readonly ClusterMembershipConfiguration membershipConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ISecurityProvider securityProvider;
+        private readonly ILocalSocket<IMessage> localRouterSocket;
 
         public ClusterMessageListener(IRendezvousCluster rendezvousCluster,
                                       ISocketFactory socketFactory,
@@ -34,12 +35,14 @@ namespace kino.Core.Connectivity
                                       ClusterMembershipConfiguration membershipConfiguration,
                                       IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                       ISecurityProvider securityProvider,
+                                      ILocalSocket<IMessage> localRouterSocket,
                                       ILogger logger)
         {
             this.logger = logger;
             this.membershipConfiguration = membershipConfiguration;
             this.performanceCounterManager = performanceCounterManager;
             this.securityProvider = securityProvider;
+            this.localRouterSocket = localRouterSocket;
             this.rendezvousCluster = rendezvousCluster;
             this.socketFactory = socketFactory;
             this.routerConfigurationProvider = routerConfigurationProvider;
@@ -57,8 +60,8 @@ namespace kino.Core.Connectivity
 
                 using (var clusterMonitorSubscriptionSocket = CreateClusterMonitorSubscriptionSocket())
                 {
-                    using (var routerNotificationSocket = CreateRouterCommunicationSocket())
-                    {
+                    //using (var routerNotificationSocket = CreateRouterCommunicationSocket())
+                    //{
                         gateway.SignalAndWait(token);
 
                         while (!token.IsCancellationRequested)
@@ -66,10 +69,10 @@ namespace kino.Core.Connectivity
                             var message = clusterMonitorSubscriptionSocket.ReceiveMessage(token);
                             if (message != null)
                             {
-                                ProcessIncomingMessage(message, routerNotificationSocket);
+                                ProcessIncomingMessage(message);
                             }
                         }
-                    }
+                    //}
                 }
             }
             catch (Exception err)
@@ -136,15 +139,15 @@ namespace kino.Core.Connectivity
             return false;
         }
 
-        private ISocket CreateRouterCommunicationSocket()
-        {
-            var routerConfiguration = routerConfigurationProvider.GetRouterConfiguration();
-            var socket = socketFactory.CreateDealerSocket();
-            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ClusterListenerInternalSocketSendRate);
-            SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
+        //private ISocket CreateRouterCommunicationSocket()
+        //{
+        //    var routerConfiguration = routerConfigurationProvider.GetRouterConfiguration();
+        //    var socket = socketFactory.CreateDealerSocket();
+        //    socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ClusterListenerInternalSocketSendRate);
+        //    SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
 
-            return socket;
-        }
+        //    return socket;
+        //}
 
         private ISocket CreateClusterMonitorSubscriptionSocket()
         {
@@ -159,11 +162,11 @@ namespace kino.Core.Connectivity
             return socket;
         }
 
-        private bool ProcessIncomingMessage(IMessage message, ISocket routerNotificationSocket)
-            => Ping(message, routerNotificationSocket)
+        private bool ProcessIncomingMessage(IMessage message)
+            => Ping(message)
                || Pong(message)
                || RendezvousReconfiguration(message)
-               || MessageRoutingControlMessage(message, routerNotificationSocket)
+               || MessageRoutingControlMessage(message)
                || RendezvousNotLeader(message);
 
         private bool RendezvousReconfiguration(IMessage message)
@@ -208,7 +211,7 @@ namespace kino.Core.Connectivity
             return shouldHandle;
         }
 
-        private bool Ping(IMessage message, ISocket routerNotificationSocket)
+        private bool Ping(IMessage message)
         {
             var shouldHandle = IsPing(message);
             if (shouldHandle)
@@ -218,7 +221,7 @@ namespace kino.Core.Connectivity
                 var ping = message.GetPayload<PingMessage>();
                 SendPong(ping.PingId);
 
-                UnregisterDeadNodes(routerNotificationSocket, DateTime.UtcNow, ping.PingInterval);
+                UnregisterDeadNodes(DateTime.UtcNow, ping.PingInterval);
             }
 
             return shouldHandle;
@@ -235,7 +238,7 @@ namespace kino.Core.Connectivity
             return shouldHandle;
         }
 
-        private bool MessageRoutingControlMessage(IMessage message, ISocket routerNotificationSocket)
+        private bool MessageRoutingControlMessage(IMessage message)
         {
             var shouldHandle = IsRequestAllMessageRoutingMessage(message)
                                || IsRequestNodeMessageRoutingMessage(message)
@@ -246,7 +249,7 @@ namespace kino.Core.Connectivity
 
             if (shouldHandle)
             {
-                routerNotificationSocket.SendMessage(message);
+                localRouterSocket.Send(message);
             }
 
             return shouldHandle;
@@ -369,7 +372,7 @@ namespace kino.Core.Connectivity
             }
         }
 
-        private void UnregisterDeadNodes(ISocket routerNotificationSocket, DateTime pingTime, TimeSpan pingInterval)
+        private void UnregisterDeadNodes(DateTime pingTime, TimeSpan pingInterval)
         {
             foreach (var deadNode in clusterMembership.GetDeadMembers(pingTime, pingInterval))
             {
@@ -378,7 +381,7 @@ namespace kino.Core.Connectivity
                                                  Uri = deadNode.Uri.ToSocketAddress(),
                                                  SocketIdentity = deadNode.Identity
                                              });
-                routerNotificationSocket.SendMessage(message);
+                localRouterSocket.Send(message);
             }
         }
 

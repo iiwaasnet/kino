@@ -78,9 +78,17 @@
     <Compile Include="Connectivity\IClusterMessageListener.cs" />
     <Compile Include="Connectivity\IClusterMessageSender.cs" />
     <Compile Include="Connectivity\IdentityRegistration.cs" />
+    <Compile Include="Connectivity\ILocalReceivingSocket.cs" />
+    <Compile Include="Connectivity\ILocalSendingSocket.cs" />
+    <Compile Include="Connectivity\ILocalSocket.cs" />
+    <Compile Include="Connectivity\ILocalSocketFactory.cs" />
+    <Compile Include="Connectivity\InternalRouteRegistration.cs" />
     <Compile Include="Connectivity\IRouteDiscovery.cs" />
     <Compile Include="Connectivity\IRouterConfigurationManager.cs" />
     <Compile Include="Connectivity\IRouterConfigurationProvider.cs" />
+    <Compile Include="Connectivity\LocalSocket.cs" />
+    <Compile Include="Connectivity\LocalSocketFactory.cs" />
+    <Compile Include="Connectivity\MessageContract.cs" />
     <Compile Include="Connectivity\MessageHandlerDefinitionAttribute.cs" />
     <Compile Include="Connectivity\MessageRouter.Tracing.cs" />
     <Compile Include="Connectivity\PeerConnection.cs" />

@@ -9,12 +9,9 @@ namespace kino.Core.Messaging.Messages
         private static readonly ushort MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
-        public MessageContract[] GlobalMessageContracts { get; set; }
+        public MessageContract[] MessageContracts { get; set; }
 
         [ProtoMember(2)]
-        public MessageContract[] LocalMessageContracts { get; set; }
-
-        [ProtoMember(3)]
         public byte[] SocketIdentity { get; set; }
 
         public override ushort Version => MessageVersion;

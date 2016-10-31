@@ -87,7 +87,7 @@ namespace kino.Core.Connectivity
                                          {
                                              Uri = scaleOutAddress.Uri.ToSocketAddress(),
                                              SocketIdentity = scaleOutAddress.Identity,
-                                             MessageContracts = messageHandlers.Select(mi => new MessageContract
+                                             MessageContracts = messageHandlers.Select(mi => new Messaging.Messages.MessageContract
                                                                                              {
                                                                                                  Version = mi.Version,
                                                                                                  Identity = mi.Identity,
@@ -125,7 +125,7 @@ namespace kino.Core.Connectivity
             => messageIdentifiers.Where(mi => !mi.IsMessageHub())
                                  .Select(mi => new MessageDomainMap
                                                {
-                                                   Message = new MessageContract
+                                                   Message = new Messaging.Messages.MessageContract
                                                              {
                                                                  Identity = mi.Identity,
                                                                  Version = mi.Version,
@@ -140,7 +140,7 @@ namespace kino.Core.Connectivity
                                  .SelectMany(mi => securityProvider.GetAllowedDomains().Select(dom =>
                                                                                                    new MessageDomainMap
                                                                                                    {
-                                                                                                       Message = new MessageContract
+                                                                                                       Message = new Messaging.Messages.MessageContract
                                                                                                                  {
                                                                                                                      Identity = mi.Identity,
                                                                                                                      Version = mi.Version,
@@ -159,7 +159,7 @@ namespace kino.Core.Connectivity
 
     internal class MessageDomainMap
     {
-        internal MessageContract Message { get; set; }
+        internal Messaging.Messages.MessageContract Message { get; set; }
 
         internal string Domain { get; set; }
     }

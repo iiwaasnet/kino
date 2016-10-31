@@ -5,7 +5,7 @@ namespace kino.Core.Connectivity
 {
     public class InternalRoute
     {
-        public SocketIdentifier Socket { get; set; }
+        public ILocalSendingSocket<IMessage> Socket { get; set; }
 
         public IEnumerable<Identifier> Messages { get; set; }
     }

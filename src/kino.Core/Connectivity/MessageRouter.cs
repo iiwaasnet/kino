@@ -32,6 +32,9 @@ namespace kino.Core.Connectivity
         private readonly ClusterMembershipConfiguration membershipConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ISecurityProvider securityProvider;
+        private readonly ILocalSocket<IMessage> localRouterSocket;
+        private readonly ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver;
+        private readonly InternalMessageRouteRegistrationHandler internalRegistrationHandler;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
 
         public MessageRouter(ISocketFactory socketFactory,
@@ -43,6 +46,9 @@ namespace kino.Core.Connectivity
                              ClusterMembershipConfiguration membershipConfiguration,
                              IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                              ISecurityProvider securityProvider,
+                             ILocalSocket<IMessage> localRouterSocket,
+                             ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver,
+                             InternalMessageRouteRegistrationHandler internalRegistrationHandler,
                              ILogger logger)
         {
             this.logger = logger;
@@ -56,6 +62,9 @@ namespace kino.Core.Connectivity
             this.membershipConfiguration = membershipConfiguration;
             this.performanceCounterManager = performanceCounterManager;
             this.securityProvider = securityProvider;
+            this.localRouterSocket = localRouterSocket;
+            this.internalRegistrationsReceiver = internalRegistrationsReceiver;
+            this.internalRegistrationHandler = internalRegistrationHandler;
             cancellationTokenSource = new CancellationTokenSource();
         }
 
@@ -85,7 +94,7 @@ namespace kino.Core.Connectivity
             {
                 using (var scaleOutFrontend = CreateScaleOutFrontendSocket())
                 {
-                    var localSocketIdentity = localSocketIdentityPromise.Task.Result;
+                    //var localSocketIdentity = localSocketIdentityPromise.Task.Result;
 
                     while (!token.IsCancellationRequested)
                     {
@@ -97,15 +106,16 @@ namespace kino.Core.Connectivity
                             {
                                 message.VerifySignature(securityProvider);
 
-                                message.SetSocketIdentity(localSocketIdentity);
-                                scaleOutFrontend.SendMessage(message);
+                                //message.SetSocketIdentity(localSocketIdentity);
+                                //scaleOutFrontend.SendMessage(message);
+                                localRouterSocket.Send(message);
 
                                 ReceivedFromOtherNode(message);
                             }
                         }
                         catch (SecurityException err)
                         {
-                            CallbackSecurityException(scaleOutFrontend, err, message, localSocketIdentity);
+                            CallbackSecurityException(err, message);
                             logger.Error(err);
                         }
                         catch (Exception err)
@@ -125,36 +135,55 @@ namespace kino.Core.Connectivity
         {
             try
             {
-                using (var localSocket = CreateRouterSocket())
-                {
-                    localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
+                //TODO: Remove this call after refactoring: no need for local socket identity any more
+                routerConfigurationManager.SetMessageRouterConfigurationActive();
+                //using (var localSocket = CreateRouterSocket())
+                //{
+                //    localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
 
-                    using (var scaleOutBackend = CreateScaleOutBackendSocket())
+                using (var scaleOutBackend = CreateScaleOutBackendSocket())
+                {
+                    while (!token.IsCancellationRequested)
                     {
-                        while (!token.IsCancellationRequested)
+                        try
                         {
-                            try
+                            var receiverId = WaitHandle.WaitAny(new[]
+                                                                {
+                                                                    localRouterSocket.CanReceive(),
+                                                                    internalRegistrationsReceiver.CanReceive(),
+                                                                    token.WaitHandle
+                                                                });
+                            if (receiverId == 0)
                             {
-                                var message = (Message) localSocket.ReceiveMessage(token);
+                                var message = (Message) localRouterSocket.TryReceive();
                                 if (message != null)
                                 {
                                     var _ = TryHandleServiceMessage(message, scaleOutBackend)
-                                            || HandleOperationMessage(message, localSocket, scaleOutBackend);
+                                            || HandleOperationMessage(message, scaleOutBackend);
                                 }
                             }
-                            catch (NetMQException err)
+                            if (receiverId == 1)
                             {
-                                logger.Error($"{nameof(err.ErrorCode)}:{err.ErrorCode} " +
-                                             $"{nameof(err.Message)}:{err.Message} " +
-                                             $"Exception:{err}");
+                                var registration = internalRegistrationsReceiver.TryReceive();
+                                if (registration != null)
+                                {
+                                    internalRegistrationHandler.Handle(registration);
+                                }
                             }
-                            catch (Exception err)
-                            {
-                                logger.Error(err);
-                            }
+                        }
+                        catch (NetMQException err)
+                        {
+                            logger.Error($"{nameof(err.ErrorCode)}:{err.ErrorCode} " +
+                                         $"{nameof(err.Message)}:{err.Message} " +
+                                         $"Exception:{err}");
+                        }
+                        catch (Exception err)
+                        {
+                            logger.Error(err);
                         }
                     }
                 }
+                //}
             }
             catch (Exception err)
             {
@@ -162,12 +191,12 @@ namespace kino.Core.Connectivity
             }
         }
 
-        private bool HandleOperationMessage(Message message, ISocket localSocket, ISocket scaleOutBackend)
+        private bool HandleOperationMessage(Message message, ISocket scaleOutBackend)
         {
             var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
 
             var handled = !message.ReceiverNodeSet()
-                          && HandleMessageLocally(messageHandlerIdentifier, message, localSocket);
+                          && HandleMessageLocally(messageHandlerIdentifier, message);
             if (!handled || message.Distribution == DistributionPattern.Broadcast)
             {
                 handled = ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend) || handled;
@@ -176,7 +205,7 @@ namespace kino.Core.Connectivity
             return handled || ProcessUnhandledMessage(message, messageHandlerIdentifier);
         }
 
-        private bool HandleMessageLocally(Identifier messageIdentifier, Message message, ISocket localSocket)
+        private bool HandleMessageLocally(Identifier messageIdentifier, Message message)
         {
             var handlers = (message.Distribution == DistributionPattern.Unicast
                                 ? new[] {internalRoutingTable.FindRoute(messageIdentifier)}
@@ -186,10 +215,11 @@ namespace kino.Core.Connectivity
 
             foreach (var handler in handlers)
             {
-                message.SetSocketIdentity(handler.Identity);
+                //message.SetSocketIdentity(handler.Identity);
                 try
                 {
-                    localSocket.SendMessage(message);
+                    handler.Send(message);
+                    //localSocket.SendMessage(message);
                     RoutedToLocalActor(message);
                 }
                 catch (HostUnreachableException err)
@@ -310,7 +340,7 @@ namespace kino.Core.Connectivity
                     socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutFrontendSocketReceiveRate);
 
                     socket.Bind(scaleOutAddress.Uri);
-                    SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
+                    //SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
                     routerConfigurationManager.SetActiveScaleOutAddress(scaleOutAddress);
 
                     logger.Info($"MessageRouter started at Uri:{scaleOutAddress.Uri.ToSocketAddress()} " +
@@ -342,19 +372,19 @@ namespace kino.Core.Connectivity
             return hwm;
         }
 
-        private ISocket CreateRouterSocket()
-        {
-            var routerConfiguration = routerConfigurationManager.GetInactiveRouterConfiguration();
-            var socket = socketFactory.CreateRouterSocket();
-            socket.SetMandatoryRouting();
-            socket.SetIdentity(routerConfiguration.RouterAddress.Identity);
-            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterSocketReceiveRate);
-            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterSocketSendRate);
-            socket.Bind(routerConfiguration.RouterAddress.Uri);
-            routerConfigurationManager.SetMessageRouterConfigurationActive();
+        //private ISocket CreateRouterSocket()
+        //{
+        //    var routerConfiguration = routerConfigurationManager.GetInactiveRouterConfiguration();
+        //    var socket = socketFactory.CreateRouterSocket();
+        //    socket.SetMandatoryRouting();
+        //    socket.SetIdentity(routerConfiguration.RouterAddress.Identity);
+        //    socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterSocketReceiveRate);
+        //    socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterSocketSendRate);
+        //    socket.Bind(routerConfiguration.RouterAddress.Uri);
+        //    routerConfigurationManager.SetMessageRouterConfigurationActive();
 
-            return socket;
-        }
+        //    return socket;
+        //}
 
         private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
         {
@@ -373,7 +403,7 @@ namespace kino.Core.Connectivity
                    ? (Identifier) new AnyIdentifier(message.ReceiverIdentity)
                    : (Identifier) new MessageIdentifier(message);
 
-        private void CallbackSecurityException(ISocket scaleOutFrontend, Exception err, Message messageIn, byte[] localSocketIdentity)
+        private void CallbackSecurityException(Exception err, Message messageIn)
         {
             var messageOut = Message.Create(new ExceptionMessage
                                             {
@@ -386,9 +416,9 @@ namespace kino.Core.Connectivity
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
             messageOut.TraceOptions |= messageIn.TraceOptions;
-            messageOut.SetSocketIdentity(localSocketIdentity);
+            //messageOut.SetSocketIdentity(localSocketIdentity);
 
-            scaleOutFrontend.SendMessage(messageOut);
+            localRouterSocket.Send(messageOut);
         }
     }
 }

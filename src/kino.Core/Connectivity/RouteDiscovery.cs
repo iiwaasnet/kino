@@ -91,7 +91,7 @@ namespace kino.Core.Connectivity
                                                  {
                                                      RequestorSocketIdentity = scaleOutAddress.Identity,
                                                      RequestorUri = scaleOutAddress.Uri.ToSocketAddress(),
-                                                     MessageContract = new MessageContract
+                                                     MessageContract = new Messaging.Messages.MessageContract
                                                                        {
                                                                            Version = messageIdentifier.Version,
                                                                            Identity = messageIdentifier.Identity,

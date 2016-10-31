@@ -34,6 +34,12 @@ namespace kino.Core.Connectivity
                    && StructuralCompare((SocketIdentifier) obj);
         }
 
+        public static bool operator ==(SocketIdentifier left, SocketIdentifier right)
+            => left != null && left.Equals(right);
+
+        public static bool operator !=(SocketIdentifier left, SocketIdentifier right)
+            => !(left == right);
+
         public override int GetHashCode()
             => hashCode;
 
