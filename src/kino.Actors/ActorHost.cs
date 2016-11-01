@@ -96,10 +96,6 @@ namespace kino.Actors
         {
             try
             {
-                //using (var socket = CreateOneWaySocket(KinoPerformanceCounters.ActorHostRegistrationSocketSendRate))
-                //{
-                //var localSocketIdentity = localSocketIdentityPromise.Task.Result;
-
                 foreach (var registrations in actorRegistrationsQueue.GetConsumingEnumerable(token))
                 {
                     try
@@ -111,7 +107,6 @@ namespace kino.Actors
                         logger.Error(err);
                     }
                 }
-                //}
             }
             finally
             {
@@ -121,22 +116,6 @@ namespace kino.Actors
 
         private void SendActorRegistrationMessage(IEnumerable<ActorMessageHandlerIdentifier> registrations)
         {
-            //var payload = new RegisterInternalMessageRouteMessage
-            //              {
-            //                  SocketIdentity = identity,
-            //                  MessageContracts = registrations.Select(mh => new MessageContract
-            //                                                                {
-            //                                                                    Identity = mh.Identifier.Identity,
-            //                                                                    Version = mh.Identifier.Version,
-            //                                                                    Partition = mh.Identifier.Partition,
-            //                                                                    KeepRegistrationLocal = mh.KeepRegistrationLocal,
-            //                                                                    IsAnyIdentifier = false
-            //                                                                })
-            //                                                  .ToArray<>()
-            //              };
-            //var message = Message.Create(payload);
-            //socket.Send(message);
-
             var registration = new InternalRouteRegistration
                                {
                                    MessageContracts = registrations.Select(mh => new MessageContract
@@ -157,8 +136,6 @@ namespace kino.Actors
         {
             try
             {
-                //using (var localSocket = CreateOneWaySocket(KinoPerformanceCounters.ActorHostAsyncResponseSocketSendRate))
-                //{
                 foreach (var messageContext in asyncQueue.GetConsumingEnumerable(token))
                 {
                     try
@@ -182,7 +159,6 @@ namespace kino.Actors
                         logger.Error(err);
                     }
                 }
-                //}
             }
             finally
             {
@@ -192,10 +168,6 @@ namespace kino.Actors
 
         private void ProcessRequests(CancellationToken token)
         {
-            //using (var localSocket = CreateRoutableSocket())
-            //{
-            //localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
-
             while (!token.IsCancellationRequested)
             {
                 try
@@ -238,7 +210,6 @@ namespace kino.Actors
                     logger.Error(err);
                 }
             }
-            //}
         }
 
         private void HandleTaskResult(CancellationToken token, Task<IActorResult> task, Message messageIn)
@@ -331,26 +302,6 @@ namespace kino.Actors
 
             return task.Result ?? ActorResult.Empty;
         }
-
-        //private ISocket CreateOneWaySocket(KinoPerformanceCounters couter)
-        //{
-        //    var socket = socketFactory.CreateDealerSocket();
-        //    socket.SendRate = performanceCounterManager.GetCounter(couter);
-        //    SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
-
-        //    return socket;
-        //}
-
-        //private ISocket CreateRoutableSocket()
-        //{
-        //    var socket = socketFactory.CreateDealerSocket();
-        //    socket.SetIdentity(SocketIdentifier.CreateIdentity());
-        //    socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ActorHostRequestSocketReceiveRate);
-        //    socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ActorHostRequestSocketSendRate);
-        //    SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
-
-        //    return socket;
-        //}
 
         private void SafeExecute(Action wrappedMethod)
         {

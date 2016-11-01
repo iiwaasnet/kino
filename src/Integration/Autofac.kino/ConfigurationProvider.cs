@@ -17,12 +17,9 @@ namespace Autofac.kino
         public IEnumerable<RendezvousEndpoint> GetRendezvousEndpointsConfiguration()
             => appConfig.RendezvousServers.Select(s => new RendezvousEndpoint(s.UnicastUri, s.BroadcastUri));
 
+        //TODO: Remove
         public RouterConfiguration GetRouterConfiguration()
-            => new RouterConfiguration
-               {
-                   RouterAddress = new SocketEndpoint(appConfig.RouterUri),
-                   DeferPeerConnection = appConfig.DeferPeerConnection
-               };
+            => new RouterConfiguration();
 
         public ScaleOutSocketConfiguration GetScaleOutConfiguration()
         {

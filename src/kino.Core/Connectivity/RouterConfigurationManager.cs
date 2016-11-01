@@ -8,6 +8,7 @@ namespace kino.Core.Connectivity
 {
     public class RouterConfigurationManager : IRouterConfigurationManager
     {
+        private readonly RouterConfiguration routerConfig;
         private readonly ScaleOutSocketConfiguration scaleOutConfig;
         private readonly TaskCompletionSource<SocketEndpoint> scaleOutAddressSource;
         private SocketEndpoint scaleOutAddress;
@@ -19,13 +20,12 @@ namespace kino.Core.Connectivity
                                           ScaleOutSocketConfiguration scaleOutConfig)
         {
             scaleOutAddressSource = new TaskCompletionSource<SocketEndpoint>();
-            activeRouterConfigSource = new TaskCompletionSource<RouterConfiguration>();
             this.scaleOutConfig = scaleOutConfig;
-            inactiveRouterConfig = SetDefaultsForMissingMembers(routerConfig);
+            this.routerConfig = SetDefaultsForMissingMembers(routerConfig);
         }
 
         public RouterConfiguration GetRouterConfiguration()
-            => activeRouterConfig ?? (activeRouterConfig = activeRouterConfigSource.Task.Result);
+            => routerConfig;
 
         public SocketEndpoint GetScaleOutAddress()
             => scaleOutAddress ?? (scaleOutAddress = scaleOutAddressSource.Task.Result);
@@ -44,13 +44,6 @@ namespace kino.Core.Connectivity
                 throw new Exception($"SocketEndpoint {activeAddress.Uri.ToSocketAddress()} is not configured!");
             }
         }
-            
-
-        public RouterConfiguration GetInactiveRouterConfiguration()
-            => inactiveRouterConfig;
-
-        public void SetMessageRouterConfigurationActive()
-            => activeRouterConfigSource.SetResult(inactiveRouterConfig);
 
         private static RouterConfiguration SetDefaultsForMissingMembers(RouterConfiguration routerConfiguration)
         {

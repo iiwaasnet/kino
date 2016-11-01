@@ -7,9 +7,5 @@ namespace kino.Core.Connectivity
         IEnumerable<SocketEndpoint> GetScaleOutAddressRange();
 
         void SetActiveScaleOutAddress(SocketEndpoint activeAddress);
-
-        RouterConfiguration GetInactiveRouterConfiguration();
-
-        void SetMessageRouterConfigurationActive();
     }
 }

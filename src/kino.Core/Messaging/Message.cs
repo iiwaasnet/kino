@@ -35,6 +35,10 @@ namespace kino.Core.Messaging
             TraceOptions = MessageTraceOptions.None;
         }
 
+        private Message()
+        {
+        }
+
         public static IMessage CreateFlowStartMessage(IPayload payload, string domain = null)
             => new Message(payload, domain)
                {
@@ -232,6 +236,31 @@ namespace kino.Core.Messaging
         {
             throw new NotImplementedException();
         }
+
+        //TODO: Think of deep cloning byte arrays
+        internal IMessage Clone()
+            => new Message
+               {
+                   Body = Body,
+                   WireFormatVersion = WireFormatVersion,
+                   Identity = Identity,
+                   Partition = Partition,
+                   Version = Version,
+                   TTL = TTL,
+                   CorrelationId = CorrelationId,
+                   ReceiverIdentity = ReceiverIdentity,
+                   Signature = Signature,
+                   //NOTE: CallbackPoint, if changed from immutable, should be deep-cloned here
+                   CallbackPoint = CallbackPoint,
+                   CallbackKey = CallbackKey,
+                   CallbackReceiverIdentity = CallbackReceiverIdentity,
+                   SocketIdentity = SocketIdentity,
+                   TraceOptions = TraceOptions,
+                   Distribution = Distribution,
+                   Hops = Hops,
+                   Domain = Domain,
+                   routing = new List<SocketEndpoint>(routing)
+               };
 
         public override string ToString()
             => $"{nameof(Identity)}[{Identity?.GetAnyString()}]-" +

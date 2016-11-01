@@ -6,7 +6,6 @@ using kino.Core.Framework;
 using kino.Core.Messaging;
 using kino.Core.Messaging.Messages;
 using kino.Core.Security;
-using kino.Core.Sockets;
 
 namespace kino.Core.Connectivity.ServiceMessageHandlers
 {
@@ -28,14 +27,8 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
             this.logger = logger;
         }
 
-        public bool Handle(InternalRouteRegistration routeRegistration)
+        public void Handle(InternalRouteRegistration routeRegistration)
         {
-            //var shouldHandle = IsInternalMessageRoutingRegistration(message);
-            //if (shouldHandle)
-            //{
-            //var payload = message.GetPayload<RegisterInternalMessageRouteMessage>();
-            //var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
-
             if (routeRegistration.MessageContracts != null)
             {
                 var newRoutes = UpdateLocalRoutingTable(routeRegistration);
@@ -46,9 +39,6 @@ namespace kino.Core.Connectivity.ServiceMessageHandlers
                     clusterMonitor.RegisterSelf(group.Select(g => g.Identity).ToList(), group.Key);
                 }
             }
-            //}
-
-            return true;
         }
 
         private IEnumerable<IdentityDomainMap> GetMessageHandlers(IEnumerable<Identifier> newRoutes)

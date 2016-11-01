@@ -25,7 +25,6 @@ namespace kino.Core.Connectivity
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IRouterConfigurationManager routerConfigurationManager;
         private readonly ISocketFactory socketFactory;
-        private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly IClusterMonitor clusterMonitor;
         private readonly ILogger logger;
         private readonly IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
@@ -53,7 +52,6 @@ namespace kino.Core.Connectivity
         {
             this.logger = logger;
             this.socketFactory = socketFactory;
-            localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
             this.routerConfigurationManager = routerConfigurationManager;
@@ -94,8 +92,6 @@ namespace kino.Core.Connectivity
             {
                 using (var scaleOutFrontend = CreateScaleOutFrontendSocket())
                 {
-                    //var localSocketIdentity = localSocketIdentityPromise.Task.Result;
-
                     while (!token.IsCancellationRequested)
                     {
                         Message message = null;
@@ -105,9 +101,6 @@ namespace kino.Core.Connectivity
                             if (message != null)
                             {
                                 message.VerifySignature(securityProvider);
-
-                                //message.SetSocketIdentity(localSocketIdentity);
-                                //scaleOutFrontend.SendMessage(message);
                                 localRouterSocket.Send(message);
 
                                 ReceivedFromOtherNode(message);
@@ -135,12 +128,6 @@ namespace kino.Core.Connectivity
         {
             try
             {
-                //TODO: Remove this call after refactoring: no need for local socket identity any more
-                routerConfigurationManager.SetMessageRouterConfigurationActive();
-                //using (var localSocket = CreateRouterSocket())
-                //{
-                //    localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
-
                 using (var scaleOutBackend = CreateScaleOutBackendSocket())
                 {
                     while (!token.IsCancellationRequested)
@@ -183,7 +170,6 @@ namespace kino.Core.Connectivity
                         }
                     }
                 }
-                //}
             }
             catch (Exception err)
             {
@@ -215,11 +201,13 @@ namespace kino.Core.Connectivity
 
             foreach (var handler in handlers)
             {
-                //message.SetSocketIdentity(handler.Identity);
                 try
                 {
+                    message = MessageCameFromLocalActor(message)
+                                  ? message.Clone().As<Message>()
+                                  : message;
+
                     handler.Send(message);
-                    //localSocket.SendMessage(message);
                     RoutedToLocalActor(message);
                 }
                 catch (HostUnreachableException err)
@@ -305,10 +293,10 @@ namespace kino.Core.Connectivity
             return true;
         }
 
-        private bool MessageCameFromLocalActor(Message message)
+        private bool MessageCameFromLocalActor(IMessage message)
             => message.Hops == 0;
 
-        private bool MessageCameFromOtherNode(Message message)
+        private bool MessageCameFromOtherNode(IMessage message)
             => !MessageCameFromLocalActor(message);
 
         private ISocket CreateScaleOutBackendSocket()
@@ -340,7 +328,6 @@ namespace kino.Core.Connectivity
                     socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutFrontendSocketReceiveRate);
 
                     socket.Bind(scaleOutAddress.Uri);
-                    //SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
                     routerConfigurationManager.SetActiveScaleOutAddress(scaleOutAddress);
 
                     logger.Info($"MessageRouter started at Uri:{scaleOutAddress.Uri.ToSocketAddress()} " +
@@ -372,20 +359,6 @@ namespace kino.Core.Connectivity
             return hwm;
         }
 
-        //private ISocket CreateRouterSocket()
-        //{
-        //    var routerConfiguration = routerConfigurationManager.GetInactiveRouterConfiguration();
-        //    var socket = socketFactory.CreateRouterSocket();
-        //    socket.SetMandatoryRouting();
-        //    socket.SetIdentity(routerConfiguration.RouterAddress.Identity);
-        //    socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterSocketReceiveRate);
-        //    socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterSocketSendRate);
-        //    socket.Bind(routerConfiguration.RouterAddress.Uri);
-        //    routerConfigurationManager.SetMessageRouterConfigurationActive();
-
-        //    return socket;
-        //}
-
         private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
         {
             var handled = false;
@@ -416,7 +389,6 @@ namespace kino.Core.Connectivity
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
             messageOut.TraceOptions |= messageIn.TraceOptions;
-            //messageOut.SetSocketIdentity(localSocketIdentity);
 
             localRouterSocket.Send(messageOut);
         }
