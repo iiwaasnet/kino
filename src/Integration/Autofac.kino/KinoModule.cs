@@ -55,16 +55,12 @@ namespace Autofac.kino
                    .As<IClusterMonitorProvider>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterMembership>()
-                   .As<IClusterMembership>()
+            builder.RegisterType<AutoDiscoverySender>()
+                   .As<IAutoDiscoverySender>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterMessageSender>()
-                   .As<IClusterMessageSender>()
-                   .SingleInstance();
-
-            builder.RegisterType<ClusterMessageListener>()
-                   .As<IClusterMessageListener>()
+            builder.RegisterType<AutoDiscoveryListener>()
+                   .As<IAutoDiscoveryListener>()
                    .SingleInstance();
 
             builder.RegisterType<RouteDiscovery>()

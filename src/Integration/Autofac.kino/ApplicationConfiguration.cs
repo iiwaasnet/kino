@@ -12,9 +12,7 @@ namespace Autofac.kino
 
         public IEnumerable<RendezvousNode> RendezvousServers { get; set; }
 
-        public TimeSpan PingSilenceBeforeRendezvousFailover { get; set; }
-
-        public TimeSpan PongSilenceBeforeRouteDeletion { get; set; }
+        public TimeSpan HeartBeatSilenceBeforeRendezvousFailover { get; set; }
 
         public bool RunAsStandalone { get; set; }
 

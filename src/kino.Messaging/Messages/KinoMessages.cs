@@ -18,5 +18,9 @@ namespace kino.Messaging.Messages
         public static readonly MessageIdentifier RendezvousConfigurationChanged = MessageIdentifier.Create<RendezvousConfigurationChangedMessage>();
         public static readonly MessageIdentifier Exception = MessageIdentifier.Create<ExceptionMessage>();
         public static readonly MessageIdentifier RequestKnownMessageRoutes = MessageIdentifier.Create<RequestKnownMessageRoutesMessage>();
+        public static readonly MessageIdentifier HeartBeat = MessageIdentifier.Create<HeartBeatMessage>();
+        public static readonly MessageIdentifier StartPeerMonitoring = MessageIdentifier.Create<StartPeerMonitoringMessage>();
+        public static readonly MessageIdentifier CheckDeadPeers = MessageIdentifier.Create<CheckDeadPeersMessage>();
+        public static readonly MessageIdentifier DeletePeer = MessageIdentifier.Create<DeletePeerMessage>();
     }
 }

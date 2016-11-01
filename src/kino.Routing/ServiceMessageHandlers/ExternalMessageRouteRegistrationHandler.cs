@@ -1,5 +1,4 @@
 ﻿using System;
-using kino.Cluster;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -7,6 +6,7 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
+using Health = kino.Cluster.Health;
 
 namespace kino.Routing.ServiceMessageHandlers
 {
@@ -14,17 +14,14 @@ namespace kino.Routing.ServiceMessageHandlers
     {
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ILogger logger;
-        private readonly IClusterMembership clusterMembership;
         private readonly ISecurityProvider securityProvider;
 
         public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable,
-                                                       IClusterMembership clusterMembership,
                                                        ISecurityProvider securityProvider,
                                                        ILogger logger)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.logger = logger;
-            this.clusterMembership = clusterMembership;
             this.securityProvider = securityProvider;
         }
 
@@ -54,18 +51,16 @@ namespace kino.Routing.ServiceMessageHandlers
                             //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
                             if (messageIdentifier.IsMessageHub() || securityProvider.GetDomain(messageIdentifier.Identity) == message.Domain)
                             {
-                                if (!memberAdded)
-                                {
-                                    clusterMembership.AddClusterMember(new SocketEndpoint(uri, payload.SocketIdentity));
-                                    memberAdded = true;
-                                }
-                                var peerConnection = externalRoutingTable.AddMessageRoute(messageIdentifier, handlerSocketIdentifier, uri);
-                                //TODO: Remove this code from here, no connection to be established!!!
-                                if (!peerConnection.Connected)
-                                {
-                                    forwardingSocket.Connect(uri);
-                                    peerConnection.Connected = true;
-                                }
+                                var peerConnection = externalRoutingTable.AddMessageRoute(new ExternalRouteDefinition
+                                                                                          {
+                                                                                              Identifier = messageIdentifier,
+                                                                                              Peer = new Node(uri, payload.SocketIdentity),
+                                                                                              Health = new Health
+                                                                                                       {
+                                                                                                           Uri = payload.Health.Uri,
+                                                                                                           HeartBeatInterval = payload.Health.HeartBeatInterval
+                                                                                                       }
+                                                                                          });
                             }
                             else
                             {

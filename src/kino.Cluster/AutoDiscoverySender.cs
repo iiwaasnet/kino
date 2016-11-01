@@ -12,7 +12,7 @@ using kino.Security;
 
 namespace kino.Cluster
 {
-    public class ClusterMessageSender : IClusterMessageSender
+    public class AutoDiscoverySender : IAutoDiscoverySender
     {
         private readonly IRendezvousCluster rendezvousCluster;
         private readonly IRouterConfigurationProvider routerConfigurationProvider;
@@ -24,7 +24,7 @@ namespace kino.Cluster
         //TODO: Move to config
         private readonly TimeSpan UnregisterMessageSendTimeout = TimeSpan.FromMilliseconds(500);
 
-        public ClusterMessageSender(IRendezvousCluster rendezvousCluster,
+        public AutoDiscoverySender(IRendezvousCluster rendezvousCluster,
                                     IRouterConfigurationProvider routerConfigurationProvider,
                                     ISocketFactory socketFactory,
                                     IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,

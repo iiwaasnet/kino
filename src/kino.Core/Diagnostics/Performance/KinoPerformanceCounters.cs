@@ -23,7 +23,8 @@ namespace kino.Core.Diagnostics.Performance
 
         [PerformanceCounterDefinition("ActorHost Request Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] ActorHostRequestSocketSendRate,
 
-        [PerformanceCounterDefinition("Rendezvous Ping Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] RendezvousPingSocketSendRate,
+        [PerformanceCounterDefinition("Rendezvous HeartBeat Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+        RendezvousHeartBeatSocketSendRate,
 
         [PerformanceCounterDefinition("Rendezvous Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] RendezvousSocketReceiveRate,
 

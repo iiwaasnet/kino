@@ -21,12 +21,13 @@ namespace kino.Rendezvous
         private readonly ILeaseProvider leaseProvider;
         private readonly Node localNode;
         private Task messageProcessing;
-        private Task pinging;
+        private Task heartBeating;
         private readonly RendezvousConfiguration config;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly IMessageSerializer serializer;
         private readonly ILogger logger;
         private readonly byte[] leaderPayload;
+        private readonly IMessage pongMessage;
 
         public RendezvousService(ILeaseProvider leaseProvider,
                                  ISynodConfiguration synodConfig,
@@ -44,6 +45,7 @@ namespace kino.Rendezvous
             this.config = config;
             this.performanceCounterManager = performanceCounterManager;
             cancellationTokenSource = new CancellationTokenSource();
+            pongMessage = Message.Create(new PongMessage());
             leaderPayload = serializer.Serialize(new RendezvousNode
                                                  {
                                                      MulticastUri = config.BroadcastUri.ToSocketAddress(),
@@ -59,9 +61,9 @@ namespace kino.Rendezvous
                 messageProcessing = Task.Factory.StartNew(_ => ProcessMessages(cancellationTokenSource.Token, gateway),
                                                           cancellationTokenSource.Token,
                                                           TaskCreationOptions.LongRunning);
-                pinging = Task.Factory.StartNew(_ => PingClusterMembers(cancellationTokenSource.Token, gateway),
-                                                cancellationTokenSource.Token,
-                                                TaskCreationOptions.LongRunning);
+                heartBeating = Task.Factory.StartNew(_ => SendHeartBeat(cancellationTokenSource.Token, gateway),
+                                                     cancellationTokenSource.Token,
+                                                     TaskCreationOptions.LongRunning);
 
                 return gateway.SignalAndWait(startTimeout, cancellationTokenSource.Token);
             }
@@ -71,33 +73,32 @@ namespace kino.Rendezvous
         {
             cancellationTokenSource.Cancel();
             messageProcessing?.Wait();
-            pinging?.Wait();
+            heartBeating?.Wait();
             leaseProvider.Dispose();
         }
 
-        private void PingClusterMembers(CancellationToken token, Barrier gateway)
+        private void SendHeartBeat(CancellationToken token, Barrier gateway)
         {
             try
             {
                 using (var wait = new ManualResetEventSlim(false))
                 {
-                    using (var pingNotificationSocket = CreatePingNotificationSocket())
+                    using (var heartBeatSocket = CreateHeartBeatSocket())
                     {
                         gateway.SignalAndWait(token);
-                        var pingId = 0UL;
 
                         while (!token.IsCancellationRequested)
                         {
                             try
                             {
                                 var message = NodeIsLeader()
-                                                  ? CreatePing(ref pingId)
+                                                  ? CreateHeartBeat()
                                                   : CreateNotLeaderMessage();
                                 if (message != null)
                                 {
-                                    pingNotificationSocket.SendMessage(message);
+                                    heartBeatSocket.SendMessage(message);
                                 }
-                                wait.Wait(config.PingInterval, token);
+                                wait.Wait(config.HeartBeatInterval, token);
                             }
                             catch (OperationCanceledException)
                             {
@@ -140,7 +141,9 @@ namespace kino.Rendezvous
                             {
                                 var message = unicastSocket.ReceiveMessage(token);
 
-                                message = (NodeIsLeader()) ? message : CreateNotLeaderMessage();
+                                message = NodeIsLeader()
+                                              ? ProcessMessage(message)
+                                              : CreateNotLeaderMessage();
 
                                 if (message != null)
                                 {
@@ -164,14 +167,13 @@ namespace kino.Rendezvous
             }
         }
 
-        private IMessage CreatePing(ref ulong pingId)
-        {
-            return Message.Create(new PingMessage
-                                  {
-                                      PingId = pingId++,
-                                      PingInterval = config.PingInterval
-                                  });
-        }
+        private IMessage ProcessMessage(IMessage message)
+            => message?.Equals(KinoMessages.Ping) == true
+                   ? pongMessage
+                   : message;
+
+        private IMessage CreateHeartBeat()
+            => Message.Create(new HeartBeatMessage {HeartBeatInterval = config.HeartBeatInterval});
 
         private IMessage CreateNotLeaderMessage()
         {
@@ -205,10 +207,10 @@ namespace kino.Rendezvous
             return socket;
         }
 
-        private ISocket CreatePingNotificationSocket()
+        private ISocket CreateHeartBeatSocket()
         {
             var socket = socketFactory.CreateDealerSocket();
-            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousPingSocketSendRate);
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousHeartBeatSocketSendRate);
             socket.Connect(config.UnicastUri);
 
             return socket;

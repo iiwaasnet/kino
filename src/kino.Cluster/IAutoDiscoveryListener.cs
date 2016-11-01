@@ -3,7 +3,7 @@ using System.Threading;
 
 namespace kino.Cluster
 {
-    public interface IClusterMessageListener
+    public interface IAutoDiscoveryListener
     {
         void StartBlockingListenMessages(Action restartRequestHandler, CancellationToken token, Barrier gateway);
     }

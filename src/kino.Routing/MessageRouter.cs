@@ -307,11 +307,6 @@ namespace kino.Routing
             var socket = socketFactory.CreateRouterSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutBackendSocketSendRate);
 
-            foreach (var peer in clusterMonitor.GetClusterMembers())
-            {
-                socket.Connect(peer.Uri);
-            }
-
             return socket;
         }
 

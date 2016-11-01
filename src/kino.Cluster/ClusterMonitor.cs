@@ -15,28 +15,28 @@ namespace kino.Cluster
     public class ClusterMonitor : IClusterMonitor
     {
         private CancellationTokenSource messageProcessingToken;
-        private readonly IClusterMembership clusterMembership;
         private Task sendingMessages;
         private Task listenningMessages;
         private readonly IRouterConfigurationProvider routerConfigurationProvider;
-        private readonly IClusterMessageSender clusterMessageSender;
-        private readonly IClusterMessageListener clusterMessageListener;
+        private readonly IAutoDiscoverySender autoDiscoverySender;
+        private readonly IAutoDiscoveryListener autoDiscoveryListener;
+        private readonly IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider;
         private readonly IRouteDiscovery routeDiscovery;
         private readonly ISecurityProvider securityProvider;
 
         public ClusterMonitor(IRouterConfigurationProvider routerConfigurationProvider,
-                              IClusterMembership clusterMembership,
-                              IClusterMessageSender clusterMessageSender,
-                              IClusterMessageListener clusterMessageListener,
+                              IAutoDiscoverySender autoDiscoverySender,
+                              IAutoDiscoveryListener autoDiscoveryListener,
+                              IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider,
                               IRouteDiscovery routeDiscovery,
                               ISecurityProvider securityProvider)
         {
             this.routerConfigurationProvider = routerConfigurationProvider;
-            this.clusterMessageSender = clusterMessageSender;
-            this.clusterMessageListener = clusterMessageListener;
+            this.autoDiscoverySender = autoDiscoverySender;
+            this.autoDiscoveryListener = autoDiscoveryListener;
+            this.heartBeatConfigurationProvider = heartBeatConfigurationProvider;
             this.routeDiscovery = routeDiscovery;
             this.securityProvider = securityProvider;
-            this.clusterMembership = clusterMembership;
         }
 
         public bool Start(TimeSpan startTimeout)
@@ -51,10 +51,10 @@ namespace kino.Cluster
             const int participantCount = 3;
             using (var gateway = new Barrier(participantCount))
             {
-                sendingMessages = Task.Factory.StartNew(_ => clusterMessageSender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
+                sendingMessages = Task.Factory.StartNew(_ => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
                                                         TaskCreationOptions.LongRunning);
                 listenningMessages =
-                    Task.Factory.StartNew(_ => clusterMessageListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
+                    Task.Factory.StartNew(_ => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
                                           TaskCreationOptions.LongRunning);
                 var started = gateway.SignalAndWait(startTimeout, messageProcessingToken.Token);
                 if (started)
@@ -89,7 +89,13 @@ namespace kino.Cluster
                                          {
                                              Uri = scaleOutAddress.Uri.ToSocketAddress(),
                                              SocketIdentity = scaleOutAddress.Identity,
-                                             MessageContracts = messageHandlers.Select(mi => new Messaging.Messages.MessageContract
+                                             Health = new Messaging.Messages.Health
+                                                      {
+                                                          Uri = heartBeatConfigurationProvider.GetHeartBeatAddress()
+                                                                                              .ToSocketAddress(),
+                                                          HeartBeatInterval = heartBeatConfigurationProvider.GetHeartBeatInterval()
+                                                      },
+                                             MessageContracts = messageHandlers.Select(mi => new MessageContract
                                                                                              {
                                                                                                  Version = mi.Version,
                                                                                                  Identity = mi.Identity,
@@ -99,7 +105,7 @@ namespace kino.Cluster
                                          },
                                          domain);
             message.As<Message>().SignMessage(securityProvider);
-            clusterMessageSender.EnqueueMessage(message);
+            autoDiscoverySender.EnqueueMessage(message);
         }
 
         public void UnregisterSelf(IEnumerable<Identifier> messageIdentifiers)
@@ -119,7 +125,7 @@ namespace kino.Cluster
                                              group.Key);
                 message.As<Message>().SignMessage(securityProvider);
 
-                clusterMessageSender.EnqueueMessage(message);
+                autoDiscoverySender.EnqueueMessage(message);
             }
         }
 
@@ -127,7 +133,7 @@ namespace kino.Cluster
             => messageIdentifiers.Where(mi => !mi.IsMessageHub())
                                  .Select(mi => new MessageDomainMap
                                                {
-                                                   Message = new Messaging.Messages.MessageContract
+                                                   Message = new MessageContract
                                                              {
                                                                  Identity = mi.Identity,
                                                                  Version = mi.Version,
@@ -142,7 +148,7 @@ namespace kino.Cluster
                                  .SelectMany(mi => securityProvider.GetAllowedDomains().Select(dom =>
                                                                                                    new MessageDomainMap
                                                                                                    {
-                                                                                                       Message = new Messaging.Messages.MessageContract
+                                                                                                       Message = new MessageContract
                                                                                                                  {
                                                                                                                      Identity = mi.Identity,
                                                                                                                      Version = mi.Version,
@@ -152,16 +158,13 @@ namespace kino.Cluster
                                                                                                        Domain = dom
                                                                                                    }));
 
-        public IEnumerable<SocketEndpoint> GetClusterMembers()
-            => clusterMembership.GetClusterMembers();
-
         public void DiscoverMessageRoute(Identifier messageIdentifier)
             => routeDiscovery.RequestRouteDiscovery(messageIdentifier);
     }
 
     internal class MessageDomainMap
     {
-        internal Messaging.Messages.MessageContract Message { get; set; }
+        internal MessageContract Message { get; set; }
 
         internal string Domain { get; set; }
     }

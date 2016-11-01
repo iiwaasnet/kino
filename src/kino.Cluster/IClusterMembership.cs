@@ -4,16 +4,16 @@ using kino.Core;
 
 namespace kino.Cluster
 {
-    public interface IClusterMembership
-    {
-        IEnumerable<SocketEndpoint> GetClusterMembers();
+    //public interface IClusterMembership
+    //{
+    //    IEnumerable<SocketEndpoint> GetClusterMembers();
 
-        IEnumerable<SocketEndpoint> GetDeadMembers(DateTime pingTime, TimeSpan pingInterval);
+    //    IEnumerable<SocketEndpoint> GetDeadMembers(DateTime pingTime, TimeSpan pingInterval);
 
-        void AddClusterMember(SocketEndpoint node);
+    //    void AddClusterMember(SocketEndpoint node);
 
-        void DeleteClusterMember(SocketEndpoint node);
+    //    void DeleteClusterMember(SocketEndpoint node);
 
-        bool KeepAlive(SocketEndpoint node);
-    }
+    //    bool KeepAlive(SocketEndpoint node);
+    //}
 }

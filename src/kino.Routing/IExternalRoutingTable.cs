@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using kino.Core;
 
 namespace kino.Routing
 {
     public interface IExternalRoutingTable
     {
-        PeerConnection AddMessageRoute(Identifier messageIdentifier, SocketIdentifier socketIdentifier, Uri uri);
+        PeerConnection AddMessageRoute(ExternalRouteDefinition routeDefinition);
 
         PeerConnection FindRoute(Identifier messageIdentifier, byte[] receiverNodeIdentity);
 

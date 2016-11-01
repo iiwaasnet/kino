@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using C5;
 using kino.Core;
@@ -25,30 +24,30 @@ namespace kino.Routing
             uriReferenceCount = new HashDictionary<string, int>();
         }
 
-        public PeerConnection AddMessageRoute(Identifier messageIdentifier,
-                                              SocketIdentifier socketIdentifier,
-                                              Uri uri)
+        public PeerConnection AddMessageRoute(ExternalRouteDefinition routeDefinition)
         {
             var peerConnection = new PeerConnection
                                  {
-                                     Node = new Node(uri, socketIdentifier.Identity),
+                                     Node = routeDefinition.Peer,
+                                     Health = routeDefinition.Health,
                                      Connected = false
                                  };
+            var socketIdentifier = new SocketIdentifier(routeDefinition.Peer.SocketIdentity);
             var socketAlreadyFound = socketToConnectionMap.FindOrAdd(socketIdentifier, ref peerConnection);
 
-            if (MapMessageToSocket(messageIdentifier, socketIdentifier))
+            if (MapMessageToSocket(routeDefinition.Identifier, socketIdentifier))
             {
                 if (!socketAlreadyFound)
                 {
-                    IncrementUriReferenceCount(uri.ToSocketAddress());
+                    IncrementUriReferenceCount(routeDefinition.Peer.Uri.ToSocketAddress());
                 }
 
-                MapSocketToMessage(messageIdentifier, socketIdentifier);
+                MapSocketToMessage(routeDefinition.Identifier, socketIdentifier);
 
                 logger.Debug("External route added " +
-                             $"Uri:{uri.AbsoluteUri} " +
-                             $"Socket:{socketIdentifier.Identity.GetAnyString()} " +
-                             $"Message:{messageIdentifier}");
+                             $"Uri:{routeDefinition.Peer.Uri.AbsoluteUri} " +
+                             $"Socket:{socketIdentifier} " +
+                             $"Message:{routeDefinition.Identifier}");
             }
 
             return peerConnection;

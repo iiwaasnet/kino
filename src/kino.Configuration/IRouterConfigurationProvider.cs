@@ -8,4 +8,5 @@ namespace kino.Configuration
 
         SocketEndpoint GetScaleOutAddress();
     }
+
 }

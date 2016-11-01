@@ -3,7 +3,7 @@ using kino.Messaging;
 
 namespace kino.Cluster
 {
-    public interface IClusterMessageSender
+    public interface IAutoDiscoverySender
     {
         void StartBlockingSendMessages(CancellationToken token, Barrier gateway);
 

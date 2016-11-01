@@ -55,8 +55,12 @@
     <Compile Include="IMessageSerializer.cs" />
     <Compile Include="IPayload.cs" />
     <Compile Include="Message.cs" />
+    <Compile Include="Messages\CheckDeadPeersMessage.cs" />
+    <Compile Include="Messages\DeletePeerMessage.cs" />
     <Compile Include="Messages\DiscoverMessageRouteMessage.cs" />
     <Compile Include="Messages\ExceptionMessage.cs" />
+    <Compile Include="Messages\Health.cs" />
+    <Compile Include="Messages\HeartBeatMessage.cs" />
     <Compile Include="Messages\KinoMessages.cs" />
     <Compile Include="Messages\KnownMessageRoutesMessage.cs" />
     <Compile Include="Messages\MessageContract.cs" />
@@ -71,6 +75,7 @@
     <Compile Include="Messages\RequestClusterMessageRoutesMessage.cs" />
     <Compile Include="Messages\RequestKnownMessageRoutesMessage.cs" />
     <Compile Include="Messages\RequestNodeMessageRoutesMessage.cs" />
+    <Compile Include="Messages\StartPeerMonitoringMessage.cs" />
     <Compile Include="Messages\UnregisterMessageRouteMessage.cs" />
     <Compile Include="Messages\UnregisterNodeMessage.cs" />
     <Compile Include="Messages\UnregisterUnreachableNodeMessage.cs" />

@@ -15,7 +15,7 @@ namespace kino.Cluster
 {
     public class RouteDiscovery : IRouteDiscovery
     {
-        private readonly IClusterMessageSender clusterMessageSender;
+        private readonly IAutoDiscoverySender autoDiscoverySender;
         private readonly IRouterConfigurationProvider routerConfigurationProvider;
         private readonly ISecurityProvider securityProvider;
         private readonly RouteDiscoveryConfiguration discoveryConfiguration;
@@ -24,7 +24,7 @@ namespace kino.Cluster
         private Task sendingMessages;
         private CancellationTokenSource cancellationTokenSource;
 
-        public RouteDiscovery(IClusterMessageSender clusterMessageSender,
+        public RouteDiscovery(IAutoDiscoverySender autoDiscoverySender,
                               IRouterConfigurationProvider routerConfigurationProvider,
                               ClusterMembershipConfiguration clusterMembershipConfiguration,
                               ISecurityProvider securityProvider,
@@ -32,7 +32,7 @@ namespace kino.Cluster
         {
             this.securityProvider = securityProvider;
             discoveryConfiguration = clusterMembershipConfiguration.RouteDiscovery ?? DefaultConfiguration();
-            this.clusterMessageSender = clusterMessageSender;
+            this.autoDiscoverySender = autoDiscoverySender;
             this.routerConfigurationProvider = routerConfigurationProvider;
             this.logger = logger;
             requests = new HashedQueue<Identifier>(discoveryConfiguration.MaxRequestsQueueLength);
@@ -93,7 +93,7 @@ namespace kino.Cluster
                                                  {
                                                      RequestorSocketIdentity = scaleOutAddress.Identity,
                                                      RequestorUri = scaleOutAddress.Uri.ToSocketAddress(),
-                                                     MessageContract = new Messaging.Messages.MessageContract
+                                                     MessageContract = new MessageContract
                                                                        {
                                                                            Version = messageIdentifier.Version,
                                                                            Identity = messageIdentifier.Identity,
@@ -103,7 +103,7 @@ namespace kino.Cluster
                                                  },
                                                  domain);
                     message.As<Message>().SignMessage(securityProvider);
-                    clusterMessageSender.EnqueueMessage(message);
+                    autoDiscoverySender.EnqueueMessage(message);
                 }
             }
             catch (SecurityException err)

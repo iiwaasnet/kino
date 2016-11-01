@@ -9,72 +9,72 @@ using kino.Core.Framework;
 
 namespace kino.Cluster
 {
-    public class ClusterMembership : IClusterMembership
-    {
-        private readonly ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta> clusterMembers;
-        private readonly ILogger logger;
-        private DateTime lastPingTime;
-        private readonly ClusterMembershipConfiguration config;
+    //public class ClusterMembership : IClusterMembership
+    //{
+    //    private readonly ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta> clusterMembers;
+    //    private readonly ILogger logger;
+    //    private DateTime lastPingTime;
+    //    private readonly ClusterMembershipConfiguration config;
 
-        public ClusterMembership(ClusterMembershipConfiguration config, ILogger logger)
-        {
-            lastPingTime = DateTime.UtcNow;
-            this.config = config;
-            this.logger = logger;
-            clusterMembers = new ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta>();
-        }
+    //    public ClusterMembership(ClusterMembershipConfiguration config, ILogger logger)
+    //    {
+    //        lastPingTime = DateTime.UtcNow;
+    //        this.config = config;
+    //        this.logger = logger;
+    //        clusterMembers = new ConcurrentDictionary<SocketEndpoint, ClusterMemberMeta>();
+    //    }
 
-        public IEnumerable<SocketEndpoint> GetClusterMembers()
-            => clusterMembers.Keys;
+    //    public IEnumerable<SocketEndpoint> GetClusterMembers()
+    //        => clusterMembers.Keys;
 
-        public void AddClusterMember(SocketEndpoint node)
-        {
-            if (clusterMembers.TryAdd(node, new ClusterMemberMeta {LastKnownPong = DateTime.UtcNow}))
-            {
-                logger.Debug("New node added " +
-                             $"Uri:{node.Uri.AbsoluteUri} " +
-                             $"Socket:{node.Identity.GetAnyString()}");
-            }
-        }
+    //    public void AddClusterMember(SocketEndpoint node)
+    //    {
+    //        if (clusterMembers.TryAdd(node, new ClusterMemberMeta {LastKnownPong = DateTime.UtcNow}))
+    //        {
+    //            logger.Debug("New node added " +
+    //                         $"Uri:{node.Uri.AbsoluteUri} " +
+    //                         $"Socket:{node.Identity.GetAnyString()}");
+    //        }
+    //    }
 
-        public bool KeepAlive(SocketEndpoint node)
-        {
-            ClusterMemberMeta meta;
-            var updated = clusterMembers.TryGetValue(node, out meta);
-            if (updated)
-            {
-                meta.LastKnownPong = DateTime.UtcNow;
-            }
+    //    public bool KeepAlive(SocketEndpoint node)
+    //    {
+    //        ClusterMemberMeta meta;
+    //        var updated = clusterMembers.TryGetValue(node, out meta);
+    //        if (updated)
+    //        {
+    //            meta.LastKnownPong = DateTime.UtcNow;
+    //        }
 
-            return updated;
-        }
+    //        return updated;
+    //    }
 
-        public IEnumerable<SocketEndpoint> GetDeadMembers(DateTime pingTime, TimeSpan pingInterval)
-        {
-            var now = DateTime.UtcNow;
-            var pingDelay = CalculatePingDelay(pingTime, pingInterval);
-            lastPingTime = pingTime;
+    //    public IEnumerable<SocketEndpoint> GetDeadMembers(DateTime pingTime, TimeSpan pingInterval)
+    //    {
+    //        var now = DateTime.UtcNow;
+    //        var pingDelay = CalculatePingDelay(pingTime, pingInterval);
+    //        lastPingTime = pingTime;
 
-            return clusterMembers
-                .Where(mem => now - mem.Value.LastKnownPong - pingDelay > config.PongSilenceBeforeRouteDeletion)
-                .Select(mem => mem.Key)
-                .ToList();
-        }
+    //        return clusterMembers
+    //            .Where(mem => now - mem.Value.LastKnownPong - pingDelay > config.PongSilenceBeforeRouteDeletion)
+    //            .Select(mem => mem.Key)
+    //            .ToList();
+    //    }
 
-        private TimeSpan CalculatePingDelay(DateTime pingTime, TimeSpan pingInterval)
-        {
-            var pingDelay = pingTime - lastPingTime - pingInterval;
+    //    private TimeSpan CalculatePingDelay(DateTime pingTime, TimeSpan pingInterval)
+    //    {
+    //        var pingDelay = pingTime - lastPingTime - pingInterval;
 
-            return (pingDelay <= TimeSpan.Zero) ? TimeSpan.Zero : pingDelay;
-        }
+    //        return (pingDelay <= TimeSpan.Zero) ? TimeSpan.Zero : pingDelay;
+    //    }
 
-        public void DeleteClusterMember(SocketEndpoint node)
-        {
-            ClusterMemberMeta meta;
-            clusterMembers.TryRemove(node, out meta);
+    //    public void DeleteClusterMember(SocketEndpoint node)
+    //    {
+    //        ClusterMemberMeta meta;
+    //        clusterMembers.TryRemove(node, out meta);
 
-            logger.Debug($"Dead node removed Uri:{node.Uri.AbsoluteUri} " +
-                         $"Socket:{node.Identity.GetAnyString()}");
-        }
-    }
+    //        logger.Debug($"Dead node removed Uri:{node.Uri.AbsoluteUri} " +
+    //                     $"Socket:{node.Identity.GetAnyString()}");
+    //    }
+    //}
 }

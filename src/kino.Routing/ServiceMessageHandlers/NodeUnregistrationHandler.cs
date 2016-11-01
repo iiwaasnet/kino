@@ -12,15 +12,12 @@ namespace kino.Routing.ServiceMessageHandlers
     public class NodeUnregistrationHandler : IServiceMessageHandler
     {
         private readonly IExternalRoutingTable externalRoutingTable;
-        private readonly IClusterMembership clusterMembership;
         private readonly ISecurityProvider securityProvider;
 
         public NodeUnregistrationHandler(IExternalRoutingTable externalRoutingTable,
-                                         IClusterMembership clusterMembership,
                                          ISecurityProvider securityProvider)
         {
             this.externalRoutingTable = externalRoutingTable;
-            this.clusterMembership = clusterMembership;
             this.securityProvider = securityProvider;
         }
 
@@ -35,7 +32,6 @@ namespace kino.Routing.ServiceMessageHandlers
 
                     var payload = message.GetPayload<UnregisterNodeMessage>();
 
-                    clusterMembership.DeleteClusterMember(new SocketEndpoint(new Uri(payload.Uri), payload.SocketIdentity));
                     var connectionAction = externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(payload.SocketIdentity));
                     if (connectionAction == PeerConnectionAction.Disconnect)
                     {

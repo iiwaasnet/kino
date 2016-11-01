@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnyIdentifier.cs" />
+    <Compile Include="Framework\DateTimeExtensions.cs" />
     <Compile Include="Identifier.cs" />
     <Compile Include="IIdentifier.cs" />
     <Compile Include="Node.cs" />

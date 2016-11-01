@@ -53,16 +53,14 @@ namespace Autofac.kino
         public ClusterMembershipConfiguration GetClusterMembershipConfiguration()
             => new ClusterMembershipConfiguration
                {
-                   PongSilenceBeforeRouteDeletion = appConfig.PongSilenceBeforeRouteDeletion,
-                   PingSilenceBeforeRendezvousFailover = appConfig.PingSilenceBeforeRendezvousFailover,
+                   HeartBeatSilenceBeforeRendezvousFailover = appConfig.HeartBeatSilenceBeforeRendezvousFailover,
                    RunAsStandalone = appConfig.RunAsStandalone
                };
 
         public ClusterMembershipConfiguration GetClusterTimingConfiguration()
             => new ClusterMembershipConfiguration
                {
-                   PongSilenceBeforeRouteDeletion = appConfig.PongSilenceBeforeRouteDeletion,
-                   PingSilenceBeforeRendezvousFailover = appConfig.PingSilenceBeforeRendezvousFailover,
+                   HeartBeatSilenceBeforeRendezvousFailover = appConfig.HeartBeatSilenceBeforeRendezvousFailover,
                    RunAsStandalone = appConfig.RunAsStandalone
                };
     }

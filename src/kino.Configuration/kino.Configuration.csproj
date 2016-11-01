@@ -44,8 +44,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClusterHealthMonitorConfiguration.cs" />
     <Compile Include="ClusterMembershipConfiguration.cs" />
+    <Compile Include="HeartBeatSenderConfiguration.cs" />
+    <Compile Include="HeartBeatSenderConfigurationManager.cs" />
     <Compile Include="IConfigurationStorage.cs" />
+    <Compile Include="IHeartBeatSenderConfigurationManager.cs" />
+    <Compile Include="IHeartBeatSenderConfigurationProvider.cs" />
     <Compile Include="IRouterConfigurationManager.cs" />
     <Compile Include="IRouterConfigurationProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExternalRoute.cs" />
+    <Compile Include="ExternalRouteDefinition.cs" />
     <Compile Include="ExternalRoutingTable.cs" />
     <Compile Include="IdentityRegistration.cs" />
     <Compile Include="IExternalRoutingTable.cs" />

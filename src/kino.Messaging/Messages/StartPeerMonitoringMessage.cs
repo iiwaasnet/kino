@@ -3,21 +3,15 @@
 namespace kino.Messaging.Messages
 {
     [ProtoContract]
-    public class RegisterExternalMessageRouteMessage : Payload
+    public class StartPeerMonitoringMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = BuildFullIdentity("REGEXTROUTE");
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("STARTPEERMON");
         private static readonly ushort MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
-        public string Uri { get; set; }
-
-        [ProtoMember(2)]
         public byte[] SocketIdentity { get; set; }
 
-        [ProtoMember(3)]
-        public MessageContract[] MessageContracts { get; set; }
-
-        [ProtoMember(4)]
+        [ProtoMember(2)]
         public Health Health { get; set; }
 
         public override ushort Version => MessageVersion;

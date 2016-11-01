@@ -1,12 +1,15 @@
-using ProtoBuf;
+﻿using ProtoBuf;
 
 namespace kino.Messaging.Messages
 {
     [ProtoContract]
-    public class PongMessage : Payload
+    public class DeletePeerMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = BuildFullIdentity("PONG");
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("DELETEPEER");
         private static readonly ushort MessageVersion = Message.CurrentVersion;
+
+        [ProtoMember(1)]
+        public byte[] SocketIdentity { get; set; }
 
         public override ushort Version => MessageVersion;
 

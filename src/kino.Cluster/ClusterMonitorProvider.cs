@@ -9,18 +9,18 @@ namespace kino.Cluster
 
         public ClusterMonitorProvider(ClusterMembershipConfiguration membershipConfiguration,
                                       IRouterConfigurationProvider routerConfigurationProvider,
-                                      IClusterMembership clusterMembership,
-                                      IClusterMessageSender clusterMessageSender,
-                                      IClusterMessageListener clusterMessageListener,
+                                      IAutoDiscoverySender autoDiscoverySender,
+                                      IAutoDiscoveryListener autoDiscoveryListener,
+                                      IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider,
                                       IRouteDiscovery routeDiscovery,
                                       ISecurityProvider securityProvider)
         {
             clusterMonitor = membershipConfiguration.RunAsStandalone
                                  ? (IClusterMonitor) new LoopbackClusterMonitor()
                                  : new ClusterMonitor(routerConfigurationProvider,
-                                                      clusterMembership,
-                                                      clusterMessageSender,
-                                                      clusterMessageListener,
+                                                      autoDiscoverySender,
+                                                      autoDiscoveryListener,
+                                                      heartBeatConfigurationProvider,
                                                       routeDiscovery,
                                                       securityProvider);
         }
