@@ -1,5 +1,4 @@
 ﻿using kino.Core.Framework;
-using kino.Core.Messaging;
 
 namespace kino.Core.Connectivity
 {
@@ -21,7 +20,7 @@ namespace kino.Core.Connectivity
 
         public static MessageDefinition Create<T>()
             where T : IIdentifier, new()
-            => Create<T>(IdentityExtensions.Empty);
+        => Create<T>(IdentityExtensions.Empty);
 
         public byte[] Identity { get; }
 

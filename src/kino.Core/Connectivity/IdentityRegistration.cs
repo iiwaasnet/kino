@@ -1,5 +1,4 @@
 ﻿using System;
-using kino.Core.Messaging;
 
 namespace kino.Core.Connectivity
 {
@@ -7,7 +6,7 @@ namespace kino.Core.Connectivity
     {
         private readonly int hashCode;
 
-        internal IdentityRegistration(Identifier identifier)
+        public IdentityRegistration(Identifier identifier)
             : this(identifier, false)
         {
         }

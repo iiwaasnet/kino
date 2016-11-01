@@ -20,7 +20,6 @@ namespace kino.Consensus
         private readonly TimeSpan leaseRenewWaitTimeout;
         private byte[] ownerPayload;
 
-
         public LeaseProvider(IRoundBasedRegister register,
                              IBallotGenerator ballotGenerator,
                              LeaseConfiguration config,
@@ -45,7 +44,7 @@ namespace kino.Consensus
         }
 
         public Lease GetLease(byte[] ownerPayload)
-        {  
+        {
             Interlocked.Exchange(ref this.ownerPayload, ownerPayload);
 
             return GetLastKnownLease();

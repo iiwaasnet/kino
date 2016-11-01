@@ -2,14 +2,15 @@
 using kino.Actors;
 using kino.Actors.Diagnostics;
 using kino.Client;
-using kino.Core.Connectivity;
-using kino.Core.Connectivity.ServiceMessageHandlers;
+using kino.Cluster;
+using kino.Configuration;
+using kino.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
-using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Security;
-using kino.Core.Sockets;
+using kino.Messaging;
+using kino.Routing;
+using kino.Routing.ServiceMessageHandlers;
+using kino.Security;
 
 namespace Autofac.kino
 {

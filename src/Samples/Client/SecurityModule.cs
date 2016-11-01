@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 using Autofac;
-using kino.Core.Security;
+using kino.Security;
 
 namespace Client
 {
@@ -21,7 +21,7 @@ namespace Client
                    .As<IDomainScopeResolver>()
                    .SingleInstance();
 
-            builder.Register(m => (Func<HMAC>)(() => HMAC.Create("HMACMD5")))
+            builder.Register(m => (Func<HMAC>) (() => HMAC.Create("HMACMD5")))
                    .As<Func<HMAC>>()
                    .SingleInstance();
         }

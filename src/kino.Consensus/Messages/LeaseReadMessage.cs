@@ -1,4 +1,4 @@
-﻿using kino.Core.Messaging;
+﻿using kino.Messaging;
 using ProtoBuf;
 
 namespace kino.Consensus.Messages
@@ -11,10 +11,12 @@ namespace kino.Consensus.Messages
 
         [ProtoMember(1)]
         public Ballot Ballot { get; set; }
+
         [ProtoMember(2)]
         public byte[] SenderIdentity { get; set; }
 
         public override ushort Version => MessageVersion;
+
         public override byte[] Identity => MessageIdentity;
     }
 }

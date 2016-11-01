@@ -1,4 +1,4 @@
-﻿using kino.Core.Messaging;
+﻿using kino.Messaging;
 using ProtoBuf;
 
 namespace kino.Consensus.Messages

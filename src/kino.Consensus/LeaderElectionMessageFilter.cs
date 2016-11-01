@@ -2,7 +2,7 @@
 using kino.Consensus.Configuration;
 using kino.Consensus.Messages;
 using kino.Core.Framework;
-using kino.Core.Messaging;
+using kino.Messaging;
 
 namespace kino.Consensus
 {

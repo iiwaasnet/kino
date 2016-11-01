@@ -1,7 +1,7 @@
 ﻿using Autofac;
 using kino.Consensus;
 using kino.Consensus.Configuration;
-using kino.Core.Messaging;
+using kino.Messaging;
 using kino.Rendezvous.Configuration;
 using SynodConfiguration = kino.Consensus.Configuration.SynodConfiguration;
 

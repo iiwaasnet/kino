@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using kino.Core.Connectivity;
 using kino.Core.Framework;
-using kino.Core.Messaging;
+using kino.Messaging;
 
 namespace kino.Client
 {

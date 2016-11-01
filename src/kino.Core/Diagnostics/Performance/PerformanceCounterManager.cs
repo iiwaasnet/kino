@@ -63,7 +63,7 @@ namespace kino.Core.Diagnostics.Performance
         }
 
         private static T TryGetAttribute<T>(MemberInfo type) where T : class
-            => Attribute.GetCustomAttribute(type, typeof(T), false) as T;
+        => Attribute.GetCustomAttribute(type, typeof(T), false) as T;
 
         public IPerformanceCounter GetCounter(TCategory counter)
         {

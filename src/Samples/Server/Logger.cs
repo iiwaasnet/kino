@@ -1,4 +1,5 @@
-﻿using kino.Core.Diagnostics;
+﻿using NLog;
+using ILogger = kino.Core.Diagnostics.ILogger;
 
 namespace Server
 {
@@ -8,7 +9,7 @@ namespace Server
 
         public Logger(string name)
         {
-            logger = NLog.LogManager.GetLogger(name);
+            logger = LogManager.GetLogger(name);
         }
 
         public void Warn(object message)

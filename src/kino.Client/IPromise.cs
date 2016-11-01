@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using kino.Core.Messaging;
+using kino.Messaging;
 
 namespace kino.Client
 {

@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>kino.Actors</RootNamespace>
     <AssemblyName>kino.Actors</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -56,21 +57,47 @@
     <Compile Include="ActorHostInstancePolicy.cs" />
     <Compile Include="ActorHostManager.cs" />
     <Compile Include="ActorMessageHandlerIdentifier.cs" />
+    <Compile Include="ActorResult.cs" />
+    <Compile Include="AsyncMessageContext.cs" />
     <Compile Include="Diagnostics\ExceptionHandlerActor.cs" />
     <Compile Include="Diagnostics\KnownMessageRoutesActor.cs" />
     <Compile Include="IActor.cs" />
     <Compile Include="IActorHandlerMap.cs" />
     <Compile Include="IActorHost.cs" />
     <Compile Include="IActorHostManager.cs" />
+    <Compile Include="IActorResult.cs" />
+    <Compile Include="MessageHandler.cs" />
+    <Compile Include="MessageHandlerDefinition.cs" />
+    <Compile Include="MessageHandlerDefinitionAttribute.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\kino.Configuration\kino.Configuration.csproj">
+      <Project>{7B3A4113-BBF9-4469-A3CF-981C2C09279A}</Project>
+      <Name>kino.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Connectivity\kino.Connectivity.csproj">
+      <Project>{45F6F46B-B864-4C27-9A4B-5022546AE424}</Project>
+      <Name>kino.Connectivity</Name>
+    </ProjectReference>
     <ProjectReference Include="..\kino.Core\kino.Core.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
       <Name>kino.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Messaging\kino.Messaging.csproj">
+      <Project>{6282F68E-6D06-4DAB-8D8C-B8FCD4F18F9D}</Project>
+      <Name>kino.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Routing\kino.Routing.csproj">
+      <Project>{6809914A-DBDF-4801-A2CA-A03FD43F1172}</Project>
+      <Name>kino.Routing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Security\kino.Security.csproj">
+      <Project>{33F0B37F-478E-405E-ACFB-65759C56228D}</Project>
+      <Name>kino.Security</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

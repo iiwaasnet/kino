@@ -14,12 +14,12 @@ namespace kino.Core.Diagnostics.Performance
             }
 
             Name = counterName;
-            Type = type;            
+            Type = type;
         }
 
         public string Name { get; }
 
-        public string Description { get; set; }        
+        public string Description { get; set; }
 
         public PerformanceCounterType Type { get; }
     }

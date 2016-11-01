@@ -66,6 +66,7 @@ namespace kino.Core.Connectivity
         }
 
         public Uri Uri { get; }
+
         public byte[] SocketIdentity { get; }
     }
 }

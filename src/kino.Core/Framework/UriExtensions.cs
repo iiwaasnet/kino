@@ -36,6 +36,6 @@ namespace kino.Core.Framework
             => Dns.GetHostEntry(Environment.MachineName)
                   .AddressList
                   .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)
-                ?.ToString();
+                  ?.ToString();
     }
 }

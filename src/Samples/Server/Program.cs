@@ -4,7 +4,7 @@ using System.Threading;
 using Autofac;
 using Autofac.kino;
 using kino.Actors;
-using kino.Core.Connectivity;
+using kino.Routing;
 using static System.Console;
 
 namespace Server

@@ -1,7 +1,7 @@
 ﻿namespace kino.Consensus
 {
-	public interface ILeaseReader
-	{
-		LeaseTxResult Read(Ballot ballot);
-	}
+    public interface ILeaseReader
+    {
+        LeaseTxResult Read(Ballot ballot);
+    }
 }

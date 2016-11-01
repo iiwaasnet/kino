@@ -1,6 +1,4 @@
-﻿using kino.Core.Messaging;
-
-namespace kino.Core.Connectivity
+﻿namespace kino.Core.Connectivity
 {
     public class MessageContract
     {

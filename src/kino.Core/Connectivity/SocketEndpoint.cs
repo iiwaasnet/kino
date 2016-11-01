@@ -17,7 +17,7 @@ namespace kino.Core.Connectivity
         {
         }
 
-        internal SocketEndpoint(Uri uri, byte[] identity)
+        public SocketEndpoint(Uri uri, byte[] identity)
         {
             Uri = uri;
             Identity = identity;

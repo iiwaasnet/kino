@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using Autofac;
@@ -10,9 +9,10 @@ using Autofac.kino;
 using Client.Messages;
 using kino.Client;
 using kino.Core.Connectivity;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Routing;
+using kino.Security;
 using static System.Console;
 
 namespace Client
@@ -28,8 +28,8 @@ namespace Client
 
             var builder = new ContainerBuilder();
             builder.RegisterModule<MainModule>();
-            builder.RegisterModule<KinoModule>();            
-            builder.RegisterModule<SecurityModule>();            
+            builder.RegisterModule<KinoModule>();
+            builder.RegisterModule<SecurityModule>();
             var container = builder.Build();
 
             var messageRouter = container.Resolve<IMessageRouter>();

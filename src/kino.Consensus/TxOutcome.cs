@@ -1,8 +1,8 @@
 ﻿namespace kino.Consensus
 {
-	public enum TxOutcome
-	{
-		Commit,
-		Abort
-	}
+    public enum TxOutcome
+    {
+        Commit,
+        Abort
+    }
 }

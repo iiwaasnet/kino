@@ -6,9 +6,8 @@ using System.Security.Cryptography;
 using Client.Messages;
 using kino.Core.Connectivity;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
+using kino.Messaging.Messages;
+using kino.Security;
 
 namespace Client
 {

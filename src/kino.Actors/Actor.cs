@@ -14,18 +14,18 @@ namespace kino.Actors
         private IEnumerable<MessageHandlerDefinition> GetActorRegistrationsByAttributes()
         {
             var methods = GetType()
-                              .FindMembers(MemberTypes.Method,
-                                           BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
-                                           InterfaceMethodFilter,
-                                           typeof (MessageHandlerDefinitionAttribute))
-                              .Cast<MethodInfo>();
+                .FindMembers(MemberTypes.Method,
+                             BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
+                             InterfaceMethodFilter,
+                             typeof(MessageHandlerDefinitionAttribute))
+                .Cast<MethodInfo>();
 
             return methods.Select(Selector);
         }
 
         private MessageHandlerDefinition Selector(MethodInfo method)
         {
-            var @delegate = (MessageHandler) Delegate.CreateDelegate(typeof (MessageHandler), this, method);
+            var @delegate = (MessageHandler) Delegate.CreateDelegate(typeof(MessageHandler), this, method);
             var attr = method.GetCustomAttribute<MessageHandlerDefinitionAttribute>();
             var messageIdentifier = MessageIdentifier.Create(attr.MessageType);
 

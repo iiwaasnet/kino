@@ -43,7 +43,7 @@ namespace kino.Core.Framework
             lock (@lock)
             {
                 var dequeueCount = Math.Min(collection.Count, count);
-                ((List<T>)items).AddRange(collection.View(0, dequeueCount));
+                ((List<T>) items).AddRange(collection.View(0, dequeueCount));
             }
 
             return items.Any();

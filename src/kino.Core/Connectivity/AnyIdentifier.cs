@@ -1,5 +1,4 @@
 ﻿using kino.Core.Framework;
-using kino.Core.Messaging;
 
 namespace kino.Core.Connectivity
 {

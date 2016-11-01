@@ -2,10 +2,7 @@
 using WindowsServiceHost;
 using Autofac;
 using Autofac.kino;
-using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
-using kino.Core.Sockets;
-using kino.Rendezvous.Configuration;
 
 namespace kino.Rendezvous
 {
@@ -16,13 +13,13 @@ namespace kino.Rendezvous
 
         protected override ServiceConfiguration GetServiceConfiguration()
             => new ServiceConfiguration
-            {
-                ServiceName = "kino.Rendezvous",
-                DisplayName = "kino.Rendezvous",
-                OnStart = Start,
-                OnStop = Stop,
-                Installers = new[] { new PerformanceCounterInstaller() }
-            };
+               {
+                   ServiceName = "kino.Rendezvous",
+                   DisplayName = "kino.Rendezvous",
+                   OnStart = Start,
+                   OnStop = Stop,
+                   Installers = new[] {new PerformanceCounterInstaller()}
+               };
 
         private void Start()
         {

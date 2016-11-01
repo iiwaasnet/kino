@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using kino.Configuration;
 using kino.Core.Connectivity;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Routing;
+using kino.Security;
+using MessageContract = kino.Messaging.Messages.MessageContract;
 
 namespace kino.Actors.Diagnostics
 {
@@ -47,7 +50,7 @@ namespace kino.Actors.Diagnostics
                        MessageContracts = internalRoutingTable
                            .GetAllRoutes()
                            .SelectMany(ir => ir.Messages)
-                           .Select(m => new Core.Messaging.Messages.MessageContract
+                           .Select(m => new MessageContract
                                         {
                                             Version = m.Version,
                                             Identity = m.Identity,
@@ -67,7 +70,7 @@ namespace kino.Actors.Diagnostics
                                   Uri = mr.Connection.Node.Uri.ToSocketAddress(),
                                   Connected = mr.Connection.Connected,
                                   MessageContracts = mr.Messages
-                                                       .Select(m => new Core.Messaging.Messages.MessageContract
+                                                       .Select(m => new MessageContract
                                                                     {
                                                                         Version = m.Version,
                                                                         Identity = m.Identity,

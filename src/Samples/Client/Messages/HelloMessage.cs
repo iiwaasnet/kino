@@ -1,5 +1,5 @@
 ﻿using kino.Core.Framework;
-using kino.Core.Messaging;
+using kino.Messaging;
 using ProtoBuf;
 
 namespace Client.Messages
@@ -13,6 +13,7 @@ namespace Client.Messages
         public string Greeting { get; set; }
 
         public override ushort Version => Message.CurrentVersion;
+
         public override byte[] Identity => MessageIdentity;
     }
 }

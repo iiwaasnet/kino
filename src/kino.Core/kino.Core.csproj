@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>kino.Core</RootNamespace>
     <AssemblyName>kino.Core</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -69,46 +70,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Connectivity\ActorResult.cs" />
     <Compile Include="Connectivity\AnyIdentifier.cs" />
-    <Compile Include="Connectivity\ClusterMembershipConfiguration.cs" />
-    <Compile Include="Connectivity\ClusterMessageListener.cs" />
-    <Compile Include="Connectivity\ClusterMessageSender.cs" />
-    <Compile Include="Connectivity\ClusterMonitorProvider.cs" />
-    <Compile Include="Connectivity\IClusterMessageListener.cs" />
-    <Compile Include="Connectivity\IClusterMessageSender.cs" />
+    <Compile Include="Connectivity\Identifier.cs" />
     <Compile Include="Connectivity\IdentityRegistration.cs" />
-    <Compile Include="Connectivity\ILocalReceivingSocket.cs" />
-    <Compile Include="Connectivity\ILocalSendingSocket.cs" />
-    <Compile Include="Connectivity\ILocalSocket.cs" />
-    <Compile Include="Connectivity\ILocalSocketFactory.cs" />
-    <Compile Include="Connectivity\InternalRouteRegistration.cs" />
-    <Compile Include="Connectivity\IRouteDiscovery.cs" />
-    <Compile Include="Connectivity\IRouterConfigurationManager.cs" />
-    <Compile Include="Connectivity\IRouterConfigurationProvider.cs" />
-    <Compile Include="Connectivity\LocalSocket.cs" />
-    <Compile Include="Connectivity\LocalSocketFactory.cs" />
+    <Compile Include="Connectivity\IIdentifier.cs" />
     <Compile Include="Connectivity\MessageContract.cs" />
-    <Compile Include="Connectivity\MessageHandlerDefinitionAttribute.cs" />
-    <Compile Include="Connectivity\MessageRouter.Tracing.cs" />
-    <Compile Include="Connectivity\PeerConnection.cs" />
-    <Compile Include="Connectivity\PeerConnectionAction.cs" />
-    <Compile Include="Connectivity\RendezvousClusterConfigurationReadonlyStorage.cs" />
     <Compile Include="Connectivity\Node.cs" />
-    <Compile Include="Connectivity\RendezvousClusterConfiguration.cs" />
-    <Compile Include="Connectivity\RouteDiscovery.cs" />
-    <Compile Include="Connectivity\RouteDiscoveryConfiguration.cs" />
-    <Compile Include="Connectivity\RouterConfigurationManager.cs" />
-    <Compile Include="Connectivity\ScaleOutSocketConfiguration.cs" />
-    <Compile Include="Connectivity\ServiceMessageHandlers\NodeMessageRoutesRequestHandler.cs" />
-    <Compile Include="Connectivity\ServiceMessageHandlers\ExternalMessageRouteRegistrationHandler.cs" />
-    <Compile Include="Connectivity\ServiceMessageHandlers\InternalMessageRouteRegistrationHandler.cs" />
-    <Compile Include="Connectivity\ServiceMessageHandlers\IServiceMessageHandler.cs" />
-    <Compile Include="Connectivity\ServiceMessageHandlers\MessageRouteDiscoveryHandler.cs" />
-    <Compile Include="Connectivity\ServiceMessageHandlers\MessageRouteUnregistrationHandler.cs" />
-    <Compile Include="Connectivity\ServiceMessageHandlers\UnreachableNodeUnregistrationHandler.cs" />
-    <Compile Include="Connectivity\ServiceMessageHandlers\ClusterMessageRoutesRequestHandler.cs" />
-    <Compile Include="Connectivity\ServiceMessageHandlers\NodeUnregistrationHandler.cs" />
     <Compile Include="Diagnostics\Performance\IInstanceNameResolver.cs" />
     <Compile Include="Diagnostics\Performance\InstanceNameResolver.cs" />
     <Compile Include="Diagnostics\Performance\IPerformanceCounter.cs" />
@@ -122,46 +89,11 @@
     <Compile Include="Diagnostics\Performance\PerformanceCounterManager.cs" />
     <Compile Include="Diagnostics\Performance\SafePerformanceCounter.cs" />
     <Compile Include="Framework\HashedQueue.cs" />
-    <Compile Include="Framework\IConfigurationStorage.cs" />
     <Compile Include="Framework\SyntacticSugar.cs" />
     <Compile Include="Framework\ThreadExtensions.cs" />
-    <Compile Include="Messaging\CallbackKey.cs" />
-    <Compile Include="Messaging\Identifier.cs" />
-    <Compile Include="Messaging\IIdentifier.cs" />
-    <Compile Include="Messaging\Messages\DiscoverMessageRouteMessage.cs" />
-    <Compile Include="Connectivity\ExternalRoute.cs" />
-    <Compile Include="Connectivity\ExternalRoutingTable.cs" />
-    <Compile Include="Connectivity\IActorResult.cs" />
-    <Compile Include="Connectivity\IClusterMonitorProvider.cs" />
-    <Compile Include="Connectivity\IExternalRoutingTable.cs" />
-    <Compile Include="Connectivity\IInternalRoutingTable.cs" />
-    <Compile Include="Connectivity\AsyncMessageContext.cs" />
-    <Compile Include="Connectivity\IMessageRouter.cs" />
-    <Compile Include="Connectivity\InternalRoute.cs" />
-    <Compile Include="Connectivity\LoopbackClusterMonitor.cs" />
-    <Compile Include="Connectivity\RendezvousCluster.cs" />
-    <Compile Include="Connectivity\RendezvousEndpoint.cs" />
-    <Compile Include="Connectivity\ClusterMembership.cs" />
-    <Compile Include="Connectivity\ClusterMonitor.cs" />
     <Compile Include="Connectivity\SocketEndpoint.cs" />
-    <Compile Include="Connectivity\IRendezvousCluster.cs" />
-    <Compile Include="Connectivity\IClusterMembership.cs" />
-    <Compile Include="Connectivity\IClusterMonitor.cs" />
-    <Compile Include="Connectivity\RouterConfiguration.cs" />
     <Compile Include="Connectivity\MessageDefinition.cs" />
-    <Compile Include="Connectivity\MessageHandler.cs" />
-    <Compile Include="Connectivity\InternalRoutingTable.cs" />
-    <Compile Include="Connectivity\MessageHandlerDefinition.cs" />
-    <Compile Include="Connectivity\MessageRouter.cs" />
     <Compile Include="Connectivity\SocketIdentifier.cs" />
-    <Compile Include="Connectivity\ClusterMemberMeta.cs" />
-    <Compile Include="Messaging\Messages\KnownMessageRoutesMessage.cs" />
-    <Compile Include="Messaging\Messages\KinoMessages.cs" />
-    <Compile Include="Messaging\Messages\MessageRoute.cs" />
-    <Compile Include="Messaging\Messages\RendezvousConfigurationChangedMessage.cs" />
-    <Compile Include="Messaging\Messages\RendezvousNode.cs" />
-    <Compile Include="Messaging\Messages\RequestKnownMessageRoutesMessage.cs" />
-    <Compile Include="Messaging\Messages\UnregisterMessageRouteMessage.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />
     <Compile Include="Framework\AsyncQueue.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />
@@ -174,53 +106,15 @@
     <Compile Include="Framework\UriExtensions.cs" />
     <Compile Include="Framework\DataEncoder.cs" />
     <Compile Include="Connectivity\MessageIdentifier.cs" />
-    <Compile Include="Messaging\CorrelationId.cs" />
-    <Compile Include="Messaging\DistributionPattern.cs" />
-    <Compile Include="Messaging\IMessage.cs" />
-    <Compile Include="Messaging\IMessageSerializer.cs" />
-    <Compile Include="Messaging\IPayload.cs" />
-    <Compile Include="Messaging\Message.cs" />
-    <Compile Include="Messaging\Messages\ExceptionMessage.cs" />
-    <Compile Include="Messaging\Messages\MessageContract.cs" />
-    <Compile Include="Messaging\Messages\RegisterInternalMessageRouteMessage.cs" />
-    <Compile Include="Messaging\Messages\RegisterExternalMessageRouteMessage.cs" />
-    <Compile Include="Messaging\Messages\RendezvousNotLeaderMessage.cs" />
-    <Compile Include="Messaging\Messages\RequestClusterMessageRoutesMessage.cs" />
-    <Compile Include="Messaging\Messages\RequestNodeMessageRoutesMessage.cs" />
-    <Compile Include="Messaging\Messages\UnregisterUnreachableNodeMessage.cs" />
-    <Compile Include="Messaging\Messages\UnregisterNodeMessage.cs" />
-    <Compile Include="Messaging\Messages\PingMessage.cs" />
-    <Compile Include="Messaging\Messages\PongMessage.cs" />
-    <Compile Include="Messaging\MessageTraceOptions.cs" />
-    <Compile Include="Messaging\MultipartMessage.cs" />
-    <Compile Include="Messaging\MultipartMessage.Frames.cs" />
-    <Compile Include="Messaging\NewtonJsonMessageSerializer.cs" />
-    <Compile Include="Messaging\Payload.cs" />
-    <Compile Include="Messaging\ProtobufMessageSerializer.cs" />
-    <Compile Include="Messaging\Versioning.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Security\DomainPrivateKey.cs" />
-    <Compile Include="Security\DomainScope.cs" />
-    <Compile Include="Security\IDomainPrivateKeyProvider.cs" />
-    <Compile Include="Security\IDomainScopeResolver.cs" />
-    <Compile Include="Security\ISecurityProvider.cs" />
-    <Compile Include="Security\ISignatureProvider.cs" />
-    <Compile Include="Security\MessageNotSupportedException.cs" />
-    <Compile Include="Security\NullSecurityProvider.cs" />
-    <Compile Include="Security\SecurityProvider.cs" />
-    <Compile Include="Security\WrongMessageSignatureException.cs" />
-    <Compile Include="Sockets\ISocket.cs" />
-    <Compile Include="Sockets\ISocketFactory.cs" />
-    <Compile Include="Sockets\Socket.cs" />
-    <Compile Include="Sockets\SocketConfiguration.cs" />
-    <Compile Include="Sockets\SocketExtensions.cs" />
-    <Compile Include="Sockets\SocketFactory.cs" />
-    <Compile Include="Sockets\SocketHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Messaging\" />
+    <Folder Include="Security\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Autofac.Builder;
-using kino.Core.Connectivity;
+using kino.Configuration;
+using kino.Connectivity;
 using kino.Core.Diagnostics;
-using kino.Core.Sockets;
 
 namespace Autofac.kino
 {

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Core.Connectivity;
+using kino.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Security;
+using kino.Messaging;
+using kino.Routing;
+using kino.Security;
 
 namespace kino.Actors
 {

@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using kino.Connectivity;
 using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Routing;
+using kino.Security;
 using MessageContract = kino.Core.Connectivity.MessageContract;
 
 namespace kino.Actors
