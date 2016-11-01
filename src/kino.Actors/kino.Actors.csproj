@@ -66,6 +66,7 @@
     <Compile Include="IActorHost.cs" />
     <Compile Include="IActorHostManager.cs" />
     <Compile Include="IActorResult.cs" />
+    <Compile Include="MessageDefinition.cs" />
     <Compile Include="MessageHandler.cs" />
     <Compile Include="MessageHandlerDefinition.cs" />
     <Compile Include="MessageHandlerDefinitionAttribute.cs" />

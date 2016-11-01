@@ -1,6 +1,6 @@
 ﻿using kino.Core.Framework;
 
-namespace kino.Core.Connectivity
+namespace kino.Core
 {
     public class AnyIdentifier : Identifier
     {

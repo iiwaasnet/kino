@@ -1,4 +1,4 @@
-﻿namespace kino.Core.Connectivity
+﻿namespace kino.Core
 {
     public interface IIdentifier
     {

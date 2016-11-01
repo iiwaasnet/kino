@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;

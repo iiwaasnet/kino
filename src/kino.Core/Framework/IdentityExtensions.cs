@@ -1,6 +1,4 @@
-﻿using kino.Core.Connectivity;
-
-namespace kino.Core.Framework
+﻿namespace kino.Core.Framework
 {
     public static class IdentityExtensions
     {

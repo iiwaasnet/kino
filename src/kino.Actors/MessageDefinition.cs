@@ -1,6 +1,7 @@
-﻿using kino.Core.Framework;
+﻿using kino.Core;
+using kino.Core.Framework;
 
-namespace kino.Core.Connectivity
+namespace kino.Actors
 {
     public class MessageDefinition
     {

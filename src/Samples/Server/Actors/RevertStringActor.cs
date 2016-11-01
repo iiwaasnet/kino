@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using kino.Actors;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Messaging;
 using kino.Security;
 using Server.Messages;

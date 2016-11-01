@@ -4,7 +4,7 @@ using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Configuration;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;

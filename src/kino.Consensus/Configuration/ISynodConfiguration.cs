@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using kino.Core.Connectivity;
+using kino.Core;
 
 namespace kino.Consensus.Configuration
 {

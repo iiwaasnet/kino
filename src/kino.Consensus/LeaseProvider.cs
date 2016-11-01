@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using kino.Consensus.Configuration;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using kino.Configuration;
-using kino.Core.Connectivity;
+using kino.Core;
 
 namespace Autofac.kino
 {

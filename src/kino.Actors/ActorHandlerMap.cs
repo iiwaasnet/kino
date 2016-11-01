@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
 
 namespace kino.Actors

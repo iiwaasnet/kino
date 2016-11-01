@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
 
 namespace kino.Configuration

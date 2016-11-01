@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Connectivity;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
@@ -12,7 +12,7 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Routing;
 using kino.Security;
-using MessageContract = kino.Core.Connectivity.MessageContract;
+using MessageContract = kino.Routing.MessageContract;
 
 namespace kino.Actors
 {

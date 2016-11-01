@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using kino.Core.Connectivity;
+using kino.Core;
 
 namespace kino.Configuration
 {

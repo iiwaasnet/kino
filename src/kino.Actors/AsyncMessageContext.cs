@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Messaging;
 
 namespace kino.Actors

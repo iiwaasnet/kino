@@ -1,6 +1,4 @@
-﻿using kino.Core.Connectivity;
-
-namespace kino.Actors
+﻿namespace kino.Actors
 {
     public class MessageHandlerDefinition
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using kino.Connectivity;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
 using Client.Messages;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
 using kino.Messaging.Messages;
 using kino.Security;

@@ -1,7 +1,7 @@
 ﻿using System;
 using kino.Core.Framework;
 
-namespace kino.Core.Connectivity
+namespace kino.Core
 {
     public abstract class Identifier : IEquatable<Identifier>, IIdentifier
     {

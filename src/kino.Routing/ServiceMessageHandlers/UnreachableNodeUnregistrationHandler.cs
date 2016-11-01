@@ -1,7 +1,7 @@
 ﻿using System;
 using kino.Cluster;
 using kino.Connectivity;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Messaging;
 using kino.Messaging.Messages;
 

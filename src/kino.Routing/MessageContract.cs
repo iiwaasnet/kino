@@ -1,4 +1,6 @@
-﻿namespace kino.Core.Connectivity
+﻿using kino.Core;
+
+namespace kino.Routing
 {
     public class MessageContract
     {

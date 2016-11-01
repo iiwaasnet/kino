@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using kino.Core.Connectivity;
+using kino.Core;
 
 namespace kino.Connectivity
 {

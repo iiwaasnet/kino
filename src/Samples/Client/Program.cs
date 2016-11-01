@@ -8,7 +8,7 @@ using Autofac;
 using Autofac.kino;
 using Client.Messages;
 using kino.Client;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Routing;

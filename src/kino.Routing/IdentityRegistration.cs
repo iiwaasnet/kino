@@ -1,6 +1,7 @@
 ﻿using System;
+using kino.Core;
 
-namespace kino.Core.Connectivity
+namespace kino.Routing
 {
     public class IdentityRegistration : IEquatable<IdentityRegistration>
     {

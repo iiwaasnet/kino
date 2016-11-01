@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using kino.Configuration;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;

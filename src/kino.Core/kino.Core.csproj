@@ -70,12 +70,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Connectivity\AnyIdentifier.cs" />
-    <Compile Include="Connectivity\Identifier.cs" />
-    <Compile Include="Connectivity\IdentityRegistration.cs" />
-    <Compile Include="Connectivity\IIdentifier.cs" />
-    <Compile Include="Connectivity\MessageContract.cs" />
-    <Compile Include="Connectivity\Node.cs" />
+    <Compile Include="AnyIdentifier.cs" />
+    <Compile Include="Identifier.cs" />
+    <Compile Include="IIdentifier.cs" />
+    <Compile Include="Node.cs" />
     <Compile Include="Diagnostics\Performance\IInstanceNameResolver.cs" />
     <Compile Include="Diagnostics\Performance\InstanceNameResolver.cs" />
     <Compile Include="Diagnostics\Performance\IPerformanceCounter.cs" />
@@ -91,9 +89,8 @@
     <Compile Include="Framework\HashedQueue.cs" />
     <Compile Include="Framework\SyntacticSugar.cs" />
     <Compile Include="Framework\ThreadExtensions.cs" />
-    <Compile Include="Connectivity\SocketEndpoint.cs" />
-    <Compile Include="Connectivity\MessageDefinition.cs" />
-    <Compile Include="Connectivity\SocketIdentifier.cs" />
+    <Compile Include="SocketEndpoint.cs" />
+    <Compile Include="SocketIdentifier.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />
     <Compile Include="Framework\AsyncQueue.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />
@@ -105,16 +102,13 @@
     <Compile Include="Framework\Unsafe.cs" />
     <Compile Include="Framework\UriExtensions.cs" />
     <Compile Include="Framework\DataEncoder.cs" />
-    <Compile Include="Connectivity\MessageIdentifier.cs" />
+    <Compile Include="MessageIdentifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Messaging\" />
-    <Folder Include="Security\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
