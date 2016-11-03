@@ -80,7 +80,7 @@
     <Compile Include="AutoDiscoveryListener.cs" />
     <Compile Include="AutoDiscoverySender.cs" />
     <Compile Include="ClusterMonitor.cs" />
-    <Compile Include="ClusterMonitorProvider.cs" />
+    <Compile Include="ClusterConnectivity.cs" />
     <Compile Include="Health.cs" />
     <Compile Include="HeartBeatSender.cs" />
     <Compile Include="IClusterHealthMonitor.cs" />
@@ -88,14 +88,18 @@
     <Compile Include="IAutoDiscoveryListener.cs" />
     <Compile Include="IAutoDiscoverySender.cs" />
     <Compile Include="IClusterMonitor.cs" />
-    <Compile Include="IClusterMonitorProvider.cs" />
+    <Compile Include="IClusterConnectivity.cs" />
     <Compile Include="IHeartBeatSender.cs" />
     <Compile Include="IRendezvousCluster.cs" />
     <Compile Include="IRouteDiscovery.cs" />
+    <Compile Include="IScaleOutListener.cs" />
     <Compile Include="LoopbackClusterMonitor.cs" />
+    <Compile Include="NullScaleOutListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RendezvousCluster.cs" />
     <Compile Include="RouteDiscovery.cs" />
+    <Compile Include="ScaleOutListener.Tracing.cs" />
+    <Compile Include="ScaleOutListener.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\kino.Configuration\kino.Configuration.csproj">

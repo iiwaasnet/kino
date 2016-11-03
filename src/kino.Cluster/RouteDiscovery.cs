@@ -16,7 +16,7 @@ namespace kino.Cluster
     public class RouteDiscovery : IRouteDiscovery
     {
         private readonly IAutoDiscoverySender autoDiscoverySender;
-        private readonly IRouterConfigurationProvider routerConfigurationProvider;
+        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly ISecurityProvider securityProvider;
         private readonly RouteDiscoveryConfiguration discoveryConfiguration;
         private readonly ILogger logger;
@@ -25,7 +25,7 @@ namespace kino.Cluster
         private CancellationTokenSource cancellationTokenSource;
 
         public RouteDiscovery(IAutoDiscoverySender autoDiscoverySender,
-                              IRouterConfigurationProvider routerConfigurationProvider,
+                              IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                               ClusterMembershipConfiguration clusterMembershipConfiguration,
                               ISecurityProvider securityProvider,
                               ILogger logger)
@@ -33,7 +33,7 @@ namespace kino.Cluster
             this.securityProvider = securityProvider;
             discoveryConfiguration = clusterMembershipConfiguration.RouteDiscovery ?? DefaultConfiguration();
             this.autoDiscoverySender = autoDiscoverySender;
-            this.routerConfigurationProvider = routerConfigurationProvider;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.logger = logger;
             requests = new HashedQueue<Identifier>(discoveryConfiguration.MaxRequestsQueueLength);
         }
@@ -83,7 +83,7 @@ namespace kino.Cluster
         {
             try
             {
-                var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
+                var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
                 var domains = messageIdentifier.IsMessageHub()
                                   ? securityProvider.GetAllowedDomains()
                                   : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};

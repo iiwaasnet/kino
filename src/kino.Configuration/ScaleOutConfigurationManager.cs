@@ -7,7 +7,7 @@ using kino.Core.Framework;
 
 namespace kino.Configuration
 {
-    public class RouterConfigurationManager : IRouterConfigurationManager
+    public class ScaleOutConfigurationManager : IScaleOutConfigurationManager
     {
         private readonly RouterConfiguration routerConfig;
         private readonly ScaleOutSocketConfiguration scaleOutConfig;
@@ -17,7 +17,7 @@ namespace kino.Configuration
         private RouterConfiguration activeRouterConfig;
         private readonly RouterConfiguration inactiveRouterConfig;
 
-        public RouterConfigurationManager(RouterConfiguration routerConfig,
+        public ScaleOutConfigurationManager(RouterConfiguration routerConfig,
                                           ScaleOutSocketConfiguration scaleOutConfig)
         {
             scaleOutAddressSource = new TaskCompletionSource<SocketEndpoint>();

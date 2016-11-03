@@ -18,7 +18,7 @@ namespace kino.Cluster
         private readonly ILogger logger;
         private readonly IRendezvousCluster rendezvousCluster;
         private readonly ISocketFactory socketFactory;
-        private readonly IRouterConfigurationProvider routerConfigurationProvider;
+        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly IAutoDiscoverySender autoDiscoverySender;
         private readonly ManualResetEventSlim heartBeatReceived;
         private readonly ManualResetEventSlim newRendezvousConfiguration;
@@ -29,7 +29,7 @@ namespace kino.Cluster
 
         public AutoDiscoveryListener(IRendezvousCluster rendezvousCluster,
                                      ISocketFactory socketFactory,
-                                     IRouterConfigurationProvider routerConfigurationProvider,
+                                     IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                                      IAutoDiscoverySender autoDiscoverySender,
                                      ClusterMembershipConfiguration membershipConfiguration,
                                      IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
@@ -44,7 +44,7 @@ namespace kino.Cluster
             this.localRouterSocket = localRouterSocket;
             this.rendezvousCluster = rendezvousCluster;
             this.socketFactory = socketFactory;
-            this.routerConfigurationProvider = routerConfigurationProvider;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.autoDiscoverySender = autoDiscoverySender;
             heartBeatReceived = new ManualResetEventSlim(false);
             newRendezvousConfiguration = new ManualResetEventSlim(false);
@@ -310,7 +310,7 @@ namespace kino.Cluster
 
         private bool ThisNodeSocket(byte[] socketIdentity)
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
+            var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
             return Unsafe.ArraysEqual(scaleOutAddress.Identity, socketIdentity);
         }
     }

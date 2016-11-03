@@ -9,5 +9,7 @@ namespace kino.Cluster
         void DeletePeer(SocketIdentifier socketIdentifier);
 
         void Start();
+
+        void Stop();
     }
 }

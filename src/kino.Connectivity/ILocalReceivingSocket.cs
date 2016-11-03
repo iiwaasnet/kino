@@ -6,6 +6,6 @@ namespace kino.Connectivity
     {
         T TryReceive();
 
-        WaitHandle CanReceive();        
+        WaitHandle CanReceive();
     }
 }

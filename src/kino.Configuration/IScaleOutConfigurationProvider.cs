@@ -2,7 +2,7 @@ using kino.Core;
 
 namespace kino.Configuration
 {
-    public interface IRouterConfigurationProvider
+    public interface IScaleOutConfigurationProvider
     {
         RouterConfiguration GetRouterConfiguration();
 

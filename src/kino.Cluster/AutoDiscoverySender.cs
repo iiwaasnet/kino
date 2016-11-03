@@ -15,7 +15,7 @@ namespace kino.Cluster
     public class AutoDiscoverySender : IAutoDiscoverySender
     {
         private readonly IRendezvousCluster rendezvousCluster;
-        private readonly IRouterConfigurationProvider routerConfigurationProvider;
+        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly ISocketFactory socketFactory;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ISecurityProvider securityProvider;
@@ -25,14 +25,14 @@ namespace kino.Cluster
         private readonly TimeSpan UnregisterMessageSendTimeout = TimeSpan.FromMilliseconds(500);
 
         public AutoDiscoverySender(IRendezvousCluster rendezvousCluster,
-                                    IRouterConfigurationProvider routerConfigurationProvider,
+                                    IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                                     ISocketFactory socketFactory,
                                     IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                     ISecurityProvider securityProvider,
                                     ILogger logger)
         {
             this.rendezvousCluster = rendezvousCluster;
-            this.routerConfigurationProvider = routerConfigurationProvider;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.socketFactory = socketFactory;
             this.performanceCounterManager = performanceCounterManager;
             this.securityProvider = securityProvider;
@@ -78,7 +78,7 @@ namespace kino.Cluster
         {
             try
             {
-                var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
+                var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
                 foreach (var domain in securityProvider.GetAllowedDomains())
                 {
                     var message = Message.Create(new RequestClusterMessageRoutesMessage
@@ -102,7 +102,7 @@ namespace kino.Cluster
 
         private void UnregisterRoutingSelf(ISocket clusterMonitorSendingSocket)
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
+            var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
             foreach (var domain in securityProvider.GetAllowedDomains())
             {
                 var message = Message.Create(new UnregisterNodeMessage

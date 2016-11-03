@@ -37,7 +37,6 @@ namespace kino.Routing.ServiceMessageHandlers
                     var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
                     var uri = new Uri(payload.Uri);
                     var memberAdded = false;
-                    var handlerSocketIdentifier = new SocketIdentifier(payload.SocketIdentity);
 
                     foreach (var registration in payload.MessageContracts)
                     {
@@ -51,16 +50,16 @@ namespace kino.Routing.ServiceMessageHandlers
                             //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
                             if (messageIdentifier.IsMessageHub() || securityProvider.GetDomain(messageIdentifier.Identity) == message.Domain)
                             {
-                                var peerConnection = externalRoutingTable.AddMessageRoute(new ExternalRouteDefinition
-                                                                                          {
-                                                                                              Identifier = messageIdentifier,
-                                                                                              Peer = new Node(uri, payload.SocketIdentity),
-                                                                                              Health = new Health
-                                                                                                       {
-                                                                                                           Uri = payload.Health.Uri,
-                                                                                                           HeartBeatInterval = payload.Health.HeartBeatInterval
-                                                                                                       }
-                                                                                          });
+                                externalRoutingTable.AddMessageRoute(new ExternalRouteDefinition
+                                                                     {
+                                                                         Identifier = messageIdentifier,
+                                                                         Peer = new Node(uri, payload.SocketIdentity),
+                                                                         Health = new Health
+                                                                                  {
+                                                                                      Uri = payload.Health.Uri,
+                                                                                      HeartBeatInterval = payload.Health.HeartBeatInterval
+                                                                                  }
+                                                                     });
                             }
                             else
                             {

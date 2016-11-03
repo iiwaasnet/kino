@@ -17,21 +17,21 @@ namespace kino.Cluster
         private CancellationTokenSource messageProcessingToken;
         private Task sendingMessages;
         private Task listenningMessages;
-        private readonly IRouterConfigurationProvider routerConfigurationProvider;
+        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly IAutoDiscoverySender autoDiscoverySender;
         private readonly IAutoDiscoveryListener autoDiscoveryListener;
         private readonly IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider;
         private readonly IRouteDiscovery routeDiscovery;
         private readonly ISecurityProvider securityProvider;
 
-        public ClusterMonitor(IRouterConfigurationProvider routerConfigurationProvider,
+        public ClusterMonitor(IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                               IAutoDiscoverySender autoDiscoverySender,
                               IAutoDiscoveryListener autoDiscoveryListener,
                               IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider,
                               IRouteDiscovery routeDiscovery,
                               ISecurityProvider securityProvider)
         {
-            this.routerConfigurationProvider = routerConfigurationProvider;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.autoDiscoverySender = autoDiscoverySender;
             this.autoDiscoveryListener = autoDiscoveryListener;
             this.heartBeatConfigurationProvider = heartBeatConfigurationProvider;
@@ -53,8 +53,7 @@ namespace kino.Cluster
             {
                 sendingMessages = Task.Factory.StartNew(_ => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
                                                         TaskCreationOptions.LongRunning);
-                listenningMessages =
-                    Task.Factory.StartNew(_ => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
+                listenningMessages = Task.Factory.StartNew(_ => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
                                           TaskCreationOptions.LongRunning);
                 var started = gateway.SignalAndWait(startTimeout, messageProcessingToken.Token);
                 if (started)
@@ -83,7 +82,7 @@ namespace kino.Cluster
 
         public void RegisterSelf(IEnumerable<Identifier> messageHandlers, string domain)
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
+            var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
 
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
@@ -110,7 +109,7 @@ namespace kino.Cluster
 
         public void UnregisterSelf(IEnumerable<Identifier> messageIdentifiers)
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
+            var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
             var messageGroups = GetMessageHubs(messageIdentifiers).Concat(GetMessageHandlers(messageIdentifiers))
                                                                   .GroupBy(mh => mh.Domain);
 

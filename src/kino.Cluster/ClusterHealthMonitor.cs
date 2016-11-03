@@ -44,47 +44,51 @@ namespace kino.Cluster
         }
 
         public void StartPeerMonitoring(SocketIdentifier socketIdentifier, Health health)
-        =>
-            multiplexingSocket.Send(Message.Create(new StartPeerMonitoringMessage
-                                                   {
-                                                       SocketIdentity = socketIdentifier.Identity,
-                                                       Health = new Messaging.Messages.Health
-                                                                {
-                                                                    Uri = health.Uri,
-                                                                    HeartBeatInterval = health.HeartBeatInterval
-                                                                }
-                                                   }));
+            => multiplexingSocket.Send(Message.Create(new StartPeerMonitoringMessage
+                                                      {
+                                                          SocketIdentity = socketIdentifier.Identity,
+                                                          Health = new Messaging.Messages.Health
+                                                                   {
+                                                                       Uri = health.Uri,
+                                                                       HeartBeatInterval = health.HeartBeatInterval
+                                                                   }
+                                                      }));
 
         public void DeletePeer(SocketIdentifier socketIdentifier)
             => multiplexingSocket.Send(Message.Create(new DeletePeerMessage {SocketIdentity = socketIdentifier.Identity}));
 
         public void Start()
         {
-            cancellationTokenSource?.Cancel();
-            monitoring?.Wait();
-            messageProcessing?.Wait();
-            cancellationTokenSource?.Dispose();
             cancellationTokenSource = new CancellationTokenSource();
 
             monitoring = Task.Factory.StartNew(_ => MonitorPeers(cancellationTokenSource.Token), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
             messageProcessing = Task.Factory.StartNew(_ => ProcessMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
         }
 
+        public void Stop()
+        {
+            cancellationTokenSource?.Cancel();
+            monitoring?.Wait();
+            messageProcessing?.Wait();
+            cancellationTokenSource?.Dispose();
+        }
+
         private void ProcessMessages(CancellationToken token)
         {
             try
             {
+                var waitHandles = new[]
+                                  {
+                                      multiplexingSocket.CanReceive(),
+                                      token.WaitHandle
+                                  };
                 using (var publisherSocket = CreatePublisherSocket())
                 {
                     while (!token.IsCancellationRequested)
                     {
                         try
                         {
-                            if (WaitHandle.WaitAny(new[]
-                                                   {
-                                                       multiplexingSocket.CanReceive(),
-                                                       token.WaitHandle
-                                                   }) == 0)
+                            if (WaitHandle.WaitAny(waitHandles) == 0)
                             {
                                 var message = multiplexingSocket.TryReceive();
                                 if (message != null)
@@ -154,7 +158,7 @@ namespace kino.Cluster
                                      .ToList();
                 foreach (var deadNode in deadNodes)
                 {
-                    routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage { SocketIdentity = deadNode.Key.Identity }));
+                    routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {SocketIdentity = deadNode.Key.Identity}));
                     logger.Debug($"Unreachable node {deadNode.Key.Identity.GetAnyString()}@{deadNode.Value.HealthUri} detected. Route deletion scheduled.");
                 }
             }
@@ -176,11 +180,11 @@ namespace kino.Cluster
                 logger.Debug($"Received {typeof(StartPeerMonitoringMessage).Name} for node {payload.SocketIdentity.GetAnyString()}");
 
                 var meta = new ClusterMemberMeta
-                {
-                    HealthUri = payload.Health.Uri,
-                    HeartBeatInterval = payload.Health.HeartBeatInterval,
-                    LastKnownHeartBeat = DateTime.UtcNow
-                };
+                           {
+                               HealthUri = payload.Health.Uri,
+                               HeartBeatInterval = payload.Health.HeartBeatInterval,
+                               LastKnownHeartBeat = DateTime.UtcNow
+                           };
                 peers.FindOrAdd(new SocketIdentifier(payload.SocketIdentity), ref meta);
                 StartDeadPeersCheck(meta.HeartBeatInterval);
                 socket.Connect(new Uri(meta.HealthUri));

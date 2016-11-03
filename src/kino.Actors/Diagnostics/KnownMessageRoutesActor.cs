@@ -16,18 +16,18 @@ namespace kino.Actors.Diagnostics
     {
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IInternalRoutingTable internalRoutingTable;
-        private readonly IRouterConfigurationProvider routerConfigurationProvider;
+        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly ISecurityProvider securityProvider;
         private static readonly MessageIdentifier KnownMessageRoutes = MessageIdentifier.Create<KnownMessageRoutesMessage>();
 
         public KnownMessageRoutesActor(IExternalRoutingTable externalRoutingTable,
                                        IInternalRoutingTable internalRoutingTable,
-                                       IRouterConfigurationProvider routerConfigurationProvider,
+                                       IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                                        ISecurityProvider securityProvider)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.internalRoutingTable = internalRoutingTable;
-            this.routerConfigurationProvider = routerConfigurationProvider;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.securityProvider = securityProvider;
         }
 
@@ -42,7 +42,7 @@ namespace kino.Actors.Diagnostics
 
         private MessageRoute GetInternalRoutes()
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
+            var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
             return new MessageRoute
                    {
                        SocketIdentity = scaleOutAddress.Identity,

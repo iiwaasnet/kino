@@ -16,12 +16,12 @@ namespace kino.Routing.ServiceMessageHandlers
         private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
 
-        public InternalMessageRouteRegistrationHandler(IClusterMonitorProvider clusterMonitorProvider,
+        public InternalMessageRouteRegistrationHandler(IClusterConnectivity clusterConnectivity,
                                                        IInternalRoutingTable internalRoutingTable,
                                                        ISecurityProvider securityProvider,
                                                        ILogger logger)
         {
-            clusterMonitor = clusterMonitorProvider.GetClusterMonitor();
+            clusterMonitor = clusterConnectivity.GetClusterMonitor();
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
             this.logger = logger;

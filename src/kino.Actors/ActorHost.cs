@@ -170,48 +170,60 @@ namespace kino.Actors
 
         private void ProcessRequests(CancellationToken token)
         {
-            while (!token.IsCancellationRequested)
+            try
             {
-                try
+                var waitHandles = new[]
+                                  {
+                                      receivingSocket.CanReceive(),
+                                      token.WaitHandle
+                                  };
+                while (!token.IsCancellationRequested)
                 {
-                    if (WaitHandle.WaitAny(new[]
-                                           {
-                                               receivingSocket.CanReceive(),
-                                               token.WaitHandle
-                                           }) == 0)
+                    try
                     {
-                        var message = (Message) receivingSocket.TryReceive();
-                        if (message != null)
+                        if (WaitHandle.WaitAny(waitHandles) == 0)
                         {
-                            try
+                            var message = (Message) receivingSocket.TryReceive();
+                            if (message != null)
                             {
-                                var actorIdentifier = new MessageIdentifier(message);
-                                var handler = actorHandlerMap.Get(actorIdentifier);
-                                if (handler != null)
+                                try
                                 {
-                                    var task = handler(message);
+                                    var actorIdentifier = new MessageIdentifier(message);
+                                    var handler = actorHandlerMap.Get(actorIdentifier);
+                                    if (handler != null)
+                                    {
+                                        var task = handler(message);
 
-                                    HandleTaskResult(token, task, message);
+                                        HandleTaskResult(token, task, message);
+                                    }
+                                    else
+                                    {
+                                        HandlerNotFound(message);
+                                    }
                                 }
-                                else
+                                catch (Exception err)
                                 {
-                                    HandlerNotFound(message);
+                                    //TODO: Add more context to exception about which Actor failed
+                                    CallbackException(err, message);
+                                    logger.Error(err);
                                 }
-                            }
-                            catch (Exception err)
-                            {
-                                //TODO: Add more context to exception about which Actor failed
-                                CallbackException(err, message);
-                                logger.Error(err);
                             }
                         }
                     }
-                }
-                catch (Exception err)
-                {
-                    logger.Error(err);
+                    catch (OperationCanceledException)
+                    {
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
+                    }
                 }
             }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
+            logger.Warn($"{GetType().Name} requests processing stopped.");
         }
 
         private void HandleTaskResult(CancellationToken token, Task<IActorResult> task, Message messageIn)

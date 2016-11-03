@@ -17,7 +17,7 @@ namespace kino.Routing.ServiceMessageHandlers
         private readonly ILogger logger;
         private readonly IClusterMonitor clusterMonitor;
 
-        public MessageRouteDiscoveryHandler(IClusterMonitorProvider clusterMonitorProvider,
+        public MessageRouteDiscoveryHandler(IClusterConnectivity clusterConnectivity,
                                             IInternalRoutingTable internalRoutingTable,
                                             ISecurityProvider securityProvider,
                                             ILogger logger)
@@ -25,7 +25,7 @@ namespace kino.Routing.ServiceMessageHandlers
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
             this.logger = logger;
-            clusterMonitor = clusterMonitorProvider.GetClusterMonitor();
+            clusterMonitor = clusterConnectivity.GetClusterMonitor();
         }
 
         public bool Handle(IMessage message, ISocket forwardingSocket)

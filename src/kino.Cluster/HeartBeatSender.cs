@@ -15,19 +15,19 @@ namespace kino.Cluster
     {
         private readonly ISocketFactory socketFactory;
         private readonly IHeartBeatSenderConfigurationManager config;
-        private readonly IRouterConfigurationProvider routerConfigurationProvider;
+        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly ILogger logger;
         private CancellationTokenSource cancellationTokenSource;
         private Task heartBeating;
 
         public HeartBeatSender(ISocketFactory socketFactory,
                                IHeartBeatSenderConfigurationManager config,
-                               IRouterConfigurationProvider routerConfigurationProvider,
+                               IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                                ILogger logger)
         {
             this.socketFactory = socketFactory;
             this.config = config;
-            this.routerConfigurationProvider = routerConfigurationProvider;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.logger = logger;
         }
 
@@ -49,7 +49,7 @@ namespace kino.Cluster
                 {
                     var heartBeatMessage = new HeartBeatMessage
                                            {
-                                               SocketIdentity = routerConfigurationProvider.GetScaleOutAddress().Identity,
+                                               SocketIdentity = scaleOutConfigurationProvider.GetScaleOutAddress().Identity,
                                                HeartBeatInterval = config.GetHeartBeatInterval()
                                            };
                     while (!token.IsCancellationRequested)

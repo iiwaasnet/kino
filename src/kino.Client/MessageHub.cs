@@ -121,15 +121,16 @@ namespace kino.Client
         {
             try
             {
+                var waitHandles = new[]
+                                  {
+                                      receivingSocket.CanReceive(),
+                                      token.WaitHandle
+                                  };
                 while (!token.IsCancellationRequested)
                 {
                     try
                     {
-                        if (WaitHandle.WaitAny(new[]
-                                               {
-                                                   receivingSocket.CanReceive(),
-                                                   token.WaitHandle
-                                               }) == 0)
+                        if (WaitHandle.WaitAny(waitHandles) == 0)
                         {
                             var message = receivingSocket.TryReceive().As<Message>();
                             if (message != null)
@@ -166,6 +167,7 @@ namespace kino.Client
             {
                 logger.Error(err);
             }
+            logger.Warn($"{GetType().Name} replies reading stopped.");
         }
 
         private void RegisterMessageHub()

@@ -14,11 +14,11 @@ namespace kino.Routing.ServiceMessageHandlers
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
 
-        public NodeMessageRoutesRequestHandler(IClusterMonitorProvider clusterMonitorProvider,
+        public NodeMessageRoutesRequestHandler(IClusterConnectivity clusterConnectivity,
                                                IInternalRoutingTable internalRoutingTable,
                                                ISecurityProvider securityProvider)
         {
-            clusterMonitor = clusterMonitorProvider.GetClusterMonitor();
+            clusterMonitor = clusterConnectivity.GetClusterMonitor();
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
         }

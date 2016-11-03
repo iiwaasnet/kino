@@ -39,6 +39,10 @@ namespace Autofac.kino
                    .As<IMessageRouter>()
                    .SingleInstance();
 
+            builder.RegisterType<ScaleOutListener>()
+                   .As<IScaleOutListener>()
+                   .SingleInstance();
+
             builder.Register(c => new SocketFactory(c.ResolveOptional<SocketConfiguration>()))
                    .As<ISocketFactory>()
                    .SingleInstance();
@@ -51,8 +55,8 @@ namespace Autofac.kino
                    .As<IExternalRoutingTable>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterMonitorProvider>()
-                   .As<IClusterMonitorProvider>()
+            builder.RegisterType<ClusterConnectivity>()
+                   .As<IClusterConnectivity>()
                    .SingleInstance();
 
             builder.RegisterType<AutoDiscoverySender>()
@@ -97,9 +101,9 @@ namespace Autofac.kino
                    .As<ISecurityProvider>()
                    .SingleInstance();
 
-            builder.RegisterType<RouterConfigurationManager>()
-                   .As<IRouterConfigurationProvider>()
-                   .As<IRouterConfigurationManager>()
+            builder.RegisterType<ScaleOutConfigurationManager>()
+                   .As<IScaleOutConfigurationProvider>()
+                   .As<IScaleOutConfigurationManager>()
                    .SingleInstance();
         }
 

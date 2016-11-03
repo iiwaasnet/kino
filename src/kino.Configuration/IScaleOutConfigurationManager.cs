@@ -3,7 +3,7 @@ using kino.Core;
 
 namespace kino.Configuration
 {
-    public interface IRouterConfigurationManager : IRouterConfigurationProvider
+    public interface IScaleOutConfigurationManager : IScaleOutConfigurationProvider
     {
         IEnumerable<SocketEndpoint> GetScaleOutAddressRange();
 
