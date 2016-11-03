@@ -36,6 +36,8 @@ namespace kino.Routing
         private readonly ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver;
         private readonly InternalMessageRouteRegistrationHandler internalRegistrationHandler;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
+        private readonly IHeartBeatSender heartBeatSender;
+        private readonly IClusterHealthMonitor clusterHealthMonitor;
 
         public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
@@ -57,6 +59,8 @@ namespace kino.Routing
             this.scaleOutConfigurationManager = scaleOutConfigurationManager;
             clusterMonitor = clusterConnectivity.GetClusterMonitor();
             scaleOutListener = clusterConnectivity.GetScaleOutListener();
+            heartBeatSender = clusterConnectivity.GetHeartBeatSender();
+            clusterHealthMonitor = clusterConnectivity.GetClusterHealthMonitor();
             this.serviceMessageHandlers = serviceMessageHandlers;
             this.performanceCounterManager = performanceCounterManager;
             this.securityProvider = securityProvider;
@@ -65,18 +69,23 @@ namespace kino.Routing
             this.internalRegistrationHandler = internalRegistrationHandler;
         }
 
-        public bool Start(TimeSpan startTimeout)
+        public void Start()
         {
+            //TODO: Decide on how to handle start timeout
             cancellationTokenSource = new CancellationTokenSource();
             localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token),
                                                  TaskCreationOptions.LongRunning);
             scaleOutListener.Start();
-            return clusterMonitor.Start(startTimeout);
+            clusterHealthMonitor.Start();
+            heartBeatSender.Start();
+            clusterMonitor.Start();
         }
 
         public void Stop()
         {
             scaleOutListener.Stop();
+            clusterHealthMonitor.Stop();
+            heartBeatSender.Stop();
             cancellationTokenSource?.Cancel();
             localRouting?.Wait(TerminationWaitTimeout);
             cancellationTokenSource?.Dispose();

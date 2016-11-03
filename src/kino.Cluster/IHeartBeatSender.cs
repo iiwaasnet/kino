@@ -3,5 +3,7 @@
     public interface IHeartBeatSender
     {
         void Start();
+
+        void Stop();
     }
 }

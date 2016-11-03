@@ -39,10 +39,6 @@ namespace Autofac.kino
                    .As<IMessageRouter>()
                    .SingleInstance();
 
-            builder.RegisterType<ScaleOutListener>()
-                   .As<IScaleOutListener>()
-                   .SingleInstance();
-
             builder.Register(c => new SocketFactory(c.ResolveOptional<SocketConfiguration>()))
                    .As<ISocketFactory>()
                    .SingleInstance();

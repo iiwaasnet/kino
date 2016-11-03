@@ -39,13 +39,13 @@ namespace kino.Cluster
             this.securityProvider = securityProvider;
         }
 
-        public bool Start(TimeSpan startTimeout)
-            => StartProcessingClusterMessages(startTimeout);
+        public void Start()
+            => StartProcessingClusterMessages();
 
         public void Stop()
             => StopProcessingClusterMessages();
 
-        private bool StartProcessingClusterMessages(TimeSpan startTimeout)
+        private void StartProcessingClusterMessages()
         {
             messageProcessingToken = new CancellationTokenSource();
             const int participantCount = 3;
@@ -54,14 +54,10 @@ namespace kino.Cluster
                 sendingMessages = Task.Factory.StartNew(_ => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
                                                         TaskCreationOptions.LongRunning);
                 listenningMessages = Task.Factory.StartNew(_ => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
-                                          TaskCreationOptions.LongRunning);
-                var started = gateway.SignalAndWait(startTimeout, messageProcessingToken.Token);
-                if (started)
-                {
-                    routeDiscovery.Start();
-                }
+                                                           TaskCreationOptions.LongRunning);
+                gateway.SignalAndWait(messageProcessingToken.Token);
 
-                return started;
+                routeDiscovery.Start();
             }
         }
 
@@ -77,7 +73,7 @@ namespace kino.Cluster
         private void RestartProcessingClusterMessages()
         {
             StopProcessingClusterMessages();
-            StartProcessingClusterMessages(TimeSpan.FromMilliseconds(-1));
+            StartProcessingClusterMessages();
         }
 
         public void RegisterSelf(IEnumerable<Identifier> messageHandlers, string domain)

@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace kino.Routing
+﻿namespace kino.Routing
 {
     public interface IMessageRouter
     {
-        bool Start(TimeSpan startTimeout);
+        void Start();
 
         void Stop();
     }

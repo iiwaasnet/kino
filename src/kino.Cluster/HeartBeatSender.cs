@@ -33,12 +33,16 @@ namespace kino.Cluster
 
         public void Start()
         {
-            cancellationTokenSource?.Cancel();
-            heartBeating?.Wait();
-            cancellationTokenSource?.Dispose();
             cancellationTokenSource = new CancellationTokenSource();
 
             heartBeating = Task.Factory.StartNew(_ => SendHeartBeat(cancellationTokenSource.Token), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
+        }
+
+        public void Stop()
+        {
+            cancellationTokenSource?.Cancel();
+            heartBeating?.Wait();
+            cancellationTokenSource?.Dispose();
         }
 
         private async void SendHeartBeat(CancellationToken token)

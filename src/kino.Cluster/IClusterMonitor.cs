@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using kino.Core;
 
 namespace kino.Cluster
 {
     public interface IClusterMonitor
     {
-        bool Start(TimeSpan startTimeout);
+        void Start();
 
         void Stop();
 
