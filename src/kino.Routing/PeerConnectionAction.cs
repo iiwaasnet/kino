@@ -2,7 +2,8 @@
 {
     public enum PeerConnectionAction
     {
-        None,
-        Disconnect
+        KeepConnection,
+        Disconnect,
+        NotFound
     }
 }

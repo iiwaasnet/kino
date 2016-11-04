@@ -46,20 +46,20 @@ namespace kino.Routing
 
                 logger.Debug("External route added " +
                              $"Uri:{routeDefinition.Peer.Uri.AbsoluteUri} " +
-                             $"Socket:{socketIdentifier} " +
+                             $"Socket:{routeDefinition.Peer.SocketIdentity.GetAnyString()} " +
                              $"Message:{routeDefinition.Identifier}");
             }
 
             return peerConnection;
         }
 
-        private bool MapMessageToSocket(Identifier messageIdentifier, SocketIdentifier socketIdentifier)
+        private bool MapMessageToSocket(Identifier identifier, SocketIdentifier socketIdentifier)
         {
             HashedLinkedList<SocketIdentifier> hashSet;
-            if (!messageToSocketMap.Find(ref messageIdentifier, out hashSet))
+            if (!messageToSocketMap.Find(ref identifier, out hashSet))
             {
                 hashSet = new HashedLinkedList<SocketIdentifier>();
-                messageToSocketMap[messageIdentifier] = hashSet;
+                messageToSocketMap[identifier] = hashSet;
             }
             if (!hashSet.Contains(socketIdentifier))
             {
@@ -70,7 +70,7 @@ namespace kino.Routing
             return false;
         }
 
-        private void MapSocketToMessage(Identifier messageIdentifier, SocketIdentifier socketIdentifier)
+        private void MapSocketToMessage(Identifier identifier, SocketIdentifier socketIdentifier)
         {
             C5.HashSet<Identifier> hashSet;
             if (!socketToMessageMap.Find(ref socketIdentifier, out hashSet))
@@ -78,13 +78,13 @@ namespace kino.Routing
                 hashSet = new C5.HashSet<Identifier>();
                 socketToMessageMap[socketIdentifier] = hashSet;
             }
-            hashSet.Add(messageIdentifier);
+            hashSet.Add(identifier);
         }
 
-        public PeerConnection FindRoute(Identifier messageIdentifier, byte[] receiverNodeIdentity)
+        public PeerConnection FindRoute(Identifier identifier, byte[] receiverNodeIdentity)
         {
             HashedLinkedList<SocketIdentifier> collection;
-            if (messageToSocketMap.Find(ref messageIdentifier, out collection))
+            if (messageToSocketMap.Find(ref identifier, out collection))
             {
                 var socketIdentifier = GetReceiverSocketIdentifier(collection, receiverNodeIdentity);
                 PeerConnection peerConnection;
@@ -109,10 +109,10 @@ namespace kino.Routing
             return Get(collection);
         }
 
-        public IEnumerable<PeerConnection> FindAllRoutes(Identifier messageIdentifier)
+        public IEnumerable<PeerConnection> FindAllRoutes(Identifier identifier)
         {
             HashedLinkedList<SocketIdentifier> collection;
-            return messageToSocketMap.Find(ref messageIdentifier, out collection)
+            return messageToSocketMap.Find(ref identifier, out collection)
                        ? collection.Select(el => socketToConnectionMap[el])
                        : Enumerable.Empty<PeerConnection>();
         }
@@ -133,15 +133,15 @@ namespace kino.Routing
             return default(T);
         }
 
-        public PeerConnectionAction RemoveNodeRoute(SocketIdentifier socketIdentifier)
+        public PeerRemoveResult RemoveNodeRoute(SocketIdentifier socketIdentifier)
         {
             PeerConnection connection;
             socketToConnectionMap.Remove(socketIdentifier, out connection);
 
-            C5.HashSet<Identifier> messageIdentifiers;
-            if (socketToMessageMap.Find(ref socketIdentifier, out messageIdentifiers))
+            C5.HashSet<Identifier> identifiers;
+            if (socketToMessageMap.Find(ref socketIdentifier, out identifiers))
             {
-                RemoveMessageRoutesForSocketIdentifier(socketIdentifier, messageIdentifiers);
+                RemoveMessageRoutesForSocketIdentifier(socketIdentifier, identifiers);
 
                 socketToMessageMap.Remove(socketIdentifier);
 
@@ -149,38 +149,44 @@ namespace kino.Routing
                              $"Socket:{socketIdentifier.Identity.GetAnyString()}");
             }
 
-            // NOTE: Don't change order so that ref count is decreased
-            return (connection != null
-                    && DecrementUriReferenceCount(connection.Node.Uri.ToSocketAddress()) == 0
-                    && connection.Connected)
-                       ? PeerConnectionAction.Disconnect
-                       : PeerConnectionAction.None;
+            return new PeerRemoveResult
+                   {
+                       Uri = connection?.Node.Uri,
+                       ConnectionAction = DecrementConnectionRefCount(connection)
+                   };
         }
 
-        public PeerConnectionAction RemoveMessageRoute(IEnumerable<Identifier> messageIdentifiers, SocketIdentifier socketIdentifier)
+        private PeerConnectionAction DecrementConnectionRefCount(PeerConnection connection)
         {
-            var connectionAction = PeerConnectionAction.None;
+            if (connection != null)
+            {
+                var connectionsLeft = DecrementUriReferenceCount(connection.Node.Uri.ToSocketAddress());
+                return (connectionsLeft == 0 && connection.Connected)
+                           ? PeerConnectionAction.Disconnect
+                           : PeerConnectionAction.KeepConnection;
+            }
 
-            RemoveMessageRoutesForSocketIdentifier(socketIdentifier, messageIdentifiers);
+            return PeerConnectionAction.NotFound;
+        }
+
+        public PeerRemoveResult RemoveMessageRoute(IEnumerable<Identifier> identifiers, SocketIdentifier socketIdentifier)
+        {
+            PeerConnection connection = null;
+
+            RemoveMessageRoutesForSocketIdentifier(socketIdentifier, identifiers);
 
             C5.HashSet<Identifier> allSocketMessageIdentifiers;
             if (socketToMessageMap.Find(ref socketIdentifier, out allSocketMessageIdentifiers))
             {
-                foreach (var messageIdentifier in messageIdentifiers)
+                foreach (var messageIdentifier in identifiers)
                 {
                     allSocketMessageIdentifiers.Remove(messageIdentifier);
                 }
                 if (!allSocketMessageIdentifiers.Any())
                 {
                     socketToMessageMap.Remove(socketIdentifier);
-                    PeerConnection connection;
+
                     socketToConnectionMap.Remove(socketIdentifier, out connection);
-                    // NOTE: Don't change order so that ref count is decreased
-                    connectionAction = (connection != null
-                                        && DecrementUriReferenceCount(connection.Node.Uri.ToSocketAddress()) == 0
-                                        && connection.Connected)
-                                           ? PeerConnectionAction.Disconnect
-                                           : connectionAction;
 
                     logger.Debug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} " +
                                  $"Socket:{socketIdentifier.Identity.GetAnyString()}");
@@ -189,9 +195,13 @@ namespace kino.Routing
 
             logger.Debug("External message route removed " +
                          $"Socket:{socketIdentifier.Identity.GetAnyString()} " +
-                         $"Messages:[{string.Join(";", ConcatenateMessageHandlers(messageIdentifiers))}]");
+                         $"Messages:[{string.Join(";", ConcatenateMessageHandlers(identifiers))}]");
 
-            return connectionAction;
+            return new PeerRemoveResult
+                   {
+                       ConnectionAction = DecrementConnectionRefCount(connection),
+                       Uri = connection?.Node.Uri
+                   };
         }
 
         private void RemoveMessageRoutesForSocketIdentifier(SocketIdentifier socketIdentifier, IEnumerable<Identifier> messageIdentifiers)
@@ -226,6 +236,7 @@ namespace kino.Routing
                        Connection = new PeerConnection
                                     {
                                         Node = connection.Node,
+                                        Health = connection.Health,
                                         Connected = connection.Connected
                                     },
                        Messages = socketMessagePair.Value

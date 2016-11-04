@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using kino.Cluster;
 using kino.Connectivity;
@@ -40,17 +39,19 @@ namespace kino.Routing.ServiceMessageHandlers
                     message.As<Message>().VerifySignature(securityProvider);
 
                     var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-                    var messageContracts = payload.MessageContracts
-                                                  .Select(mh => new MessageIdentifier(mh.Identity,
-                                                                                      mh.Version,
-                                                                                      mh.Partition));
-                    var messageIdentifiers = messageContracts.Where(mi => securityProvider.GetDomain(mi.Identity) == message.Domain);
                     var socketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+                    var messageContracts = payload.MessageContracts
+                                                  .Select(mh => mh.ToIdentifier());
+                    var messageIdentifiers = messageContracts.Where(mi => mi.IsMessageHub()
+                                                                          || securityProvider.GetDomain(mi.Identity) == message.Domain);
 
-                    var connectionAction = externalRoutingTable.RemoveMessageRoute(messageIdentifiers, socketIdentifier);
-                    if (connectionAction == PeerConnectionAction.Disconnect)
+                    var peerRemoveResult = externalRoutingTable.RemoveMessageRoute(messageIdentifiers, socketIdentifier);
+                    if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                     {
-                        forwardingSocket.SafeDisconnect(new Uri(payload.Uri));
+                        forwardingSocket.SafeDisconnect(peerRemoveResult.Uri);
+                    }
+                    if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
+                    {
                         clusterConnectivity.DeletePeer(socketIdentifier);
                     }
                     LogIfMessagesBelongToOtherDomain(messageIdentifiers, messageContracts, message.Domain);
@@ -60,8 +61,8 @@ namespace kino.Routing.ServiceMessageHandlers
             return shouldHandle;
         }
 
-        private void LogIfMessagesBelongToOtherDomain(IEnumerable<MessageIdentifier> messageIdentifiers,
-                                                      IEnumerable<MessageIdentifier> messageContracts,
+        private void LogIfMessagesBelongToOtherDomain(IEnumerable<Identifier> messageIdentifiers,
+                                                      IEnumerable<Identifier> messageContracts,
                                                       string domain)
         {
             foreach (var messageContract in messageContracts.Where(mc => !messageIdentifiers.Contains(mc)))

@@ -27,6 +27,7 @@ namespace kino.Cluster
         private Task messageProcessing;
         private TimeSpan deadPeersCheckInterval;
         private IDisposable observer;
+        private ManualResetEvent barrier;
 
         public ClusterHealthMonitor(ISocketFactory socketFactory,
                                     ILocalSocketFactory localSocketFactory,
@@ -60,17 +61,20 @@ namespace kino.Cluster
         public void Start()
         {
             cancellationTokenSource = new CancellationTokenSource();
+            barrier = new ManualResetEvent(false);
 
-            monitoring = Task.Factory.StartNew(_ => MonitorPeers(cancellationTokenSource.Token), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
             messageProcessing = Task.Factory.StartNew(_ => ProcessMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
+            monitoring = Task.Factory.StartNew(_ => MonitorPeers(cancellationTokenSource.Token), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
         }
 
         public void Stop()
         {
+            barrier?.Dispose();
             cancellationTokenSource?.Cancel();
             monitoring?.Wait();
             messageProcessing?.Wait();
             cancellationTokenSource?.Dispose();
+            barrier?.Dispose();
         }
 
         private void ProcessMessages(CancellationToken token)
@@ -84,6 +88,7 @@ namespace kino.Cluster
                                   };
                 using (var publisherSocket = CreatePublisherSocket())
                 {
+                    barrier.Set();
                     while (!token.IsCancellationRequested)
                     {
                         try
@@ -113,6 +118,43 @@ namespace kino.Cluster
             }
 
             logger.Warn($" {GetType().Name} message processing stopped. ");
+        }
+
+        private void MonitorPeers(CancellationToken token)
+        {
+            try
+            {
+                WaitHandle.WaitAny(new[] {barrier, token.WaitHandle});
+
+                using (var socket = CreateSubscriberSocket())
+                {
+                    while (!token.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            var message = socket.ReceiveMessage(token);
+                            if (message != null)
+                            {
+                                logger.Debug($"{GetType().Name} received {message.Identity.GetAnyString()} message");
+                                ProcessMessage(message, socket);
+                            }
+                        }
+                        catch (OperationCanceledException)
+                        {
+                        }
+                        catch (Exception err)
+                        {
+                            logger.Error(err);
+                        }
+                    }
+                }
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
+
+            logger.Warn($"{GetType().Name} stopped.");
         }
 
         private void ProcessMessage(IMessage message, ISocket socket)
@@ -229,41 +271,6 @@ namespace kino.Cluster
             }
 
             return shouldHandle;
-        }
-
-        private void MonitorPeers(CancellationToken token)
-        {
-            try
-            {
-                using (var socket = CreateSubscriberSocket())
-                {
-                    while (!token.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            var message = socket.ReceiveMessage(token);
-                            if (message != null)
-                            {
-                                logger.Debug($"{GetType().Name} received {message.Identity.GetAnyString()} message");
-                                ProcessMessage(message, socket);
-                            }
-                        }
-                        catch (OperationCanceledException)
-                        {
-                        }
-                        catch (Exception err)
-                        {
-                            logger.Error(err);
-                        }
-                    }
-                }
-            }
-            catch (Exception err)
-            {
-                logger.Error(err);
-            }
-
-            logger.Warn($"{GetType().Name} stopped.");
         }
 
         private ISocket CreateSubscriberSocket()

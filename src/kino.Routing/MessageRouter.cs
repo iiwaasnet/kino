@@ -219,11 +219,7 @@ namespace kino.Routing
                 }
                 catch (HostUnreachableException err)
                 {
-                    var unregMessage = new UnregisterUnreachableNodeMessage
-                                       {
-                                           SocketIdentity = route.Node.SocketIdentity,
-                                           Uri = route.Node.Uri.ToSocketAddress()
-                                       };
+                    var unregMessage = new UnregisterUnreachableNodeMessage {SocketIdentity = route.Node.SocketIdentity};
                     TryHandleServiceMessage(Message.Create(unregMessage), scaleOutBackend);
                     logger.Error(err);
                 }

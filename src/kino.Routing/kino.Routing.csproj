@@ -68,9 +68,11 @@
     <Compile Include="MessageRouter.Tracing.cs" />
     <Compile Include="PeerConnection.cs" />
     <Compile Include="PeerConnectionAction.cs" />
+    <Compile Include="PeerRemoveResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceMessageHandlers\ClusterMessageRoutesRequestHandler.cs" />
     <Compile Include="ServiceMessageHandlers\ExternalMessageRouteRegistrationHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\IdentifierExtensions.cs" />
     <Compile Include="ServiceMessageHandlers\InternalMessageRouteRegistrationHandler.cs" />
     <Compile Include="ServiceMessageHandlers\IServiceMessageHandler.cs" />
     <Compile Include="ServiceMessageHandlers\MessageRouteDiscoveryHandler.cs" />

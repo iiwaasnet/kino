@@ -38,13 +38,12 @@ namespace kino.Routing.ServiceMessageHandlers
                     message.As<Message>().VerifySignature(securityProvider);
 
                     var messageContract = message.GetPayload<DiscoverMessageRouteMessage>().MessageContract;
-                    var messageIdentifier = new MessageIdentifier(messageContract.Identity,
-                                                                  messageContract.Version, messageContract.Partition);
+                    var messageIdentifier = messageContract.ToIdentifier();
                     if (internalRoutingTable.MessageHandlerRegisteredExternaly(messageIdentifier))
                     {
                         var domains = messageIdentifier.IsMessageHub()
-                                                  ? securityProvider.GetAllowedDomains()
-                                                  : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};
+                                          ? securityProvider.GetAllowedDomains()
+                                          : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};
                         if (domains.Contains(message.Domain))
                         {
                             clusterConnectivity.RegisterSelf(new[] {messageIdentifier}, message.Domain);

@@ -7,13 +7,13 @@ namespace kino.Routing
     {
         PeerConnection AddMessageRoute(ExternalRouteDefinition routeDefinition);
 
-        PeerConnection FindRoute(Identifier messageIdentifier, byte[] receiverNodeIdentity);
+        PeerConnection FindRoute(Identifier identifier, byte[] receiverNodeIdentity);
 
-        PeerConnectionAction RemoveNodeRoute(SocketIdentifier socketIdentifier);
+        PeerRemoveResult RemoveNodeRoute(SocketIdentifier socketIdentifier);
 
-        PeerConnectionAction RemoveMessageRoute(IEnumerable<Identifier> messageHandlerIdentifiers, SocketIdentifier socketIdentifier);
+        PeerRemoveResult RemoveMessageRoute(IEnumerable<Identifier> identifiers, SocketIdentifier socketIdentifier);
 
-        IEnumerable<PeerConnection> FindAllRoutes(Identifier messageIdentifier);
+        IEnumerable<PeerConnection> FindAllRoutes(Identifier identifier);
 
         IEnumerable<ExternalRoute> GetAllRoutes();
     }
