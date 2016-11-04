@@ -1,4 +1,5 @@
 ﻿using System;
+using kino.Cluster;
 using kino.Connectivity;
 using kino.Core;
 using kino.Messaging;
@@ -8,10 +9,13 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class UnreachableNodeUnregistrationHandler : IServiceMessageHandler
     {
+        private readonly IClusterConnectivity clusterConnectivity;
         private readonly IExternalRoutingTable externalRoutingTable;
 
-        public UnreachableNodeUnregistrationHandler(IExternalRoutingTable externalRoutingTable)
+        public UnreachableNodeUnregistrationHandler(IClusterConnectivity clusterConnectivity,
+                                                    IExternalRoutingTable externalRoutingTable)
         {
+            this.clusterConnectivity = clusterConnectivity;
             this.externalRoutingTable = externalRoutingTable;
         }
 
@@ -22,10 +26,12 @@ namespace kino.Routing.ServiceMessageHandlers
             {
                 var payload = message.GetPayload<UnregisterUnreachableNodeMessage>();
 
-                var connectionAction = externalRoutingTable.RemoveNodeRoute(new SocketIdentifier(payload.SocketIdentity));
+                var socketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+                var connectionAction = externalRoutingTable.RemoveNodeRoute(socketIdentifier);
                 if (connectionAction == PeerConnectionAction.Disconnect)
                 {
                     forwardingSocket.SafeDisconnect(new Uri(payload.Uri));
+                    clusterConnectivity.DeletePeer(socketIdentifier);
                 }
             }
 

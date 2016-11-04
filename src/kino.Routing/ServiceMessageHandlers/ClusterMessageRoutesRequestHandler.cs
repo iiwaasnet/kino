@@ -10,7 +10,7 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class ClusterMessageRoutesRequestHandler : IServiceMessageHandler
     {
-        private readonly IClusterMonitor clusterMonitor;
+        private readonly IClusterConnectivity clusterConnectivity;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
 
@@ -18,12 +18,12 @@ namespace kino.Routing.ServiceMessageHandlers
                                                   IInternalRoutingTable internalRoutingTable,
                                                   ISecurityProvider securityProvider)
         {
-            clusterMonitor = clusterConnectivity.GetClusterMonitor();
+            this.clusterConnectivity = clusterConnectivity;
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
         }
 
-        public bool Handle(IMessage message, ISocket forwardingSocket)
+        public bool Handle(IMessage message, ISocket _)
         {
             var shouldHandle = IsRoutesRequest(message);
             if (shouldHandle)
@@ -44,7 +44,7 @@ namespace kino.Routing.ServiceMessageHandlers
 
                     if (contracts.Any())
                     {
-                        clusterMonitor.RegisterSelf(contracts, message.Domain);
+                        clusterConnectivity.RegisterSelf(contracts, message.Domain);
                     }
                 }
             }

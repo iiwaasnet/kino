@@ -80,7 +80,6 @@
   <ItemGroup>
     <Compile Include="ClusterHealthMonitor.cs" />
     <Compile Include="ClusterMemberMeta.cs" />
-    <Compile Include="ClusterMembership.cs" />
     <Compile Include="AutoDiscoveryListener.cs" />
     <Compile Include="AutoDiscoverySender.cs" />
     <Compile Include="ClusterMonitor.cs" />
@@ -88,7 +87,6 @@
     <Compile Include="Health.cs" />
     <Compile Include="HeartBeatSender.cs" />
     <Compile Include="IClusterHealthMonitor.cs" />
-    <Compile Include="IClusterMembership.cs" />
     <Compile Include="IAutoDiscoveryListener.cs" />
     <Compile Include="IAutoDiscoverySender.cs" />
     <Compile Include="IClusterMonitor.cs" />

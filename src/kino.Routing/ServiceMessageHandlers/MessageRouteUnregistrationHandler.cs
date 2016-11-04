@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using kino.Cluster;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -13,14 +14,17 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class MessageRouteUnregistrationHandler : IServiceMessageHandler
     {
+        private readonly IClusterConnectivity clusterConnectivity;
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
 
-        public MessageRouteUnregistrationHandler(IExternalRoutingTable externalRoutingTable,
+        public MessageRouteUnregistrationHandler(IClusterConnectivity clusterConnectivity,
+                                                 IExternalRoutingTable externalRoutingTable,
                                                  ISecurityProvider securityProvider,
                                                  ILogger logger)
         {
+            this.clusterConnectivity = clusterConnectivity;
             this.externalRoutingTable = externalRoutingTable;
             this.securityProvider = securityProvider;
             this.logger = logger;
@@ -38,13 +42,16 @@ namespace kino.Routing.ServiceMessageHandlers
                     var payload = message.GetPayload<UnregisterMessageRouteMessage>();
                     var messageContracts = payload.MessageContracts
                                                   .Select(mh => new MessageIdentifier(mh.Identity,
-                                                                                      mh.Version, mh.Partition));
+                                                                                      mh.Version,
+                                                                                      mh.Partition));
                     var messageIdentifiers = messageContracts.Where(mi => securityProvider.GetDomain(mi.Identity) == message.Domain);
-                    var connectionAction = externalRoutingTable.RemoveMessageRoute(messageIdentifiers,
-                                                                                   new SocketIdentifier(payload.SocketIdentity));
+                    var socketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+
+                    var connectionAction = externalRoutingTable.RemoveMessageRoute(messageIdentifiers, socketIdentifier);
                     if (connectionAction == PeerConnectionAction.Disconnect)
                     {
                         forwardingSocket.SafeDisconnect(new Uri(payload.Uri));
+                        clusterConnectivity.DeletePeer(socketIdentifier);
                     }
                     LogIfMessagesBelongToOtherDomain(messageIdentifiers, messageContracts, message.Domain);
                 }

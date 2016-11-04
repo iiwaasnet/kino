@@ -5,7 +5,6 @@ using kino.Client;
 using kino.Cluster;
 using kino.Configuration;
 using kino.Connectivity;
-using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Routing;
@@ -75,13 +74,7 @@ namespace Autofac.kino
                    .As<ICallbackHandlerStack>()
                    .SingleInstance();
 
-            builder.Register(c => new MessageHub(c.Resolve<ICallbackHandlerStack>(),
-                                                 c.Resolve<IPerformanceCounterManager<KinoPerformanceCounters>>(),
-                                                 c.Resolve<ILocalSocket<IMessage>>(),
-                                                 c.Resolve<ILocalSendingSocket<InternalRouteRegistration>>(),
-                                                 c.Resolve<ILocalSocketFactory>(),
-                                                 false,
-                                                 c.Resolve<ILogger>()))
+            builder.RegisterType<MessageHub>()
                    .As<IMessageHub>()
                    .SingleInstance();
 
@@ -121,6 +114,11 @@ namespace Autofac.kino
                    .As<IConfigurationProvider>()
                    .SingleInstance();
 
+            builder.RegisterType<HeartBeatSenderConfigurationManager>()
+                   .As<IHeartBeatSenderConfigurationProvider>()
+                   .As<IHeartBeatSenderConfigurationManager>()
+                   .SingleInstance();
+
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetRouterConfiguration())
                    .As<RouterConfiguration>()
                    .SingleInstance();
@@ -129,16 +127,20 @@ namespace Autofac.kino
                    .As<IEnumerable<RendezvousEndpoint>>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterTimingConfiguration())
-                   .As<ClusterMembershipConfiguration>()
-                   .SingleInstance();
-
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetScaleOutConfiguration())
                    .As<ScaleOutSocketConfiguration>()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())
                    .As<ClusterMembershipConfiguration>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterHealthMonitorConfiguration())
+                   .As<ClusterHealthMonitorConfiguration>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetHeartBeatSenderConfiguration())
+                   .As<HeartBeatSenderConfiguration>()
                    .SingleInstance();
         }
 

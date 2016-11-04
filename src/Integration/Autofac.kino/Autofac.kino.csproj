@@ -69,6 +69,7 @@
     <Compile Include="ApplicationConfiguration.cs" />
     <Compile Include="AutofacExtensions.cs" />
     <Compile Include="ConfigurationProvider.cs" />
+    <Compile Include="HealthConfiguration.cs" />
     <Compile Include="IConfigurationProvider.cs" />
     <Compile Include="KinoModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -13,6 +13,8 @@ namespace Autofac.kino
 
         ClusterMembershipConfiguration GetClusterMembershipConfiguration();
 
-        ClusterMembershipConfiguration GetClusterTimingConfiguration();
+        ClusterHealthMonitorConfiguration GetClusterHealthMonitorConfiguration();
+
+        HeartBeatSenderConfiguration GetHeartBeatSenderConfiguration();
     }
 }

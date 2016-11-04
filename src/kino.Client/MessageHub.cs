@@ -39,8 +39,8 @@ namespace kino.Client
                           ILocalSocket<IMessage> localRouterSocket,
                           ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
                           ILocalSocketFactory localSocketFactory,
-                          bool keepRegistrationLocal,
-                          ILogger logger)
+                          ILogger logger,
+                          bool keepRegistrationLocal = false)
         {
             this.logger = logger;
             this.performanceCounterManager = performanceCounterManager;

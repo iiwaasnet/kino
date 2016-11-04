@@ -1,10 +1,14 @@
 ﻿{
     "dev": {
-        "routerUri": "inproc://router",
         "scaleOutAddressUri": "tcp://*:5101-5103",
         "heartBeatSilenceBeforeRendezvousFailover": "00:00:15",
-        "runAsStandalone": false,
-        "deferPeerConnection": false,
+        "runAsStandalone": false,        
+        "health": {
+            "heartBeatUri": "tcp://*:5101-5130",
+            "heartBeatInterval": "00:00:05",
+            "intercomEndpoint": "inproc://health",
+            "missingHeartBeatsBeforeDeletion": 2
+        },
 
         "rendezvousServers": [
             {

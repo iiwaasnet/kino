@@ -25,19 +25,16 @@ namespace kino.Routing
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IScaleOutConfigurationManager scaleOutConfigurationManager;
+        private readonly IClusterConnectivity clusterConnectivity;
         private readonly ISocketFactory socketFactory;
-        private readonly IClusterMonitor clusterMonitor;
         private readonly ILogger logger;
         private readonly IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
-        private readonly IScaleOutListener scaleOutListener;
         private readonly ISecurityProvider securityProvider;
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver;
         private readonly InternalMessageRouteRegistrationHandler internalRegistrationHandler;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
-        private readonly IHeartBeatSender heartBeatSender;
-        private readonly IClusterHealthMonitor clusterHealthMonitor;
 
         public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
@@ -57,10 +54,7 @@ namespace kino.Routing
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
             this.scaleOutConfigurationManager = scaleOutConfigurationManager;
-            clusterMonitor = clusterConnectivity.GetClusterMonitor();
-            scaleOutListener = clusterConnectivity.GetScaleOutListener();
-            heartBeatSender = clusterConnectivity.GetHeartBeatSender();
-            clusterHealthMonitor = clusterConnectivity.GetClusterHealthMonitor();
+            this.clusterConnectivity = clusterConnectivity;
             this.serviceMessageHandlers = serviceMessageHandlers;
             this.performanceCounterManager = performanceCounterManager;
             this.securityProvider = securityProvider;
@@ -75,21 +69,15 @@ namespace kino.Routing
             cancellationTokenSource = new CancellationTokenSource();
             localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token),
                                                  TaskCreationOptions.LongRunning);
-            scaleOutListener.Start();
-            clusterHealthMonitor.Start();
-            heartBeatSender.Start();
-            clusterMonitor.Start();
+            clusterConnectivity.StartClusterServices();
         }
 
         public void Stop()
         {
-            scaleOutListener.Stop();
-            clusterHealthMonitor.Stop();
-            heartBeatSender.Stop();
+            clusterConnectivity.StopClusterServices();
             cancellationTokenSource?.Cancel();
             localRouting?.Wait(TerminationWaitTimeout);
             cancellationTokenSource?.Dispose();
-            clusterMonitor.Stop();
         }
 
         private void RouteLocalMessages(CancellationToken token)
@@ -186,7 +174,7 @@ namespace kino.Routing
                     var removedHandlerIdentifiers = internalRoutingTable.RemoveActorHostRoute(handler);
                     if (removedHandlerIdentifiers.Any())
                     {
-                        clusterMonitor.UnregisterSelf(removedHandlerIdentifiers.Select(hi => hi.Identifier));
+                        clusterConnectivity.UnregisterSelf(removedHandlerIdentifiers.Select(hi => hi.Identifier));
                     }
                     logger.Error(err);
                 }
@@ -215,6 +203,7 @@ namespace kino.Routing
                     {
                         scaleOutBackend.Connect(route.Node.Uri);
                         route.Connected = true;
+                        clusterConnectivity.StartPeerMonitoring(new SocketIdentifier(route.Node.SocketIdentity), route.Health);
                         routerConfiguration.ConnectionEstablishWaitTime.Sleep();
                     }
 
@@ -245,11 +234,11 @@ namespace kino.Routing
 
         private bool ProcessUnhandledMessage(IMessage message, Identifier messageIdentifier)
         {
-            clusterMonitor.DiscoverMessageRoute(messageIdentifier);
+            clusterConnectivity.DiscoverMessageRoute(messageIdentifier);
 
             if (MessageCameFromOtherNode(message))
             {
-                clusterMonitor.UnregisterSelf(new[] {messageIdentifier});
+                clusterConnectivity.UnregisterSelf(new[] {messageIdentifier});
 
                 if (message.Distribution == DistributionPattern.Broadcast)
                 {

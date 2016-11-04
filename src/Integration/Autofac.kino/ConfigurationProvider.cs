@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using kino.Configuration;
 using kino.Core;
+using kino.Core.Framework;
 
 namespace Autofac.kino
 {
@@ -24,30 +25,14 @@ namespace Autofac.kino
 
         public ScaleOutSocketConfiguration GetScaleOutConfiguration()
         {
-            var addressParts = appConfig.ScaleOutAddressUri.Split(":".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-            if (addressParts.Length != 3)
-            {
-                throw new FormatException(appConfig.ScaleOutAddressUri);
-            }
-            var host = $"{addressParts[0]}:{addressParts[1]}";
-            var ports = GetPortRange(addressParts[2]);
+            var uris = appConfig.ScaleOutAddressUri.GetAddressRange();
             var socketIdentifier = SocketIdentifier.CreateIdentity();
 
             return new ScaleOutSocketConfiguration
                    {
-                       AddressRange = ports.Select(p => new SocketEndpoint($"{host}:{p}", socketIdentifier))
-                                           .ToList()
+                       AddressRange = uris.Select(uri => new SocketEndpoint(uri, socketIdentifier))
+                                          .ToList()
                    };
-        }
-
-        private static IEnumerable<int> GetPortRange(string portRange)
-        {
-            var ports = portRange.Split("-".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
-                                 .Select(p => int.Parse(p.Trim()));
-            var firstPort = ports.First();
-            var lastPort = ports.Skip(1).FirstOrDefault();
-
-            return Enumerable.Range(firstPort, Math.Abs(lastPort - firstPort) + 1);
         }
 
         public ClusterMembershipConfiguration GetClusterMembershipConfiguration()
@@ -57,11 +42,18 @@ namespace Autofac.kino
                    RunAsStandalone = appConfig.RunAsStandalone
                };
 
-        public ClusterMembershipConfiguration GetClusterTimingConfiguration()
-            => new ClusterMembershipConfiguration
+        public ClusterHealthMonitorConfiguration GetClusterHealthMonitorConfiguration()
+            => new ClusterHealthMonitorConfiguration
                {
-                   HeartBeatSilenceBeforeRendezvousFailover = appConfig.HeartBeatSilenceBeforeRendezvousFailover,
-                   RunAsStandalone = appConfig.RunAsStandalone
+                   IntercomEndpoint = new Uri(appConfig.Health.IntercomEndpoint),
+                   MissingHeartBeatsBeforeDeletion = appConfig.Health.MissingHeartBeatsBeforeDeletion
+               };
+
+        public HeartBeatSenderConfiguration GetHeartBeatSenderConfiguration()
+            => new HeartBeatSenderConfiguration
+               {
+                   HeartBeatInterval = appConfig.Health.HeartBeatInterval,
+                   AddressRange = appConfig.Health.HeartBeatUri.GetAddressRange().ToList()
                };
     }
 }

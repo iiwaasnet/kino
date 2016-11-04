@@ -11,7 +11,7 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class InternalMessageRouteRegistrationHandler
     {
-        private readonly IClusterMonitor clusterMonitor;
+        private readonly IClusterConnectivity clusterConnectivity;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
@@ -21,7 +21,7 @@ namespace kino.Routing.ServiceMessageHandlers
                                                        ISecurityProvider securityProvider,
                                                        ILogger logger)
         {
-            clusterMonitor = clusterConnectivity.GetClusterMonitor();
+            this.clusterConnectivity = clusterConnectivity;
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
             this.logger = logger;
@@ -31,23 +31,32 @@ namespace kino.Routing.ServiceMessageHandlers
         {
             if (routeRegistration.MessageContracts != null)
             {
-                var newRoutes = UpdateLocalRoutingTable(routeRegistration);
-                var messageGroups = GetMessageHandlers(newRoutes).Concat(GetMessageHubs(newRoutes))
+                var newGlobalRoutes = UpdateLocalRoutingTable(routeRegistration);
+                var messageGroups = GetMessageHandlers(newGlobalRoutes).Concat(GetMessageHubs(newGlobalRoutes))
                                                                  .GroupBy(mh => mh.Domain);
                 foreach (var group in messageGroups)
                 {
-                    clusterMonitor.RegisterSelf(group.Select(g => g.Identity).ToList(), group.Key);
+                    clusterConnectivity.RegisterSelf(group.Select(g => g.Identity).ToList(), group.Key);
                 }
             }
         }
 
         private IEnumerable<IdentityDomainMap> GetMessageHandlers(IEnumerable<Identifier> newRoutes)
             => newRoutes.Where(mi => !mi.IsMessageHub())
-                        .Select(mh => new IdentityDomainMap {Identity = mh, Domain = securityProvider.GetDomain(mh.Identity)});
+                        .Select(mh => new IdentityDomainMap
+                                      {
+                                          Identity = mh,
+                                          Domain = securityProvider.GetDomain(mh.Identity)
+                                      });
 
         private IEnumerable<IdentityDomainMap> GetMessageHubs(IEnumerable<Identifier> newRoutes)
             => newRoutes.Where(mi => mi.IsMessageHub())
-                        .SelectMany(mi => securityProvider.GetAllowedDomains().Select(dom => new IdentityDomainMap {Identity = mi, Domain = dom}));
+                        .SelectMany(mi => securityProvider.GetAllowedDomains()
+                                                          .Select(dom => new IdentityDomainMap
+                                                                         {
+                                                                             Identity = mi,
+                                                                             Domain = dom
+                                                                         }));
 
         private IEnumerable<Identifier> UpdateLocalRoutingTable(InternalRouteRegistration routeRegistration)
         {

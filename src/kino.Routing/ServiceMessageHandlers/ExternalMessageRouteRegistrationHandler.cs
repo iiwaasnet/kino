@@ -25,7 +25,7 @@ namespace kino.Routing.ServiceMessageHandlers
             this.securityProvider = securityProvider;
         }
 
-        public bool Handle(IMessage message, ISocket forwardingSocket)
+        public bool Handle(IMessage message, ISocket _)
         {
             var shouldHandle = IsExternalRouteRegistration(message);
             if (shouldHandle)

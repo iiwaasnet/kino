@@ -1,8 +1,11 @@
-﻿using Castle.DynamicProxy;
+﻿using System.Collections.Generic;
+using Castle.DynamicProxy;
 using kino.Configuration;
 using kino.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
+using kino.Core.Framework;
 using kino.Messaging;
 using kino.Security;
 
@@ -19,10 +22,9 @@ namespace kino.Cluster
                                    IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                                    IAutoDiscoverySender autoDiscoverySender,
                                    IAutoDiscoveryListener autoDiscoveryListener,
-                                   IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider,
                                    IRouteDiscovery routeDiscovery,
                                    ISocketFactory socketFactory,
-                                   ILocalSendingSocket<IMessage> routerLocalSocket,
+                                   ILocalSocket<IMessage> routerLocalSocket,
                                    IScaleOutConfigurationManager scaleOutConfigurationManager,
                                    ISecurityProvider securityProvider,
                                    IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
@@ -31,16 +33,17 @@ namespace kino.Cluster
                                    ILocalSocketFactory localSocketFactory,
                                    ClusterHealthMonitorConfiguration clusterHealthMonitorConfiguration)
         {
+            var proxyGenerator = new ProxyGenerator();
             clusterMonitor = membershipConfiguration.RunAsStandalone
-                                 ? (IClusterMonitor) new ProxyGenerator().CreateInterfaceProxyWithoutTarget<IClusterMonitor>()
+                                 ? (IClusterMonitor) proxyGenerator.CreateInterfaceProxyWithoutTarget<IClusterMonitor>()
                                  : (IClusterMonitor) new ClusterMonitor(scaleOutConfigurationProvider,
                                                                         autoDiscoverySender,
                                                                         autoDiscoveryListener,
-                                                                        heartBeatConfigurationProvider,
+                                                                        heartBeatSenderConfigurationManager.As<IHeartBeatSenderConfigurationProvider>(),
                                                                         routeDiscovery,
                                                                         securityProvider);
             scaleOutListener = membershipConfiguration.RunAsStandalone
-                                   ? (IScaleOutListener)new ProxyGenerator().CreateInterfaceProxyWithoutTarget<IScaleOutListener>()
+                                   ? (IScaleOutListener) proxyGenerator.CreateInterfaceProxyWithoutTarget<IScaleOutListener>()
                                    : (IScaleOutListener) new ScaleOutListener(socketFactory,
                                                                               routerLocalSocket,
                                                                               scaleOutConfigurationManager,
@@ -48,13 +51,13 @@ namespace kino.Cluster
                                                                               performanceCounterManager,
                                                                               logger);
             heartBeatSender = membershipConfiguration.RunAsStandalone
-                                  ? (IHeartBeatSender)new ProxyGenerator().CreateInterfaceProxyWithoutTarget<IHeartBeatSender>()
+                                  ? (IHeartBeatSender) proxyGenerator.CreateInterfaceProxyWithoutTarget<IHeartBeatSender>()
                                   : (IHeartBeatSender) new HeartBeatSender(socketFactory,
                                                                            heartBeatSenderConfigurationManager,
                                                                            scaleOutConfigurationProvider,
                                                                            logger);
             clusterHealthMonitor = membershipConfiguration.RunAsStandalone
-                                       ? (IClusterHealthMonitor)new ProxyGenerator().CreateInterfaceProxyWithoutTarget<IClusterHealthMonitor>()
+                                       ? (IClusterHealthMonitor) proxyGenerator.CreateInterfaceProxyWithoutTarget<IClusterHealthMonitor>()
                                        : (IClusterHealthMonitor) new ClusterHealthMonitor(socketFactory,
                                                                                           localSocketFactory,
                                                                                           clusterHealthMonitorConfiguration,
@@ -62,16 +65,35 @@ namespace kino.Cluster
                                                                                           logger);
         }
 
-        public IScaleOutListener GetScaleOutListener()
-            => scaleOutListener;
+        public void RegisterSelf(IEnumerable<Identifier> messageHandlers, string domain)
+            => clusterMonitor.RegisterSelf(messageHandlers, domain);
 
-        public IClusterMonitor GetClusterMonitor()
-            => clusterMonitor;
+        public void UnregisterSelf(IEnumerable<Identifier> messageIdentifiers)
+            => clusterMonitor.UnregisterSelf(messageIdentifiers);
 
-        public IHeartBeatSender GetHeartBeatSender()
-            => heartBeatSender;
+        public void DiscoverMessageRoute(Identifier messageIdentifier)
+            => clusterMonitor.DiscoverMessageRoute(messageIdentifier);
 
-        public IClusterHealthMonitor GetClusterHealthMonitor()
-            => clusterHealthMonitor;
+        public void StartPeerMonitoring(SocketIdentifier socketIdentifier, Health health)
+            => clusterHealthMonitor.StartPeerMonitoring(socketIdentifier, health);
+
+        public void DeletePeer(SocketIdentifier socketIdentifier)
+            => clusterHealthMonitor.DeletePeer(socketIdentifier);
+
+        public void StartClusterServices()
+        {
+            clusterMonitor.Start();
+            scaleOutListener.Start();
+            heartBeatSender.Start();
+            clusterHealthMonitor.Start();
+        }
+
+        public void StopClusterServices()
+        {
+            clusterMonitor.Stop();
+            scaleOutListener.Stop();
+            heartBeatSender.Stop();
+            clusterHealthMonitor.Stop();
+        }
     }
 }

@@ -1,13 +1,22 @@
-﻿namespace kino.Cluster
+﻿using System.Collections.Generic;
+using kino.Core;
+
+namespace kino.Cluster
 {
     public interface IClusterConnectivity
     {
-        IClusterMonitor GetClusterMonitor();
+        void RegisterSelf(IEnumerable<Identifier> messageHandlers, string domain);
 
-        IScaleOutListener GetScaleOutListener();
+        void UnregisterSelf(IEnumerable<Identifier> messageIdentifiers);
 
-        IHeartBeatSender GetHeartBeatSender();
+        void DiscoverMessageRoute(Identifier messageIdentifier);
 
-        IClusterHealthMonitor GetClusterHealthMonitor();
+        void StartPeerMonitoring(SocketIdentifier socketIdentifier, Health health);
+
+        void DeletePeer(SocketIdentifier socketIdentifier);
+
+        void StartClusterServices();
+
+        void StopClusterServices();
     }
 }
