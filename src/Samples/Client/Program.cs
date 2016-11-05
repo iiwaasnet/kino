@@ -83,6 +83,8 @@ namespace Client
                         else
                         {
                             WriteLine($"{DateTime.UtcNow} Call timed out after {timeout.TotalSeconds} sec.");
+                            promises.ForEach(p => p.Dispose());
+                            break;
                         }
                     }
                 }
