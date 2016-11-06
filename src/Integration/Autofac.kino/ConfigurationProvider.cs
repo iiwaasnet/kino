@@ -46,7 +46,9 @@ namespace Autofac.kino
             => new ClusterHealthMonitorConfiguration
                {
                    IntercomEndpoint = new Uri(appConfig.Health.IntercomEndpoint),
-                   MissingHeartBeatsBeforeDeletion = appConfig.Health.MissingHeartBeatsBeforeDeletion
+                   MissingHeartBeatsBeforeDeletion = appConfig.Health.MissingHeartBeatsBeforeDeletion,
+                   PeerIsStaleAfter = appConfig.Health.PeerIsStaleAfter,
+                   StalePeersCheckInterval = appConfig.Health.StalePeersCheckInterval
                };
 
         public HeartBeatSenderConfiguration GetHeartBeatSenderConfiguration()

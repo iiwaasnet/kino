@@ -37,10 +37,10 @@ namespace kino.Routing
 
             if (MapMessageToSocket(routeDefinition.Identifier, socketIdentifier))
             {
-                if (!socketAlreadyFound)
-                {
+                //if (!socketAlreadyFound)
+                //{
                     IncrementUriReferenceCount(routeDefinition.Peer.Uri.ToSocketAddress());
-                }
+                //}
 
                 MapSocketToMessage(routeDefinition.Identifier, socketIdentifier);
 

@@ -12,6 +12,9 @@ namespace kino.Messaging.Messages
         public byte[] SocketIdentity { get; set; }
 
         [ProtoMember(2)]
+        public string Uri { get; set; }
+
+        [ProtoMember(3)]
         public Health Health { get; set; }
 
         public override ushort Version => MessageVersion;

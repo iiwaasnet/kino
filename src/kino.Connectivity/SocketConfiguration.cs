@@ -11,5 +11,7 @@ namespace kino.Connectivity
         public int ReceivingHighWatermark { get; set; }
 
         public TimeSpan SendTimeout { get; set; }
+
+        public TimeSpan ConnectionEstablishmentTime { get; set; }
     }
 }

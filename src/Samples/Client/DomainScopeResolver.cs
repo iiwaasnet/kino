@@ -34,7 +34,7 @@ namespace Client
                 if (domain == kinoDomain)
                 {
                     messageIdentities.Add(KinoMessages.Pong.Identity.GetString());
-                    messageIdentities.Add(KinoMessages.RegisterInternalMessageRoute.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.Ping.Identity.GetString());
                     messageIdentities.Add(KinoMessages.DiscoverMessageRoute.Identity.GetString());
                     messageIdentities.Add(KinoMessages.Exception.Identity.GetString());
                     messageIdentities.Add(KinoMessages.RegisterExternalMessageRoute.Identity.GetString());

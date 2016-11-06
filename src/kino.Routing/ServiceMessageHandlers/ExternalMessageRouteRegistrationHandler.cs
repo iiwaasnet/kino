@@ -1,4 +1,5 @@
 ﻿using System;
+using kino.Cluster;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -15,14 +16,17 @@ namespace kino.Routing.ServiceMessageHandlers
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ILogger logger;
         private readonly ISecurityProvider securityProvider;
+        private readonly IClusterConnectivity clusterConnectivity;
 
         public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable,
                                                        ISecurityProvider securityProvider,
+                                                       IClusterConnectivity clusterConnectivity,
                                                        ILogger logger)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.logger = logger;
             this.securityProvider = securityProvider;
+            this.clusterConnectivity = clusterConnectivity;
         }
 
         public bool Handle(IMessage message, ISocket _)
@@ -46,15 +50,17 @@ namespace kino.Routing.ServiceMessageHandlers
                             //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
                             if (messageIdentifier.IsMessageHub() || securityProvider.GetDomain(messageIdentifier.Identity) == message.Domain)
                             {
+                                var health = new Health
+                                             {
+                                                 Uri = payload.Health.Uri,
+                                                 HeartBeatInterval = payload.Health.HeartBeatInterval
+                                             };
+                                clusterConnectivity.AddPeer(new Node(payload.Uri, payload.SocketIdentity), health);
                                 externalRoutingTable.AddMessageRoute(new ExternalRouteDefinition
                                                                      {
                                                                          Identifier = messageIdentifier,
                                                                          Peer = new Node(uri, payload.SocketIdentity),
-                                                                         Health = new Health
-                                                                                  {
-                                                                                      Uri = payload.Health.Uri,
-                                                                                      HeartBeatInterval = payload.Health.HeartBeatInterval
-                                                                                  }
+                                                                         Health = health
                                                                      });
                             }
                             else

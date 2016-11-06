@@ -11,7 +11,7 @@ namespace kino.Connectivity
 
         IMessage ReceiveMessage(CancellationToken cancellationToken);
 
-        void Connect(Uri address);
+        void Connect(Uri address, bool waitConnectionEstablishment = false);
 
         void Bind(Uri address);
 

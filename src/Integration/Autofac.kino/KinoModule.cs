@@ -161,6 +161,10 @@ namespace Autofac.kino
                    .As<IServiceMessageHandler>()
                    .SingleInstance();
 
+            builder.RegisterType<PingHandler>()
+                   .As<IServiceMessageHandler>()
+                   .SingleInstance();
+
             builder.RegisterType<ExternalMessageRouteRegistrationHandler>()
                    .As<IServiceMessageHandler>()
                    .SingleInstance();

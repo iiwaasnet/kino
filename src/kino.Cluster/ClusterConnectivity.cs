@@ -60,6 +60,7 @@ namespace kino.Cluster
                                        ? (IClusterHealthMonitor) proxyGenerator.CreateInterfaceProxyWithoutTarget<IClusterHealthMonitor>()
                                        : (IClusterHealthMonitor) new ClusterHealthMonitor(socketFactory,
                                                                                           localSocketFactory,
+                                                                                          securityProvider,
                                                                                           clusterHealthMonitorConfiguration,
                                                                                           routerLocalSocket,
                                                                                           logger);
@@ -74,8 +75,11 @@ namespace kino.Cluster
         public void DiscoverMessageRoute(Identifier messageIdentifier)
             => clusterMonitor.DiscoverMessageRoute(messageIdentifier);
 
-        public void StartPeerMonitoring(SocketIdentifier socketIdentifier, Health health)
-            => clusterHealthMonitor.StartPeerMonitoring(socketIdentifier, health);
+        public void StartPeerMonitoring(Node peer, Health health)
+            => clusterHealthMonitor.StartPeerMonitoring(peer, health);
+
+        public void AddPeer(Node peer, Health health)
+            => clusterHealthMonitor.AddPeer(peer, health);
 
         public void DeletePeer(SocketIdentifier socketIdentifier)
             => clusterHealthMonitor.DeletePeer(socketIdentifier);

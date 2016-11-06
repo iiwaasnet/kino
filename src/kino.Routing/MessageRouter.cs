@@ -203,7 +203,8 @@ namespace kino.Routing
                     {
                         scaleOutBackend.Connect(route.Node.Uri);
                         route.Connected = true;
-                        clusterConnectivity.StartPeerMonitoring(new SocketIdentifier(route.Node.SocketIdentity), route.Health);
+                        clusterConnectivity.StartPeerMonitoring(new Node(route.Node.Uri, route.Node.SocketIdentity),
+                                                                route.Health);
                         routerConfiguration.ConnectionEstablishWaitTime.Sleep();
                     }
 

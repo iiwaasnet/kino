@@ -12,8 +12,8 @@ namespace kino.Connectivity
     internal class Socket : ISocket
     {
         private readonly NetMQSocket socket;
+        private readonly SocketConfiguration config;
         private static readonly TimeSpan ReceiveWaitTimeout;
-        private readonly TimeSpan sendingTimeout;
 
         static Socket()
         {
@@ -25,8 +25,8 @@ namespace kino.Connectivity
             socket.Options.Linger = config.Linger;
             socket.Options.ReceiveHighWatermark = config.ReceivingHighWatermark;
             socket.Options.SendHighWatermark = config.SendingHighWatermark;
-            sendingTimeout = config.SendTimeout;
             this.socket = socket;
+            this.config = config;
         }
 
         public void SendMessage(IMessage message)
@@ -41,9 +41,10 @@ namespace kino.Connectivity
                 {
                     var buffer = frames[i];
                     msg.InitGC(buffer, buffer.Length);
-                    if (!socket.TrySend(ref msg, sendingTimeout, ++i < framesCount))
+                    var sendingTimeout1 = config.SendTimeout;
+                    if (!socket.TrySend(ref msg, sendingTimeout1, ++i < framesCount))
                     {
-                        throw new TimeoutException($"Sending timed out after {sendingTimeout.TotalMilliseconds} ms!");
+                        throw new TimeoutException($"Sending timed out after {sendingTimeout1.TotalMilliseconds} ms!");
                     }
                 }
                 SendRate?.Increment();
@@ -84,10 +85,16 @@ namespace kino.Connectivity
             }
 
             return null;
-        }        
+        }
 
-        public void Connect(Uri address)
-            => socket.Connect(address.ToSocketAddress());
+        public void Connect(Uri address, bool waitConnectionEstablishment = false)
+        {
+            socket.Connect(address.ToSocketAddress());
+            if (waitConnectionEstablishment)
+            {
+                config.ConnectionEstablishmentTime.Sleep();
+            }
+        }
 
         public void Disconnect(Uri address)
             => socket.Disconnect(address.ToSocketAddress());

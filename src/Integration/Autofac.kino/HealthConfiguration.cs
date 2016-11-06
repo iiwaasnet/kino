@@ -11,5 +11,9 @@ namespace Autofac.kino
         public string IntercomEndpoint { get; set; }
 
         public int MissingHeartBeatsBeforeDeletion { get; set; }
+
+        public TimeSpan PeerIsStaleAfter { get; set; }
+
+        public TimeSpan StalePeersCheckInterval { get; set; }
     }
 }

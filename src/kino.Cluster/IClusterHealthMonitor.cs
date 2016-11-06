@@ -4,7 +4,9 @@ namespace kino.Cluster
 {
     public interface IClusterHealthMonitor
     {
-        void StartPeerMonitoring(SocketIdentifier socketIdentifier, Health health);
+        void StartPeerMonitoring(Node peer, Health health);
+
+        void AddPeer(Node peer, Health health);
 
         void DeletePeer(SocketIdentifier socketIdentifier);
 

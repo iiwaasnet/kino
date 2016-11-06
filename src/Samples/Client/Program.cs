@@ -42,7 +42,7 @@ namespace Client
 
             Thread.Sleep(TimeSpan.FromSeconds(5));
             WriteLine($"Client is running... {DateTime.Now}");
-            var runs = 1000;
+            var runs = 1;
 
             //var receiverIdentity = FindReceiver(messageHub);
 
@@ -96,6 +96,8 @@ namespace Client
                                       ? ((messagesPerTest * runs) / (double) timer.ElapsedMilliseconds * 1000).ToString("##.00")
                                       : "Infinite";
                 WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} ms with {performance} msg/sec");
+
+                Thread.Sleep(TimeSpan.FromSeconds(2));
             }
 
             ReadLine();

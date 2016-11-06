@@ -8,6 +8,10 @@ namespace kino.Cluster
 
         public string HealthUri { get; set; }
 
+        public string ScaleOutUri { get; set; }
+
         public TimeSpan HeartBeatInterval { get; set; }
+
+        public bool ConnectionEstablished { get; set; }
     }
 }

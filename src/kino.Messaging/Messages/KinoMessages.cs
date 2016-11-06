@@ -4,7 +4,6 @@ namespace kino.Messaging.Messages
 {
     public class KinoMessages
     {
-        public static readonly MessageIdentifier RegisterInternalMessageRoute = MessageIdentifier.Create<RegisterInternalMessageRouteMessage>();
         public static readonly MessageIdentifier DiscoverMessageRoute = MessageIdentifier.Create<DiscoverMessageRouteMessage>();
         public static readonly MessageIdentifier RequestClusterMessageRoutes = MessageIdentifier.Create<RequestClusterMessageRoutesMessage>();
         public static readonly MessageIdentifier RequestNodeMessageRoutes = MessageIdentifier.Create<RequestNodeMessageRoutesMessage>();
@@ -21,6 +20,8 @@ namespace kino.Messaging.Messages
         public static readonly MessageIdentifier HeartBeat = MessageIdentifier.Create<HeartBeatMessage>();
         public static readonly MessageIdentifier StartPeerMonitoring = MessageIdentifier.Create<StartPeerMonitoringMessage>();
         public static readonly MessageIdentifier CheckDeadPeers = MessageIdentifier.Create<CheckDeadPeersMessage>();
+        public static readonly MessageIdentifier CheckStalePeers = MessageIdentifier.Create<CheckStalePeersMessage>();
         public static readonly MessageIdentifier DeletePeer = MessageIdentifier.Create<DeletePeerMessage>();
+        public static readonly MessageIdentifier AddPeer = MessageIdentifier.Create<AddPeerMessage>();
     }
 }
