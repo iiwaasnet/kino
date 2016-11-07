@@ -100,6 +100,7 @@ namespace Autofac.kino
         {
             builder.RegisterType<LocalSocket<IMessage>>()
                    .As<ILocalSocket<IMessage>>()
+                   .As<ILocalSendingSocket<IMessage>>()
                    .SingleInstance();
 
             builder.RegisterType<LocalSocket<InternalRouteRegistration>>()

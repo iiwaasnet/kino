@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Castle.DynamicProxy;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core;
@@ -33,71 +32,65 @@ namespace kino.Cluster
                                    ILocalSocketFactory localSocketFactory,
                                    ClusterHealthMonitorConfiguration clusterHealthMonitorConfiguration)
         {
-            var proxyGenerator = new ProxyGenerator();
-            clusterMonitor = membershipConfiguration.RunAsStandalone
-                                 ? (IClusterMonitor) proxyGenerator.CreateInterfaceProxyWithoutTarget<IClusterMonitor>()
-                                 : (IClusterMonitor) new ClusterMonitor(scaleOutConfigurationProvider,
-                                                                        autoDiscoverySender,
-                                                                        autoDiscoveryListener,
-                                                                        heartBeatSenderConfigurationManager.As<IHeartBeatSenderConfigurationProvider>(),
-                                                                        routeDiscovery,
-                                                                        securityProvider);
-            scaleOutListener = membershipConfiguration.RunAsStandalone
-                                   ? (IScaleOutListener) proxyGenerator.CreateInterfaceProxyWithoutTarget<IScaleOutListener>()
-                                   : (IScaleOutListener) new ScaleOutListener(socketFactory,
-                                                                              routerLocalSocket,
-                                                                              scaleOutConfigurationManager,
-                                                                              securityProvider,
-                                                                              performanceCounterManager,
-                                                                              logger);
-            heartBeatSender = membershipConfiguration.RunAsStandalone
-                                  ? (IHeartBeatSender) proxyGenerator.CreateInterfaceProxyWithoutTarget<IHeartBeatSender>()
-                                  : (IHeartBeatSender) new HeartBeatSender(socketFactory,
-                                                                           heartBeatSenderConfigurationManager,
-                                                                           scaleOutConfigurationProvider,
-                                                                           logger);
-            clusterHealthMonitor = membershipConfiguration.RunAsStandalone
-                                       ? (IClusterHealthMonitor) proxyGenerator.CreateInterfaceProxyWithoutTarget<IClusterHealthMonitor>()
-                                       : (IClusterHealthMonitor) new ClusterHealthMonitor(socketFactory,
-                                                                                          localSocketFactory,
-                                                                                          securityProvider,
-                                                                                          clusterHealthMonitorConfiguration,
-                                                                                          routerLocalSocket,
-                                                                                          logger);
+            if (!membershipConfiguration.RunAsStandalone)
+            {
+                clusterMonitor = new ClusterMonitor(scaleOutConfigurationProvider,
+                                                    autoDiscoverySender,
+                                                    autoDiscoveryListener,
+                                                    heartBeatSenderConfigurationManager.As<IHeartBeatSenderConfigurationProvider>(),
+                                                    routeDiscovery,
+                                                    securityProvider);
+                scaleOutListener = new ScaleOutListener(socketFactory,
+                                                        routerLocalSocket,
+                                                        scaleOutConfigurationManager,
+                                                        securityProvider,
+                                                        performanceCounterManager,
+                                                        logger);
+                heartBeatSender = new HeartBeatSender(socketFactory,
+                                                      heartBeatSenderConfigurationManager,
+                                                      scaleOutConfigurationProvider,
+                                                      logger);
+                clusterHealthMonitor = new ClusterHealthMonitor(socketFactory,
+                                                                localSocketFactory,
+                                                                securityProvider,
+                                                                clusterHealthMonitorConfiguration,
+                                                                routerLocalSocket,
+                                                                logger);
+            }
         }
 
         public void RegisterSelf(IEnumerable<Identifier> messageHandlers, string domain)
-            => clusterMonitor.RegisterSelf(messageHandlers, domain);
+            => clusterMonitor?.RegisterSelf(messageHandlers, domain);
 
         public void UnregisterSelf(IEnumerable<Identifier> messageIdentifiers)
-            => clusterMonitor.UnregisterSelf(messageIdentifiers);
+            => clusterMonitor?.UnregisterSelf(messageIdentifiers);
 
         public void DiscoverMessageRoute(Identifier messageIdentifier)
-            => clusterMonitor.DiscoverMessageRoute(messageIdentifier);
+            => clusterMonitor?.DiscoverMessageRoute(messageIdentifier);
 
         public void StartPeerMonitoring(Node peer, Health health)
-            => clusterHealthMonitor.StartPeerMonitoring(peer, health);
+            => clusterHealthMonitor?.StartPeerMonitoring(peer, health);
 
         public void AddPeer(Node peer, Health health)
-            => clusterHealthMonitor.AddPeer(peer, health);
+            => clusterHealthMonitor?.AddPeer(peer, health);
 
         public void DeletePeer(SocketIdentifier socketIdentifier)
-            => clusterHealthMonitor.DeletePeer(socketIdentifier);
+            => clusterHealthMonitor?.DeletePeer(socketIdentifier);
 
         public void StartClusterServices()
         {
-            clusterMonitor.Start();
-            scaleOutListener.Start();
-            heartBeatSender.Start();
-            clusterHealthMonitor.Start();
+            clusterMonitor?.Start();
+            scaleOutListener?.Start();
+            heartBeatSender?.Start();
+            clusterHealthMonitor?.Start();
         }
 
         public void StopClusterServices()
         {
-            clusterMonitor.Stop();
-            scaleOutListener.Stop();
-            heartBeatSender.Stop();
-            clusterHealthMonitor.Stop();
+            clusterMonitor?.Stop();
+            scaleOutListener?.Stop();
+            heartBeatSender?.Stop();
+            clusterHealthMonitor?.Stop();
         }
     }
 }
