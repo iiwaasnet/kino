@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Cluster;
-using kino.Configuration;
+using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -24,7 +24,7 @@ namespace kino.Routing
         private Task localRouting;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly IExternalRoutingTable externalRoutingTable;
-        private readonly IScaleOutConfigurationManager scaleOutConfigurationManager;
+        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly IClusterConnectivity clusterConnectivity;
         private readonly ISocketFactory socketFactory;
         private readonly ILogger logger;
@@ -39,7 +39,7 @@ namespace kino.Routing
         public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
                              IExternalRoutingTable externalRoutingTable,
-                             IScaleOutConfigurationManager scaleOutConfigurationManager,
+                             IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                              IClusterConnectivity clusterConnectivity,
                              IEnumerable<IServiceMessageHandler> serviceMessageHandlers,
                              IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
@@ -53,7 +53,7 @@ namespace kino.Routing
             this.socketFactory = socketFactory;
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
-            this.scaleOutConfigurationManager = scaleOutConfigurationManager;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.clusterConnectivity = clusterConnectivity;
             this.serviceMessageHandlers = serviceMessageHandlers;
             this.performanceCounterManager = performanceCounterManager;
@@ -194,7 +194,7 @@ namespace kino.Routing
                 .Where(h => h != null)
                 .ToList();
 
-            var routerConfiguration = scaleOutConfigurationManager.GetRouterConfiguration();
+            var routerConfiguration = scaleOutConfigurationProvider.GetRouterConfiguration();
             foreach (var route in routes)
             {
                 try
@@ -210,7 +210,7 @@ namespace kino.Routing
 
                     message.SetSocketIdentity(route.Node.SocketIdentity);
                     message.AddHop();
-                    message.PushRouterAddress(scaleOutConfigurationManager.GetScaleOutAddress());
+                    message.PushRouterAddress(scaleOutConfigurationProvider.GetScaleOutAddress());
 
                     message.SignMessage(securityProvider);
 

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using Castle.DynamicProxy;
-using kino.Configuration;
+using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -24,7 +24,7 @@ namespace kino.Cluster
                                    IAutoDiscoveryListener autoDiscoveryListener,
                                    IRouteDiscovery routeDiscovery,
                                    ISocketFactory socketFactory,
-                                   ILocalSocket<IMessage> routerLocalSocket,
+                                   ILocalSendingSocket<IMessage> routerLocalSocket,
                                    IScaleOutConfigurationManager scaleOutConfigurationManager,
                                    ISecurityProvider securityProvider,
                                    IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,

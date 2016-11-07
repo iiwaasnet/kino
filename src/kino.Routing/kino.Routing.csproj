@@ -88,10 +88,6 @@
       <Project>{041A2E08-53AD-485E-8F57-B06ADB01C26F}</Project>
       <Name>kino.Cluster</Name>
     </ProjectReference>
-    <ProjectReference Include="..\kino.Configuration\kino.Configuration.csproj">
-      <Project>{7b3a4113-bbf9-4469-a3cf-981c2c09279a}</Project>
-      <Name>kino.Configuration</Name>
-    </ProjectReference>
     <ProjectReference Include="..\kino.Connectivity\kino.Connectivity.csproj">
       <Project>{45f6f46b-b864-4c27-9a4b-5022546ae424}</Project>
       <Name>kino.Connectivity</Name>

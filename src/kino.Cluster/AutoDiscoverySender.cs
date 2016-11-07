@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using kino.Configuration;
+using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;

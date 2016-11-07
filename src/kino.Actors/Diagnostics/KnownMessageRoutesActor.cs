@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using kino.Configuration;
+using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Messaging;

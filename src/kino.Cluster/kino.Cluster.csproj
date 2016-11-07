@@ -84,6 +84,22 @@
     <Compile Include="AutoDiscoverySender.cs" />
     <Compile Include="ClusterMonitor.cs" />
     <Compile Include="ClusterConnectivity.cs" />
+    <Compile Include="Configuration\ClusterHealthMonitorConfiguration.cs" />
+    <Compile Include="Configuration\ClusterMembershipConfiguration.cs" />
+    <Compile Include="Configuration\HeartBeatSenderConfiguration.cs" />
+    <Compile Include="Configuration\HeartBeatSenderConfigurationManager.cs" />
+    <Compile Include="Configuration\IConfigurationStorage.cs" />
+    <Compile Include="Configuration\IHeartBeatSenderConfigurationManager.cs" />
+    <Compile Include="Configuration\IHeartBeatSenderConfigurationProvider.cs" />
+    <Compile Include="Configuration\IScaleOutConfigurationManager.cs" />
+    <Compile Include="Configuration\IScaleOutConfigurationProvider.cs" />
+    <Compile Include="Configuration\RendezvousClusterConfiguration.cs" />
+    <Compile Include="Configuration\RendezvousClusterConfigurationReadonlyStorage.cs" />
+    <Compile Include="Configuration\RendezvousEndpoint.cs" />
+    <Compile Include="Configuration\RouteDiscoveryConfiguration.cs" />
+    <Compile Include="Configuration\RouterConfiguration.cs" />
+    <Compile Include="Configuration\ScaleOutConfigurationManager.cs" />
+    <Compile Include="Configuration\ScaleOutSocketConfiguration.cs" />
     <Compile Include="Health.cs" />
     <Compile Include="HeartBeatSender.cs" />
     <Compile Include="IClusterHealthMonitor.cs" />
@@ -102,10 +118,6 @@
     <Compile Include="ScaleOutListener.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\kino.Configuration\kino.Configuration.csproj">
-      <Project>{7b3a4113-bbf9-4469-a3cf-981c2c09279a}</Project>
-      <Name>kino.Configuration</Name>
-    </ProjectReference>
     <ProjectReference Include="..\kino.Connectivity\kino.Connectivity.csproj">
       <Project>{45F6F46B-B864-4C27-9A4B-5022546AE424}</Project>
       <Name>kino.Connectivity</Name>

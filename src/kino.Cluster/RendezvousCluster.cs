@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using C5;
-using kino.Configuration;
+using kino.Cluster.Configuration;
 
 namespace kino.Cluster
 {

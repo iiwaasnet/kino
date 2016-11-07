@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace kino.Configuration
+namespace kino.Cluster.Configuration
 {
     public interface IHeartBeatSenderConfigurationProvider
     {

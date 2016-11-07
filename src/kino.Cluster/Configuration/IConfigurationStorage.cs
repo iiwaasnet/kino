@@ -1,4 +1,4 @@
-﻿namespace kino.Configuration
+﻿namespace kino.Cluster.Configuration
 {
     public interface IConfigurationStorage<T>
     {

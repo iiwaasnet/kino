@@ -40,8 +40,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Security", "kino.Secur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Cluster", "kino.Cluster\kino.Cluster.csproj", "{041A2E08-53AD-485E-8F57-B06ADB01C26F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Configuration", "kino.Configuration\kino.Configuration.csproj", "{7B3A4113-BBF9-4469-A3CF-981C2C09279A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,10 +102,6 @@ Global
 		{041A2E08-53AD-485E-8F57-B06ADB01C26F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{041A2E08-53AD-485E-8F57-B06ADB01C26F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{041A2E08-53AD-485E-8F57-B06ADB01C26F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7B3A4113-BBF9-4469-A3CF-981C2C09279A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7B3A4113-BBF9-4469-A3CF-981C2C09279A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7B3A4113-BBF9-4469-A3CF-981C2C09279A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7B3A4113-BBF9-4469-A3CF-981C2C09279A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

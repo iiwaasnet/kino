@@ -1,7 +1,7 @@
 ﻿using System;
 using kino.Core.Framework;
 
-namespace kino.Configuration
+namespace kino.Cluster.Configuration
 {
     public class RendezvousEndpoint : IEquatable<RendezvousEndpoint>
     {

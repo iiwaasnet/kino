@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
-using kino.Configuration;
+using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;

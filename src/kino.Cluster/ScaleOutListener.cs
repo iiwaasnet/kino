@@ -2,7 +2,7 @@
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
-using kino.Configuration;
+using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;

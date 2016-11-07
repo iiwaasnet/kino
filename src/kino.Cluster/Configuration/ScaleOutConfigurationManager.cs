@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using kino.Core;
 using kino.Core.Framework;
 
-namespace kino.Configuration
+namespace kino.Cluster.Configuration
 {
     public class ScaleOutConfigurationManager : IScaleOutConfigurationManager
     {
@@ -13,12 +13,9 @@ namespace kino.Configuration
         private readonly ScaleOutSocketConfiguration scaleOutConfig;
         private readonly TaskCompletionSource<SocketEndpoint> scaleOutAddressSource;
         private SocketEndpoint scaleOutAddress;
-        private readonly TaskCompletionSource<RouterConfiguration> activeRouterConfigSource;
-        private RouterConfiguration activeRouterConfig;
-        private readonly RouterConfiguration inactiveRouterConfig;
 
         public ScaleOutConfigurationManager(RouterConfiguration routerConfig,
-                                          ScaleOutSocketConfiguration scaleOutConfig)
+                                            ScaleOutSocketConfiguration scaleOutConfig)
         {
             scaleOutAddressSource = new TaskCompletionSource<SocketEndpoint>();
             this.scaleOutConfig = scaleOutConfig;

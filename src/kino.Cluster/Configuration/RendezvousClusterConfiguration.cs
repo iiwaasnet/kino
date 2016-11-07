@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace kino.Configuration
+namespace kino.Cluster.Configuration
 {
     public class RendezvousClusterConfiguration
     {

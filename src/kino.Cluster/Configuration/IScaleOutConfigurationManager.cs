@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using kino.Core;
 
-namespace kino.Configuration
+namespace kino.Cluster.Configuration
 {
     public interface IScaleOutConfigurationManager : IScaleOutConfigurationProvider
     {

@@ -1,6 +1,6 @@
 using kino.Core;
 
-namespace kino.Configuration
+namespace kino.Cluster.Configuration
 {
     public interface IScaleOutConfigurationProvider
     {

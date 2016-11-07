@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Autofac.Builder;
-using kino.Configuration;
+using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core.Diagnostics;
 
