@@ -2,7 +2,7 @@
     "dev": {
         "scaleOutAddressUri": "tcp://*:5101-5103",
         "heartBeatSilenceBeforeRendezvousFailover": "00:00:15",
-        "runAsStandalone": false,
+        "runAsStandalone": true,
         "health": {
             "heartBeatUri": "tcp://*:5101-5130",
             "heartBeatInterval": "00:00:05",

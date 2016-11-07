@@ -73,6 +73,7 @@
     <Compile Include="ServiceMessageHandlers\ClusterMessageRoutesRequestHandler.cs" />
     <Compile Include="ServiceMessageHandlers\ExternalMessageRouteRegistrationHandler.cs" />
     <Compile Include="ServiceMessageHandlers\IdentifierExtensions.cs" />
+    <Compile Include="ServiceMessageHandlers\IdentityDomainMap.cs" />
     <Compile Include="ServiceMessageHandlers\InternalMessageRouteRegistrationHandler.cs" />
     <Compile Include="ServiceMessageHandlers\IServiceMessageHandler.cs" />
     <Compile Include="ServiceMessageHandlers\PingHandler.cs" />

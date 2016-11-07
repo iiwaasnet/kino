@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -25,7 +26,7 @@ namespace kino.Cluster
         private CancellationTokenSource cancellationTokenSource;
         private Task processingMessages;
         private readonly ILocalSocket<IMessage> multiplexingSocket;
-        private readonly IDictionary<SocketIdentifier, ClusterMemberMeta> peers;
+        private readonly C5.IDictionary<SocketIdentifier, ClusterMemberMeta> peers;
         private Task receivingMessages;
         private TimeSpan deadPeersCheckInterval;
         private IDisposable deadPeersCheckObserver;
@@ -233,7 +234,7 @@ namespace kino.Cluster
             return shouldHandle;
         }
 
-        private void CheckConnectivity(CancellationToken token, System.Collections.Generic.List<KeyValuePair<SocketIdentifier, ClusterMemberMeta>> deadNodes)
+        private void CheckConnectivity(CancellationToken token, IReadOnlyList<C5.KeyValuePair<SocketIdentifier, ClusterMemberMeta>> deadNodes)
         {
             try
             {
@@ -286,11 +287,11 @@ namespace kino.Cluster
             return shouldHandle;
         }
 
-        private bool PeerIsStale(DateTime now, KeyValuePair<SocketIdentifier, ClusterMemberMeta> p)
+        private bool PeerIsStale(DateTime now, C5.KeyValuePair<SocketIdentifier, ClusterMemberMeta> p)
             => !p.Value.ConnectionEstablished
                && now - p.Value.LastKnownHeartBeat > config.PeerIsStaleAfter;
 
-        private bool HeartBeatExpired(DateTime now, KeyValuePair<SocketIdentifier, ClusterMemberMeta> p)
+        private bool HeartBeatExpired(DateTime now, C5.KeyValuePair<SocketIdentifier, ClusterMemberMeta> p)
             => p.Value.ConnectionEstablished
                && now - p.Value.LastKnownHeartBeat > p.Value.HeartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion);
 

@@ -33,7 +33,7 @@ namespace kino.Routing.ServiceMessageHandlers
             {
                 var newGlobalRoutes = UpdateLocalRoutingTable(routeRegistration);
                 var messageGroups = GetMessageHandlers(newGlobalRoutes).Concat(GetMessageHubs(newGlobalRoutes))
-                                                                 .GroupBy(mh => mh.Domain);
+                                                                       .GroupBy(mh => mh.Domain);
                 foreach (var group in messageGroups)
                 {
                     clusterConnectivity.RegisterSelf(group.Select(g => g.Identity).ToList(), group.Key);
@@ -81,12 +81,5 @@ namespace kino.Routing.ServiceMessageHandlers
 
             return handlers;
         }
-    }
-
-    internal class IdentityDomainMap
-    {
-        internal Identifier Identity { get; set; }
-
-        internal string Domain { get; set; }
     }
 }
