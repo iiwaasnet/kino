@@ -120,7 +120,7 @@ namespace kino.Cluster
                 }
             }
 
-            throw new Exception($"Failed to bind to any of the configured ScaleOut endpoints!");
+            throw new Exception("Failed to bind to any of the configured ScaleOut endpoints!");
         }
 
         private int GetScaleOutReceiveMessageQueueLength(RouterConfiguration config)

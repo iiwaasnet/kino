@@ -67,8 +67,7 @@ namespace kino.Routing
         {
             //TODO: Decide on how to handle start timeout
             cancellationTokenSource = new CancellationTokenSource();
-            localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token),
-                                                 TaskCreationOptions.LongRunning);
+            localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
             clusterConnectivity.StartClusterServices();
         }
 

@@ -48,7 +48,7 @@ namespace Client
 
             var securityProvider = container.Resolve<ISecurityProvider>();
             var helloMessageIdentity = MessageIdentifier.Create<HelloMessage>();
-            while (false)
+            while (true)
             {
                 var promises = new List<IPromise>(runs);
 

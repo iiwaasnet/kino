@@ -1,4 +1,3 @@
-using System;
 using ProtoBuf;
 
 namespace kino.Messaging.Messages

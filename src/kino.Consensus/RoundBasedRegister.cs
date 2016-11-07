@@ -139,9 +139,9 @@ namespace kino.Consensus
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, m => m.GetPayload<LeaseAckReadMessage>(), GetQuorum());
             var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, m => m.GetPayload<LeaseNackReadMessage>(), GetQuorum());
 
-            using (ackReadStream.Subscribe((IObserver<IMessage>) awaitableAckFilter))
+            using (ackReadStream.Subscribe(awaitableAckFilter))
             {
-                using (nackReadStream.Subscribe((IObserver<IMessage>) awaitableNackFilter))
+                using (nackReadStream.Subscribe(awaitableNackFilter))
                 {
                     var message = CreateReadMessage(ballot);
                     intercomMessageHub.Broadcast(message);
@@ -187,9 +187,9 @@ namespace kino.Consensus
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, m => m.GetPayload<LeaseAckWriteMessage>(), GetQuorum());
             var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, m => m.GetPayload<LeaseNackWriteMessage>(), GetQuorum());
 
-            using (ackWriteStream.Subscribe((IObserver<IMessage>) awaitableAckFilter))
+            using (ackWriteStream.Subscribe(awaitableAckFilter))
             {
-                using (nackWriteStream.Subscribe((IObserver<IMessage>) awaitableNackFilter))
+                using (nackWriteStream.Subscribe(awaitableNackFilter))
                 {
                     intercomMessageHub.Broadcast(CreateWriteMessage(ballot, lease));
 

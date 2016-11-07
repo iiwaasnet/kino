@@ -1,5 +1,4 @@
-﻿using System;
-using kino.Cluster;
+﻿using kino.Cluster;
 using kino.Connectivity;
 using kino.Core;
 using kino.Messaging;

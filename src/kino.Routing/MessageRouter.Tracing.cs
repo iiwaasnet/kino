@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using kino.Core.Framework;
+﻿using kino.Core.Framework;
 using kino.Messaging;
 
 namespace kino.Routing

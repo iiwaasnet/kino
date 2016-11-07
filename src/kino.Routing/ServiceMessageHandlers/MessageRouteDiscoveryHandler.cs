@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using kino.Cluster;
 using kino.Connectivity;
-using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
