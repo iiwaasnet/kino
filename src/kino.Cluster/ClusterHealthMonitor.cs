@@ -247,12 +247,12 @@ namespace kino.Cluster
                             var uri = new Uri(staleNode.Value.ScaleOutUri);
                             try
                             {
-                                //socket.SetIdentity(SocketIdentifier.CreateIdentity());
                                 socket.SetMandatoryRouting();
                                 socket.Connect(uri, waitConnectionEstablishment: true);
-                                var ping = Message.Create(new PingMessage(), securityProvider.GetDomain(KinoMessages.Ping.Identity));
-                                ping.SetReceiverNode(staleNode.Key);
-                                socket.SendMessage(ping);
+                                var message = Message.Create(new PingMessage(), securityProvider.GetDomain(KinoMessages.Ping.Identity)).As<Message>();
+                                message.SetSocketIdentity(staleNode.Key.Identity);
+                                message.SignMessage(securityProvider);
+                                socket.SendMessage(message);
                                 socket.Disconnect(uri);
                                 staleNode.Value.LastKnownHeartBeat = DateTime.UtcNow;
                             }

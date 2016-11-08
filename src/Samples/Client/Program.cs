@@ -48,7 +48,7 @@ namespace Client
 
             var securityProvider = container.Resolve<ISecurityProvider>();
             var helloMessageIdentity = MessageIdentifier.Create<HelloMessage>();
-            Thread.Sleep(TimeSpan.FromSeconds(35));
+            //Thread.Sleep(TimeSpan.FromSeconds(35));
             while (true)
             {
                 var promises = new List<IPromise>(runs);

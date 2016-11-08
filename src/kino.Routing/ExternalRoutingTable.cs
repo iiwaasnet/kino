@@ -33,14 +33,11 @@ namespace kino.Routing
                                      Connected = false
                                  };
             var socketIdentifier = new SocketIdentifier(routeDefinition.Peer.SocketIdentity);
-            var socketAlreadyFound = socketToConnectionMap.FindOrAdd(socketIdentifier, ref peerConnection);
+            socketToConnectionMap.FindOrAdd(socketIdentifier, ref peerConnection);
 
             if (MapMessageToSocket(routeDefinition.Identifier, socketIdentifier))
             {
-                //if (!socketAlreadyFound)
-                //{
-                    IncrementUriReferenceCount(routeDefinition.Peer.Uri.ToSocketAddress());
-                //}
+                IncrementUriReferenceCount(routeDefinition.Peer.Uri.ToSocketAddress());
 
                 MapSocketToMessage(routeDefinition.Identifier, socketIdentifier);
 
@@ -161,7 +158,7 @@ namespace kino.Routing
             if (connection != null)
             {
                 var connectionsLeft = DecrementUriReferenceCount(connection.Node.Uri.ToSocketAddress());
-                return (connectionsLeft == 0 && connection.Connected)
+                return connectionsLeft == 0
                            ? PeerConnectionAction.Disconnect
                            : PeerConnectionAction.KeepConnection;
             }
