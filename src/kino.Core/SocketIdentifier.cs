@@ -60,6 +60,9 @@ namespace kino.Core
             return StructuralCompare(other);
         }
 
+        public override string ToString()
+            => Identity.GetAnyString();
+
         private bool StructuralCompare(SocketIdentifier other)
             => Unsafe.ArraysEqual(Identity, other.Identity);
 
