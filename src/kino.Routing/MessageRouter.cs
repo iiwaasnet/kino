@@ -258,6 +258,7 @@ namespace kino.Routing
         private ISocket CreateScaleOutBackendSocket()
         {
             var socket = socketFactory.CreateRouterSocket();
+            socket.SetMandatoryRouting();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutBackendSocketSendRate);
 
             return socket;
