@@ -4,6 +4,7 @@ using kino.Actors.Diagnostics;
 using kino.Client;
 using kino.Cluster;
 using kino.Cluster.Configuration;
+using kino.Configuration;
 using kino.Connectivity;
 using kino.Core.Diagnostics.Performance;
 using kino.Messaging;

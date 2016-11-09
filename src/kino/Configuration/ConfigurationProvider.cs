@@ -5,7 +5,7 @@ using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Framework;
 
-namespace Autofac.kino
+namespace kino.Configuration
 {
     public class ConfigurationProvider : IConfigurationProvider
     {

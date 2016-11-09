@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Autofac.kino
+namespace kino.Configuration
 {
     public class HealthConfiguration
     {

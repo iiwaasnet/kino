@@ -41,6 +41,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\ApplicationConfiguration.cs" />
+    <Compile Include="Configuration\ConfigurationProvider.cs" />
+    <Compile Include="Configuration\HealthConfiguration.cs" />
+    <Compile Include="Configuration\IConfigurationProvider.cs" />
+    <Compile Include="Configuration\RendezvousNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -51,6 +56,10 @@
     <ProjectReference Include="..\kino.Client\kino.Client.csproj">
       <Project>{2c69ba32-dadc-4e4e-8d91-055fb9d35bff}</Project>
       <Name>kino.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Cluster\kino.Cluster.csproj">
+      <Project>{041A2E08-53AD-485E-8F57-B06ADB01C26F}</Project>
+      <Name>kino.Cluster</Name>
     </ProjectReference>
     <ProjectReference Include="..\kino.Core\kino.Core.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>

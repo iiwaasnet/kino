@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-
-namespace Autofac.kino
+namespace kino.Configuration
 {
     public class ApplicationConfiguration
     {

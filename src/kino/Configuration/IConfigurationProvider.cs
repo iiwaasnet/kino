@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using kino.Cluster.Configuration;
 
-namespace Autofac.kino
+namespace kino.Configuration
 {
     public interface IConfigurationProvider
     {

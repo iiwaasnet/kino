@@ -1,6 +1,6 @@
 ﻿using Autofac;
-using Autofac.kino;
 using kino.Actors;
+using kino.Configuration;
 using kino.Core.Diagnostics;
 using Server.Actors;
 using TypedConfigProvider;
