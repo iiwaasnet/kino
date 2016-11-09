@@ -48,7 +48,7 @@ namespace Client
 
             var securityProvider = container.Resolve<ISecurityProvider>();
             var helloMessageIdentity = MessageIdentifier.Create<HelloMessage>();
-            //Thread.Sleep(TimeSpan.FromSeconds(35));
+            Thread.Sleep(TimeSpan.FromSeconds(5));
             while (true)
             {
                 var promises = new List<IPromise>(runs);
@@ -83,7 +83,10 @@ namespace Client
                         }
                         else
                         {
+                            var fc = ForegroundColor;
+                            ForegroundColor = ConsoleColor.Yellow;
                             WriteLine($"{DateTime.UtcNow} Call timed out after {timeout.TotalSeconds} sec.");
+                            ForegroundColor = fc;
                             promises.ForEach(p => p.Dispose());
                             break;
                         }
