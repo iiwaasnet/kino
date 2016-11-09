@@ -282,7 +282,7 @@ namespace kino.Cluster
                 foreach (var deadNode in deadNodes)
                 {
                     routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {SocketIdentity = deadNode.Key.Identity}));
-                    logger.Debug($"Unreachable node {deadNode.Key.Identity}@{deadNode.Value.ScaleOutUri} detected. Route deletion scheduled.");
+                    logger.Debug($"Unreachable node {deadNode.Key}@{deadNode.Value.ScaleOutUri} detected. Route deletion scheduled.");
                 }
             }
 
