@@ -155,7 +155,7 @@ namespace kino.Cluster
                             var message = socket.ReceiveMessage(token);
                             if (message != null)
                             {
-                                logger.Debug($"{GetType().Name} received {message.Identity.GetAnyString()} message");
+                                //logger.Debug($"{GetType().Name} received {message.Identity.GetAnyString()} message");
                                 ProcessMessage(message, socket);
                             }
                         }
@@ -221,12 +221,12 @@ namespace kino.Cluster
             if (shouldHandle)
             {
                 var now = DateTime.UtcNow;
-                var deadNodes = peers.Where(p => PeerIsStale(now, p))
+                var staleNodes = peers.Where(p => PeerIsStale(now, p))
                                      .ToList();
-                if (deadNodes.Any())
+                if (staleNodes.Any())
                 {
-                    logger.Debug("Stale nodes detected. Connectivity check scheduled.");
-                    Task.Factory.StartNew(() => CheckConnectivity(cancellationTokenSource.Token, deadNodes), TaskCreationOptions.LongRunning);
+                    logger.Debug($"Stale nodes detected: {staleNodes.Count()}. Connectivity check scheduled.");
+                    Task.Factory.StartNew(() => CheckConnectivity(cancellationTokenSource.Token, staleNodes), TaskCreationOptions.LongRunning);
                 }
             }
 
