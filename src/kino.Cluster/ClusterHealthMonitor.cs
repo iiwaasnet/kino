@@ -30,7 +30,6 @@ namespace kino.Cluster
         private TimeSpan deadPeersCheckInterval;
         private IDisposable deadPeersCheckObserver;
         private readonly IDisposable stalePeersCheckObserver;
-        private ManualResetEvent barrier;
 
         public ClusterHealthMonitor(ISocketFactory socketFactory,
                                     ILocalSocketFactory localSocketFactory,
@@ -63,16 +62,19 @@ namespace kino.Cluster
                                                       }));
 
         public void AddPeer(Node peer, Health health)
-            => multiplexingSocket.Send(Message.Create(new AddPeerMessage
-                                                      {
-                                                          SocketIdentity = peer.SocketIdentity,
-                                                          Uri = peer.Uri.ToSocketAddress(),
-                                                          Health = new Messaging.Messages.Health
-                                                                   {
-                                                                       Uri = health.Uri,
-                                                                       HeartBeatInterval = health.HeartBeatInterval
-                                                                   }
-                                                      }));
+        {
+            //logger.Debug($"AddPeer {peer.SocketIdentity.GetAnyString()}");
+            multiplexingSocket.Send(Message.Create(new AddPeerMessage
+                                                   {
+                                                       SocketIdentity = peer.SocketIdentity,
+                                                       Uri = peer.Uri.ToSocketAddress(),
+                                                       Health = new Messaging.Messages.Health
+                                                                {
+                                                                    Uri = health.Uri,
+                                                                    HeartBeatInterval = health.HeartBeatInterval
+                                                                }
+                                                   }));
+        }
 
         public void DeletePeer(SocketIdentifier socketIdentifier)
             => multiplexingSocket.Send(Message.Create(new DeletePeerMessage {SocketIdentity = socketIdentifier.Identity}));
@@ -80,25 +82,27 @@ namespace kino.Cluster
         public void Start()
         {
             cancellationTokenSource = new CancellationTokenSource();
-            barrier = new ManualResetEvent(false);
-
-            receivingMessages = Task.Factory.StartNew(_ => ReceiveMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
-            processingMessages = Task.Factory.StartNew(_ => ProcessMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
+            var participantsCount = 3;
+            using (var barrier = new Barrier(participantsCount))
+            {
+                receivingMessages = Task.Factory.StartNew(_ => ReceiveMessages(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
+                processingMessages = Task.Factory.StartNew(_ => ProcessMessages(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
+                barrier.SignalAndWait(cancellationTokenSource.Token);
+                barrier.SignalAndWait(cancellationTokenSource.Token);
+            }
         }
 
         public void Stop()
         {
             stalePeersCheckObserver?.Dispose();
             deadPeersCheckObserver?.Dispose();
-            barrier?.Dispose();
             cancellationTokenSource?.Cancel();
             processingMessages?.Wait();
             receivingMessages?.Wait();
             cancellationTokenSource?.Dispose();
-            barrier?.Dispose();
         }
 
-        private void ReceiveMessages(CancellationToken token)
+        private void ReceiveMessages(CancellationToken token, Barrier barrier)
         {
             try
             {
@@ -109,7 +113,8 @@ namespace kino.Cluster
                                   };
                 using (var publisherSocket = CreatePublisherSocket())
                 {
-                    barrier.Set();
+                    barrier.SignalAndWait(token);
+                    barrier.SignalAndWait(token);
                     while (!token.IsCancellationRequested)
                     {
                         try
@@ -141,13 +146,14 @@ namespace kino.Cluster
             logger.Warn($"{GetType().Name} message processing stopped.");
         }
 
-        private void ProcessMessages(CancellationToken token)
+        private void ProcessMessages(CancellationToken token, Barrier barrier)
         {
             try
             {
-                WaitHandle.WaitAny(new[] {barrier, token.WaitHandle});
+                barrier.SignalAndWait(token);
                 using (var socket = CreateSubscriberSocket())
                 {
+                    barrier.SignalAndWait(token);
                     while (!token.IsCancellationRequested)
                     {
                         try
@@ -222,7 +228,7 @@ namespace kino.Cluster
             {
                 var now = DateTime.UtcNow;
                 var staleNodes = peers.Where(p => PeerIsStale(now, p))
-                                     .ToList();
+                                      .ToList();
                 if (staleNodes.Any())
                 {
                     logger.Debug($"Stale nodes detected: {staleNodes.Count()}. Connectivity check scheduled.");
@@ -248,7 +254,7 @@ namespace kino.Cluster
                             try
                             {
                                 socket.SetMandatoryRouting();
-                                socket.Connect(uri, waitConnectionEstablishment: true);
+                                socket.Connect(uri, true);
                                 var message = Message.Create(new PingMessage(), securityProvider.GetDomain(KinoMessages.Ping.Identity)).As<Message>();
                                 message.SetSocketIdentity(staleNode.Key.Identity);
                                 message.SignMessage(securityProvider);
@@ -388,7 +394,7 @@ namespace kino.Cluster
         private ISocket CreateSubscriberSocket()
         {
             var socket = socketFactory.CreateSubscriberSocket();
-            socket.Connect(config.IntercomEndpoint);
+            socket.Connect(config.IntercomEndpoint, true);
             socket.Subscribe();
 
             return socket;
