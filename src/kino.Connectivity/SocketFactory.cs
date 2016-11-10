@@ -36,7 +36,7 @@ namespace kino.Connectivity
                    SendingHighWatermark = 10000,
                    SendTimeout = TimeSpan.FromMilliseconds(200),
                    Linger = TimeSpan.Zero,
-                   ConnectionEstablishmentTime = TimeSpan.FromMilliseconds(50)
+                   ConnectionEstablishmentTime = TimeSpan.FromMilliseconds(100)
                };
 
         public SocketConfiguration GetSocketDefaultConfiguration()
