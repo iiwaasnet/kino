@@ -7,6 +7,11 @@ namespace kino.Connectivity
     {
         private readonly SocketConfiguration config;
 
+        public SocketFactory()
+            : this(null)
+        {
+        }
+
         public SocketFactory(SocketConfiguration config)
         {
             this.config = config ?? CreateDefaultConfiguration();

@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using Autofac.kino;
 using kino.Configuration;
 using kino.Core.Diagnostics;
 using TypedConfigProvider;
