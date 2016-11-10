@@ -25,7 +25,6 @@ namespace kino.Actors
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly IAsyncQueue<AsyncMessageContext> asyncQueue;
         private readonly ISecurityProvider securityProvider;
-        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
         private readonly IAsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>> actorRegistrationsQueue;
@@ -37,7 +36,6 @@ namespace kino.Actors
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
                          IAsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>> actorRegistrationsQueue,
                          ISecurityProvider securityProvider,
-                         IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                          ILocalSocket<IMessage> localRouterSocket,
                          ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
                          ILocalSocketFactory localSocketFactory,
@@ -46,7 +44,6 @@ namespace kino.Actors
             this.logger = logger;
             this.actorHandlerMap = actorHandlerMap;
             this.securityProvider = securityProvider;
-            this.performanceCounterManager = performanceCounterManager;
             this.localRouterSocket = localRouterSocket;
             this.internalRegistrationsSender = internalRegistrationsSender;
             this.asyncQueue = asyncQueue;

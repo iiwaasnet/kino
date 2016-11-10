@@ -123,7 +123,7 @@ namespace kino.Cluster
         {
             var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateDealerSocket();
-            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ClusterSenderSocketSendRate);
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.AutoDiscoverySenderSocketSendRate);
             socket.Connect(rendezvousServer.UnicastUri);
 
             return socket;

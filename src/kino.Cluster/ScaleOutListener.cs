@@ -103,7 +103,6 @@ namespace kino.Cluster
                     socket.SetIdentity(scaleOutAddress.Identity);
                     socket.SetMandatoryRouting();
                     socket.SetReceiveHighWaterMark(GetScaleOutReceiveMessageQueueLength(routerConfiguration));
-                    socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutFrontendSocketSendRate);
                     socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutFrontendSocketReceiveRate);
 
                     socket.Bind(scaleOutAddress.Uri);

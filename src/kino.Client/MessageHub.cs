@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
-using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
@@ -23,7 +22,6 @@ namespace kino.Client
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
-        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
         private readonly bool keepRegistrationLocal;
@@ -35,7 +33,6 @@ namespace kino.Client
         private readonly byte[] receivingSocketIdentity;
 
         public MessageHub(ICallbackHandlerStack callbackHandlers,
-                          IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                           ILocalSocket<IMessage> localRouterSocket,
                           ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
                           ILocalSocketFactory localSocketFactory,
@@ -43,7 +40,6 @@ namespace kino.Client
                           bool keepRegistrationLocal = false)
         {
             this.logger = logger;
-            this.performanceCounterManager = performanceCounterManager;
             this.localRouterSocket = localRouterSocket;
             this.internalRegistrationsSender = internalRegistrationsSender;
             this.keepRegistrationLocal = keepRegistrationLocal;

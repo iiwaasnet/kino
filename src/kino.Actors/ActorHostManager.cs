@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using kino.Connectivity;
 using kino.Core.Diagnostics;
-using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Routing;
@@ -14,7 +13,6 @@ namespace kino.Actors
     public class ActorHostManager : IActorHostManager
     {
         private readonly ISecurityProvider securityProvider;
-        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
         private readonly ILocalSocketFactory localSocketFactory;
@@ -24,14 +22,12 @@ namespace kino.Actors
         private bool isDisposed = false;
 
         public ActorHostManager(ISecurityProvider securityProvider,
-                                IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                 ILocalSocket<IMessage> localRouterSocket,
                                 ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
                                 ILocalSocketFactory localSocketFactory,
                                 ILogger logger)
         {
             this.securityProvider = securityProvider;
-            this.performanceCounterManager = performanceCounterManager;
             this.localRouterSocket = localRouterSocket;
             this.internalRegistrationsSender = internalRegistrationsSender;
             this.localSocketFactory = localSocketFactory;
@@ -69,7 +65,6 @@ namespace kino.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
                                           securityProvider,
-                                          performanceCounterManager,
                                           localRouterSocket,
                                           internalRegistrationsSender,
                                           localSocketFactory,
