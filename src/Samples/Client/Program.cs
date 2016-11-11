@@ -42,13 +42,13 @@ namespace Client
 
             Thread.Sleep(TimeSpan.FromSeconds(5));
             WriteLine($"Client is running... {DateTime.Now}");
-            var runs = 1;
+            var runs = 1000;
 
             //var receiverIdentity = FindReceiver(messageHub);
 
             var securityProvider = container.Resolve<ISecurityProvider>();
             var helloMessageIdentity = MessageIdentifier.Create<HelloMessage>();
-            Thread.Sleep(TimeSpan.FromSeconds(5));
+            //Thread.Sleep(TimeSpan.FromSeconds(5));
             while (true)
             {
                 var promises = new List<IPromise>(runs);
