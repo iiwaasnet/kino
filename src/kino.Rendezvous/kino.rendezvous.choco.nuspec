@@ -11,7 +11,11 @@
     <summary>Rendezvous service for kino networks</summary>
     <description>Rendezvous service for kino networks</description>
     <projectUrl>https://github.com/iiwaasnet/kino</projectUrl>
+    <projectSourceUrl>https://github.com/iiwaasnet/kino</projectSourceUrl>
     <packageSourceUrl>https://github.com/iiwaasnet/kino</packageSourceUrl>
+    <bugTrackerUrl>https://github.com/iiwaasnet/kino/issues</bugTrackerUrl>
+    <docsUrl>https://github.com/iiwaasnet/kino/wiki</docsUrl>
+    <mailingListUrl>https://gitter.im/iiwaasnet/kino?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge</mailingListUrl>
     <tags>Actors framework kino Rendezvous</tags>
     <copyright>Copyright © 2015 Sergey Ivasenko</copyright>
     <licenseUrl>https://github.com/iiwaasnet/kino/blob/master/LICENSE</licenseUrl>
