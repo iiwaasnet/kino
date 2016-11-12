@@ -1,5 +1,6 @@
 ﻿using Autofac;
-using Autofac.kino;
+using kino.Configuration;
+using kino.Core.Diagnostics;
 using TypedConfigProvider;
 
 namespace Client
@@ -20,7 +21,8 @@ namespace Client
                    .As<ApplicationConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterLogger(c => new Logger("default"))
+            builder.Register(c => new Logger("default"))
+                   .As<ILogger>()
                    .SingleInstance();
         }
     }

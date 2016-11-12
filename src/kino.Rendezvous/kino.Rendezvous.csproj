@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>kino.Rendezvous</RootNamespace>
     <AssemblyName>kino.Rendezvous</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile>
@@ -48,32 +48,8 @@
       <HintPath>..\packages\Autofac.4.1.0\lib\net45\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Autofac.kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.kino.0.0.0.6-alpha\lib\net46\Autofac.kino.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="C5, Version=2.4.5947.17248, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
       <HintPath>..\packages\C5.2.4.5947.17249\lib\net45\C5.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.20-alpha\lib\net46\kino.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Actors, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Actors.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Client, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Client.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Consensus, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.Consensus.0.0.1.20-alpha\lib\net46\kino.Consensus.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Core.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
@@ -155,7 +131,28 @@
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\Integration\Autofac.kino\Autofac.kino.csproj">
+      <Project>{C50A6AC1-FA0F-42B5-B709-13832FD604D5}</Project>
+      <Name>Autofac.kino</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Connectivity\kino.Connectivity.csproj">
+      <Project>{45F6F46B-B864-4C27-9A4B-5022546AE424}</Project>
+      <Name>kino.Connectivity</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Consensus\kino.Consensus.csproj">
+      <Project>{1143EA92-6006-4FA1-B844-1E7078D5CBDA}</Project>
+      <Name>kino.Consensus</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Core\kino.Core.csproj">
+      <Project>{AC984F96-6D8F-466B-B6A7-B241A7C5DEC1}</Project>
+      <Name>kino.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Messaging\kino.Messaging.csproj">
+      <Project>{6282F68E-6D06-4DAB-8D8C-B8FCD4F18F9D}</Project>
+      <Name>kino.Messaging</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{6809914A-DBDF-4801-A2CA-A03FD43F1172}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>kino.Routing</RootNamespace>
+    <AssemblyName>kino.Routing</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AsyncIO, Version=0.1.25.0, Culture=neutral, PublicKeyToken=44a94435bd6f33f8, processorArchitecture=MSIL">
+      <HintPath>..\packages\AsyncIO.0.1.26.0\lib\net40\AsyncIO.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="C5, Version=2.4.5947.17248, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
+      <HintPath>..\packages\C5.2.4.5947.17249\lib\net45\C5.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="NetMQ, Version=4.0.0.0, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\NetMQ.4.0.0-rc5\lib\net40\NetMQ.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ExternalRoute.cs" />
+    <Compile Include="ExternalRouteDefinition.cs" />
+    <Compile Include="ExternalRoutingTable.cs" />
+    <Compile Include="IdentityRegistration.cs" />
+    <Compile Include="IExternalRoutingTable.cs" />
+    <Compile Include="IInternalRoutingTable.cs" />
+    <Compile Include="IMessageRouter.cs" />
+    <Compile Include="InternalRoute.cs" />
+    <Compile Include="InternalRouteRegistration.cs" />
+    <Compile Include="InternalRoutingTable.cs" />
+    <Compile Include="MessageContract.cs" />
+    <Compile Include="MessageRouter.cs" />
+    <Compile Include="MessageRouter.Tracing.cs" />
+    <Compile Include="PeerConnection.cs" />
+    <Compile Include="PeerConnectionAction.cs" />
+    <Compile Include="PeerRemoveResult.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServiceMessageHandlers\ClusterMessageRoutesRequestHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\ExternalMessageRouteRegistrationHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\IdentifierExtensions.cs" />
+    <Compile Include="ServiceMessageHandlers\IdentityDomainMap.cs" />
+    <Compile Include="ServiceMessageHandlers\InternalMessageRouteRegistrationHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\IServiceMessageHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\PingHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\MessageRouteDiscoveryHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\MessageRouteUnregistrationHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\NodeMessageRoutesRequestHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\NodeUnregistrationHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\UnreachableNodeUnregistrationHandler.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\kino.Cluster\kino.Cluster.csproj">
+      <Project>{041A2E08-53AD-485E-8F57-B06ADB01C26F}</Project>
+      <Name>kino.Cluster</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Connectivity\kino.Connectivity.csproj">
+      <Project>{45f6f46b-b864-4c27-9a4b-5022546ae424}</Project>
+      <Name>kino.Connectivity</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Core\kino.Core.csproj">
+      <Project>{AC984F96-6D8F-466B-B6A7-B241A7C5DEC1}</Project>
+      <Name>kino.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Messaging\kino.Messaging.csproj">
+      <Project>{6282f68e-6d06-4dab-8d8c-b8fcd4f18f9d}</Project>
+      <Name>kino.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Security\kino.Security.csproj">
+      <Project>{33F0B37F-478E-405E-ACFB-65759C56228D}</Project>
+      <Name>kino.Security</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

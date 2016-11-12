@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Client</RootNamespace>
     <AssemblyName>Client</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -89,7 +90,6 @@
     <Compile Include="Messages\HelloMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SampleSecurityProvider.cs" />
     <Compile Include="SecurityModule.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -120,6 +120,18 @@
     <ProjectReference Include="..\..\kino.Core\kino.Core.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
       <Name>kino.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Messaging\kino.Messaging.csproj">
+      <Project>{6282f68e-6d06-4dab-8d8c-b8fcd4f18f9d}</Project>
+      <Name>kino.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Routing\kino.Routing.csproj">
+      <Project>{6809914A-DBDF-4801-A2CA-A03FD43F1172}</Project>
+      <Name>kino.Routing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Security\kino.Security.csproj">
+      <Project>{33F0B37F-478E-405E-ACFB-65759C56228D}</Project>
+      <Name>kino.Security</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\kino\kino.csproj">
       <Project>{dd0c07ed-15db-4a33-b796-2ad4058e7433}</Project>

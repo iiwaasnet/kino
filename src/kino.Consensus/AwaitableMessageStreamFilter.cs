@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using kino.Consensus.Messages;
-using kino.Core.Messaging;
+using kino.Messaging;
 
 namespace kino.Consensus
 {
@@ -30,7 +30,7 @@ namespace kino.Consensus
         {
             if (predicate(value))
             {
-                var messagePayload = payload(value); 
+                var messagePayload = payload(value);
                 lock (locker)
                 {
                     if (!awaitable.IsSet)

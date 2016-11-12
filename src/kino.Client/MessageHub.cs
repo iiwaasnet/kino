@@ -3,51 +3,52 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using kino.Core.Connectivity;
+using kino.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
-using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
-using kino.Core.Sockets;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Routing;
+using MessageContract = kino.Routing.MessageContract;
 
 namespace kino.Client
 {
     public partial class MessageHub : IMessageHub
     {
         private readonly ICallbackHandlerStack callbackHandlers;
-        private readonly IRouterConfigurationProvider routerConfigurationProvider;
-        private readonly ISocketFactory socketFactory;
         private Task sending;
         private Task receiving;
-        private readonly TaskCompletionSource<byte[]> receivingSocketIdentityPromise;
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
-        private readonly ISecurityProvider securityProvider;
-        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
+        private readonly ILocalSocket<IMessage> localRouterSocket;
+        private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
+        private readonly bool keepRegistrationLocal;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception);
+        private long lastCallbackKey = 0;
+        private readonly ILocalSocket<IMessage> receivingSocket;
+        private readonly byte[] receivingSocketIdentity;
 
-        public MessageHub(ISocketFactory socketFactory,
-                          ICallbackHandlerStack callbackHandlers,
-                          IRouterConfigurationProvider routerConfigurationProvider,
-                          ISecurityProvider securityProvider,
-                          IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
-                          ILogger logger)
+        public MessageHub(ICallbackHandlerStack callbackHandlers,
+                          ILocalSocket<IMessage> localRouterSocket,
+                          ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
+                          ILocalSocketFactory localSocketFactory,
+                          ILogger logger,
+                          bool keepRegistrationLocal = false)
         {
             this.logger = logger;
-            this.socketFactory = socketFactory;
-            this.securityProvider = securityProvider;
-            this.performanceCounterManager = performanceCounterManager;
-            receivingSocketIdentityPromise = new TaskCompletionSource<byte[]>();
+            this.localRouterSocket = localRouterSocket;
+            this.internalRegistrationsSender = internalRegistrationsSender;
+            this.keepRegistrationLocal = keepRegistrationLocal;
             hubRegistered = new ManualResetEventSlim();
             this.callbackHandlers = callbackHandlers;
-            this.routerConfigurationProvider = routerConfigurationProvider;
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
             cancellationTokenSource = new CancellationTokenSource();
+            receivingSocket = localSocketFactory.Create<IMessage>();
+            receivingSocketIdentity = receivingSocket.GetIdentity().Identity;
         }
 
         public void Start()
@@ -71,38 +72,34 @@ namespace kino.Client
         {
             try
             {
-                using (var socket = CreateOneWaySocket())
+                RegisterMessageHub();
+
+                foreach (var callbackRegistration in registrationsQueue.GetConsumingEnumerable(token))
                 {
-                    var receivingSocketIdentity = receivingSocketIdentityPromise.Task.Result;
-                    RegisterMessageHub(socket, receivingSocketIdentity);
-
-                    foreach (var callbackRegistration in registrationsQueue.GetConsumingEnumerable(token))
+                    try
                     {
-                        try
+                        var message = (Message) callbackRegistration.Message;
+                        if (CallbackRequired(callbackRegistration))
                         {
-                            var message = (Message) callbackRegistration.Message;
-                            if (CallbackRequired(callbackRegistration))
-                            {
-                                var promise = callbackRegistration.Promise;
-                                var callbackPoint = callbackRegistration.CallbackPoint;
+                            var promise = callbackRegistration.Promise;
+                            var callbackPoint = callbackRegistration.CallbackPoint;
+                            var callbackKey = lastCallbackKey++;
+                            message.RegisterCallbackPoint(receivingSocketIdentity, callbackPoint.MessageIdentifiers, callbackKey);
 
-                                message.RegisterCallbackPoint(receivingSocketIdentity, callbackPoint.MessageIdentifiers);
-
-                                callbackHandlers.Push(new CorrelationId(message.CorrelationId),
-                                                      promise,
-                                                      callbackPoint.MessageIdentifiers.Concat(new[] {ExceptionMessageIdentifier}));
-                                CallbackRegistered(message);
-                            }
-                            socket.SendMessage(message);
-                            SentToRouter(message);
+                            callbackHandlers.Push(callbackKey,
+                                                  promise,
+                                                  callbackPoint.MessageIdentifiers.Concat(new[] {ExceptionMessageIdentifier}));
+                            CallbackRegistered(message);
                         }
-                        catch (Exception err)
-                        {
-                            logger.Error(err);
-                        }
+                        localRouterSocket.Send(message);
+                        SentToRouter(message);
                     }
-                    registrationsQueue.Dispose();
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
+                    }
                 }
+                registrationsQueue.Dispose();
             }
             catch (OperationCanceledException)
             {
@@ -114,31 +111,32 @@ namespace kino.Client
         }
 
         private bool CallbackRequired(CallbackRegistration callbackRegistration)
-        {
-            return callbackRegistration.Promise != null && callbackRegistration.CallbackPoint != null;
-        }
+            => callbackRegistration.Promise != null && callbackRegistration.CallbackPoint != null;
 
         private void ReadReplies(CancellationToken token)
         {
             try
             {
-                using (var socket = CreateRoutableSocket())
+                var waitHandles = new[]
+                                  {
+                                      receivingSocket.CanReceive(),
+                                      token.WaitHandle
+                                  };
+                while (!token.IsCancellationRequested)
                 {
-                    receivingSocketIdentityPromise.SetResult(socket.GetIdentity());
-
-                    while (!token.IsCancellationRequested)
+                    try
                     {
-                        try
+                        if (WaitHandle.WaitAny(waitHandles) == 0)
                         {
-                            var message = socket.ReceiveMessage(token);
+                            var message = receivingSocket.TryReceive().As<Message>();
                             if (message != null)
                             {
                                 var callback = (Promise) callbackHandlers.Pop(new CallbackHandlerKey
                                                                               {
                                                                                   Version = message.Version,
                                                                                   Identity = message.Identity,
-                                                                                  Correlation = message.CorrelationId,
-                                                                                  Partition = message.Partition
+                                                                                  Partition = message.Partition,
+                                                                                  CallbackKey = message.CallbackKey
                                                                               });
                                 if (callback != null)
                                 {
@@ -151,10 +149,13 @@ namespace kino.Client
                                 }
                             }
                         }
-                        catch (Exception err)
-                        {
-                            logger.Error(err);
-                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
                     }
                 }
             }
@@ -162,62 +163,34 @@ namespace kino.Client
             {
                 logger.Error(err);
             }
+            logger.Warn($"{GetType().Name} replies reading stopped.");
         }
 
-        private ISocket CreateOneWaySocket()
+        private void RegisterMessageHub()
         {
-            var config = routerConfigurationProvider.GetRouterConfiguration();
-            var socket = socketFactory.CreateDealerSocket();
-            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageHubRequestSocketSendRate);
-            SocketHelper.SafeConnect(() => socket.Connect(config.RouterAddress.Uri));
-
-            return socket;
-        }
-
-        private ISocket CreateRoutableSocket()
-        {
-            var config = routerConfigurationProvider.GetRouterConfiguration();
-            var socket = socketFactory.CreateDealerSocket();
-            socket.SetIdentity(SocketIdentifier.CreateIdentity());
-            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageHubResponseSocketReceiveRate);
-            SocketHelper.SafeConnect(() => socket.Connect(config.RouterAddress.Uri));
-
-            return socket;
-        }
-
-        private void RegisterMessageHub(ISocket socket, byte[] receivingSocketIdentity)
-        {
-            //TODO: Domain may be skipped here
-            //TODO: var message = Message.Create(payload);
-            var rdyMessage = Message.Create(new RegisterInternalMessageRouteMessage
-                                            {
-                                                SocketIdentity = receivingSocketIdentity,
-                                                GlobalMessageContracts = new[]
-                                                                         {
-                                                                             new MessageContract
-                                                                             {
-                                                                                 Version = IdentityExtensions.Empty,
-                                                                                 Identity = receivingSocketIdentity
-                                                                             }
-                                                                         }
-                                            },
-                                            securityProvider.GetDomain(KinoMessages.RegisterInternalMessageRoute.Identity));
-            socket.SendMessage(rdyMessage);
-
+            var registration = new InternalRouteRegistration
+                               {
+                                   MessageContracts = new[]
+                                                      {
+                                                          new MessageContract
+                                                          {
+                                                              Identifier = new AnyIdentifier(receivingSocketIdentity),
+                                                              KeepRegistrationLocal = keepRegistrationLocal
+                                                          }
+                                                      },
+                                   DestinationSocket = receivingSocket
+                               };
+            internalRegistrationsSender.Send(registration);
             hubRegistered.Set();
         }
 
-        public IPromise EnqueueRequest(IMessage message, ICallbackPoint callbackPoint)
-        {
-            return InternalEnqueueRequest(message, callbackPoint);
-        }
+        public IPromise EnqueueRequest(IMessage message, CallbackPoint callbackPoint)
+            => InternalEnqueueRequest(message, callbackPoint);
 
         public void SendOneWay(IMessage message)
-        {
-            registrationsQueue.Add(new CallbackRegistration {Message = message});
-        }
+            => registrationsQueue.Add(new CallbackRegistration {Message = message});
 
-        private IPromise InternalEnqueueRequest(IMessage message, ICallbackPoint callbackPoint)
+        private IPromise InternalEnqueueRequest(IMessage message, CallbackPoint callbackPoint)
         {
             hubRegistered.Wait();
 

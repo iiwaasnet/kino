@@ -9,9 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>kino.Client</RootNamespace>
     <AssemblyName>kino.Client</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -54,7 +55,6 @@
     <Compile Include="CallbackPoint.cs" />
     <Compile Include="CallbackRegistration.cs" />
     <Compile Include="ICallbackHandlerStack.cs" />
-    <Compile Include="ICallbackPoint.cs" />
     <Compile Include="IMessageHub.cs" />
     <Compile Include="IPromise.cs" />
     <Compile Include="MessageHub.Tracing.cs" />
@@ -66,9 +66,21 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\kino.Connectivity\kino.Connectivity.csproj">
+      <Project>{45F6F46B-B864-4C27-9A4B-5022546AE424}</Project>
+      <Name>kino.Connectivity</Name>
+    </ProjectReference>
     <ProjectReference Include="..\kino.Core\kino.Core.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
       <Name>kino.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Messaging\kino.Messaging.csproj">
+      <Project>{6282F68E-6D06-4DAB-8D8C-B8FCD4F18F9D}</Project>
+      <Name>kino.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Routing\kino.Routing.csproj">
+      <Project>{6809914A-DBDF-4801-A2CA-A03FD43F1172}</Project>
+      <Name>kino.Routing</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

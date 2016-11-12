@@ -2,12 +2,15 @@
 using kino.Actors;
 using kino.Actors.Diagnostics;
 using kino.Client;
-using kino.Core.Connectivity;
-using kino.Core.Connectivity.ServiceMessageHandlers;
+using kino.Cluster;
+using kino.Cluster.Configuration;
+using kino.Configuration;
+using kino.Connectivity;
 using kino.Core.Diagnostics.Performance;
-using kino.Core.Framework;
-using kino.Core.Security;
-using kino.Core.Sockets;
+using kino.Messaging;
+using kino.Routing;
+using kino.Routing.ServiceMessageHandlers;
+using kino.Security;
 
 namespace Autofac.kino
 {
@@ -18,9 +21,14 @@ namespace Autofac.kino
             RegisterServiceMessageHandlers(builder);
             RegisterFrameworkActors(builder);
             RegisterConfigurations(builder);
+            RegisterLocalSockets(builder);
 
             builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
                    .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
+                   .SingleInstance();
+
+            builder.RegisterType<LocalSocketFactory>()
+                   .As<ILocalSocketFactory>()
                    .SingleInstance();
 
             builder.RegisterType<InstanceNameResolver>()
@@ -43,20 +51,16 @@ namespace Autofac.kino
                    .As<IExternalRoutingTable>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterMonitorProvider>()
-                   .As<IClusterMonitorProvider>()
+            builder.RegisterType<ClusterConnectivity>()
+                   .As<IClusterConnectivity>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterMembership>()
-                   .As<IClusterMembership>()
+            builder.RegisterType<AutoDiscoverySender>()
+                   .As<IAutoDiscoverySender>()
                    .SingleInstance();
 
-            builder.RegisterType<ClusterMessageSender>()
-                   .As<IClusterMessageSender>()
-                   .SingleInstance();
-
-            builder.RegisterType<ClusterMessageListener>()
-                   .As<IClusterMessageListener>()
+            builder.RegisterType<AutoDiscoveryListener>()
+                   .As<IAutoDiscoveryListener>()
                    .SingleInstance();
 
             builder.RegisterType<RouteDiscovery>()
@@ -87,9 +91,22 @@ namespace Autofac.kino
                    .As<ISecurityProvider>()
                    .SingleInstance();
 
-            builder.RegisterType<RouterConfigurationManager>()
-                   .As<IRouterConfigurationProvider>()
-                   .As<IRouterConfigurationManager>()
+            builder.RegisterType<ScaleOutConfigurationManager>()
+                   .As<IScaleOutConfigurationProvider>()
+                   .As<IScaleOutConfigurationManager>()
+                   .SingleInstance();
+        }
+
+        private void RegisterLocalSockets(ContainerBuilder builder)
+        {
+            builder.RegisterType<LocalSocket<IMessage>>()
+                   .As<ILocalSocket<IMessage>>()
+                   .As<ILocalSendingSocket<IMessage>>()
+                   .SingleInstance();
+
+            builder.RegisterType<LocalSocket<InternalRouteRegistration>>()
+                   .As<ILocalSendingSocket<InternalRouteRegistration>>()
+                   .As<ILocalReceivingSocket<InternalRouteRegistration>>()
                    .SingleInstance();
         }
 
@@ -97,6 +114,11 @@ namespace Autofac.kino
         {
             builder.RegisterType<ConfigurationProvider>()
                    .As<IConfigurationProvider>()
+                   .SingleInstance();
+
+            builder.RegisterType<HeartBeatSenderConfigurationManager>()
+                   .As<IHeartBeatSenderConfigurationProvider>()
+                   .As<IHeartBeatSenderConfigurationManager>()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetRouterConfiguration())
@@ -107,16 +129,20 @@ namespace Autofac.kino
                    .As<IEnumerable<RendezvousEndpoint>>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterTimingConfiguration())
-                   .As<ClusterMembershipConfiguration>()
-                   .SingleInstance();
-
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetScaleOutConfiguration())
                    .As<ScaleOutSocketConfiguration>()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())
                    .As<ClusterMembershipConfiguration>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterHealthMonitorConfiguration())
+                   .As<ClusterHealthMonitorConfiguration>()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetHeartBeatSenderConfiguration())
+                   .As<HeartBeatSenderConfiguration>()
                    .SingleInstance();
         }
 
@@ -137,12 +163,16 @@ namespace Autofac.kino
                    .As<IServiceMessageHandler>()
                    .SingleInstance();
 
+            builder.RegisterType<PingHandler>()
+                   .As<IServiceMessageHandler>()
+                   .SingleInstance();
+
             builder.RegisterType<ExternalMessageRouteRegistrationHandler>()
                    .As<IServiceMessageHandler>()
                    .SingleInstance();
 
             builder.RegisterType<InternalMessageRouteRegistrationHandler>()
-                   .As<IServiceMessageHandler>()
+                   .As<InternalMessageRouteRegistrationHandler>()
                    .SingleInstance();
 
             builder.RegisterType<MessageRouteDiscoveryHandler>()

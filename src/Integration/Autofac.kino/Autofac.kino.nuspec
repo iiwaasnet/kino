@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/10/nuspec.xsd">
     <metadata>
-        <id>Autofac.kino</id>
-        <version>0.0.0.6-alpha</version>
-        <title>Autofac.kino</title>
+        <id>$id$</id>
+        <version>0.0.1.21-alpha</version>
+        <title>$id$</title>
         <authors>Sergey Ivasenko</authors>
         <owners>Sergey Ivasenko</owners>
         <licenseUrl>https://github.com/iiwaasnet/kino/blob/master/LICENSE</licenseUrl>
@@ -11,16 +11,6 @@
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <description>Autofac Module with core kino components registrations</description>
         <copyright>Copyright © 2016 Sergey Ivasenko</copyright>
-        <dependencies>
-            <dependency id="Autofac" version="3.5.2" />
-            <dependency id="kino" version="0.0.1.20-alpha" />
-            <dependency id="NetMQ" version="4.0.0.0-beta" />
-            <dependency id="protobuf-net" version="2.1.0-alpha-1" />
-            <dependency id="System.Reflection.Emit" version="4.0.1-beta-23516" />
-        </dependencies>
+        <tags>Actors framework</tags>
     </metadata>
-    <files>
-        <file src="bin\release\Autofac.kino.dll" target="lib\net46\Autofac.kino.dll" />
-        <file src="bin\release\Autofac.kino.pdb" target="lib\net46\Autofac.kino.pdb" />
-    </files>
 </package>

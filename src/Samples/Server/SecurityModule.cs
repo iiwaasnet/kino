@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using Autofac;
 using Client;
-using kino.Core.Security;
+using kino.Security;
 
 namespace Server
 {

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using kino.Core.Framework;
-using kino.Core.Security;
+using kino.Security;
 
 namespace Client
 {

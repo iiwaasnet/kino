@@ -1,8 +1,7 @@
 ﻿using System.Threading.Tasks;
-using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
+using kino.Messaging;
+using kino.Messaging.Messages;
 
 namespace kino.Actors.Diagnostics
 {
@@ -15,7 +14,7 @@ namespace kino.Actors.Diagnostics
             this.logger = logger;
         }
 
-        [MessageHandlerDefinition(typeof (ExceptionMessage))]
+        [MessageHandlerDefinition(typeof(ExceptionMessage))]
         public Task<IActorResult> HandleException(IMessage message)
         {
             var payload = message.GetPayload<ExceptionMessage>();

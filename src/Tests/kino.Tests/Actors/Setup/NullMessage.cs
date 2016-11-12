@@ -9,7 +9,7 @@ namespace kino.Tests.Actors.Setup
     {
         private static readonly byte[] MessageIdentity = "NULL".GetBytes();
 
-        public override byte[] Version => Message.CurrentVersion;
+        public override ushort Version => Message.CurrentVersion;
         public override byte[] Identity => MessageIdentity;
     }
 }

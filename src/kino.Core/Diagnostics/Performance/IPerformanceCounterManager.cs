@@ -1,6 +1,9 @@
-﻿namespace kino.Core.Diagnostics.Performance
+﻿using System;
+
+namespace kino.Core.Diagnostics.Performance
 {
-    public interface IPerformanceCounterManager<TCategory> where TCategory : struct
+    public interface IPerformanceCounterManager<TCategory> : IDisposable
+        where TCategory : struct
     {
         IPerformanceCounter GetCounter(TCategory counter);
     }

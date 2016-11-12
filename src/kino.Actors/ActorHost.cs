@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using kino.Core.Connectivity;
+using kino.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
-using kino.Core.Sockets;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Routing;
+using kino.Security;
+using MessageContract = kino.Routing.MessageContract;
 
 namespace kino.Actors
 {
@@ -22,34 +24,32 @@ namespace kino.Actors
         private Task registrationsProcessing;
         private readonly CancellationTokenSource cancellationTokenSource;
         private readonly IAsyncQueue<AsyncMessageContext> asyncQueue;
-        private readonly ISocketFactory socketFactory;
-        private readonly RouterConfiguration routerConfiguration;
         private readonly ISecurityProvider securityProvider;
-        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
+        private readonly ILocalSocket<IMessage> localRouterSocket;
+        private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
         private readonly IAsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>> actorRegistrationsQueue;
-        private readonly TaskCompletionSource<byte[]> localSocketIdentityPromise;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
+        private readonly ILocalSocket<IMessage> receivingSocket;
 
-        public ActorHost(ISocketFactory socketFactory,
-                         IActorHandlerMap actorHandlerMap,
+        public ActorHost(IActorHandlerMap actorHandlerMap,
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
                          IAsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>> actorRegistrationsQueue,
-                         RouterConfiguration routerConfiguration,
                          ISecurityProvider securityProvider,
-                         IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
+                         ILocalSocket<IMessage> localRouterSocket,
+                         ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
+                         ILocalSocketFactory localSocketFactory,
                          ILogger logger)
         {
             this.logger = logger;
             this.actorHandlerMap = actorHandlerMap;
-            localSocketIdentityPromise = new TaskCompletionSource<byte[]>();
-            this.socketFactory = socketFactory;
-            this.routerConfiguration = routerConfiguration;
             this.securityProvider = securityProvider;
-            this.performanceCounterManager = performanceCounterManager;
+            this.localRouterSocket = localRouterSocket;
+            this.internalRegistrationsSender = internalRegistrationsSender;
             this.asyncQueue = asyncQueue;
             this.actorRegistrationsQueue = actorRegistrationsQueue;
             cancellationTokenSource = new CancellationTokenSource();
+            receivingSocket = localSocketFactory.Create<IMessage>();
         }
 
         public void AssignActor(IActor actor)
@@ -95,20 +95,15 @@ namespace kino.Actors
         {
             try
             {
-                using (var socket = CreateOneWaySocket(KinoPerformanceCounters.ActorHostRegistrationSocketSendRate))
+                foreach (var registrations in actorRegistrationsQueue.GetConsumingEnumerable(token))
                 {
-                    var localSocketIdentity = localSocketIdentityPromise.Task.Result;
-
-                    foreach (var registrations in actorRegistrationsQueue.GetConsumingEnumerable(token))
+                    try
                     {
-                        try
-                        {
-                            SendActorRegistrationMessage(socket, localSocketIdentity, registrations);
-                        }
-                        catch (Exception err)
-                        {
-                            logger.Error(err);
-                        }
+                        SendActorRegistrationMessage(registrations);
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
                     }
                 }
             }
@@ -118,60 +113,49 @@ namespace kino.Actors
             }
         }
 
-        private void SendActorRegistrationMessage(ISocket socket, byte[] identity, IEnumerable<ActorMessageHandlerIdentifier> registrations)
+        private void SendActorRegistrationMessage(IEnumerable<ActorMessageHandlerIdentifier> registrations)
         {
-            var payload = new RegisterInternalMessageRouteMessage
-                          {
-                              SocketIdentity = identity,
-                              LocalMessageContracts = registrations.Where(mh => mh.KeepRegistrationLocal)
-                                                                   .Select(mh => new MessageContract
+            var registration = new InternalRouteRegistration
+                               {
+                                   MessageContracts = registrations.Select(mh => new MessageContract
                                                                                  {
-                                                                                     Identity = mh.Identifier.Identity,
-                                                                                     Version = mh.Identifier.Version,
-                                                                                     Partition = mh.Identifier.Partition
+                                                                                     Identifier = new MessageIdentifier(mh.Identifier.Identity,
+                                                                                                                        mh.Identifier.Version,
+                                                                                                                        mh.Identifier.Partition),
+                                                                                     KeepRegistrationLocal = mh.KeepRegistrationLocal
                                                                                  })
                                                                    .ToArray(),
-                              GlobalMessageContracts = registrations.Where(mh => !mh.KeepRegistrationLocal)
-                                                                    .Select(mh => new MessageContract
-                                                                                  {
-                                                                                      Identity = mh.Identifier.Identity,
-                                                                                      Version = mh.Identifier.Version,
-                                                                                      Partition = mh.Identifier.Partition
-                                                                                  })
-                                                                    .ToArray()
-                          };
-            //TODO: Domain may be skipped here
-            //TODO: var message = Message.Create(payload);
-            var message = Message.Create(payload, securityProvider.GetDomain(KinoMessages.RegisterInternalMessageRoute.Identity));
-            socket.SendMessage(message);
+                                   DestinationSocket = receivingSocket
+                               };
+
+            internalRegistrationsSender.Send(registration);
         }
 
         private void ProcessAsyncResponses(CancellationToken token)
         {
             try
             {
-                using (var localSocket = CreateOneWaySocket(KinoPerformanceCounters.ActorHostAsyncResponseSocketSendRate))
+                foreach (var messageContext in asyncQueue.GetConsumingEnumerable(token))
                 {
-                    foreach (var messageContext in asyncQueue.GetConsumingEnumerable(token))
+                    try
                     {
-                        try
+                        foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
                         {
-                            foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
-                            {
-                                messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverIdentity, messageContext.CallbackPoint);
-                                messageOut.SetCorrelationId(messageContext.CorrelationId);
-                                messageOut.CopyMessageRouting(messageContext.MessageHops);
-                                messageOut.TraceOptions |= messageContext.TraceOptions;
+                            messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverIdentity,
+                                                             messageContext.CallbackPoint,
+                                                             messageContext.CallbackKey);
+                            messageOut.SetCorrelationId(messageContext.CorrelationId);
+                            messageOut.CopyMessageRouting(messageContext.MessageHops);
+                            messageOut.TraceOptions |= messageContext.TraceOptions;
 
-                                localSocket.SendMessage(messageOut);
+                            localRouterSocket.Send(messageOut);
 
-                                ResponseSent(messageOut, false);
-                            }
+                            ResponseSent(messageOut, false);
                         }
-                        catch (Exception err)
-                        {
-                            logger.Error(err);
-                        }
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
                     }
                 }
             }
@@ -183,39 +167,48 @@ namespace kino.Actors
 
         private void ProcessRequests(CancellationToken token)
         {
-            using (var localSocket = CreateRoutableSocket())
+            try
             {
-                localSocketIdentityPromise.SetResult(localSocket.GetIdentity());
-
+                var waitHandles = new[]
+                                  {
+                                      receivingSocket.CanReceive(),
+                                      token.WaitHandle
+                                  };
                 while (!token.IsCancellationRequested)
                 {
                     try
                     {
-                        var message = (Message) localSocket.ReceiveMessage(token);
-                        if (message != null)
+                        if (WaitHandle.WaitAny(waitHandles) == 0)
                         {
-                            try
+                            var message = (Message) receivingSocket.TryReceive();
+                            if (message != null)
                             {
-                                var actorIdentifier = new MessageIdentifier(message);
-                                var handler = actorHandlerMap.Get(actorIdentifier);
-                                if (handler != null)
+                                try
                                 {
-                                    var task = handler(message);
+                                    var actorIdentifier = new MessageIdentifier(message);
+                                    var handler = actorHandlerMap.Get(actorIdentifier);
+                                    if (handler != null)
+                                    {
+                                        var task = handler(message);
 
-                                    HandleTaskResult(token, task, message, localSocket);
+                                        HandleTaskResult(token, task, message);
+                                    }
+                                    else
+                                    {
+                                        HandlerNotFound(message);
+                                    }
                                 }
-                                else
+                                catch (Exception err)
                                 {
-                                    HandlerNotFound(message);
+                                    //TODO: Add more context to exception about which Actor failed
+                                    CallbackException(err, message);
+                                    logger.Error(err);
                                 }
-                            }
-                            catch (Exception err)
-                            {
-                                //TODO: Add more context to exception about which Actor failed
-                                CallbackException(localSocket, err, message);
-                                logger.Error(err);
                             }
                         }
+                    }
+                    catch (OperationCanceledException)
+                    {
                     }
                     catch (Exception err)
                     {
@@ -223,9 +216,14 @@ namespace kino.Actors
                     }
                 }
             }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
+            logger.Warn($"{GetType().Name} requests processing stopped.");
         }
 
-        private void HandleTaskResult(CancellationToken token, Task<IActorResult> task, Message messageIn, ISocket localSocket)
+        private void HandleTaskResult(CancellationToken token, Task<IActorResult> task, Message messageIn)
         {
             if (task != null)
             {
@@ -237,12 +235,14 @@ namespace kino.Actors
 
                     foreach (var messageOut in response.Cast<Message>())
                     {
-                        messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
+                        messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity,
+                                                         messageIn.CallbackPoint,
+                                                         messageIn.CallbackKey);
                         messageOut.SetCorrelationId(messageIn.CorrelationId);
                         messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
                         messageOut.TraceOptions |= messageIn.TraceOptions;
 
-                        localSocket.SendMessage(messageOut);
+                        localRouterSocket.Send(messageOut);
 
                         ResponseSent(messageOut, true);
                     }
@@ -255,7 +255,7 @@ namespace kino.Actors
             }
         }
 
-        private void CallbackException(ISocket localSocket, Exception err, Message messageIn)
+        private void CallbackException(Exception err, Message messageIn)
         {
             var messageOut = Message.Create(new ExceptionMessage
                                             {
@@ -264,12 +264,14 @@ namespace kino.Actors
                                             },
                                             securityProvider.GetDomain(KinoMessages.Exception.Identity))
                                     .As<Message>();
-            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint);
+            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity,
+                                             messageIn.CallbackPoint,
+                                             messageIn.CallbackKey);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
             messageOut.TraceOptions |= messageIn.TraceOptions;
 
-            localSocket.SendMessage(messageOut);
+            localRouterSocket.Send(messageOut);
         }
 
         private void EnqueueTaskForCompletion(CancellationToken token, Task<IActorResult> task, Message messageIn)
@@ -278,6 +280,7 @@ namespace kino.Actors
                                       {
                                           OutMessages = CreateTaskResultMessage(task).Messages,
                                           CallbackPoint = messageIn.CallbackPoint,
+                                          CallbackKey = messageIn.CallbackKey,
                                           CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
                                           CorrelationId = messageIn.CorrelationId,
                                           MessageHops = messageIn.GetMessageRouting(),
@@ -309,26 +312,6 @@ namespace kino.Actors
             }
 
             return task.Result ?? ActorResult.Empty;
-        }
-
-        private ISocket CreateOneWaySocket(KinoPerformanceCounters couter)
-        {
-            var socket = socketFactory.CreateDealerSocket();
-            socket.SendRate = performanceCounterManager.GetCounter(couter);
-            SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
-
-            return socket;
-        }
-
-        private ISocket CreateRoutableSocket()
-        {
-            var socket = socketFactory.CreateDealerSocket();
-            socket.SetIdentity(SocketIdentifier.CreateIdentity());
-            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ActorHostRequestSocketReceiveRate);
-            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.ActorHostRequestSocketSendRate);
-            SocketHelper.SafeConnect(() => socket.Connect(routerConfiguration.RouterAddress.Uri));
-
-            return socket;
         }
 
         private void SafeExecute(Action wrappedMethod)

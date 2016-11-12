@@ -1,36 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Core.Connectivity;
+using kino.Connectivity;
 using kino.Core.Diagnostics;
-using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
-using kino.Core.Security;
-using kino.Core.Sockets;
+using kino.Messaging;
+using kino.Routing;
+using kino.Security;
 
 namespace kino.Actors
 {
     public class ActorHostManager : IActorHostManager
     {
-        private readonly ISocketFactory socketFactory;
-        private readonly IRouterConfigurationProvider routerConfigurationProvider;
         private readonly ISecurityProvider securityProvider;
-        private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
+        private readonly ILocalSocket<IMessage> localRouterSocket;
+        private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
+        private readonly ILocalSocketFactory localSocketFactory;
         private readonly ILogger logger;
         private readonly IList<IActorHost> actorHosts;
         private readonly object @lock = new object();
         private bool isDisposed = false;
 
-        public ActorHostManager(ISocketFactory socketFactory,
-                                IRouterConfigurationProvider routerConfigurationProvider,
-                                ISecurityProvider securityProvider,
-                                IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
+        public ActorHostManager(ISecurityProvider securityProvider,
+                                ILocalSocket<IMessage> localRouterSocket,
+                                ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
+                                ILocalSocketFactory localSocketFactory,
                                 ILogger logger)
         {
-            this.socketFactory = socketFactory;
-            this.routerConfigurationProvider = routerConfigurationProvider;
             this.securityProvider = securityProvider;
-            this.performanceCounterManager = performanceCounterManager;
+            this.localRouterSocket = localRouterSocket;
+            this.internalRegistrationsSender = internalRegistrationsSender;
+            this.localSocketFactory = localSocketFactory;
             this.logger = logger;
             actorHosts = new List<IActorHost>();
         }
@@ -61,14 +61,13 @@ namespace kino.Actors
                 || !actorHosts.Any()
                 || actorHost == null)
             {
-                var routerConfiguration = routerConfigurationProvider.GetRouterConfiguration();
-                actorHost = new ActorHost(socketFactory,
-                                          new ActorHandlerMap(),
+                actorHost = new ActorHost(new ActorHandlerMap(),
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
-                                          routerConfiguration,
                                           securityProvider,
-                                          performanceCounterManager,
+                                          localRouterSocket,
+                                          internalRegistrationsSender,
+                                          localSocketFactory,
                                           logger);
                 actorHost.Start();
                 actorHosts.Add(actorHost);

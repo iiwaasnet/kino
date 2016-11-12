@@ -7,7 +7,7 @@ using kino.Consensus.Configuration;
 using kino.Consensus.Messages;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
-using kino.Core.Messaging;
+using kino.Messaging;
 
 namespace kino.Consensus
 {
@@ -43,10 +43,8 @@ namespace kino.Consensus
 
             listener = intercomMessageHub.Subscribe();
 
-            listener.Where(m => m.Equals(ConsensusMessages.LeaseRead))
-                    .Subscribe(OnReadReceived);
-            listener.Where(m => m.Equals(ConsensusMessages.LeaseWrite))
-                    .Subscribe(OnWriteReceived);
+            listener.Where(m => m.Equals(ConsensusMessages.LeaseRead)).Subscribe(OnReadReceived);
+            listener.Where(m => m.Equals(ConsensusMessages.LeaseWrite)).Subscribe(OnWriteReceived);
 
             ackReadStream = listener.Where(m => m.Equals(ConsensusMessages.LeaseAckRead));
             nackReadStream = listener.Where(m => m.Equals(ConsensusMessages.LeaseNackRead));

@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using kino.Core.Connectivity;
+using kino.Cluster.Configuration;
+using kino.Core;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Routing;
+using kino.Security;
+using MessageContract = kino.Messaging.Messages.MessageContract;
 
 namespace kino.Actors.Diagnostics
 {
@@ -13,18 +16,18 @@ namespace kino.Actors.Diagnostics
     {
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IInternalRoutingTable internalRoutingTable;
-        private readonly IRouterConfigurationProvider routerConfigurationProvider;
+        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly ISecurityProvider securityProvider;
         private static readonly MessageIdentifier KnownMessageRoutes = MessageIdentifier.Create<KnownMessageRoutesMessage>();
 
         public KnownMessageRoutesActor(IExternalRoutingTable externalRoutingTable,
                                        IInternalRoutingTable internalRoutingTable,
-                                       IRouterConfigurationProvider routerConfigurationProvider,
+                                       IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                                        ISecurityProvider securityProvider)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.internalRoutingTable = internalRoutingTable;
-            this.routerConfigurationProvider = routerConfigurationProvider;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.securityProvider = securityProvider;
         }
 
@@ -39,7 +42,7 @@ namespace kino.Actors.Diagnostics
 
         private MessageRoute GetInternalRoutes()
         {
-            var scaleOutAddress = routerConfigurationProvider.GetScaleOutAddress();
+            var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
             return new MessageRoute
                    {
                        SocketIdentity = scaleOutAddress.Identity,
@@ -51,7 +54,8 @@ namespace kino.Actors.Diagnostics
                                         {
                                             Version = m.Version,
                                             Identity = m.Identity,
-                                            Partition = m.Partition
+                                            Partition = m.Partition,
+                                            IsAnyIdentifier = m is AnyIdentifier
                                         })
                            .ToArray()
                    };
@@ -70,7 +74,8 @@ namespace kino.Actors.Diagnostics
                                                                     {
                                                                         Version = m.Version,
                                                                         Identity = m.Identity,
-                                                                        Partition = m.Partition
+                                                                        Partition = m.Partition,
+                                                                        IsAnyIdentifier = m is AnyIdentifier
                                                                     })
                                                        .ToArray()
                               });

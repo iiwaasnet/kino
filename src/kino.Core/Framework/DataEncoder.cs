@@ -60,6 +60,9 @@ namespace kino.Core.Framework
         public static byte[] GetBytes(this string str)
             => Encoder.GetBytes(str);
 
+        public static byte[] GetBytes(this ushort val)
+            => BitConverter.GetBytes(val);
+
         public static byte[] GetBytes(this int val)
             => BitConverter.GetBytes(val);
 
@@ -83,6 +86,9 @@ namespace kino.Core.Framework
 
         public static ulong GetULong(this byte[] array)
             => BitConverter.ToUInt64(array, 0);
+
+        public static ushort GetUShort(this byte[] array)
+            => BitConverter.ToUInt16(array, 0);
 
         public static TimeSpan GetTimeSpan(this byte[] array)
             => new TimeSpan(BitConverter.ToInt64(array, 0));

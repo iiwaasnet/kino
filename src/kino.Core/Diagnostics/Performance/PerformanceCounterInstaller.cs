@@ -96,12 +96,12 @@ namespace kino.Core.Diagnostics.Performance
                     var categoryName = category.CategoryName;
 
                     var installer = new Lazy<System.Diagnostics.PerformanceCounterInstaller>(() =>
-                                                                                             new System.Diagnostics.PerformanceCounterInstaller
-                                                                                             {
-                                                                                                 CategoryName = categoryName,
-                                                                                                 CategoryHelp = categoryName,
-                                                                                                 CategoryType = category.CategoryType
-                                                                                             });
+                                                                                                 new System.Diagnostics.PerformanceCounterInstaller
+                                                                                                 {
+                                                                                                     CategoryName = categoryName,
+                                                                                                     CategoryHelp = categoryName,
+                                                                                                     CategoryType = category.CategoryType
+                                                                                                 });
 
                     foreach (var counter in GetCounterDefinitions(enumType))
                     {

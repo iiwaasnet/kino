@@ -1,30 +1,30 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
-using kino.Core.Messaging;
+using kino.Messaging;
 
 namespace kino.Client
 {
     public class CallbackHandlerStack : ICallbackHandlerStack
     {
-        private readonly ConcurrentDictionary<CorrelationId, IDictionary<MessageIdentifier, IPromise>> handlers;
+        private readonly ConcurrentDictionary<long, IDictionary<MessageIdentifier, IPromise>> handlers;
 
         public CallbackHandlerStack()
         {
-            handlers = new ConcurrentDictionary<CorrelationId, IDictionary<MessageIdentifier, IPromise>>();
+            handlers = new ConcurrentDictionary<long, IDictionary<MessageIdentifier, IPromise>>();
         }
 
-        public void Push(CorrelationId correlation, IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers)
+        public void Push(long callbackKey, IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers)
         {
-            if (handlers.TryAdd(correlation, messageIdentifiers.ToDictionary(mp => mp, mp => promise)))
+            if (handlers.TryAdd(callbackKey, messageIdentifiers.ToDictionary(mp => mp, mp => promise)))
             {
-                ((Promise) promise).SetRemoveCallbackHandler(correlation, RemoveCallback);
+                ((Promise) promise).SetRemoveCallbackHandler(callbackKey, RemoveCallback);
             }
             else
             {
-                throw new DuplicatedKeyException($"Duplicated key: Correlation[{correlation.Value}]");
+                throw new DuplicatedKeyException($"Duplicated {nameof(callbackKey)} [{callbackKey}]");
             }
         }
 
@@ -33,19 +33,19 @@ namespace kino.Client
             IPromise promise = null;
 
             IDictionary<MessageIdentifier, IPromise> messageHandlers;
-            if (handlers.TryRemove(new CorrelationId(callbackIdentifier.Correlation), out messageHandlers))
+            if (handlers.TryRemove(callbackIdentifier.CallbackKey, out messageHandlers))
             {
-                var massageHandlerId = new MessageIdentifier(callbackIdentifier.Version, callbackIdentifier.Identity, callbackIdentifier.Partition);
+                var massageHandlerId = new MessageIdentifier(callbackIdentifier.Identity, callbackIdentifier.Version, callbackIdentifier.Partition);
                 messageHandlers.TryGetValue(massageHandlerId, out promise);
             }
 
             return promise;
         }
 
-        private void RemoveCallback(CorrelationId correlationId)
+        private void RemoveCallback(CallbackKey callbackKey)
         {
             IDictionary<MessageIdentifier, IPromise> _;
-            handlers.TryRemove(correlationId, out _);
+            handlers.TryRemove(callbackKey.Value, out _);
         }
     }
 }

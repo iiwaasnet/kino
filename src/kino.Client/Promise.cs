@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
-using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
+using kino.Messaging;
+using kino.Messaging.Messages;
 
 namespace kino.Client
 {
     internal class Promise : IPromise
     {
         private readonly TaskCompletionSource<IMessage> result;
-        private volatile Action<CorrelationId> removeCallbackHandler;
+        private volatile Action<CallbackKey> removeCallbackHandler;
         private volatile bool isDisposed;
 
         internal Promise()
@@ -58,16 +57,16 @@ namespace kino.Client
             if (tmp != null)
             {
                 removeCallbackHandler = null;
-                tmp(CorrelationId);
+                tmp(CallbackKey);
             }
         }
 
-        internal void SetRemoveCallbackHandler(CorrelationId correlationId, Action<CorrelationId> removeCallbackHandler)
+        internal void SetRemoveCallbackHandler(long callbackKey, Action<CallbackKey> removeCallbackHandler)
         {
-            CorrelationId = correlationId;
+            CallbackKey = new CallbackKey(callbackKey);
             this.removeCallbackHandler = removeCallbackHandler;
         }
 
-        public CorrelationId CorrelationId { get; private set; }
+        public CallbackKey CallbackKey { get; private set; }
     }
 }

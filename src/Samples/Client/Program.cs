@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using Autofac;
 using Autofac.kino;
 using Client.Messages;
 using kino.Client;
-using kino.Core.Connectivity;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
+using kino.Core;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Routing;
+using kino.Security;
 using static System.Console;
 
 namespace Client
@@ -28,12 +28,12 @@ namespace Client
 
             var builder = new ContainerBuilder();
             builder.RegisterModule<MainModule>();
-            builder.RegisterModule<KinoModule>();            
-            builder.RegisterModule<SecurityModule>();            
+            builder.RegisterModule<KinoModule>();
+            builder.RegisterModule<SecurityModule>();
             var container = builder.Build();
 
             var messageRouter = container.Resolve<IMessageRouter>();
-            messageRouter.Start(TimeSpan.FromSeconds(3));
+            messageRouter.Start();
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
             Thread.Sleep(TimeSpan.FromMilliseconds(300));
 
@@ -42,12 +42,13 @@ namespace Client
 
             Thread.Sleep(TimeSpan.FromSeconds(5));
             WriteLine($"Client is running... {DateTime.Now}");
-            var runs = 10000;
+            var runs = 1000;
 
             //var receiverIdentity = FindReceiver(messageHub);
 
             var securityProvider = container.Resolve<ISecurityProvider>();
             var helloMessageIdentity = MessageIdentifier.Create<HelloMessage>();
+            //Thread.Sleep(TimeSpan.FromSeconds(5));
             while (true)
             {
                 var promises = new List<IPromise>(runs);
@@ -82,7 +83,12 @@ namespace Client
                         }
                         else
                         {
+                            var fc = ForegroundColor;
+                            ForegroundColor = ConsoleColor.Yellow;
                             WriteLine($"{DateTime.UtcNow} Call timed out after {timeout.TotalSeconds} sec.");
+                            ForegroundColor = fc;
+                            promises.ForEach(p => p.Dispose());
+                            break;
                         }
                     }
                 }
@@ -94,6 +100,8 @@ namespace Client
                                       ? ((messagesPerTest * runs) / (double) timer.ElapsedMilliseconds * 1000).ToString("##.00")
                                       : "Infinite";
                 WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} ms with {performance} msg/sec");
+
+                Thread.Sleep(TimeSpan.FromSeconds(2));
             }
 
             ReadLine();

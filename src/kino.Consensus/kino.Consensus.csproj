@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>kino.Consensus</RootNamespace>
     <AssemblyName>kino.Consensus</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -98,9 +99,17 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\kino.Connectivity\kino.Connectivity.csproj">
+      <Project>{45F6F46B-B864-4C27-9A4B-5022546AE424}</Project>
+      <Name>kino.Connectivity</Name>
+    </ProjectReference>
     <ProjectReference Include="..\kino.Core\kino.Core.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
       <Name>kino.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Messaging\kino.Messaging.csproj">
+      <Project>{6282f68e-6d06-4dab-8d8c-b8fcd4f18f9d}</Project>
+      <Name>kino.Messaging</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

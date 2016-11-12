@@ -17,7 +17,9 @@ namespace kino.Consensus
         }
 
         public byte[] OwnerIdentity { get; }
+
         public DateTime ExpiresAt { get; }
+
         public byte[] OwnerPayload { get; }
     }
 }

@@ -5,64 +5,24 @@ namespace kino.Core.Diagnostics.Performance
     [PerformanceCounterCategory("kino", PerformanceCounterCategoryType.MultiInstance)]
     public enum KinoPerformanceCounters
     {
-        [PerformanceCounterDefinition("ClusterListener Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        ClusterListenerSocketReceiveRate,
+        [PerformanceCounterDefinition("AutoDiscoveryListener Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] AutoDiscoveryListenerSocketReceiveRate,
 
-        [PerformanceCounterDefinition("ClusterListener Internal Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        ClusterListenerInternalSocketSendRate,
+        [PerformanceCounterDefinition("AutoDiscoverySender Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] AutoDiscoverySenderSocketSendRate,
 
-        [PerformanceCounterDefinition("ClusterSender Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        ClusterSenderSocketSendRate,
+        [PerformanceCounterDefinition("Rendezvous HeartBeat Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] RendezvousHeartBeatSocketSendRate,
 
-        [PerformanceCounterDefinition("MessageHub Request Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        MessageHubRequestSocketSendRate,
+        [PerformanceCounterDefinition("Rendezvous Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] RendezvousSocketReceiveRate,
 
-        [PerformanceCounterDefinition("MessageHub Response Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        MessageHubResponseSocketReceiveRate,
+        [PerformanceCounterDefinition("Rendezvous Broadcast Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] RendezvousBroadcastSocketSendRate,
 
-        [PerformanceCounterDefinition("ActorHost Async Response Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        ActorHostAsyncResponseSocketSendRate,
+        [PerformanceCounterDefinition("MessageRouter Scaleout Frontend Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] MessageRouterScaleoutFrontendSocketReceiveRate,
 
-        [PerformanceCounterDefinition("ActorHost Registration Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        ActorHostRegistrationSocketSendRate,
+        [PerformanceCounterDefinition("MessageRouter Scaleout Backend Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] MessageRouterScaleoutBackendSocketSendRate,
 
-        [PerformanceCounterDefinition("ActorHost Request Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        ActorHostRequestSocketReceiveRate,
+        [PerformanceCounterDefinition("Intercom Multicast Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] IntercomMulticastSocketReceiveRate,
 
-        [PerformanceCounterDefinition("ActorHost Request Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        ActorHostRequestSocketSendRate,
+        [PerformanceCounterDefinition("Intercom Unicast Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] IntercomUnicastSocketReceiveRate,
 
-        [PerformanceCounterDefinition("Rendezvous Ping Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        RendezvousPingSocketSendRate,
-
-        [PerformanceCounterDefinition("Rendezvous Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        RendezvousSocketReceiveRate,
-
-        [PerformanceCounterDefinition("Rendezvous Broadcast Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        RendezvousBroadcastSocketSendRate,
-
-        [PerformanceCounterDefinition("MessageRouter Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        MessageRouterSocketReceiveRate,
-
-        [PerformanceCounterDefinition("MessageRouter Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        MessageRouterSocketSendRate,
-
-        [PerformanceCounterDefinition("MessageRouter Scaleout Frontend Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        MessageRouterScaleoutFrontendSocketSendRate,
-
-        [PerformanceCounterDefinition("MessageRouter Scaleout Frontend Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        MessageRouterScaleoutFrontendSocketReceiveRate,
-
-        [PerformanceCounterDefinition("MessageRouter Scaleout Backend Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        MessageRouterScaleoutBackendSocketSendRate,
-
-        [PerformanceCounterDefinition("Intercom Multicast Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        IntercomMulticastSocketReceiveRate,
-
-        [PerformanceCounterDefinition("Intercom Unicast Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        IntercomUnicastSocketReceiveRate,
-
-        [PerformanceCounterDefinition("Intercom Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        IntercomSocketSendRate,
+        [PerformanceCounterDefinition("Intercom Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)] IntercomSocketSendRate,
     }
 }

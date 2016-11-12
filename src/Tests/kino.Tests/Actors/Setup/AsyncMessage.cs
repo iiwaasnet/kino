@@ -13,7 +13,7 @@ namespace kino.Tests.Actors.Setup
         [ProtoMember(1)]
         public TimeSpan Delay { get; set; }
 
-        public override byte[] Version => Message.CurrentVersion;
+        public override ushort Version => Message.CurrentVersion;
         public override byte[] Identity => MessageIdentity;
     }
 }

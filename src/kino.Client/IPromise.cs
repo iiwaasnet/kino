@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using kino.Core.Messaging;
+using kino.Messaging;
 
 namespace kino.Client
 {
@@ -8,6 +8,6 @@ namespace kino.Client
     {
         Task<IMessage> GetResponse();
 
-        CorrelationId CorrelationId { get; }
+        CallbackKey CallbackKey { get; }
     }
 }

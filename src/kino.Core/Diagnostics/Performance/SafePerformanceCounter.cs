@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace kino.Core.Diagnostics.Performance
 {
-    internal class SafePerformanceCounter : IPerformanceCounter
+    internal class SafePerformanceCounter : IPerformanceCounter, IDisposable
     {
         private readonly string categoryName;
         private readonly string name;
@@ -57,6 +57,12 @@ namespace kino.Core.Diagnostics.Performance
 
                 perfCounter = null;
             }
+        }
+
+        void IDisposable.Dispose()
+        {
+            perfCounter?.RemoveInstance();
+            perfCounter?.Dispose();
         }
     }
 }

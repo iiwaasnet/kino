@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
 
 namespace kino.Actors
@@ -65,9 +65,9 @@ namespace kino.Actors
             => actor
                 .GetInterfaceDefinition()
                 .Select(messageMap =>
-                        new KeyValuePair<MessageIdentifier, MessageHandlerDefinition>(new MessageIdentifier(messageMap.Message.Version,
-                                                                                                            messageMap.Message.Identity,
-                                                                                                            messageMap.Message.Partition),
-                                                                                      messageMap));
+                            new KeyValuePair<MessageIdentifier, MessageHandlerDefinition>(new MessageIdentifier(messageMap.Message.Identity,
+                                                                                                                messageMap.Message.Version,
+                                                                                                                messageMap.Message.Partition),
+                                                                                          messageMap));
     }
 }

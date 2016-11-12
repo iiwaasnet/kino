@@ -1,9 +1,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using kino.Actors;
-using kino.Core.Connectivity;
-using kino.Core.Messaging;
-using kino.Core.Security;
+using kino.Core;
+using kino.Messaging;
+using kino.Security;
 using Server.Messages;
 
 namespace Server.Actors

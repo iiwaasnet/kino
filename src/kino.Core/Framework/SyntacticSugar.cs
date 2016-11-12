@@ -3,6 +3,6 @@
     public static class SyntacticSugar
     {
         public static T As<T>(this object value) where T : class
-            => value as T;
+        => value as T;
     }
 }

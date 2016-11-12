@@ -2,12 +2,11 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using kino.Connectivity;
 using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
-using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Sockets;
+using kino.Messaging;
 
 namespace kino.Consensus
 {

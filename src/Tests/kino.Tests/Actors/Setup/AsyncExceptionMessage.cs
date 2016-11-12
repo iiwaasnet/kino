@@ -16,7 +16,7 @@ namespace kino.Tests.Actors.Setup
         [ProtoMember(2)]
         public string ErrorMessage { get; set; }
 
-        public override byte[] Version => Message.CurrentVersion;
+        public override ushort Version => Message.CurrentVersion;
         public override byte[] Identity => MessageIdentity;
     }
 }

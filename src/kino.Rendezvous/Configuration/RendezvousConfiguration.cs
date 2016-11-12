@@ -8,6 +8,6 @@ namespace kino.Rendezvous.Configuration
 
         public Uri UnicastUri { get; set; }
 
-        public TimeSpan PingInterval { get; set; }
+        public TimeSpan HeartBeatInterval { get; set; }
     }
 }

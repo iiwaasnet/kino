@@ -2,7 +2,7 @@
 using kino.Consensus.Configuration;
 using kino.Consensus.Messages;
 using kino.Core.Framework;
-using kino.Core.Messaging;
+using kino.Messaging;
 
 namespace kino.Consensus
 {
@@ -26,7 +26,7 @@ namespace kino.Consensus
             var messagePayload = payload(message);
 
             return synodConfig.BelongsToSynod(new Uri(messagePayload.SenderUri))
-                   && Unsafe.Equals(messagePayload.Ballot.Identity, ballot.Identity)
+                   && Unsafe.ArraysEqual(messagePayload.Ballot.Identity, ballot.Identity)
                    && messagePayload.Ballot.Timestamp == ballot.Timestamp.Ticks
                    && messagePayload.Ballot.MessageNumber == ballot.MessageNumber;
         }

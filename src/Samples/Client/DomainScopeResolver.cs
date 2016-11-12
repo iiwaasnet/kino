@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using kino.Core.Framework;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
+using kino.Messaging.Messages;
+using kino.Security;
 
 namespace Client
 {
@@ -19,7 +19,7 @@ namespace Client
             foreach (var domain in domains)
             {
                 var messageIdentities = new List<string>();
-                var domainMessages = new DomainScope { Domain = domain, MessageIdentities = messageIdentities };
+                var domainMessages = new DomainScope {Domain = domain, MessageIdentities = messageIdentities};
 
                 for (var i = 0; i < 30; i++)
                 {
@@ -34,7 +34,7 @@ namespace Client
                 if (domain == kinoDomain)
                 {
                     messageIdentities.Add(KinoMessages.Pong.Identity.GetString());
-                    messageIdentities.Add(KinoMessages.RegisterInternalMessageRoute.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.Ping.Identity.GetString());
                     messageIdentities.Add(KinoMessages.DiscoverMessageRoute.Identity.GetString());
                     messageIdentities.Add(KinoMessages.Exception.Identity.GetString());
                     messageIdentities.Add(KinoMessages.RegisterExternalMessageRoute.Identity.GetString());

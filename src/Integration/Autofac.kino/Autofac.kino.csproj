@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Autofac.kino</RootNamespace>
     <AssemblyName>Autofac.kino</AssemblyName>
-    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -42,22 +43,6 @@
       <HintPath>..\..\packages\C5.2.4.5947.17249\lib\net45\C5.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="kino, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.0.0.1.20-alpha\lib\net46\kino.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Actors, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Actors.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Client, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Client.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="kino.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\kino.0.0.1.20-alpha\lib\net46\kino.Core.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="NetMQ, Version=4.0.0.0, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
       <HintPath>..\..\packages\NetMQ.4.0.0-rc5\lib\net40\NetMQ.dll</HintPath>
       <Private>True</Private>
@@ -81,16 +66,49 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ApplicationConfiguration.cs" />
-    <Compile Include="AutofacExtensions.cs" />
-    <Compile Include="ConfigurationProvider.cs" />
-    <Compile Include="IConfigurationProvider.cs" />
     <Compile Include="KinoModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RendezvousNode.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\kino.Actors\kino.Actors.csproj">
+      <Project>{3231A7B7-C50A-4062-B5ED-BA00FCE9A77B}</Project>
+      <Name>kino.Actors</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Client\kino.Client.csproj">
+      <Project>{2C69BA32-DADC-4E4E-8D91-055FB9D35BFF}</Project>
+      <Name>kino.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Cluster\kino.Cluster.csproj">
+      <Project>{041A2E08-53AD-485E-8F57-B06ADB01C26F}</Project>
+      <Name>kino.Cluster</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Connectivity\kino.Connectivity.csproj">
+      <Project>{45F6F46B-B864-4C27-9A4B-5022546AE424}</Project>
+      <Name>kino.Connectivity</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Core\kino.Core.csproj">
+      <Project>{AC984F96-6D8F-466B-B6A7-B241A7C5DEC1}</Project>
+      <Name>kino.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Messaging\kino.Messaging.csproj">
+      <Project>{6282f68e-6d06-4dab-8d8c-b8fcd4f18f9d}</Project>
+      <Name>kino.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Routing\kino.Routing.csproj">
+      <Project>{6809914A-DBDF-4801-A2CA-A03FD43F1172}</Project>
+      <Name>kino.Routing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino.Security\kino.Security.csproj">
+      <Project>{33F0B37F-478E-405E-ACFB-65759C56228D}</Project>
+      <Name>kino.Security</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino\kino.csproj">
+      <Project>{DD0C07ED-15DB-4A33-B796-2AD4058E7433}</Project>
+      <Name>kino</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
