@@ -5,7 +5,7 @@
     <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
     <id>kino.Rendezvous</id>
     <title>kino.Rendezvous</title>
-    <version>0.0.1.20-alpha</version>
+    <version>0.0.1.21-alpha</version>
     <authors>Sergey Ivasenko</authors>
     <owners>Sergey Ivasenko</owners>
     <summary>Rendezvous service for kino networks</summary>
@@ -19,27 +19,27 @@
     <iconUrl>https://cdn.rawgit.com/iiwaasnet/kino/master/img/kino-50x50-v2.png</iconUrl>
   </metadata>
   <files>
-    <file src="bin\release\kino.Rendezvous.exe" target="kino.Rendezvous.exe" />
-        <file src="bin\Release\AsyncIO.dll" target="AsyncIO.dll" />
-        <file src="bin\Release\Autofac.dll" target="Autofac.dll" />
-        <file src="bin\Release\Autofac.kino.dll" target="Autofac.kino.dll" />
-        <file src="bin\Release\C5.dll" target="C5.dll" />
-        <file src="bin\Release\kino.dll" target="kino.dll" />
-        <file src="bin\Release\kino.Actors.dll" target="kino.Actors.dll" />
-        <file src="bin\Release\kino.Client.dll" target="kino.Client.dll" />
-        <file src="bin\Release\kino.Core.dll" target="kino.Core.dll" />
-        <file src="bin\Release\kino.Consensus.dll" target="kino.Consensus.dll" />
-        <file src="bin\Release\NetMQ.dll" target="NetMQ.dll" />
-        <file src="bin\Release\Newtonsoft.Json.dll" target="Newtonsoft.Json.dll" />
-        <file src="bin\Release\NLog.dll" target="NLog.dll" />
-        <file src="bin\Release\protobuf-net.dll" target="protobuf-net.dll" />
-        <file src="bin\Release\System.Reactive.Core.dll" target="System.Reactive.Core.dll" />
-        <file src="bin\Release\System.Reactive.Interfaces.dll" target="System.Reactive.Interfaces.dll" />
-        <file src="bin\Release\System.Reactive.Linq.dll" target="System.Reactive.Linq.dll" />
-        <file src="bin\Release\TypedConfigProvider.dll" target="TypedConfigProvider.dll" />
-        <file src="bin\Release\WindowsServiceHost.dll" target="WindowsServiceHost.dll" />
-        <file src="bin\Release\config/NLog.config" target="config/NLog.config" />
-        <file src="bin\Release\config/Application.config.json" target="config/Application.config.json" />
-        <file src="bin\Release\kino.Rendezvous.exe.config" target="kino.Rendezvous.exe.config" />
+        <file src="bin\release\config\Application.config.json" target="config\Application.config.json" />
+        <file src="bin\release\config\NLog.config" target="config\NLog.config" />
+        <file src="bin\release\AsyncIO.dll" target="AsyncIO.dll" />
+        <file src="bin\release\Autofac.dll" target="Autofac.dll" />
+        <file src="bin\release\Autofac.kino.dll" target="Autofac.kino.dll" />
+        <file src="bin\release\C5.dll" target="C5.dll" />
+        <file src="bin\release\kino.Actors.dll" target="kino.Actors.dll" />
+        <file src="bin\release\kino.Client.dll" target="kino.Client.dll" />
+        <file src="bin\release\kino.Consensus.dll" target="kino.Consensus.dll" />
+        <file src="bin\release\kino.Core.dll" target="kino.Core.dll" />
+        <file src="bin\release\kino.dll" target="kino.dll" />
+        <file src="bin\release\kino.Rendezvous.exe" target="kino.Rendezvous.exe" />
+        <file src="bin\release\kino.Rendezvous.exe.config" target="kino.Rendezvous.exe.config" />
+        <file src="bin\release\NetMQ.dll" target="NetMQ.dll" />
+        <file src="bin\release\Newtonsoft.Json.dll" target="Newtonsoft.Json.dll" />
+        <file src="bin\release\NLog.dll" target="NLog.dll" />
+        <file src="bin\release\protobuf-net.dll" target="protobuf-net.dll" />
+        <file src="bin\release\System.Reactive.Core.dll" target="System.Reactive.Core.dll" />
+        <file src="bin\release\System.Reactive.Interfaces.dll" target="System.Reactive.Interfaces.dll" />
+        <file src="bin\release\System.Reactive.Linq.dll" target="System.Reactive.Linq.dll" />
+        <file src="bin\release\TypedConfigProvider.dll" target="TypedConfigProvider.dll" />
+        <file src="bin\release\WindowsServiceHost.dll" target="WindowsServiceHost.dll" />
   </files>
 </package>
