@@ -1,14 +1,7 @@
 ﻿using System;
-using System.Threading;
 using kino.Actors;
-using kino.Core.Connectivity;
 using kino.Core.Diagnostics;
-using kino.Core.Diagnostics.Performance;
-using kino.Core.Framework;
-using kino.Core.Security;
-using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
-using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
 
@@ -18,36 +11,19 @@ namespace kino.Tests.Actors
     public class ActorHostManagerTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
-        private readonly string localhost = "tcp://localhost:43";
         private ILogger logger;
-        private Mock<ISocketFactory> socketFactory;
-        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
-        private ActorHostSocketFactory actorHostSocketFactory;
-        private const int NumberOfDealerSocketsPerActorHost = 3;
-        private Mock<ISecurityProvider> securityProvider;
-        private Mock<IRouterConfigurationProvider> routerConfigurationProvider;
         private ActorHostManager actorHostManager;
+        private Mock<IActorHostFactory> actorHostFactory;
+        private Mock<IActorHost> actorHost;
 
         [SetUp]
         public void Setup()
         {
             logger = new Mock<ILogger>().Object;
-            actorHostSocketFactory = new ActorHostSocketFactory();
-            performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
-            socketFactory = new Mock<ISocketFactory>();
-            socketFactory.Setup(m => m.CreateDealerSocket()).Returns(actorHostSocketFactory.CreateSocket);
-            var routerConfiguration = new RouterConfiguration
-                                      {
-                                          RouterAddress = new SocketEndpoint(new Uri("inproc://router"), SocketIdentifier.CreateIdentity())
-                                      };
-            routerConfigurationProvider = new Mock<IRouterConfigurationProvider>();
-            routerConfigurationProvider.Setup(m => m.GetRouterConfiguration()).Returns(routerConfiguration);
-            securityProvider = new Mock<ISecurityProvider>();
-            securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
-            actorHostManager = new ActorHostManager(socketFactory.Object,
-                                                    routerConfigurationProvider.Object,
-                                                    securityProvider.Object,
-                                                    performanceCounterManager.Object,
+            actorHostFactory = new Mock<IActorHostFactory>();
+            actorHost = new Mock<IActorHost>();
+            actorHostFactory.Setup(m => m.Create()).Returns(actorHost.Object);
+            actorHostManager = new ActorHostManager(actorHostFactory.Object,
                                                     logger);
         }
 
@@ -59,10 +35,8 @@ namespace kino.Tests.Actors
             {
                 Assert.DoesNotThrow(() => actorHostManager.AssignActor(new EchoActor()));
             }
-
-            AsyncOp.Sleep();
-
-            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost * numberOfActors));
+            //
+            actorHostFactory.Verify(m => m.Create(), Times.Exactly(numberOfActors));
         }
 
         [Test]
@@ -70,21 +44,22 @@ namespace kino.Tests.Actors
         {
             actorHostManager.AssignActor(new EchoActor(), ActorHostInstancePolicy.AlwaysCreateNew);
             actorHostManager.AssignActor(new ExceptionActor(), ActorHostInstancePolicy.AlwaysCreateNew);
-
-            AsyncOp.Sleep();
-
-            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost * 2));
+            //
+            actorHostFactory.Verify(m => m.Create(), Times.Exactly(2));
         }
 
         [Test]
-        public void IfActorHostInstancePolicyIsTryReuseExisting_NewDifferentActorsAreHostedInOneActorHost()
+        public void IfActorHostCanHostAllActorsBeingAssigned_ThisActorHostInstanceIsUsed()
         {
-            actorHostManager.AssignActor(new EchoActor());
-            actorHostManager.AssignActor(new NullActor());
-
-            AsyncOp.Sleep();
-
-            socketFactory.Verify(m => m.CreateDealerSocket(), Times.Exactly(NumberOfDealerSocketsPerActorHost));
+            var echoActor = new EchoActor();
+            var nullActor = new NullActor();
+            actorHost.Setup(m => m.CanAssignActor(nullActor)).Returns(true);
+            actorHost.Setup(m => m.CanAssignActor(echoActor)).Returns(true);
+            //
+            actorHostManager.AssignActor(echoActor);
+            actorHostManager.AssignActor(nullActor);
+            //
+            actorHostFactory.Verify(m => m.Create(), Times.Once);
         }
     }
 }

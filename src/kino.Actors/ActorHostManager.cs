@@ -1,36 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
-using kino.Messaging;
-using kino.Routing;
-using kino.Security;
 
 namespace kino.Actors
 {
     public class ActorHostManager : IActorHostManager
     {
-        private readonly ISecurityProvider securityProvider;
-        private readonly ILocalSocket<IMessage> localRouterSocket;
-        private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
-        private readonly ILocalSocketFactory localSocketFactory;
+        private readonly IActorHostFactory actorHostFactory;
         private readonly ILogger logger;
         private readonly IList<IActorHost> actorHosts;
         private readonly object @lock = new object();
         private bool isDisposed = false;
 
-        public ActorHostManager(ISecurityProvider securityProvider,
-                                ILocalSocket<IMessage> localRouterSocket,
-                                ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
-                                ILocalSocketFactory localSocketFactory,
+        public ActorHostManager(IActorHostFactory actorHostFactory,
                                 ILogger logger)
         {
-            this.securityProvider = securityProvider;
-            this.localRouterSocket = localRouterSocket;
-            this.internalRegistrationsSender = internalRegistrationsSender;
-            this.localSocketFactory = localSocketFactory;
+            this.actorHostFactory = actorHostFactory;
             this.logger = logger;
             actorHosts = new List<IActorHost>();
         }
@@ -61,14 +48,7 @@ namespace kino.Actors
                 || !actorHosts.Any()
                 || actorHost == null)
             {
-                actorHost = new ActorHost(new ActorHandlerMap(),
-                                          new AsyncQueue<AsyncMessageContext>(),
-                                          new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
-                                          securityProvider,
-                                          localRouterSocket,
-                                          internalRegistrationsSender,
-                                          localSocketFactory,
-                                          logger);
+                actorHost = actorHostFactory.Create();
                 actorHost.Start();
                 actorHosts.Add(actorHost);
             }

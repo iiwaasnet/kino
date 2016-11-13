@@ -2,9 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
+using kino.Connectivity;
 using kino.Core.Framework;
-using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
 
 namespace kino.Tests.Helpers
@@ -33,7 +32,7 @@ namespace kino.Tests.Helpers
                             Socket = socket,
                             Purpose = GetSocketPurpose()
                         }
-                );
+                       );
 
             return socket;
         }
@@ -97,6 +96,7 @@ namespace kino.Tests.Helpers
         private class SocketMeta
         {
             internal MockSocket Socket { get; set; }
+
             internal SocketPurpose Purpose { get; set; }
         }
 

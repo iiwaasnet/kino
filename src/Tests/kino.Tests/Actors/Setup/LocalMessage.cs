@@ -1,5 +1,5 @@
 ﻿using kino.Core.Framework;
-using kino.Core.Messaging;
+using kino.Messaging;
 using ProtoBuf;
 
 namespace kino.Tests.Actors.Setup
@@ -13,6 +13,7 @@ namespace kino.Tests.Actors.Setup
         public string Content { get; set; }
 
         public override ushort Version => Message.CurrentVersion;
+
         public override byte[] Identity => MessageIdentity;
     }
 }

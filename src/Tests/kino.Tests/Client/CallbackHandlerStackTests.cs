@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using kino.Client;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
+using kino.Messaging;
+using kino.Messaging.Messages;
 using kino.Tests.Actors.Setup;
 using NUnit.Framework;
 

@@ -54,6 +54,7 @@
     <Compile Include="ActorHandlerMap.cs" />
     <Compile Include="ActorHost.Tracing.cs" />
     <Compile Include="ActorHost.cs" />
+    <Compile Include="ActorHostFactory.cs" />
     <Compile Include="ActorHostInstancePolicy.cs" />
     <Compile Include="ActorHostManager.cs" />
     <Compile Include="ActorMessageHandlerIdentifier.cs" />
@@ -64,6 +65,7 @@
     <Compile Include="IActor.cs" />
     <Compile Include="IActorHandlerMap.cs" />
     <Compile Include="IActorHost.cs" />
+    <Compile Include="IActorHostFactory.cs" />
     <Compile Include="IActorHostManager.cs" />
     <Compile Include="IActorResult.cs" />
     <Compile Include="MessageDefinition.cs" />

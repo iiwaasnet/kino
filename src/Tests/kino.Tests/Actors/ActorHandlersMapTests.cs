@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using kino.Actors;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
+using kino.Messaging.Messages;
 using kino.Tests.Actors.Setup;
 using NUnit.Framework;
 
@@ -63,21 +62,21 @@ namespace kino.Tests.Actors
             var actorHandlersMap = new ActorHandlerMap();
 
             var actorWithoutPartition = new ConfigurableActor(new[]
-                                                           {
-                                                               new MessageHandlerDefinition
-                                                               {
-                                                                   Handler = null,
-                                                                   Message = MessageDefinition.Create<SimpleMessage>()
-                                                               }
-                                                           });
-            var actorWithPartition = new ConfigurableActor(new[]
                                                               {
                                                                   new MessageHandlerDefinition
                                                                   {
                                                                       Handler = null,
-                                                                      Message = MessageDefinition.Create<SimpleMessage>(Guid.NewGuid().ToByteArray())
+                                                                      Message = MessageDefinition.Create<SimpleMessage>()
                                                                   }
                                                               });
+            var actorWithPartition = new ConfigurableActor(new[]
+                                                           {
+                                                               new MessageHandlerDefinition
+                                                               {
+                                                                   Handler = null,
+                                                                   Message = MessageDefinition.Create<SimpleMessage>(Guid.NewGuid().ToByteArray())
+                                                               }
+                                                           });
 
             actorHandlersMap.Add(actorWithoutPartition);
             actorHandlersMap.Add(actorWithPartition);

@@ -2,9 +2,9 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using kino.Connectivity;
 using kino.Core.Diagnostics.Performance;
-using kino.Core.Messaging;
-using kino.Core.Sockets;
+using kino.Messaging;
 using Moq;
 
 namespace kino.Tests.Actors.Setup
@@ -64,7 +64,7 @@ namespace kino.Tests.Actors.Setup
             Object.Unsubscribe(topic);
         }
 
-        public void Connect(Uri address)
+        public void Connect(Uri address, bool waitConnectionEstablishment = false)
         {
             Object.Connect(address);
             connected = true;

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Threading;
-using kino.Core.Connectivity;
+using kino.Cluster.Configuration;
+using kino.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
-using kino.Core.Sockets;
 using kino.Tests.Actors.Setup;
 
 namespace kino.Tests.Helpers
@@ -37,22 +37,22 @@ namespace kino.Tests.Helpers
             return socket;
         }
 
-        public MockSocket GetRouterSocket()
-        {
-            MockSocket socket = null;
-            var retries = socketWaitRetries;
+        //public MockSocket GetRouterSocket()
+        //{
+        //    MockSocket socket = null;
+        //    var retries = socketWaitRetries;
 
-            while (retries-- > 0 && socket == null)
-            {
-                socket = sockets.FirstOrDefault(IsRouterSocket);
-                Wait(socket);
-            }
+        //    while (retries-- > 0 && socket == null)
+        //    {
+        //        socket = sockets.FirstOrDefault(IsRouterSocket);
+        //        Wait(socket);
+        //    }
 
-            return socket;
-        }
+        //    return socket;
+        //}
 
-        private bool IsRouterSocket(MockSocket s)
-            => Unsafe.Equals(s?.GetIdentity(), config.RouterAddress.Identity);
+        //private bool IsRouterSocket(MockSocket s)
+        //    => Equals(s?.GetIdentity(), config.RouterAddress.Identity);
 
         public MockSocket GetScaleoutFrontendSocket()
         {
@@ -69,7 +69,7 @@ namespace kino.Tests.Helpers
         }
 
         private bool IsScaleOutFrontendSocket(MockSocket s)
-            => Unsafe.Equals(s?.GetIdentity(), scaleOutAddress.Identity);
+            => Equals(s?.GetIdentity(), scaleOutAddress.Identity);
 
         public MockSocket GetScaleoutBackendSocket()
         {

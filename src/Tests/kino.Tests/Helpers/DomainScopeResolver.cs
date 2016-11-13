@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using kino.Core.Framework;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
+using kino.Messaging.Messages;
+using kino.Security;
 using kino.Tests.Actors.Setup;
 
 namespace kino.Tests.Helpers
@@ -37,7 +37,6 @@ namespace kino.Tests.Helpers
                 if (domain == kinoDomain)
                 {
                     messageIdentities.Add(KinoMessages.Pong.Identity.GetString());
-                    messageIdentities.Add(KinoMessages.RegisterInternalMessageRoute.Identity.GetString());
                     messageIdentities.Add(KinoMessages.DiscoverMessageRoute.Identity.GetString());
                     messageIdentities.Add(KinoMessages.Exception.Identity.GetString());
                     messageIdentities.Add(KinoMessages.RegisterExternalMessageRoute.Identity.GetString());

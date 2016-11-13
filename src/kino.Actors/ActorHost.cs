@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
-using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
@@ -66,9 +65,7 @@ namespace kino.Actors
         }
 
         public bool CanAssignActor(IActor actor)
-        {
-            return actorHandlerMap.CanAdd(actor);
-        }
+            => actorHandlerMap.CanAdd(actor);
 
         public void Start()
         {

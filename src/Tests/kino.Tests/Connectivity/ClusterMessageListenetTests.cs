@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using kino.Core.Connectivity;
+using kino.Cluster;
+using kino.Cluster.Configuration;
+using kino.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
-using kino.Core.Sockets;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Security;
 using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
@@ -172,7 +174,7 @@ namespace kino.Tests.Connectivity
             task.Wait();
 
             clusterMembership.Verify(m => m.KeepAlive(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == sourceNode.Uri.ToSocketAddress()
-                                                                                 && Unsafe.Equals(e.Identity, sourceNode.Identity))),
+                                                                                 && Equals(e.Identity, sourceNode.Identity))),
                                      Times.Once());
         }
 
@@ -234,7 +236,7 @@ namespace kino.Tests.Connectivity
             task.Wait();
 
             clusterMembership.Verify(m => m.KeepAlive(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == sourceNode.Uri.ToSocketAddress()
-                                                                                 && Unsafe.Equals(e.Identity, sourceNode.Identity))),
+                                                                                 && Equals(e.Identity, sourceNode.Identity))),
                                      Times.Once);
             clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => RoutesRequestMessage(msg, routesRequestMessage))), Times.Exactly(allowedDomains.Count()));
         }
@@ -280,7 +282,7 @@ namespace kino.Tests.Connectivity
             task.Wait();
 
             clusterMembership.Verify(m => m.KeepAlive(It.Is<SocketEndpoint>(e => e.Uri.ToSocketAddress() == sourceNode.Uri.ToSocketAddress()
-                                                                                 && Unsafe.Equals(e.Identity, sourceNode.Identity))),
+                                                                                 && Equals(e.Identity, sourceNode.Identity))),
                                      times);
             clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => RoutesRequestMessage(msg, routesRequestMessage))), times);
         }
@@ -391,7 +393,7 @@ namespace kino.Tests.Connectivity
         private bool RoutesRequestMessage(IMessage message, RequestNodeMessageRoutesMessage routesRequestMessage)
         {
             var payload = message.GetPayload<RequestNodeMessageRoutesMessage>();
-            return Unsafe.Equals(payload.Identity, routesRequestMessage.Identity)
+            return Equals(payload.Identity, routesRequestMessage.Identity)
                    && payload.TargetNodeUri == routesRequestMessage.TargetNodeUri;
         }
 
@@ -400,7 +402,7 @@ namespace kino.Tests.Connectivity
 
         private TimeSpan WaitLongerThanPingSilenceFailover()
             =>
-                TimeSpan.FromMilliseconds(clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover.TotalMilliseconds * 1.5);
+            TimeSpan.FromMilliseconds(clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover.TotalMilliseconds * 1.5);
 
         private static bool SameServer(RendezvousEndpoint e, RendezvousNotLeaderMessage notLeaderMessage)
             => e.BroadcastUri.ToSocketAddress() == notLeaderMessage.NewLeader.MulticastUri

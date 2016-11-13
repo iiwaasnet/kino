@@ -1,6 +1,6 @@
 ﻿using System;
 using kino.Core.Framework;
-using kino.Core.Messaging;
+using kino.Messaging;
 using ProtoBuf;
 
 namespace kino.Tests.Actors.Setup

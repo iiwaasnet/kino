@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using kino.Actors;
-using kino.Core.Connectivity;
-using kino.Core.Messaging;
+using kino.Messaging;
 
 namespace kino.Tests.Actors.Setup
 {
@@ -16,7 +15,7 @@ namespace kino.Tests.Actors.Setup
             throw new Exception(message);
         }
 
-        [MessageHandlerDefinition(typeof (AsyncExceptionMessage))]
+        [MessageHandlerDefinition(typeof(AsyncExceptionMessage))]
         private async Task<IActorResult> AsyncProcess(IMessage messageIn)
         {
             var error = messageIn.GetPayload<AsyncExceptionMessage>();

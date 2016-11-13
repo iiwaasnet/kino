@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Threading;
-using kino.Core.Connectivity;
+using kino.Cluster.Configuration;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using Moq;
@@ -20,9 +20,9 @@ namespace kino.Tests.Connectivity
         {
             pingInterval = TimeSpan.FromSeconds(2);
             membershipConfiguration = new ClusterMembershipConfiguration
-            {
-                PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(4)
-            };
+                                      {
+                                          PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(4)
+                                      };
             logger = new Mock<ILogger>().Object;
         }
 
@@ -57,8 +57,6 @@ namespace kino.Tests.Connectivity
 
             CollectionAssert.DoesNotContain(config.GetClusterMembers(), ep1);
             CollectionAssert.Contains(config.GetClusterMembers(), ep2);
-
-
         }
 
         [Test]
@@ -76,7 +74,7 @@ namespace kino.Tests.Connectivity
             (membershipConfiguration.PongSilenceBeforeRouteDeletion + pingDelay).Sleep();
 
             config.KeepAlive(ep1);
-            
+
             CollectionAssert.Contains(config.GetDeadMembers(pingTime, pingInterval), ep2);
             CollectionAssert.DoesNotContain(config.GetDeadMembers(pingTime, pingInterval), ep1);
         }

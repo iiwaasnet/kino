@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using kino.Actors;
-using kino.Core.Connectivity;
 
 namespace kino.Tests.Actors.Setup
 {

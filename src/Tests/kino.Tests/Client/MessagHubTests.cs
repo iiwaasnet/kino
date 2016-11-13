@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using kino.Client;
-using kino.Core.Connectivity;
+using kino.Cluster.Configuration;
+using kino.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
-using kino.Core.Sockets;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
@@ -92,7 +93,7 @@ namespace kino.Tests.Client
 
                 AsyncOp.Sleep();
 
-                callbackHandlerStack.Verify(m => m.Push(It.Is<CorrelationId>(c => Unsafe.Equals(c.Value, message.CorrelationId)),
+                callbackHandlerStack.Verify(m => m.Push(It.Is<CorrelationId>(c => Equals(c.Value, message.CorrelationId)),
                                                         It.IsAny<IPromise>(),
                                                         It.Is<IEnumerable<MessageIdentifier>>(en => ContainsMessageAndExceptionRegistrations(en))),
                                             Times.Once);
@@ -295,8 +296,8 @@ namespace kino.Tests.Client
                               logger);
 
         private static bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageIdentifier> registrations)
-            => registrations.Any(h => Unsafe.Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
-               && registrations.Any(h => Unsafe.Equals(h.Version, KinoMessages.Exception.Version))
-               && registrations.Any(h => Unsafe.Equals(h.Partition, KinoMessages.Exception.Partition));
+            => registrations.Any(h => Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
+               && registrations.Any(h => Equals(h.Version, KinoMessages.Exception.Version))
+               && registrations.Any(h => Equals(h.Partition, KinoMessages.Exception.Partition));
     }
 }

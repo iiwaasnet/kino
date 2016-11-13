@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Linq;
-using kino.Core.Connectivity;
+using kino.Cluster;
+using kino.Cluster.Configuration;
+using kino.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
-using kino.Core.Sockets;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
@@ -115,11 +117,11 @@ namespace kino.Tests.Connectivity
                 Assert.IsNotNull(message);
                 Assert.IsTrue(message.Equals(KinoMessages.RegisterExternalMessageRoute));
                 var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
-                Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, scaleOutAddress.Identity));
+                Assert.IsTrue(Equals(payload.SocketIdentity, scaleOutAddress.Identity));
                 Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
-                Assert.IsTrue(payload.MessageContracts.Any(mc => Unsafe.Equals(mc.Identity, messageIdentifier.Identity)
-                                                                 && Unsafe.Equals(mc.Version, messageIdentifier.Version)
-                                                                 && Unsafe.Equals(mc.Partition, messageIdentifier.Partition)));
+                Assert.IsTrue(payload.MessageContracts.Any(mc => Equals(mc.Identity, messageIdentifier.Identity)
+                                                                 && Equals(mc.Version, messageIdentifier.Version)
+                                                                 && Equals(mc.Partition, messageIdentifier.Partition)));
             }
             finally
             {
@@ -143,11 +145,11 @@ namespace kino.Tests.Connectivity
                 Assert.IsNotNull(message);
                 Assert.IsTrue(message.Equals(KinoMessages.UnregisterMessageRoute));
                 var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-                Assert.IsTrue(Unsafe.Equals(payload.SocketIdentity, scaleOutAddress.Identity));
+                Assert.IsTrue(Equals(payload.SocketIdentity, scaleOutAddress.Identity));
                 Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
-                Assert.IsTrue(payload.MessageContracts.Any(mc => Unsafe.Equals(mc.Identity, messageIdentifier.Identity)
-                                                                 && Unsafe.Equals(mc.Version, messageIdentifier.Version)
-                                                                 && Unsafe.Equals(mc.Partition, messageIdentifier.Partition)));
+                Assert.IsTrue(payload.MessageContracts.Any(mc => Equals(mc.Identity, messageIdentifier.Identity)
+                                                                 && Equals(mc.Version, messageIdentifier.Version)
+                                                                 && Equals(mc.Partition, messageIdentifier.Partition)));
             }
             finally
             {
@@ -185,11 +187,11 @@ namespace kino.Tests.Connectivity
                 Assert.IsNotNull(message);
                 Assert.IsTrue(message.Equals(KinoMessages.DiscoverMessageRoute));
                 var payload = message.GetPayload<DiscoverMessageRouteMessage>();
-                Assert.IsTrue(Unsafe.Equals(payload.RequestorSocketIdentity, scaleOutAddress.Identity));
+                Assert.IsTrue(Equals(payload.RequestorSocketIdentity, scaleOutAddress.Identity));
                 Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
-                Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Identity, messageIdentifier.Identity));
-                Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Version, messageIdentifier.Version));
-                Assert.IsTrue(Unsafe.Equals(payload.MessageContract.Partition, messageIdentifier.Partition));
+                Assert.IsTrue(Equals(payload.MessageContract.Identity, messageIdentifier.Identity));
+                Assert.IsTrue(Equals(payload.MessageContract.Version, messageIdentifier.Version));
+                Assert.IsTrue(Equals(payload.MessageContract.Partition, messageIdentifier.Partition));
             }
             finally
             {
@@ -290,7 +292,7 @@ namespace kino.Tests.Connectivity
         {
             return msg.GetPayload<UnregisterMessageRouteMessage>()
                       .MessageContracts
-                      .Any(mc => Unsafe.Equals(mc.Identity, messageHub.Identity))
+                      .Any(mc => Equals(mc.Identity, messageHub.Identity))
                    && msg.Domain == domain;
         }
     }

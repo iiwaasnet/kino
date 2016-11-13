@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Threading;
-using kino.Consensus;
-using kino.Consensus.Configuration;
 using NUnit.Framework;
 
 namespace kino.Tests.Consensus

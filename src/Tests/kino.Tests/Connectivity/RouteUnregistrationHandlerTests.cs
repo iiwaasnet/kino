@@ -1,14 +1,17 @@
 ﻿using System;
-using kino.Core.Connectivity;
-using kino.Core.Connectivity.ServiceMessageHandlers;
+using kino.Cluster.Configuration;
+using kino.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
-using kino.Core.Sockets;
+using kino.Messaging;
+using kino.Messaging.Messages;
+using kino.Routing;
+using kino.Routing.ServiceMessageHandlers;
+using kino.Security;
 using Moq;
 using NUnit.Framework;
+using MessageContract = kino.Routing.MessageContract;
 
 namespace kino.Tests.Connectivity
 {

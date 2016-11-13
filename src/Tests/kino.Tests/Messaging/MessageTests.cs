@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Security.Cryptography;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
-using kino.Core.Messaging;
-using kino.Core.Security;
+using kino.Messaging;
+using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using NUnit.Framework;
@@ -37,7 +37,7 @@ namespace kino.Tests.Messaging
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
             Assert.IsNotNull(message.Version);
-            CollectionAssert.AreEqual(Message.CurrentVersion, message.Version);
+            Assert.AreEqual(Message.CurrentVersion, message.Version);
         }
 
         [Test]
@@ -201,9 +201,10 @@ namespace kino.Tests.Messaging
 
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
             var callbackMessageIdentifiers = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
-                                                                   Guid.NewGuid().ToByteArray(),
+                                                                   Randomizer.UInt16(),
                                                                    Guid.NewGuid().ToByteArray());
-            message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifiers);
+            var callbackKey = Randomizer.Int32();
+            message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifiers, callbackKey);
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
@@ -220,7 +221,8 @@ namespace kino.Tests.Messaging
 
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
             var callbackIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            message.RegisterCallbackPoint(callbackReceiverIdentity, callbackIdentifier);
+            var callbackKey = Randomizer.Int32();
+            message.RegisterCallbackPoint(callbackReceiverIdentity, callbackIdentifier, callbackKey);
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
@@ -256,7 +258,7 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            Assert.IsTrue(Unsafe.Equals(partition, message.Partition));
+            Assert.IsTrue(Unsafe.ArraysEqual(partition, message.Partition));
         }
 
         [Test]
@@ -304,8 +306,7 @@ namespace kino.Tests.Messaging
         [Test]
         public void MessageTTL_IsConsistentlyTransferredViaMultipartMessage()
         {
-            var random = new Random((int) (0x0000ffff & DateTime.UtcNow.Ticks));
-            var ttl = TimeSpan.FromSeconds(random.Next(2, 60));
+            var ttl = TimeSpan.FromSeconds(Randomizer.Int32(2, 60));
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TTL = ttl;
 
@@ -325,6 +326,20 @@ namespace kino.Tests.Messaging
             message = new Message(multipart);
 
             Assert.AreEqual(securityDomain, message.Domain);
+        }
+
+        [Test]
+        public void CallbackKey_IsConsistentlyTransferredViaMultipartMessage()
+        {
+            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            var callbackKey = Randomizer.Int32(1, Int32.MaxValue);
+            message.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
+                                          MessageIdentifier.Create<SimpleMessage>(),
+                                          callbackKey);
+            var multipart = new MultipartMessage(message);
+            message = new Message(multipart);
+
+            Assert.AreEqual(callbackKey, message.CallbackKey);
         }
 
         [Test]
@@ -358,9 +373,9 @@ namespace kino.Tests.Messaging
                                Message.Create(new AsyncMessage()),
                            };
 
-            foreach (Message message in messages)
+            foreach (var message in messages.OfType<Message>())
             {
-                message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifier);
+                message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifier, Randomizer.Int32());
                 CollectionAssert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
             }
         }

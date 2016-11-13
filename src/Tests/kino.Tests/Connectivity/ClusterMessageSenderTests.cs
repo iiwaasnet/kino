@@ -2,13 +2,14 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using kino.Core.Connectivity;
+using kino.Cluster;
+using kino.Cluster.Configuration;
+using kino.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
-using kino.Core.Framework;
-using kino.Core.Messaging.Messages;
-using kino.Core.Security;
-using kino.Core.Sockets;
+using kino.Messaging.Messages;
+using kino.Security;
 using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
@@ -77,12 +78,11 @@ namespace kino.Tests.Connectivity
             var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
             var messages = socket.GetSentMessages().BlockingAll(AsyncOp);
 
-            Assert.AreEqual(allowedDomains.Count(), messages.Count(m => Unsafe.Equals(m.Identity, KinoMessages.UnregisterNode.Identity)));
+            Assert.AreEqual(allowedDomains.Count(), messages.Count(m => Equals(m.Identity, KinoMessages.UnregisterNode.Identity)));
             //NOTE: REQCLUSTROUTES will also be sent for each allowedDomains. That's why the following condition is wrong until RequestClusterRoutes() call is removed
             //Assert.IsTrue(messages.All(m => Unsafe.Equals(m.Identity, KinoMessages.UnregisterNode.Identity)));
             Assert.IsTrue(messages.All(m => allowedDomains.Contains(m.Domain)));
         }
-
 
         //TODO: Implement the below test here
         //[Test]
