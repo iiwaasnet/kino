@@ -5,7 +5,7 @@
     <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
     <id>kino.Rendezvous</id>
     <title>kino.Rendezvous</title>
-    <version>0.0.1.21-alpha</version>
+    <version>0.0.1.23-alpha</version>
     <authors>Sergey Ivasenko</authors>
     <owners>Sergey Ivasenko</owners>
     <summary>Rendezvous service for kino networks</summary>
@@ -15,7 +15,6 @@
     <packageSourceUrl>https://github.com/iiwaasnet/kino</packageSourceUrl>
     <bugTrackerUrl>https://github.com/iiwaasnet/kino/issues</bugTrackerUrl>
     <docsUrl>https://github.com/iiwaasnet/kino/wiki</docsUrl>
-    <mailingListUrl>https://gitter.im/iiwaasnet/kino?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge</mailingListUrl>
     <tags>Actors framework kino Rendezvous</tags>
     <copyright>Copyright © 2015 Sergey Ivasenko</copyright>
     <licenseUrl>https://github.com/iiwaasnet/kino/blob/master/LICENSE</licenseUrl>
@@ -31,11 +30,16 @@
         <file src="bin\release\C5.dll" target="C5.dll" />
         <file src="bin\release\kino.Actors.dll" target="kino.Actors.dll" />
         <file src="bin\release\kino.Client.dll" target="kino.Client.dll" />
+        <file src="bin\release\kino.Cluster.dll" target="kino.Cluster.dll" />
+        <file src="bin\release\kino.Connectivity.dll" target="kino.Connectivity.dll" />
         <file src="bin\release\kino.Consensus.dll" target="kino.Consensus.dll" />
         <file src="bin\release\kino.Core.dll" target="kino.Core.dll" />
         <file src="bin\release\kino.dll" target="kino.dll" />
+        <file src="bin\release\kino.Messaging.dll" target="kino.Messaging.dll" />
         <file src="bin\release\kino.Rendezvous.exe" target="kino.Rendezvous.exe" />
         <file src="bin\release\kino.Rendezvous.exe.config" target="kino.Rendezvous.exe.config" />
+        <file src="bin\release\kino.Routing.dll" target="kino.Routing.dll" />
+        <file src="bin\release\kino.Security.dll" target="kino.Security.dll" />
         <file src="bin\release\NetMQ.dll" target="NetMQ.dll" />
         <file src="bin\release\Newtonsoft.Json.dll" target="Newtonsoft.Json.dll" />
         <file src="bin\release\NLog.dll" target="NLog.dll" />
