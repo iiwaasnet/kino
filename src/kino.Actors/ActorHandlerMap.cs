@@ -22,7 +22,11 @@ namespace kino.Actors
             {
                 if (messageHandlers.TryAdd(reg.Key, reg.Value.Handler))
                 {
-                    tmp.Add(new ActorMessageHandlerIdentifier {Identifier = reg.Key, KeepRegistrationLocal = reg.Value.KeepRegistrationLocal});
+                    tmp.Add(new ActorMessageHandlerIdentifier
+                            {
+                                Identifier = reg.Key,
+                                KeepRegistrationLocal = reg.Value.KeepRegistrationLocal
+                            });
                 }
                 else
                 {

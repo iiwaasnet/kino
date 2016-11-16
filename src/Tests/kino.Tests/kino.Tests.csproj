@@ -88,6 +88,7 @@
   <ItemGroup>
     <Compile Include="Actors\ActorHandlersMapTests.cs" />
     <Compile Include="Actors\ActorHostManagerTests.cs" />
+    <Compile Include="Actors\ActorHostTests.cs" />
     <Compile Include="Actors\Setup\AsyncExceptionMessage.cs" />
     <Compile Include="Actors\Setup\AsyncMessage.cs" />
     <Compile Include="Actors\Setup\ConfigurableActor.cs" />

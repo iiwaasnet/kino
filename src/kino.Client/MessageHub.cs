@@ -20,7 +20,7 @@ namespace kino.Client
         private Task sending;
         private Task receiving;
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
-        private readonly CancellationTokenSource cancellationTokenSource;
+        private CancellationTokenSource cancellationTokenSource;
         private readonly ManualResetEventSlim hubRegistered;
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
@@ -46,13 +46,13 @@ namespace kino.Client
             hubRegistered = new ManualResetEventSlim();
             this.callbackHandlers = callbackHandlers;
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
-            cancellationTokenSource = new CancellationTokenSource();
             receivingSocket = localSocketFactory.Create<IMessage>();
             receivingSocketIdentity = receivingSocket.GetIdentity().Identity;
         }
 
         public void Start()
         {
+            cancellationTokenSource = new CancellationTokenSource();
             receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token),
                                               cancellationTokenSource.Token,
                                               TaskCreationOptions.LongRunning);
@@ -63,9 +63,10 @@ namespace kino.Client
 
         public void Stop()
         {
-            cancellationTokenSource.Cancel();
+            cancellationTokenSource?.Cancel();
             sending?.Wait(TerminationWaitTimeout);
             receiving?.Wait(TerminationWaitTimeout);
+            cancellationTokenSource?.Dispose();
         }
 
         private void SendClientRequests(CancellationToken token)

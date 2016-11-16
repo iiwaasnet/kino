@@ -21,7 +21,7 @@ namespace kino.Actors
         private Task syncProcessing;
         private Task asyncProcessing;
         private Task registrationsProcessing;
-        private readonly CancellationTokenSource cancellationTokenSource;
+        private CancellationTokenSource cancellationTokenSource;
         private readonly IAsyncQueue<AsyncMessageContext> asyncQueue;
         private readonly ISecurityProvider securityProvider;
         private readonly ILocalSocket<IMessage> localRouterSocket;
@@ -47,7 +47,6 @@ namespace kino.Actors
             this.internalRegistrationsSender = internalRegistrationsSender;
             this.asyncQueue = asyncQueue;
             this.actorRegistrationsQueue = actorRegistrationsQueue;
-            cancellationTokenSource = new CancellationTokenSource();
             receivingSocket = localSocketFactory.Create<IMessage>();
         }
 
@@ -56,7 +55,7 @@ namespace kino.Actors
             var registrations = actorHandlerMap.Add(actor);
             if (registrations.Any())
             {
-                actorRegistrationsQueue.Enqueue(registrations, cancellationTokenSource.Token);
+                actorRegistrationsQueue.Enqueue(registrations, cancellationTokenSource?.Token ?? CancellationToken.None);
             }
             else
             {
@@ -69,6 +68,7 @@ namespace kino.Actors
 
         public void Start()
         {
+            cancellationTokenSource = new CancellationTokenSource();
             registrationsProcessing = Task.Factory.StartNew(_ => SafeExecute(() => RegisterActors(cancellationTokenSource.Token)),
                                                             cancellationTokenSource.Token,
                                                             TaskCreationOptions.LongRunning);
@@ -82,10 +82,11 @@ namespace kino.Actors
 
         public void Stop()
         {
-            cancellationTokenSource.Cancel();
+            cancellationTokenSource?.Cancel();
             registrationsProcessing?.Wait(TerminationWaitTimeout);
             syncProcessing?.Wait(TerminationWaitTimeout);
             asyncProcessing?.Wait(TerminationWaitTimeout);
+            cancellationTokenSource?.Dispose();
         }
 
         private void RegisterActors(CancellationToken token)
