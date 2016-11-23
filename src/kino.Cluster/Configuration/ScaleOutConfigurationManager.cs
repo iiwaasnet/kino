@@ -9,21 +9,18 @@ namespace kino.Cluster.Configuration
 {
     public class ScaleOutConfigurationManager : IScaleOutConfigurationManager
     {
-        private readonly RouterConfiguration routerConfig;
         private readonly ScaleOutSocketConfiguration scaleOutConfig;
         private readonly TaskCompletionSource<SocketEndpoint> scaleOutAddressSource;
         private SocketEndpoint scaleOutAddress;
 
-        public ScaleOutConfigurationManager(RouterConfiguration routerConfig,
-                                            ScaleOutSocketConfiguration scaleOutConfig)
+        public ScaleOutConfigurationManager(ScaleOutSocketConfiguration scaleOutConfig)
         {
             scaleOutAddressSource = new TaskCompletionSource<SocketEndpoint>();
             this.scaleOutConfig = scaleOutConfig;
-            this.routerConfig = SetDefaultsForMissingMembers(routerConfig);
         }
 
-        public RouterConfiguration GetRouterConfiguration()
-            => routerConfig;
+        public int GetScaleOutReceiveMessageQueueLength()
+            => scaleOutConfig.ScaleOutReceiveMessageQueueLength;
 
         public SocketEndpoint GetScaleOutAddress()
             => scaleOutAddress ?? (scaleOutAddress = scaleOutAddressSource.Task.Result);
@@ -41,14 +38,6 @@ namespace kino.Cluster.Configuration
             {
                 throw new Exception($"SocketEndpoint {activeAddress.Uri.ToSocketAddress()} is not configured!");
             }
-        }
-
-        private static RouterConfiguration SetDefaultsForMissingMembers(RouterConfiguration routerConfiguration)
-        {
-            routerConfiguration.ConnectionEstablishWaitTime = routerConfiguration.ConnectionEstablishWaitTime <= TimeSpan.Zero
-                                                                  ? TimeSpan.FromMilliseconds(200)
-                                                                  : routerConfiguration.ConnectionEstablishWaitTime;
-            return routerConfiguration;
         }
     }
 }

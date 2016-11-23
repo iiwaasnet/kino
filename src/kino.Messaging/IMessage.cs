@@ -7,7 +7,9 @@ namespace kino.Messaging
     {
         T GetPayload<T>() where T : IPayload, new();
 
-        void SetReceiverNode(SocketIdentifier socketIdentifier);
+        void SetReceiverNode(ReceiverIdentifier receiverNode);
+
+        void SetReceiverActor(ReceiverIdentifier receiverNode, ReceiverIdentifier receiverActor);
 
         void EncryptPayload();
 

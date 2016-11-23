@@ -25,7 +25,7 @@ namespace kino.Routing.ServiceMessageHandlers
             {
                 var payload = message.GetPayload<UnregisterUnreachableNodeMessage>();
 
-                var socketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+                var socketIdentifier = new ReceiverIdentifier(payload.SocketIdentity);
                 var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(socketIdentifier);
                 if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                 {

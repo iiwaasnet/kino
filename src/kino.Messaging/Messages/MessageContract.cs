@@ -13,8 +13,5 @@ namespace kino.Messaging.Messages
 
         [ProtoMember(3)]
         public byte[] Partition { get; set; }
-
-        [ProtoMember(4)]
-        public bool IsAnyIdentifier { get; set; }
     }
 }

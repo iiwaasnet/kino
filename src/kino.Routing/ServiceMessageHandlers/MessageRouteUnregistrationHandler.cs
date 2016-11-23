@@ -39,7 +39,7 @@ namespace kino.Routing.ServiceMessageHandlers
                     message.As<Message>().VerifySignature(securityProvider);
 
                     var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-                    var socketIdentifier = new SocketIdentifier(payload.SocketIdentity);
+                    var socketIdentifier = new ReceiverIdentifier(payload.SocketIdentity);
                     var messageContracts = payload.MessageContracts
                                                   .Select(mh => mh.ToIdentifier());
                     var messageIdentifiers = messageContracts.Where(mi => mi.IsMessageHub()

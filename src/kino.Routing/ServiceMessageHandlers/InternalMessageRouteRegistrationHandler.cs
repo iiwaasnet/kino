@@ -11,17 +11,17 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class InternalMessageRouteRegistrationHandler
     {
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterServices clusterServices;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
 
-        public InternalMessageRouteRegistrationHandler(IClusterConnectivity clusterConnectivity,
+        public InternalMessageRouteRegistrationHandler(IClusterServices clusterServices,
                                                        IInternalRoutingTable internalRoutingTable,
                                                        ISecurityProvider securityProvider,
                                                        ILogger logger)
         {
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterServices = clusterServices;
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
             this.logger = logger;
@@ -36,7 +36,7 @@ namespace kino.Routing.ServiceMessageHandlers
                                                                        .GroupBy(mh => mh.Domain);
                 foreach (var group in messageGroups)
                 {
-                    clusterConnectivity.RegisterSelf(group.Select(g => g.Identity).ToList(), group.Key);
+                    clusterServices.RegisterSelf(group.Select(g => g.Identity).ToList(), group.Key);
                 }
             }
         }
@@ -61,16 +61,18 @@ namespace kino.Routing.ServiceMessageHandlers
         private IEnumerable<Identifier> UpdateLocalRoutingTable(InternalRouteRegistration routeRegistration)
         {
             var handlers = new List<Identifier>();
+            internalRoutingTable.AddMessageRoute(routeRegistration);
 
             foreach (var registration in routeRegistration.MessageContracts)
             {
                 try
                 {
-                    internalRoutingTable.AddMessageRoute(new IdentityRegistration(registration.Identifier, registration.KeepRegistrationLocal),
-                                                         routeRegistration.DestinationSocket);
+                    internalRoutingTable.AddMessageRoute(routeRegistration);
+                    //internalRoutingTable.AddMessageRoute(new IdentityRegistration(registration.MessageIdentifier, registration.KeepRegistrationLocal),
+                    //                                     routeRegistration.DestinationSocket);
                     if (!registration.KeepRegistrationLocal)
                     {
-                        handlers.Add(registration.Identifier);
+                        handlers.Add(registration.Message);
                     }
                 }
                 catch (Exception err)

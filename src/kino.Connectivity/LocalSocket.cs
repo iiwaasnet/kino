@@ -5,18 +5,18 @@ using kino.Core;
 
 namespace kino.Connectivity
 {
-    public class LocalSocket<T> : ILocalSocket<T>, IEquatable<LocalSocket<T>>
+    public class LocalSocket<T> : ILocalSocket<T>, IEquatable<ILocalSocket<T>>
     {
         private readonly ManualResetEvent dataAvailable;
         private readonly BlockingCollection<T> messageQueue;
         private readonly BlockingCollection<T> lookAheadQueue;
-        private readonly SocketIdentifier socketIdentity;
+        private readonly ReceiverIdentifier socketIdentity;
         private readonly int hashCode;
 
         public LocalSocket()
         {
             dataAvailable = new ManualResetEvent(false);
-            socketIdentity = SocketIdentifier.Create();
+            socketIdentity = ReceiverIdentifier.Create();
             messageQueue = new BlockingCollection<T>(new ConcurrentQueue<T>());
             lookAheadQueue = new BlockingCollection<T>(new ConcurrentQueue<T>());
             hashCode = socketIdentity.GetHashCode();
@@ -42,10 +42,10 @@ namespace kino.Connectivity
             {
                 return false;
             }
-            return Equals((LocalSocket<T>) obj);
+            return Equals((ILocalSocket<T>) obj);
         }
 
-        public bool Equals(LocalSocket<T> other)
+        public bool Equals(ILocalSocket<T> other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -85,7 +85,7 @@ namespace kino.Connectivity
         public WaitHandle CanReceive()
             => dataAvailable;
 
-        public SocketIdentifier GetIdentity()
+        public ReceiverIdentifier GetIdentity()
             => socketIdentity;
     }
 }

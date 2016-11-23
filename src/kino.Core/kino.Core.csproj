@@ -66,6 +66,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ReceiverIdentities.cs" />
     <Compile Include="AnyIdentifier.cs" />
     <Compile Include="Framework\DateTimeExtensions.cs" />
     <Compile Include="Identifier.cs" />
@@ -86,6 +87,7 @@
     <Compile Include="Framework\HashedQueue.cs" />
     <Compile Include="Framework\SyntacticSugar.cs" />
     <Compile Include="Framework\ThreadExtensions.cs" />
+    <Compile Include="ReceiverIdentifier.cs" />
     <Compile Include="SocketEndpoint.cs" />
     <Compile Include="SocketIdentifier.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />

@@ -161,7 +161,7 @@ namespace kino.Tests.Messaging
         public void ReceiverNode_IsConsistentlyTransferredViaMultipartMessage()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
-            var socketIdentity = SocketIdentifier.Create();
+            var socketIdentity = ReceiverIdentifier.Create();
             message.SetReceiverNode(socketIdentity);
 
             var multipart = new MultipartMessage(message);
@@ -174,7 +174,7 @@ namespace kino.Tests.Messaging
         public void PopReceiverNode_RemovesReceiverNode()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
-            var socketIdentity = SocketIdentifier.Create();
+            var socketIdentity = ReceiverIdentifier.Create();
             message.SetReceiverNode(socketIdentity);
 
             CollectionAssert.AreEqual(socketIdentity.Identity, message.PopReceiverNode());

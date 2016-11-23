@@ -1,24 +1,26 @@
 using System.Linq;
 using kino.Cluster;
 using kino.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
+using MessageRoute = kino.Cluster.MessageRoute;
 
 namespace kino.Routing.ServiceMessageHandlers
 {
     public class ClusterMessageRoutesRequestHandler : IServiceMessageHandler
     {
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterServices clusterServices;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
 
-        public ClusterMessageRoutesRequestHandler(IClusterConnectivity clusterConnectivity,
+        public ClusterMessageRoutesRequestHandler(IClusterServices clusterServices,
                                                   IInternalRoutingTable internalRoutingTable,
                                                   ISecurityProvider securityProvider)
         {
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterServices = clusterServices;
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
         }
@@ -32,19 +34,21 @@ namespace kino.Routing.ServiceMessageHandlers
                 {
                     message.As<Message>().VerifySignature(securityProvider);
 
-                    var messageIdentifiers = internalRoutingTable.GetMessageRegistrations();
-                    var messageHubs = messageIdentifiers.Where(mi => mi.Identifier.IsMessageHub())
-                                                        .Select(mi => mi.Identifier);
-                    //TODO: Refactor, hence !mi.IsMessageHub() should be first condition
-                    var contracts = messageIdentifiers.Where(mi => !mi.Identifier.IsMessageHub() &&
-                                                                   securityProvider.GetDomain(mi.Identifier.Identity) == message.Domain)
-                                                      .Select(mi => mi.Identifier)
-                                                      .Concat(messageHubs)
-                                                      .ToList();
+                    var routes = internalRoutingTable.GetAllRoutes();
+                    var messageHubs = routes.MessageHubs;
+                    var actors = routes.Actors;
+                    var contracts = actors.SelectMany(r => r.Actors.Select(a => new MessageRoute
+                                                                                {
+                                                                                    Receiver = new ReceiverIdentifier(a.Identity),
+                                                                                    Message = r.Message
+                                                                                }))
+                                          .Where(r => securityProvider.GetDomain(r.Message.Identity) == message.Domain)
+                                          .Concat(messageHubs.Select(mh => new MessageRoute {Receiver = new ReceiverIdentifier(mh.MessageHub.Identity)}))
+                                          .ToList();
 
                     if (contracts.Any())
                     {
-                        clusterConnectivity.RegisterSelf(contracts, message.Domain);
+                        clusterServices.RegisterSelf(contracts, message.Domain);
                     }
                 }
             }

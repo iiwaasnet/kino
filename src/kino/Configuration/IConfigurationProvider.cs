@@ -7,8 +7,6 @@ namespace kino.Configuration
     {
         IEnumerable<RendezvousEndpoint> GetRendezvousEndpointsConfiguration();
 
-        RouterConfiguration GetRouterConfiguration();
-
         ScaleOutSocketConfiguration GetScaleOutConfiguration();
 
         ClusterMembershipConfiguration GetClusterMembershipConfiguration();

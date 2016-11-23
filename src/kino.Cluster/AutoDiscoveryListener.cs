@@ -290,7 +290,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
 
-                return !ThisNodeSocket(payload.SocketIdentity);
+                return !ThisNodeSocket(payload.ReceiverNodeIdentity);
             }
 
             return false;

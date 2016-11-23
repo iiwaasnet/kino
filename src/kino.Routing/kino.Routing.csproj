@@ -55,12 +55,18 @@
   <ItemGroup>
     <Compile Include="ExternalRoute.cs" />
     <Compile Include="ExternalRouteDefinition.cs" />
+    <Compile Include="ExternalRouteLookupRequest.cs" />
+    <Compile Include="ExternalRouteRegistration.cs" />
     <Compile Include="ExternalRoutingTable.cs" />
-    <Compile Include="IdentityRegistration.cs" />
+    <Compile Include="InternalRouteLookupRequest.cs" />
+    <Compile Include="MessageHubRoute.cs" />
+    <Compile Include="MessageActorRoute.cs" />
+    <Compile Include="MessageRoute.cs" />
+    <Compile Include="ReceiverIdentifierRegistration.cs" />
     <Compile Include="IExternalRoutingTable.cs" />
     <Compile Include="IInternalRoutingTable.cs" />
     <Compile Include="IMessageRouter.cs" />
-    <Compile Include="InternalRoute.cs" />
+    <Compile Include="InternalRouting.cs" />
     <Compile Include="InternalRouteRegistration.cs" />
     <Compile Include="InternalRoutingTable.cs" />
     <Compile Include="MessageContract.cs" />

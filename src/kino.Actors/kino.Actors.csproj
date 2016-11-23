@@ -58,6 +58,7 @@
     <Compile Include="ActorHostInstancePolicy.cs" />
     <Compile Include="ActorHostManager.cs" />
     <Compile Include="ActorMessageHandlerIdentifier.cs" />
+    <Compile Include="ActorRegistration.cs" />
     <Compile Include="ActorResult.cs" />
     <Compile Include="AsyncMessageContext.cs" />
     <Compile Include="Diagnostics\ExceptionHandlerActor.cs" />

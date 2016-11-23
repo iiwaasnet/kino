@@ -74,9 +74,9 @@ namespace kino.Tests.Actors
                                                                 }
                                                             }));
                 AsyncOp.Sleep();
-                Func<InternalRouteRegistration, bool> registrationRequest = (reg) => reg.MessageContracts.Any(id => Unsafe.ArraysEqual(id.Identifier.Identity, messageIdentifier.Identity)
-                                                                                                                    && Unsafe.ArraysEqual(id.Identifier.Partition, messageIdentifier.Partition)
-                                                                                                                    && id.Identifier.Version == messageIdentifier.Version);
+                Func<InternalRouteRegistration, bool> registrationRequest = (reg) => reg.MessageContracts.Any(id => Unsafe.ArraysEqual(id.Message.Identity, messageIdentifier.Identity)
+                                                                                                                    && Unsafe.ArraysEqual(id.Message.Partition, messageIdentifier.Partition)
+                                                                                                                    && id.Message.Version == messageIdentifier.Version);
                 internalRegistrationSender.Verify(m => m.Send(It.Is<InternalRouteRegistration>(reg => registrationRequest(reg))), Times.Once);
             }
             finally

@@ -7,17 +7,21 @@ namespace kino.Routing
 {
     public interface IInternalRoutingTable
     {
-        void AddMessageRoute(IdentityRegistration identityRegistration, ILocalSendingSocket<IMessage> receivingSocket);
+        void AddMessageRoute(InternalRouteRegistration routeRegistration);
 
-        ILocalSendingSocket<IMessage> FindRoute(Identifier identifier);
+        //void AddMessageRoute(IdentityRegistration identityRegistration, ILocalSendingSocket<IMessage> receivingSocket);
 
-        IEnumerable<ILocalSendingSocket<IMessage>> FindAllRoutes(Identifier identifier);
+        //ILocalSendingSocket<IMessage> FindRoute(Identifier identifier);
 
-        IEnumerable<IdentityRegistration> GetMessageRegistrations();
+        IEnumerable<ILocalSendingSocket<IMessage>> FindRoutes(InternalRouteLookupRequest lookupRequest);
 
-        IEnumerable<IdentityRegistration> RemoveActorHostRoute(ILocalSendingSocket<IMessage> socketIdentifier);
+        //IEnumerable<ILocalSendingSocket<IMessage>> FindAllRoutes(Identifier identifier);
 
-        IEnumerable<InternalRoute> GetAllRoutes();
+        //IEnumerable<IdentityRegistration> GetMessageRegistrations();
+
+        IEnumerable<MessageRoute> RemoveActorHostRoute(ILocalSendingSocket<IMessage> socketIdentifier);
+
+        InternalRouting GetAllRoutes();
 
         bool MessageHandlerRegisteredExternaly(Identifier identifier);
     }

@@ -7,6 +7,8 @@ namespace kino.Configuration
     {
         public string ScaleOutAddressUri { get; set; }
 
+        public int ScaleOutReceiveMessageQueueLength { get; set; }
+
         public IEnumerable<RendezvousNode> RendezvousServers { get; set; }
 
         public TimeSpan HeartBeatSilenceBeforeRendezvousFailover { get; set; }

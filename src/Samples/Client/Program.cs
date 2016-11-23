@@ -143,7 +143,7 @@ namespace Client
             }
         }
 
-        private static SocketIdentifier FindReceiver(IMessageHub messageHub)
+        private static ReceiverIdentifier FindReceiver(IMessageHub messageHub)
         {
             var request = Message.CreateFlowStartMessage(new RequestKnownMessageRoutesMessage());
             var callback = CallbackPoint.Create<KnownMessageRoutesMessage>();
@@ -152,7 +152,7 @@ namespace Client
                 var response = promise.GetResponse().Result;
                 var registeredRoutes = response.GetPayload<KnownMessageRoutesMessage>();
 
-                return new SocketIdentifier(registeredRoutes.InternalRoutes.SocketIdentity);
+                return new ReceiverIdentifier(registeredRoutes.InternalRoutes.SocketIdentity);
             }
         }
     }

@@ -4,7 +4,7 @@ namespace kino.Cluster.Configuration
 {
     public interface IScaleOutConfigurationProvider
     {
-        RouterConfiguration GetRouterConfiguration();
+        int GetScaleOutReceiveMessageQueueLength();
 
         SocketEndpoint GetScaleOutAddress();
     }

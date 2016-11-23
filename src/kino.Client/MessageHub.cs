@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -10,7 +11,6 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Routing;
-using MessageContract = kino.Routing.MessageContract;
 
 namespace kino.Client
 {
@@ -24,35 +24,40 @@ namespace kino.Client
         private readonly ManualResetEventSlim hubRegistered;
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
+        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly bool keepRegistrationLocal;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception);
         private long lastCallbackKey = 0;
         private readonly ILocalSocket<IMessage> receivingSocket;
-        private readonly byte[] receivingSocketIdentity;
+        private readonly ReceiverIdentifier receiverIdentifier;
+        private byte[] callbackReceiverNodeIdentity;
 
         public MessageHub(ICallbackHandlerStack callbackHandlers,
                           ILocalSocket<IMessage> localRouterSocket,
                           ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
                           ILocalSocketFactory localSocketFactory,
+                          IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                           ILogger logger,
                           bool keepRegistrationLocal = false)
         {
             this.logger = logger;
             this.localRouterSocket = localRouterSocket;
             this.internalRegistrationsSender = internalRegistrationsSender;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.keepRegistrationLocal = keepRegistrationLocal;
             hubRegistered = new ManualResetEventSlim();
             this.callbackHandlers = callbackHandlers;
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
             receivingSocket = localSocketFactory.Create<IMessage>();
-            receivingSocketIdentity = receivingSocket.GetIdentity().Identity;
+            receiverIdentifier = ReceiverIdentities.CreateForMessageHub();
         }
 
         public void Start()
         {
             cancellationTokenSource = new CancellationTokenSource();
+            callbackReceiverNodeIdentity = GetBlockingCallbackReceiverNodeIdentity();
             receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token),
                                               cancellationTokenSource.Token,
                                               TaskCreationOptions.LongRunning);
@@ -60,6 +65,9 @@ namespace kino.Client
                                             cancellationTokenSource.Token,
                                             TaskCreationOptions.LongRunning);
         }
+
+        private byte[] GetBlockingCallbackReceiverNodeIdentity()
+            => scaleOutConfigurationProvider.GetScaleOutAddress().Identity;
 
         public void Stop()
         {
@@ -85,7 +93,10 @@ namespace kino.Client
                             var promise = callbackRegistration.Promise;
                             var callbackPoint = callbackRegistration.CallbackPoint;
                             var callbackKey = lastCallbackKey++;
-                            message.RegisterCallbackPoint(receivingSocketIdentity, callbackPoint.MessageIdentifiers, callbackKey);
+                            message.RegisterCallbackPoint(callbackReceiverNodeIdentity,
+                                                          receiverIdentifier.Identity,
+                                                          callbackPoint.MessageIdentifiers,
+                                                          callbackKey);
 
                             callbackHandlers.Push(callbackKey,
                                                   promise,
@@ -171,14 +182,8 @@ namespace kino.Client
         {
             var registration = new InternalRouteRegistration
                                {
-                                   MessageContracts = new[]
-                                                      {
-                                                          new MessageContract
-                                                          {
-                                                              Identifier = new AnyIdentifier(receivingSocketIdentity),
-                                                              KeepRegistrationLocal = keepRegistrationLocal
-                                                          }
-                                                      },
+                                   ReceiverIdentifier = receiverIdentifier,
+                                   KeepRegistrationLocal = keepRegistrationLocal,
                                    DestinationSocket = receivingSocket
                                };
             internalRegistrationsSender.Send(registration);

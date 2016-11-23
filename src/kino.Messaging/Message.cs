@@ -16,7 +16,6 @@ namespace kino.Messaging
 
         private object payload;
         private List<SocketEndpoint> routing;
-        private byte[] receiverNodeIdentity;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
         private Message(IPayload payload, string domain)
@@ -33,6 +32,7 @@ namespace kino.Messaging
             Hops = 0;
             Signature = IdentityExtensions.Empty;
             TraceOptions = MessageTraceOptions.None;
+            ReceiverNodeIdentity = IdentityExtensions.Empty;
         }
 
         private Message()
@@ -93,7 +93,7 @@ namespace kino.Messaging
             Identity = multipartMessage.GetMessageIdentity();
             Version = multipartMessage.GetMessageVersion().GetUShort();
             Partition = multipartMessage.GetMessagePartition();
-            receiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
+            ReceiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
             ReceiverIdentity = multipartMessage.GetReceiverIdentity();
             CallbackPoint = multipartMessage.GetCallbackPoints();
@@ -107,43 +107,55 @@ namespace kino.Messaging
         private void ReadWireFormatVersion(MultipartMessage multipartMessage)
             => WireFormatVersion = multipartMessage.GetWireFormatVersion().GetInt();
 
-        internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, MessageIdentifier callbackMessageIdentifier, long callbackKey)
-            => RegisterCallbackPoint(callbackReceiverIdentity, new[] {callbackMessageIdentifier}, callbackKey);
+        internal void RegisterCallbackPoint(byte[] callbackReceiverNodeIdentity,
+                                            byte[] callbackReceiverIdentity,
+                                            MessageIdentifier callbackMessageIdentifier,
+                                            long callbackKey)
+            => RegisterCallbackPoint(callbackReceiverNodeIdentity,
+                                     callbackReceiverIdentity,
+                                     new[] {callbackMessageIdentifier},
+                                     callbackKey);
 
-        internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, IEnumerable<MessageIdentifier> callbackMessageIdentifiers, long callbackKey)
+        internal void RegisterCallbackPoint(byte[] callbackReceiverNodeIdentity,
+                                            byte[] callbackReceiverIdentity,
+                                            IEnumerable<MessageIdentifier> callbackMessageIdentifiers,
+                                            long callbackKey)
         {
+            CallbackReceiverNodeIdentity = callbackReceiverNodeIdentity;
             CallbackReceiverIdentity = callbackReceiverIdentity;
             CallbackPoint = callbackMessageIdentifiers;
             CallbackKey = callbackKey;
 
+            MatchMessageAgainstCallbackPoint();
+        }
+
+        private void MatchMessageAgainstCallbackPoint()
+        {
             if (CallbackPoint.Any(identifier => Unsafe.ArraysEqual(Identity, identifier.Identity)
                                                 && Version == identifier.Version
                                                 && Unsafe.ArraysEqual(Partition, identifier.Partition)))
             {
                 ReceiverIdentity = CallbackReceiverIdentity;
+                ReceiverNodeIdentity = CallbackReceiverNodeIdentity;
             }
         }
 
-        public void SetReceiverNode(SocketIdentifier socketIdentifier)
+        public void SetReceiverNode(ReceiverIdentifier receiverNode)
+            => SetReceivers(receiverNode.Identity, IdentityExtensions.Empty);
+
+        public void SetReceiverActor(ReceiverIdentifier receiverNode, ReceiverIdentifier receiverActor)
+            => SetReceivers(receiverNode.Identity, receiverActor.Identity);
+
+        private void SetReceivers(byte[] receiverNode, byte[] receiverActor)
         {
             if (Distribution == DistributionPattern.Broadcast)
             {
                 throw new ArgumentException("Receiver node cannot be set for broadcast message!");
             }
 
-            receiverNodeIdentity = socketIdentifier.Identity;
+            ReceiverIdentity = receiverActor;
+            ReceiverNodeIdentity = receiverNode;
         }
-
-        internal byte[] PopReceiverNode()
-        {
-            var tmp = receiverNodeIdentity;
-            receiverNodeIdentity = null;
-
-            return tmp;
-        }
-
-        internal bool ReceiverNodeSet()
-            => receiverNodeIdentity.IsSet();
 
         internal void PushRouterAddress(SocketEndpoint scaleOutAddress)
         {
@@ -254,6 +266,7 @@ namespace kino.Messaging
                    CallbackPoint = CallbackPoint,
                    CallbackKey = CallbackKey,
                    CallbackReceiverIdentity = CallbackReceiverIdentity,
+                   CallbackReceiverNodeIdentity = CallbackReceiverNodeIdentity,
                    SocketIdentity = SocketIdentity,
                    TraceOptions = TraceOptions,
                    Distribution = Distribution,
@@ -283,6 +296,8 @@ namespace kino.Messaging
 
         public byte[] ReceiverIdentity { get; private set; }
 
+        public byte[] ReceiverNodeIdentity { get; private set; }
+
         public byte[] Signature { get; private set; }
 
         public IEnumerable<MessageIdentifier> CallbackPoint { get; private set; }
@@ -290,6 +305,8 @@ namespace kino.Messaging
         public long CallbackKey { get; private set; }
 
         public byte[] CallbackReceiverIdentity { get; private set; }
+
+        public byte[] CallbackReceiverNodeIdentity { get; private set; }
 
         public byte[] SocketIdentity { get; private set; }
 

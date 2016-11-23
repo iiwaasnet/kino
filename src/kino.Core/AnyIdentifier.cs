@@ -6,9 +6,9 @@ namespace kino.Core
     {
         private readonly int hashCode;
 
-        public AnyIdentifier(byte[] identity)
+        public AnyIdentifier()
         {
-            Identity = identity;
+            Identity = new byte[0];
             Partition = new byte[0];
 
             hashCode = CalculateHashCode();
@@ -34,8 +34,6 @@ namespace kino.Core
             => Identity.ComputeHash();
 
         public override string ToString()
-            => $"{nameof(Identity)}[{Identity?.GetAnyString()}]-" +
-               $"{nameof(Version)}[ANY]-" +
-               $"{nameof(Partition)}[ANY]";
+            => "[ANY MESSAGE]";
     }
 }

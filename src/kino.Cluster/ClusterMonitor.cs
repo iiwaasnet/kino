@@ -75,34 +75,46 @@ namespace kino.Cluster
             StartProcessingClusterMessages();
         }
 
-        public void RegisterSelf(IEnumerable<Identifier> messageHandlers, string domain)
+        public void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain)
         {
+            var receiverRoutes = registrations.GroupBy(r => r.Receiver)
+                                              .Select(g => new
+                                                           {
+                                                               ReceiverIdentifier = g.Key.Identity,
+                                                               Messages = g.Key.IsActor()
+                                                                              ? g.Select(x => x.Message)
+                                                                              : Enumerable.Empty<MessageIdentifier>()
+                                                           });
             var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
 
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
                                              Uri = scaleOutAddress.Uri.ToSocketAddress(),
-                                             SocketIdentity = scaleOutAddress.Identity,
+                                             ReceiverNodeIdentity = scaleOutAddress.Identity,
                                              Health = new Messaging.Messages.Health
                                                       {
                                                           Uri = heartBeatConfigurationProvider.GetHeartBeatAddress()
                                                                                               .ToSocketAddress(),
                                                           HeartBeatInterval = heartBeatConfigurationProvider.GetHeartBeatInterval()
                                                       },
-                                             MessageContracts = messageHandlers.Select(mi => new MessageContract
-                                                                                             {
-                                                                                                 Version = mi.Version,
-                                                                                                 Identity = mi.Identity,
-                                                                                                 Partition = mi.Partition,
-                                                                                                 IsAnyIdentifier = mi is AnyIdentifier
-                                                                                             }).ToArray()
+                                             Routes = receiverRoutes.Select(r => new RouteRegistration
+                                                                                 {
+                                                                                     ReceiverIdentifier = r.ReceiverIdentifier,
+                                                                                     MessageContracts = r.Messages.Select(m => new MessageContract
+                                                                                                                               {
+                                                                                                                                   Identity = m.Identity,
+                                                                                                                                   Partition = m.Partition,
+                                                                                                                                   Version = m.Version
+                                                                                                                               })
+                                                                                                         .ToArray()
+                                                                                 }).ToArray()
                                          },
                                          domain);
             message.As<Message>().SignMessage(securityProvider);
             autoDiscoverySender.EnqueueMessage(message);
         }
 
-        public void UnregisterSelf(IEnumerable<Identifier> messageIdentifiers)
+        public void UnregisterSelf(IEnumerable<MessageRoute> registrations)
         {
             var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
             var messageGroups = GetMessageHubs(messageIdentifiers).Concat(GetMessageHandlers(messageIdentifiers))

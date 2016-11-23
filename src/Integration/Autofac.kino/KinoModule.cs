@@ -22,6 +22,7 @@ namespace Autofac.kino
             RegisterFrameworkActors(builder);
             RegisterConfigurations(builder);
             RegisterLocalSockets(builder);
+            RegisterClusterServices(builder);
 
             builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
                    .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
@@ -49,10 +50,6 @@ namespace Autofac.kino
 
             builder.RegisterType<ExternalRoutingTable>()
                    .As<IExternalRoutingTable>()
-                   .SingleInstance();
-
-            builder.RegisterType<ClusterConnectivity>()
-                   .As<IClusterConnectivity>()
                    .SingleInstance();
 
             builder.RegisterType<AutoDiscoverySender>()
@@ -101,7 +98,117 @@ namespace Autofac.kino
                    .SingleInstance();
         }
 
-        private void RegisterLocalSockets(ContainerBuilder builder)
+        private static void RegisterClusterServices(ContainerBuilder builder)
+        {
+            RegisterScaleOutConfigurationManager(builder);
+            RegisterClusterMonitor(builder);
+            RegisterScaleOutListener(builder);
+            RegisterHeartBeatSender(builder);
+            RegisterClusterHealthMonitor(builder);
+        }
+
+        private static void RegisterClusterHealthMonitor(ContainerBuilder builder)
+        {
+            builder.RegisterType<NullClusterHealthMonitor>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.RegisterType<ClusterHealthMonitor>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.Register(c => new ServiceLocator<ClusterHealthMonitor,
+                                      NullClusterHealthMonitor,
+                                      IClusterHealthMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                             c.Resolve<ClusterHealthMonitor>(),
+                                                             c.Resolve<NullClusterHealthMonitor>())
+                                 .GetService())
+                   .As<IClusterHealthMonitor>()
+                   .SingleInstance();
+        }
+
+        private static void RegisterHeartBeatSender(ContainerBuilder builder)
+        {
+            builder.RegisterType<NullHeartBeatSender>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.RegisterType<HeartBeatSender>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.Register(c => new ServiceLocator<HeartBeatSender,
+                                      NullHeartBeatSender,
+                                      IHeartBeatSender>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                        c.Resolve<HeartBeatSender>(),
+                                                        c.Resolve<NullHeartBeatSender>())
+                                 .GetService())
+                   .As<IHeartBeatSender>()
+                   .SingleInstance();
+        }
+
+        private static void RegisterScaleOutListener(ContainerBuilder builder)
+        {
+            builder.RegisterType<NullScaleOutListener>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.RegisterType<ScaleOutListener>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.Register(c => new ServiceLocator<ScaleOutListener,
+                                      NullScaleOutListener,
+                                      IScaleOutListener>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                         c.Resolve<ScaleOutListener>(),
+                                                         c.Resolve<NullScaleOutListener>())
+                                 .GetService())
+                   .As<IScaleOutListener>()
+                   .SingleInstance();
+        }
+
+        private static void RegisterClusterMonitor(ContainerBuilder builder)
+        {
+            builder.RegisterType<NullClusterMonitor>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.RegisterType<ClusterMonitor>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.Register(c => new ServiceLocator<ClusterMonitor,
+                                      NullClusterMonitor,
+                                      IClusterMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                       c.Resolve<ClusterMonitor>(),
+                                                       c.Resolve<NullClusterMonitor>())
+                                 .GetService())
+                   .As<IClusterMonitor>()
+                   .SingleInstance();
+        }
+
+        private static void RegisterScaleOutConfigurationManager(ContainerBuilder builder)
+        {
+            builder.RegisterType<NullScaleOutConfigurationManager>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.RegisterType<ScaleOutConfigurationManager>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.Register(c => new ServiceLocator<ScaleOutConfigurationManager,
+                                      NullScaleOutConfigurationManager,
+                                      IScaleOutConfigurationManager>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                                     c.Resolve<ScaleOutConfigurationManager>(),
+                                                                     c.Resolve<NullScaleOutConfigurationManager>())
+                                 .GetService())
+                   .As<IScaleOutConfigurationManager>()
+                   .As<IScaleOutConfigurationProvider>()
+                   .SingleInstance();
+        }
+
+        private static void RegisterLocalSockets(ContainerBuilder builder)
         {
             builder.RegisterType<LocalSocket<IMessage>>()
                    .As<ILocalSocket<IMessage>>()
@@ -123,10 +230,6 @@ namespace Autofac.kino
             builder.RegisterType<HeartBeatSenderConfigurationManager>()
                    .As<IHeartBeatSenderConfigurationProvider>()
                    .As<IHeartBeatSenderConfigurationManager>()
-                   .SingleInstance();
-
-            builder.Register(c => c.Resolve<IConfigurationProvider>().GetRouterConfiguration())
-                   .As<RouterConfiguration>()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
