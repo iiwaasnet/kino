@@ -32,7 +32,7 @@ Route lookup
 Remove route
 =============
 - RN + *
-- RN + MH
+- RN + MH + *
 - RN + A + MVP
 
 
@@ -48,3 +48,6 @@ Storage
 ==============
 MVP => [{RN, [A]}]
 RN => [MH]
+
+40 x 30 x 20
+H x B x T

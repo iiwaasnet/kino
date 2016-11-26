@@ -264,7 +264,7 @@ namespace kino.Cluster
                             }
                             catch (Exception err)
                             {
-                                routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {SocketIdentity = staleNode.Key.Identity}));
+                                routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = staleNode.Key.Identity}));
                                 logger.Error($"Failed trying to check connectivity to peer {staleNode.Key}@{uri.ToSocketAddress()}. Peer deletion scheduled. {err}");
                             }
                         }
@@ -287,7 +287,7 @@ namespace kino.Cluster
                                      .ToList();
                 foreach (var deadNode in deadNodes)
                 {
-                    routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {SocketIdentity = deadNode.Key.Identity}));
+                    routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = deadNode.Key.Identity}));
                     logger.Debug($"Unreachable node {deadNode.Key}@{deadNode.Value.ScaleOutUri} detected. Route deletion scheduled.");
                 }
             }

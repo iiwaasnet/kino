@@ -149,7 +149,7 @@ namespace kino.Routing
                                     Message = new MessageIdentifier(message),
                                     Distribution = message.Distribution,
                                     ReceiverNodeIdentity = new ReceiverIdentifier(message.ReceiverNodeIdentity ?? IdentityExtensions.Empty)
-                                };
+            };
             var handleMessageLocally = Unsafe.ArraysEqual(message.ReceiverNodeIdentity, thisNodeIdentity);
 
             //var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
@@ -183,7 +183,7 @@ namespace kino.Routing
                     //TODO: HostUnreachableException will never happen here, hence NetMQ sockets are not used
                     //TODO: ILocalSocketShould throw similar exception, if no one is reading messages from the socket,
                     //TODO: which should be a trigger for deletion of the ActorHost
-                    var removedRoutes = internalRoutingTable.RemoveActorHostRoute(destination);
+                    var removedRoutes = internalRoutingTable.RemoveReceiverRoute(destination);
                     if (removedRoutes.Any())
                     {
                         clusterServices.UnregisterSelf(removedRoutes.Select(rr => new Cluster.MessageRoute
@@ -234,7 +234,7 @@ namespace kino.Routing
                 }
                 catch (HostUnreachableException err)
                 {
-                    var unregMessage = new UnregisterUnreachableNodeMessage {SocketIdentity = route.Node.SocketIdentity};
+                    var unregMessage = new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = route.Node.SocketIdentity};
                     TryHandleServiceMessage(Message.Create(unregMessage), scaleOutBackend);
                     logger.Error(err);
                 }

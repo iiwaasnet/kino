@@ -76,6 +76,7 @@
     <Compile Include="Messages\RequestKnownMessageRoutesMessage.cs" />
     <Compile Include="Messages\RequestNodeMessageRoutesMessage.cs" />
     <Compile Include="Messages\AddPeerMessage.cs" />
+    <Compile Include="Messages\RouteRegistration.cs" />
     <Compile Include="Messages\StartPeerMonitoringMessage.cs" />
     <Compile Include="Messages\UnregisterMessageRouteMessage.cs" />
     <Compile Include="Messages\UnregisterNodeMessage.cs" />

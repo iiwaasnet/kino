@@ -19,7 +19,7 @@ namespace kino.Routing
 
         //IEnumerable<IdentityRegistration> GetMessageRegistrations();
 
-        IEnumerable<MessageRoute> RemoveActorHostRoute(ILocalSendingSocket<IMessage> socketIdentifier);
+        IEnumerable<MessageRoute> RemoveReceiverRoute(ILocalSendingSocket<IMessage> socketIdentifier);
 
         InternalRouting GetAllRoutes();
 

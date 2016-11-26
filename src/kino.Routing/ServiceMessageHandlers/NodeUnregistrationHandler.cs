@@ -34,7 +34,7 @@ namespace kino.Routing.ServiceMessageHandlers
 
                     var payload = message.GetPayload<UnregisterNodeMessage>();
 
-                    var socketIdentifier = new ReceiverIdentifier(payload.SocketIdentity);
+                    var socketIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
                     var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(socketIdentifier);
                     if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                     {

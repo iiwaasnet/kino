@@ -33,18 +33,23 @@ namespace kino.Routing
                                                                       routeRegistration.KeepRegistrationLocal);
                 messageHubs[registration] = routeRegistration.DestinationSocket;
             }
-            if (routeRegistration.ReceiverIdentifier.IsActor())
+            else
             {
-                var actorMessages = MapSocketToActor(routeRegistration);
-                foreach (var messageContract in routeRegistration.MessageContracts)
+                if (routeRegistration.ReceiverIdentifier.IsActor())
                 {
-                    MapMessageToActor(routeRegistration, messageContract);
-                    MapActorToMessage(routeRegistration, actorMessages, messageContract);
+                    var actorMessages = MapSocketToActor(routeRegistration);
+                    foreach (var messageContract in routeRegistration.MessageContracts)
+                    {
+                        MapMessageToActor(routeRegistration, messageContract);
+                        MapActorToMessage(routeRegistration, actorMessages, messageContract);
+                    }
+                    actorToSocketMap[routeRegistration.ReceiverIdentifier] = routeRegistration.DestinationSocket;
                 }
-                actorToSocketMap[routeRegistration.ReceiverIdentifier] = routeRegistration.DestinationSocket;
+                else
+                {
+                    throw new ArgumentException($"Requested registration is for unknown Receiver type: [{routeRegistration.ReceiverIdentifier}]!");
+                }
             }
-
-            throw new ArgumentException($"Requested registration is for unknown Receiver type: [{routeRegistration.ReceiverIdentifier}]!");
         }
 
         private Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> MapSocketToActor(InternalRouteRegistration routeRegistration)
@@ -95,7 +100,7 @@ namespace kino.Routing
             HashedLinkedList<ReceiverIdentifier> actors;
             var sockets = new Bcl.List<ILocalSendingSocket<IMessage>>();
             ILocalSendingSocket<IMessage> socket;
-            if (lookupRequest.ReceiverIdentity.Identity.IsSet())
+            if (lookupRequest.ReceiverIdentity.IsSet())
             {
                 if (lookupRequest.ReceiverIdentity.IsMessageHub())
                 {
@@ -104,15 +109,18 @@ namespace kino.Routing
                         sockets.Add(socket);
                     }
                 }
-                if (lookupRequest.ReceiverIdentity.IsActor())
+                else
                 {
-                    if (actorToSocketMap.TryGetValue(lookupRequest.ReceiverIdentity, out socket))
+                    if (lookupRequest.ReceiverIdentity.IsActor())
                     {
-                        if (messageToActorMap.TryGetValue(lookupRequest.Message, out actors))
+                        if (actorToSocketMap.TryGetValue(lookupRequest.ReceiverIdentity, out socket))
                         {
-                            if (actors.Contains(lookupRequest.ReceiverIdentity))
+                            if (messageToActorMap.TryGetValue(lookupRequest.Message, out actors))
                             {
-                                sockets.Add(socket);
+                                if (actors.Contains(lookupRequest.ReceiverIdentity))
+                                {
+                                    sockets.Add(socket);
+                                }
                             }
                         }
                     }
@@ -164,7 +172,7 @@ namespace kino.Routing
             return default(T);
         }
 
-        public Bcl.IEnumerable<MessageRoute> RemoveActorHostRoute(ILocalSendingSocket<IMessage> receivingSocket)
+        public Bcl.IEnumerable<MessageRoute> RemoveReceiverRoute(ILocalSendingSocket<IMessage> receivingSocket)
             => RemoveActors(receivingSocket)
                 .Concat(RemoveMessageHub(receivingSocket))
                 .ToList();

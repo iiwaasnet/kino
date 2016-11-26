@@ -57,6 +57,7 @@
     <Compile Include="ExternalRouteDefinition.cs" />
     <Compile Include="ExternalRouteLookupRequest.cs" />
     <Compile Include="ExternalRouteRegistration.cs" />
+    <Compile Include="ExternalRouteRemoval.cs" />
     <Compile Include="ExternalRoutingTable.cs" />
     <Compile Include="InternalRouteLookupRequest.cs" />
     <Compile Include="MessageHubRoute.cs" />

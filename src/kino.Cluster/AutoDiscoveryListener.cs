@@ -278,7 +278,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<UnregisterNodeMessage>();
 
-                return !ThisNodeSocket(payload.SocketIdentity);
+                return !ThisNodeSocket(payload.ReceiverNodeIdentity);
             }
 
             return message.Equals(KinoMessages.UnregisterUnreachableNode);
@@ -302,7 +302,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<UnregisterMessageRouteMessage>();
 
-                return !ThisNodeSocket(payload.SocketIdentity);
+                return !ThisNodeSocket(payload.ReceiverNodeIdentity);
             }
 
             return false;

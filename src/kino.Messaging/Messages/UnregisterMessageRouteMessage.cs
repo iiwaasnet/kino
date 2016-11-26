@@ -12,10 +12,10 @@ namespace kino.Messaging.Messages
         public string Uri { get; set; }
 
         [ProtoMember(2)]
-        public byte[] SocketIdentity { get; set; }
+        public byte[] ReceiverNodeIdentity { get; set; }
 
         [ProtoMember(3)]
-        public MessageContract[] MessageContracts { get; set; }
+        public RouteRegistration[] Routes { get; set; }
 
         public override ushort Version => MessageVersion;
 

@@ -125,7 +125,7 @@ namespace kino.Cluster
                 var message = Message.Create(new UnregisterMessageRouteMessage
                                              {
                                                  Uri = scaleOutAddress.Uri.ToSocketAddress(),
-                                                 SocketIdentity = scaleOutAddress.Identity,
+                                                 ReceiverNodeIdentity = scaleOutAddress.Identity,
                                                  MessageContracts = group.Select(g => g.Message).ToArray()
                                              },
                                              group.Key);

@@ -108,7 +108,7 @@ namespace kino.Cluster
                 var message = Message.Create(new UnregisterNodeMessage
                                              {
                                                  Uri = scaleOutAddress.Uri.ToSocketAddress(),
-                                                 SocketIdentity = scaleOutAddress.Identity,
+                                                 ReceiverNodeIdentity = scaleOutAddress.Identity,
                                              },
                                              domain);
                 message.As<Message>().SignMessage(securityProvider);
