@@ -75,6 +75,7 @@ namespace kino.Cluster
             StartProcessingClusterMessages();
         }
 
+        //TODO: Remove domain param and do grouping and sending of RegMessage per domain inside the function
         public void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain)
         {
             var receiverRoutes = registrations.GroupBy(r => r.Receiver)
@@ -114,63 +115,76 @@ namespace kino.Cluster
             autoDiscoverySender.EnqueueMessage(message);
         }
 
-        public void UnregisterSelf(IEnumerable<MessageRoute> registrations)
+        public void UnregisterSelf(IEnumerable<MessageRoute> messageRoutes)
         {
+            //TODO: MessageRoute.Receiver can be NULL. Check how grouping will work in this case
             var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
-            var messageGroups = GetMessageHubs(messageIdentifiers).Concat(GetMessageHandlers(messageIdentifiers))
-                                                                  .GroupBy(mh => mh.Domain);
+            var routeByDomain = GetMessageHubs(messageRoutes).Concat(GetActors(messageRoutes))
+                                                             .GroupBy(mr => mr.Domain)
+                                                             .Select(g => new
+                                                                          {
+                                                                              Domain = g.Key,
+                                                                              MessageRoutes = g.GroupBy(mr => mr.MessageRoute.Receiver)
+                                                                                               .Select(rg => new
+                                                                                                             {
+                                                                                                                 Receiver = rg.Key,
+                                                                                                                 MessageContracts = rg.Select(x => x.MessageRoute.Message)
+                                                                                                             })
+                                                                          });
 
-            foreach (var group in messageGroups)
+            foreach (var domainRoutes in routeByDomain)
             {
                 var message = Message.Create(new UnregisterMessageRouteMessage
                                              {
                                                  Uri = scaleOutAddress.Uri.ToSocketAddress(),
                                                  ReceiverNodeIdentity = scaleOutAddress.Identity,
-                                                 MessageContracts = group.Select(g => g.Message).ToArray()
+                                                 Routes = domainRoutes.MessageRoutes
+                                                                      .Select(r => new RouteRegistration
+                                                                                   {
+                                                                                       ReceiverIdentifier = r.Receiver?.Identity,
+                                                                                       MessageContracts = r.MessageContracts
+                                                                                                           ?.Select(mc => new MessageContract
+                                                                                                                          {
+                                                                                                                              Identity = mc.Identity,
+                                                                                                                              Version = mc.Version,
+                                                                                                                              Partition = mc.Partition
+                                                                                                                          })
+                                                                                                           .ToArray()
+                                                                                   })
+                                                                      .ToArray()
                                              },
-                                             group.Key);
+                                             domainRoutes.Domain);
                 message.As<Message>().SignMessage(securityProvider);
 
                 autoDiscoverySender.EnqueueMessage(message);
             }
         }
 
-        private IEnumerable<MessageDomainMap> GetMessageHandlers(IEnumerable<Identifier> messageIdentifiers)
-            => messageIdentifiers.Where(mi => !mi.IsMessageHub())
-                                 .Select(mi => new MessageDomainMap
-                                               {
-                                                   Message = new MessageContract
-                                                             {
-                                                                 Identity = mi.Identity,
-                                                                 Version = mi.Version,
-                                                                 Partition = mi.Partition,
-                                                                 IsAnyIdentifier = false
-                                                             },
-                                                   Domain = securityProvider.GetDomain(mi.Identity)
-                                               });
+        private IEnumerable<MessageRouteDomainMap> GetActors(IEnumerable<MessageRoute> messageRoutes)
+            => messageRoutes.Where(mr => !mr.Receiver.IsSet() || mr.Receiver.IsActor())
+                            .Select(mr => new MessageRouteDomainMap
+                                          {
+                                              MessageRoute = mr,
+                                              Domain = securityProvider.GetDomain(mr.Message.Identity)
+                                          });
 
-        private IEnumerable<MessageDomainMap> GetMessageHubs(IEnumerable<Identifier> messageIdentifiers)
-            => messageIdentifiers.Where(mi => mi.IsMessageHub())
-                                 .SelectMany(mi => securityProvider.GetAllowedDomains().Select(dom =>
-                                                                                                   new MessageDomainMap
-                                                                                                   {
-                                                                                                       Message = new MessageContract
-                                                                                                                 {
-                                                                                                                     Identity = mi.Identity,
-                                                                                                                     Version = mi.Version,
-                                                                                                                     Partition = mi.Partition,
-                                                                                                                     IsAnyIdentifier = true
-                                                                                                                 },
-                                                                                                       Domain = dom
-                                                                                                   }));
+        private IEnumerable<MessageRouteDomainMap> GetMessageHubs(IEnumerable<MessageRoute> messageRoutes)
+            => messageRoutes.Where(mr => mr.Receiver.IsMessageHub())
+                            .SelectMany(mr => securityProvider.GetAllowedDomains()
+                                                              .Select(dom =>
+                                                                          new MessageRouteDomainMap
+                                                                          {
+                                                                              MessageRoute = mr,
+                                                                              Domain = dom
+                                                                          }));
 
-        public void DiscoverMessageRoute(Identifier messageIdentifier)
-            => routeDiscovery.RequestRouteDiscovery(messageIdentifier);
+        public void DiscoverMessageRoute(MessageRoute messageRoute)
+            => routeDiscovery.RequestRouteDiscovery(messageRoute);
     }
 
-    internal class MessageDomainMap
+    internal class MessageRouteDomainMap
     {
-        internal MessageContract Message { get; set; }
+        internal MessageRoute MessageRoute { get; set; }
 
         internal string Domain { get; set; }
     }

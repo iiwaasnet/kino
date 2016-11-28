@@ -11,8 +11,8 @@ namespace kino.Cluster
 
         void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain);
 
-        void UnregisterSelf(IEnumerable<MessageRoute> registrations);
+        void UnregisterSelf(IEnumerable<MessageRoute> messageRoutes);
 
-        void DiscoverMessageRoute(Identifier messageIdentifier);
+        void DiscoverMessageRoute(MessageRoute messageRoute);
     }
 }

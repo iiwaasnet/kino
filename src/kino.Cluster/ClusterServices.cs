@@ -21,8 +21,8 @@ namespace kino.Cluster
             this.clusterHealthMonitor = clusterHealthMonitor;
         }
 
-        public void DiscoverMessageRoute(Identifier messageIdentifier)
-            => clusterMonitor.DiscoverMessageRoute(messageIdentifier);
+        public void DiscoverMessageRoute(MessageRoute messageRoute)
+            => clusterMonitor.DiscoverMessageRoute(messageRoute);
 
         public void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain)
             => clusterMonitor.RegisterSelf(registrations, domain);

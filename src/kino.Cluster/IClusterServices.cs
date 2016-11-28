@@ -5,7 +5,7 @@ namespace kino.Cluster
 {
     public interface IClusterServices
     {
-        void DiscoverMessageRoute(Identifier messageIdentifier);
+        void DiscoverMessageRoute(MessageRoute messageRoute);
 
         void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain);
 

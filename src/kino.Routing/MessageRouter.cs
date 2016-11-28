@@ -149,7 +149,7 @@ namespace kino.Routing
                                     Message = new MessageIdentifier(message),
                                     Distribution = message.Distribution,
                                     ReceiverNodeIdentity = new ReceiverIdentifier(message.ReceiverNodeIdentity ?? IdentityExtensions.Empty)
-            };
+                                };
             var handleMessageLocally = Unsafe.ArraysEqual(message.ReceiverNodeIdentity, thisNodeIdentity);
 
             //var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
@@ -160,7 +160,7 @@ namespace kino.Routing
                 handled = ForwardMessageAway(lookupRequest, message, scaleOutBackend) || handled;
             }
 
-            return handled || ProcessUnhandledMessage(message, messageHandlerIdentifier);
+            return handled || ProcessUnhandledMessage(message, lookupRequest);
         }
 
         private bool HandleMessageLocally(InternalRouteLookupRequest lookupRequest, Message message)
@@ -201,14 +201,9 @@ namespace kino.Routing
 
         private bool ForwardMessageAway(ExternalRouteLookupRequest lookupRequest, Message message, ISocket scaleOutBackend)
         {
-            //var receiverNodeIdentity = message.PopReceiverNode();
-            var routes = (message.Distribution == DistributionPattern.Unicast
-                              ? new[] {externalRoutingTable.FindRoutes(lookupRequest)}
-                              : (MessageCameFromLocalActor(message)
-                                     ? externalRoutingTable.FindAllRoutes(messageIdentifier)
-                                     : Enumerable.Empty<PeerConnection>()))
-                .Where(h => h != null)
-                .ToList();
+            var routes = message.Distribution == DistributionPattern.Broadcast && !MessageCameFromLocalActor(message)
+                             ? Enumerable.Empty<PeerConnection>()
+                             : externalRoutingTable.FindRoutes(lookupRequest);
 
             foreach (var route in routes)
             {
@@ -243,22 +238,27 @@ namespace kino.Routing
             return routes.Any();
         }
 
-        private bool ProcessUnhandledMessage(IMessage message, Identifier messageIdentifier)
+        private bool ProcessUnhandledMessage(IMessage message, ExternalRouteLookupRequest lookupRequest)
         {
-            clusterServices.DiscoverMessageRoute(messageIdentifier);
+            var messageRoute = new Cluster.MessageRoute
+                               {
+                                   Receiver = lookupRequest.ReceiverIdentity,
+                                   Message = lookupRequest.Message
+                               };
+            clusterServices.DiscoverMessageRoute(messageRoute);
 
             if (MessageCameFromOtherNode(message))
             {
-                clusterServices.UnregisterSelf(new[] {messageIdentifier});
+                clusterServices.UnregisterSelf(messageRoute.ToEnumerable());
 
                 if (message.Distribution == DistributionPattern.Broadcast)
                 {
-                    logger.Warn($"Broadcast message: {messageIdentifier} didn't find any local handler and was not forwarded.");
+                    logger.Warn($"Broadcast message: {lookupRequest} didn't find any local handler and was not forwarded.");
                 }
             }
             else
             {
-                logger.Warn($"Handler not found: {messageIdentifier}");
+                logger.Warn($"Handler not found: {lookupRequest}");
             }
 
             return true;
@@ -290,10 +290,5 @@ namespace kino.Routing
 
             return handled;
         }
-
-        private static Identifier CreateMessageHandlerIdentifier(Message message)
-            => message.ReceiverIdentity.IsSet()
-                   ? (Identifier) new AnyIdentifier(message.ReceiverIdentity)
-                   : (Identifier) new MessageIdentifier(message);
     }
 }

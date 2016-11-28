@@ -10,15 +10,15 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class NodeUnregistrationHandler : IServiceMessageHandler
     {
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterServices clusterServices;
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ISecurityProvider securityProvider;
 
-        public NodeUnregistrationHandler(IClusterConnectivity clusterConnectivity,
+        public NodeUnregistrationHandler(IClusterServices clusterServices,
                                          IExternalRoutingTable externalRoutingTable,
                                          ISecurityProvider securityProvider)
         {
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterServices = clusterServices;
             this.externalRoutingTable = externalRoutingTable;
             this.securityProvider = securityProvider;
         }
@@ -34,15 +34,15 @@ namespace kino.Routing.ServiceMessageHandlers
 
                     var payload = message.GetPayload<UnregisterNodeMessage>();
 
-                    var socketIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
-                    var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(socketIdentifier);
+                    var nodeIdentifer = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
+                    var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(nodeIdentifer);
                     if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                     {
                         forwardingSocket.SafeDisconnect(peerRemoveResult.Uri);
                     }
                     if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
                     {
-                        clusterConnectivity.DeletePeer(socketIdentifier);
+                        clusterServices.DeletePeer(nodeIdentifer);
                     }
                 }
             }

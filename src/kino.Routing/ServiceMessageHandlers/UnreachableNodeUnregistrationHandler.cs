@@ -25,15 +25,15 @@ namespace kino.Routing.ServiceMessageHandlers
             {
                 var payload = message.GetPayload<UnregisterUnreachableNodeMessage>();
 
-                var socketIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
-                var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(socketIdentifier);
+                var nodeIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
+                var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(nodeIdentifier);
                 if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                 {
                     forwardingSocket.SafeDisconnect(peerRemoveResult.Uri);
                 }
                 if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
                 {
-                    clusterConnectivity.DeletePeer(socketIdentifier);
+                    clusterConnectivity.DeletePeer(nodeIdentifier);
                 }
             }
 

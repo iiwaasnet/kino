@@ -11,7 +11,7 @@ namespace kino.Security
     public class SecurityProvider : ISecurityProvider
     {
         private readonly IDictionary<string, DomainPrivateKey> nameToDomainMap;
-        private readonly IDictionary<Identifier, DomainPrivateKey> messageToDomainMap;
+        private readonly IDictionary<AnyVersionMessageIdentifier, DomainPrivateKey> messageToDomainMap;
         private readonly KeyedHashAlgorithm mac;
         private readonly object @lock = new object();
 
@@ -29,7 +29,7 @@ namespace kino.Security
             => CreateDomainSignature(FindDomain(domain), buffer);
 
         public string GetDomain(byte[] messageIdentity)
-            => FindDomain(new AnyIdentifier(messageIdentity)).Domain;
+            => FindDomain(new AnyVersionMessageIdentifier(messageIdentity)).Domain;
 
         public bool DomainIsAllowed(string domain)
             => nameToDomainMap.ContainsKey(domain);
@@ -46,7 +46,7 @@ namespace kino.Security
             }
         }
 
-        private DomainPrivateKey FindDomain(Identifier identity)
+        private DomainPrivateKey FindDomain(AnyVersionMessageIdentifier identity)
         {
             DomainPrivateKey domain;
             if (messageToDomainMap.TryGetValue(identity, out domain))
@@ -67,10 +67,10 @@ namespace kino.Security
             throw new SecurityException($"Domain {name} is not allowed!");
         }
 
-        private static IDictionary<Identifier, DomainPrivateKey> CreateMessageMapping(IDictionary<string, DomainPrivateKey> domainKeys,
+        private static IDictionary<AnyVersionMessageIdentifier, DomainPrivateKey> CreateMessageMapping(IDictionary<string, DomainPrivateKey> domainKeys,
                                                                                       IDomainScopeResolver domainScopeResolver)
         {
-            var mappings = new Dictionary<Identifier, DomainPrivateKey>();
+            var mappings = new Dictionary<AnyVersionMessageIdentifier, DomainPrivateKey>();
             var domainScopes = domainScopeResolver.GetDomainMessages(domainKeys.Select(dk => dk.Key));
 
             foreach (var message in domainScopes.SelectMany(dm => dm.MessageIdentities,
@@ -83,7 +83,7 @@ namespace kino.Security
                 DomainPrivateKey key, _;
                 if (domainKeys.TryGetValue(message.Domain, out key))
                 {
-                    var messageIdentifier = new AnyIdentifier(message.Identity.GetBytes());
+                    var messageIdentifier = new AnyVersionMessageIdentifier(message.Identity.GetBytes());
                     if (!mappings.TryGetValue(messageIdentifier, out _))
                     {
                         mappings.Add(messageIdentifier, key);

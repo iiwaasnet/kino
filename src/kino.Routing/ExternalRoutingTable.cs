@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using C5;
 using kino.Core;
@@ -16,7 +17,7 @@ namespace kino.Routing
         private readonly Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> actorToMessageMap;
         private readonly Bcl.IDictionary<MessageIdentifier, HashedLinkedList<ReceiverIdentifier>> messageToNodeMap;
         private readonly Bcl.IDictionary<ReceiverIdentifier, PeerConnection> nodeToConnectionMap;
-        private readonly Bcl.IDictionary<string, int> uriReferenceCount;
+        private readonly Bcl.IDictionary<PeerConnection, Bcl.HashSet<ReceiverIdentifier>> connectionToNodeMap;
         private readonly ILogger logger;
 
         public ExternalRoutingTable(ILogger logger)
@@ -27,43 +28,53 @@ namespace kino.Routing
             actorToMessageMap = new Bcl.Dictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>>();
             messageToNodeMap = new Bcl.Dictionary<MessageIdentifier, HashedLinkedList<ReceiverIdentifier>>();
             nodeToConnectionMap = new Bcl.Dictionary<ReceiverIdentifier, PeerConnection>();
-            uriReferenceCount = new Bcl.Dictionary<string, int>();
+            connectionToNodeMap = new ConcurrentDictionary<PeerConnection, Bcl.HashSet<ReceiverIdentifier>>();
         }
 
         public PeerConnection AddMessageRoute(ExternalRouteRegistration routeRegistration)
         {
-            var receiverNode = new ReceiverIdentifier(routeRegistration.Peer.SocketIdentity);
-            Func<bool> receiverToNodeMap = () => false;
+            var nodeIdentifier = new ReceiverIdentifier(routeRegistration.Peer.SocketIdentity);
 
             if (routeRegistration.Route.Receiver.IsActor())
             {
-                MapMessageToNode(routeRegistration, receiverNode);
+                MapMessageToNode(routeRegistration, nodeIdentifier);
                 MapActorToMessage(routeRegistration);
-                receiverToNodeMap = () => MapActorToNode(routeRegistration, receiverNode);
+                MapActorToNode(routeRegistration, nodeIdentifier);
             }
             else
             {
                 if (routeRegistration.Route.Receiver.IsMessageHub())
                 {
-                    receiverToNodeMap = () => MapMessageHubToNode(routeRegistration, receiverNode);
+                    MapMessageHubToNode(routeRegistration, nodeIdentifier);
                 }
                 else
                 {
                     throw new ArgumentException($"Requested registration is for unknown Receiver type: [{routeRegistration.Route.Receiver}]!");
                 }
             }
-            if (receiverToNodeMap())
-            {
-                IncrementUriReferenceCount(routeRegistration.Peer.Uri.ToSocketAddress());
-            }
 
-            return MapNodeToConnection(routeRegistration, receiverNode);
+            var connection = MapNodeToConnection(routeRegistration, nodeIdentifier);
+            MapConnectionToNode(connection, nodeIdentifier);
+
+            return connection;
         }
 
-        private PeerConnection MapNodeToConnection(ExternalRouteRegistration routeRegistration, ReceiverIdentifier receiverNode)
+        private void MapConnectionToNode(PeerConnection connection, ReceiverIdentifier nodeIdentifier)
+        {
+            Bcl.HashSet<ReceiverIdentifier> nodes;
+            if (!connectionToNodeMap.TryGetValue(connection, out nodes))
+            {
+                nodes = new Bcl.HashSet<ReceiverIdentifier>();
+                connectionToNodeMap[connection] = nodes;
+            }
+
+            nodes.Add(nodeIdentifier);
+        }
+
+        private PeerConnection MapNodeToConnection(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
         {
             var peerConnection = default(PeerConnection);
-            if (!nodeToConnectionMap.TryGetValue(receiverNode, out peerConnection))
+            if (!nodeToConnectionMap.TryGetValue(nodeIdentifier, out peerConnection))
             {
                 peerConnection = new PeerConnection
                                  {
@@ -71,21 +82,21 @@ namespace kino.Routing
                                      Health = routeRegistration.Health,
                                      Connected = false
                                  };
-                nodeToConnectionMap[receiverNode] = peerConnection;
+                nodeToConnectionMap[nodeIdentifier] = peerConnection;
             }
             return peerConnection;
         }
 
-        private bool MapMessageHubToNode(ExternalRouteRegistration routeRegistration, ReceiverIdentifier receiverNode)
+        private void MapMessageHubToNode(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
         {
             var messageHub = routeRegistration.Route.Receiver;
             Bcl.HashSet<ReceiverIdentifier> messageHubs;
-            if (!nodeMessageHubs.TryGetValue(receiverNode, out messageHubs))
+            if (!nodeMessageHubs.TryGetValue(nodeIdentifier, out messageHubs))
             {
                 messageHubs = new Bcl.HashSet<ReceiverIdentifier>();
-                nodeMessageHubs[receiverNode] = messageHubs;
+                nodeMessageHubs[nodeIdentifier] = messageHubs;
             }
-            return messageHubs.Add(messageHub);
+            messageHubs.Add(messageHub);
         }
 
         private void MapActorToMessage(ExternalRouteRegistration routeRegistration)
@@ -99,18 +110,18 @@ namespace kino.Routing
             actorMessages.Add(routeRegistration.Route.Message);
         }
 
-        private bool MapActorToNode(ExternalRouteRegistration routeRegistration, ReceiverIdentifier receiverNode)
+        private void MapActorToNode(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
         {
             Bcl.HashSet<ReceiverIdentifier> actors;
-            if (!nodeActors.TryGetValue(receiverNode, out actors))
+            if (!nodeActors.TryGetValue(nodeIdentifier, out actors))
             {
                 actors = new Bcl.HashSet<ReceiverIdentifier>();
-                nodeActors[receiverNode] = actors;
+                nodeActors[nodeIdentifier] = actors;
             }
-            return actors.Add(routeRegistration.Route.Receiver);
+            actors.Add(routeRegistration.Route.Receiver);
         }
 
-        private void MapMessageToNode(ExternalRouteRegistration routeRegistration, ReceiverIdentifier receiverNode)
+        private void MapMessageToNode(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
         {
             var messageIdentifier = routeRegistration.Route.Message;
             HashedLinkedList<ReceiverIdentifier> nodes;
@@ -119,9 +130,9 @@ namespace kino.Routing
                 nodes = new HashedLinkedList<ReceiverIdentifier>();
                 messageToNodeMap[messageIdentifier] = nodes;
             }
-            if (!nodes.Contains(receiverNode))
+            if (!nodes.Contains(nodeIdentifier))
             {
-                nodes.InsertLast(receiverNode);
+                nodes.InsertLast(nodeIdentifier);
             }
         }
 
@@ -129,7 +140,8 @@ namespace kino.Routing
         {
             var peers = new Bcl.List<PeerConnection>();
             PeerConnection peerConnection;
-            if (lookupRequest.ReceiverNodeIdentity.IsSet() && nodeToConnectionMap.TryGetValue(lookupRequest.ReceiverNodeIdentity, out peerConnection))
+            if (lookupRequest.ReceiverNodeIdentity.IsSet()
+                && nodeToConnectionMap.TryGetValue(lookupRequest.ReceiverNodeIdentity, out peerConnection))
             {
                 peers.Add(peerConnection);
             }
@@ -174,37 +186,70 @@ namespace kino.Routing
             return default(T);
         }
 
-        public PeerRemoveResult RemoveNodeRoute(ReceiverIdentifier socketIdentifier)
+        public PeerRemoveResult RemoveNodeRoute(ReceiverIdentifier nodeIdentifier)
         {
             PeerConnection connection;
-            nodeToConnectionMap.Remove(socketIdentifier, out connection);
+            var peerConnectionAction = PeerConnectionAction.NotFound;
 
-            HashSet<Identifier> identifiers;
-            if (socketToMessageMap.Find(ref socketIdentifier, out identifiers))
+            if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out connection))
             {
-                RemoveMessageRoutesForSocketIdentifier(socketIdentifier, identifiers);
+                nodeToConnectionMap.Remove(nodeIdentifier);
+                peerConnectionAction = RemovePeerNode(connection, nodeIdentifier);
+                nodeMessageHubs.Remove(nodeIdentifier);
+                Bcl.HashSet<ReceiverIdentifier> actors;
+                if (nodeActors.TryGetValue(nodeIdentifier, out actors))
+                {
+                    nodeActors.Remove(nodeIdentifier);
 
-                socketToMessageMap.Remove(socketIdentifier);
+                    foreach (var actor in actors)
+                    {
+                        Bcl.HashSet<MessageIdentifier> messages;
+                        if (actorToMessageMap.TryGetValue(actor, out messages))
+                        {
+                            actorToMessageMap.Remove(actor);
+
+                            foreach (var message in messages)
+                            {
+                                HashedLinkedList<ReceiverIdentifier> nodes;
+                                if (messageToNodeMap.TryGetValue(message, out nodes))
+                                {
+                                    nodes.Remove(nodeIdentifier);
+                                    if (!nodes.Any())
+                                    {
+                                        messageToNodeMap.Remove(message);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
-                             $"Socket:{socketIdentifier.Identity.GetAnyString()}");
+                             $"Socket:{nodeIdentifier.Identity.GetAnyString()}");
             }
-
             return new PeerRemoveResult
                    {
                        Uri = connection?.Node.Uri,
-                       ConnectionAction = DecrementConnectionRefCount(connection)
+                       ConnectionAction = peerConnectionAction
                    };
         }
 
-        private PeerConnectionAction DecrementConnectionRefCount(PeerConnection connection)
+        private PeerConnectionAction RemovePeerNode(PeerConnection connection, ReceiverIdentifier nodeIdentifier)
         {
-            if (connection != null)
+            Bcl.HashSet<ReceiverIdentifier> nodes;
+            if (connectionToNodeMap.TryGetValue(connection, out nodes))
             {
-                var connectionsLeft = DecrementUriReferenceCount(connection.Node.Uri.ToSocketAddress());
-                return connectionsLeft == 0
-                           ? PeerConnectionAction.Disconnect
-                           : PeerConnectionAction.KeepConnection;
+                if (nodes.Remove(nodeIdentifier))
+                {
+                    if (!nodes.Any())
+                    {
+                        connectionToNodeMap.Remove(connection);
+
+                        return PeerConnectionAction.Disconnect;
+                    }
+
+                    return PeerConnectionAction.KeepConnection;
+                }
             }
 
             return PeerConnectionAction.NotFound;
@@ -215,73 +260,69 @@ namespace kino.Routing
             PeerConnection connection = null;
             var connectionAction = PeerConnectionAction.NotFound;
 
-            var receiverNode = new ReceiverIdentifier(routeRemoval.Peer.SocketIdentity);
-            if (nodeToConnectionMap.TryGetValue(receiverNode, out connection))
+            var nodeIdentifier = new ReceiverIdentifier(routeRemoval.Peer.SocketIdentity);
+            if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out connection))
             {
                 if (routeRemoval.Route.Receiver.IsMessageHub())
                 {
-                    Bcl.HashSet<ReceiverIdentifier> messageHubs;
-                    if (nodeMessageHubs.TryGetValue(receiverNode, out messageHubs))
-                    {
-                        if (messageHubs.Remove(routeRemoval.Route.Receiver))
-                        {
-                            connectionAction = DecrementConnectionRefCount(connection);
-                            if (!messageHubs.Any())
-                            {
-                                nodeMessageHubs.Remove(receiverNode);
-                            }
-                            logger.Debug("External Actor removed " +
-                                         $"Socket:{receiverNode} " +
-                                         $"Identity:[{routeRemoval.Route.Receiver}]");
-                        }
-                    }
+                    RemoveMessageHubRoute(routeRemoval);
                 }
                 else
                 {
                     if (routeRemoval.Route.Receiver.IsActor())
                     {
-                        Bcl.HashSet<MessageIdentifier> messages;
-                        if (actorToMessageMap.TryGetValue(routeRemoval.Route.Receiver, out messages))
+                        RemoveActorRoute(routeRemoval);
+                    }
+                    else
+                    {
+                        //TODO: Remove all actors by message
+                        HashedLinkedList<ReceiverIdentifier> nodes;
+                        if (messageToNodeMap.TryGetValue(routeRemoval.Route.Message, out nodes))
                         {
-                            messages.Remove(routeRemoval.Route.Message);
-                            if (!messages.Any())
+                            if (nodes.Remove(nodeIdentifier))
                             {
-                                actorToMessageMap.Remove(routeRemoval.Route.Receiver);
-                                //
-                                Bcl.HashSet<ReceiverIdentifier> actors;
-                                if (nodeActors.TryGetValue(receiverNode, out actors))
+                                if (!nodes.Any())
                                 {
-                                    if (actors.Remove(routeRemoval.Route.Receiver))
+                                    messageToNodeMap.Remove(routeRemoval.Route.Message);
+                                }
+                                Bcl.HashSet<ReceiverIdentifier> actors;
+                                var emptyActors = new Bcl.List<ReceiverIdentifier>();
+                                if (nodeActors.TryGetValue(nodeIdentifier, out actors))
+                                {
+                                    foreach (var actor in actors)
                                     {
-                                        connectionAction = DecrementConnectionRefCount(connection);
-                                        if (!actors.Any())
+                                        Bcl.HashSet<MessageIdentifier> messages;
+                                        if (actorToMessageMap.TryGetValue(actor, out messages))
                                         {
-                                            nodeActors.Remove(receiverNode);
-                                        }
-                                        //
-                                        HashedLinkedList<ReceiverIdentifier> nodes;
-                                        if (messageToNodeMap.TryGetValue(routeRemoval.Route.Message, out nodes))
-                                        {
-                                            nodes.Remove(receiverNode);
-                                            if (!nodes.Any())
+                                            if (messages.Remove(routeRemoval.Route.Message))
                                             {
-                                                messageToNodeMap.Remove(routeRemoval.Route.Message);
+                                                if (!messages.Any())
+                                                {
+                                                    actorToMessageMap.Remove(actor);
+                                                    emptyActors.Add(actor);
+                                                }
                                             }
                                         }
                                     }
+                                    foreach (var emptyActor in emptyActors)
+                                    {
+                                        actors.Remove(emptyActor);
+                                    }
+                                    if (!actors.Any())
+                                    {
+                                        nodeActors.Remove(nodeIdentifier);
+                                    }
                                 }
                             }
-                            logger.Debug("External message route removed " +
-                                         $"Socket:{receiverNode} " +
-                                         $"Message:[{routeRemoval.Route.Message}]");
                         }
                     }
                 }
-                if (!nodeActors.ContainsKey(receiverNode) && !nodeMessageHubs.ContainsKey(receiverNode))
+                if (!nodeActors.ContainsKey(nodeIdentifier) && !nodeMessageHubs.ContainsKey(nodeIdentifier))
                 {
-                    nodeToConnectionMap.Remove(receiverNode);
+                    nodeToConnectionMap.Remove(nodeIdentifier);
+                    connectionAction = RemovePeerNode(connection, nodeIdentifier);
                     logger.Debug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} " +
-                                 $"Socket:{receiverNode}");
+                                 $"Socket:{nodeIdentifier}");
                 }
             }
 
@@ -292,75 +333,70 @@ namespace kino.Routing
                    };
         }
 
-        private void RemoveMessageRoutesForSocketIdentifier(ReceiverIdentifier socketIdentifier, Bcl.IEnumerable<Identifier> messageIdentifiers)
+        private void RemoveActorRoute(ExternalRouteRemoval routeRemoval)
         {
-            foreach (var messageIdentifier in messageIdentifiers)
+            var nodeIdentifier = new ReceiverIdentifier(routeRemoval.Peer.SocketIdentity);
+            Bcl.HashSet<MessageIdentifier> messages;
+            if (actorToMessageMap.TryGetValue(routeRemoval.Route.Receiver, out messages))
             {
-                var tmpMessageIdentifier = messageIdentifier;
-                HashedLinkedList<ReceiverIdentifier> socketIdentifiers;
-                if (messageToSocketMap.Find(ref tmpMessageIdentifier, out socketIdentifiers))
+                messages.Remove(routeRemoval.Route.Message);
+                if (!messages.Any())
                 {
-                    socketIdentifiers.Remove(socketIdentifier);
-                    if (!socketIdentifiers.Any())
+                    actorToMessageMap.Remove(routeRemoval.Route.Receiver);
+                    RemoveNodeActor(routeRemoval, nodeIdentifier);
+                }
+                logger.Debug("External message route removed " +
+                             $"Socket:{nodeIdentifier} " +
+                             $"Message:[{routeRemoval.Route.Message}]");
+            }
+        }
+
+        private void RemoveNodeActor(ExternalRouteRemoval routeRemoval, ReceiverIdentifier nodeIdentifier)
+        {
+            Bcl.HashSet<ReceiverIdentifier> actors;
+            if (nodeActors.TryGetValue(nodeIdentifier, out actors))
+            {
+                if (actors.Remove(routeRemoval.Route.Receiver))
+                {
+                    if (!actors.Any())
                     {
-                        messageToSocketMap.Remove(messageIdentifier);
+                        nodeActors.Remove(nodeIdentifier);
                     }
+                    RemoveMessageToNodeMap(routeRemoval, nodeIdentifier);
                 }
             }
         }
 
-        private static Bcl.IEnumerable<string> ConcatenateMessageHandlers(Bcl.IEnumerable<Identifier> messageHandlerIdentifiers)
-            => messageHandlerIdentifiers.Select(mh => mh.ToString());
-
-        //public Bcl.IEnumerable<ExternalRoute> GetAllRoutes()
-        //    => socketToMessageMap.Select(CreateExternalRoute);
-
-        //private ExternalRoute CreateExternalRoute(KeyValuePair<ReceiverIdentifier, HashSet<Identifier>> socketMessagePair)
-        //{
-        //    var connection = nodeToConnectionMap[socketMessagePair.Key];
-
-        //    return new ExternalRoute
-        //           {
-        //               Connection = new PeerConnection
-        //                            {
-        //                                Node = connection.Node,
-        //                                Health = connection.Health,
-        //                                Connected = connection.Connected
-        //                            },
-        //               Messages = socketMessagePair.Value
-        //           };
-        //}
-
-        private int IncrementUriReferenceCount(string uri)
+        private void RemoveMessageToNodeMap(ExternalRouteRemoval routeRemoval, ReceiverIdentifier receiverNode)
         {
-            var refCount = 0;
-            uriReferenceCount.TryGetValue(uri, out refCount);
-            uriReferenceCount[uri] = ++refCount;
-
-            logger.Debug($"New connection to {uri}. Total count: {refCount}");
-
-            return refCount;
-        }
-
-        private int DecrementUriReferenceCount(string uri)
-        {
-            var refCount = 0;
-            if (uriReferenceCount.TryGetValue(uri, out refCount))
+            HashedLinkedList<ReceiverIdentifier> nodes;
+            if (messageToNodeMap.TryGetValue(routeRemoval.Route.Message, out nodes))
             {
-                refCount--;
-                if (refCount <= 0)
+                nodes.Remove(receiverNode);
+                if (!nodes.Any())
                 {
-                    uriReferenceCount.Remove(uri);
-                }
-                else
-                {
-                    uriReferenceCount[uri] = refCount;
+                    messageToNodeMap.Remove(routeRemoval.Route.Message);
                 }
             }
+        }
 
-            logger.Debug($"Removed connection to {uri}. Connections left: {refCount}");
-
-            return (refCount < 0) ? 0 : refCount;
+        private void RemoveMessageHubRoute(ExternalRouteRemoval routeRemoval)
+        {
+            var nodeIdentifier = new ReceiverIdentifier(routeRemoval.Peer.SocketIdentity);
+            Bcl.HashSet<ReceiverIdentifier> messageHubs;
+            if (nodeMessageHubs.TryGetValue(nodeIdentifier, out messageHubs))
+            {
+                if (messageHubs.Remove(routeRemoval.Route.Receiver))
+                {
+                    if (!messageHubs.Any())
+                    {
+                        nodeMessageHubs.Remove(nodeIdentifier);
+                    }
+                    logger.Debug("External MessageHub removed " +
+                                 $"Node:[{nodeIdentifier}] " +
+                                 $"Identity:[{routeRemoval.Route.Receiver}]");
+                }
+            }
         }
     }
 }

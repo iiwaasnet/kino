@@ -21,7 +21,7 @@ namespace kino.Cluster
         {
         }
 
-        public void DiscoverMessageRoute(Identifier messageIdentifier)
+        public void DiscoverMessageRoute(MessageRoute messageRoute)
         {
         }
     }

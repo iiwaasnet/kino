@@ -20,7 +20,7 @@ namespace kino.Cluster
         private readonly ISecurityProvider securityProvider;
         private readonly RouteDiscoveryConfiguration discoveryConfiguration;
         private readonly ILogger logger;
-        private readonly HashedQueue<Identifier> requests;
+        private readonly HashedQueue<MessageRoute> requests;
         private Task sendingMessages;
         private CancellationTokenSource cancellationTokenSource;
 
@@ -35,7 +35,7 @@ namespace kino.Cluster
             this.autoDiscoverySender = autoDiscoverySender;
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.logger = logger;
-            requests = new HashedQueue<Identifier>(discoveryConfiguration.MaxRequestsQueueLength);
+            requests = new HashedQueue<MessageRoute>(discoveryConfiguration.MaxRequestsQueueLength);
         }
 
         public void Start()
@@ -56,12 +56,12 @@ namespace kino.Cluster
             {
                 try
                 {
-                    IList<Identifier> missingRoutes;
+                    IList<MessageRoute> missingRoutes;
                     if (requests.TryPeek(out missingRoutes, discoveryConfiguration.RequestsPerSend))
                     {
-                        foreach (var messageIdentifier in missingRoutes)
+                        foreach (var messageRoute in missingRoutes)
                         {
-                            SendDiscoverMessageRouteMessage(messageIdentifier);
+                            SendDiscoverMessageRouteMessage(messageRoute);
                         }
                     }
 
@@ -79,14 +79,14 @@ namespace kino.Cluster
             }
         }
 
-        private void SendDiscoverMessageRouteMessage(Identifier messageIdentifier)
+        private void SendDiscoverMessageRouteMessage(MessageRoute messageRoute)
         {
             try
             {
                 var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
-                var domains = messageIdentifier.IsMessageHub()
+                var domains = messageRoute.Receiver.IsMessageHub()
                                   ? securityProvider.GetAllowedDomains()
-                                  : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};
+                                  : new[] {securityProvider.GetDomain(messageRoute.Message)};
                 foreach (var domain in domains)
                 {
                     var message = Message.Create(new DiscoverMessageRouteMessage
@@ -95,10 +95,10 @@ namespace kino.Cluster
                                                      RequestorUri = scaleOutAddress.Uri.ToSocketAddress(),
                                                      MessageContract = new MessageContract
                                                                        {
-                                                                           Version = messageIdentifier.Version,
-                                                                           Identity = messageIdentifier.Identity,
-                                                                           Partition = messageIdentifier.Partition,
-                                                                           IsAnyIdentifier = messageIdentifier is AnyIdentifier
+                                                                           Version = messageRoute.Version,
+                                                                           Identity = messageRoute.Identity,
+                                                                           Partition = messageRoute.Partition,
+                                                                           IsAnyIdentifier = messageRoute is AnyIdentifier
                                                                        }
                                                  },
                                                  domain);
@@ -112,8 +112,8 @@ namespace kino.Cluster
             }
         }
 
-        public void RequestRouteDiscovery(Identifier messageIdentifier)
-            => requests.TryEnqueue(messageIdentifier);
+        public void RequestRouteDiscovery(MessageRoute messageRoute)
+            => requests.TryEnqueue(messageRoute);
 
         private RouteDiscoveryConfiguration DefaultConfiguration()
             => new RouteDiscoveryConfiguration

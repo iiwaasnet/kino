@@ -19,5 +19,8 @@ namespace kino.Core.Framework
 
         public static T Third<T>(this IEnumerable<T> collection)
             => collection.Skip(2).First();
+
+        public static IEnumerable<T> ToEnumerable<T>(this T single)
+            => new[] {single};
     }
 }
