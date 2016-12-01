@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using kino.Connectivity;
+﻿using kino.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
@@ -32,7 +31,7 @@ namespace kino.Actors
         public IActorHost Create()
             => new ActorHost(new ActorHandlerMap(),
                              new AsyncQueue<AsyncMessageContext>(),
-                             new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
+                             new AsyncQueue<ActorRegistration>(),
                              securityProvider,
                              localRouterSocket,
                              internalRegistrationsSender,

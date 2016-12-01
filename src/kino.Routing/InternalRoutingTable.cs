@@ -3,7 +3,6 @@ using System.Linq;
 using C5;
 using kino.Connectivity;
 using kino.Core;
-using kino.Core.Framework;
 using kino.Messaging;
 using Bcl = System.Collections.Generic;
 
@@ -236,10 +235,7 @@ namespace kino.Routing
                                                                                                 .OfType<ReceiverIdentifierRegistration>()
                                                                                                 .ToList()
                                                                       })
+                                             .ToList()
                };
-
-        public bool MessageHandlerRegisteredExternaly(Identifier identifier)
-            => messageToSocketMap.Keys
-                                 .Any(k => !k.LocalRegistration && k == new ReceiverIdentifierRegistration(identifier));
     }
 }

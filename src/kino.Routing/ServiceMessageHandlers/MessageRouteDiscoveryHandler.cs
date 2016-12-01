@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using kino.Cluster;
 using kino.Connectivity;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
@@ -11,17 +13,17 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class MessageRouteDiscoveryHandler : IServiceMessageHandler
     {
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterServices clusterServices;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
 
-        public MessageRouteDiscoveryHandler(IClusterConnectivity clusterConnectivity,
+        public MessageRouteDiscoveryHandler(IClusterServices clusterServices,
                                             IInternalRoutingTable internalRoutingTable,
                                             ISecurityProvider securityProvider,
                                             ILogger logger)
         {
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterServices = clusterServices;
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
             this.logger = logger;
@@ -36,21 +38,41 @@ namespace kino.Routing.ServiceMessageHandlers
                 {
                     message.As<Message>().VerifySignature(securityProvider);
 
-                    var messageContract = message.GetPayload<DiscoverMessageRouteMessage>().MessageContract;
-                    var messageIdentifier = messageContract.ToIdentifier();
-                    if (internalRoutingTable.MessageHandlerRegisteredExternaly(messageIdentifier))
+                    var payload = message.GetPayload<DiscoverMessageRouteMessage>();
+                    var internalRoutes = internalRoutingTable.GetAllRoutes();
+                    var messageRoutes = new List<Cluster.MessageRoute>();
+                    if (payload.ReceiverIdentity.IsMessageHub())
                     {
-                        var domains = messageIdentifier.IsMessageHub()
+                        messageRoutes.AddRange(internalRoutes.MessageHubs
+                                                             .Where(mh => !mh.LocalRegistration
+                                                                          && mh.MessageHub.Equals(new ReceiverIdentifier(payload.ReceiverIdentity)))
+                                                             .Select(mh => new Cluster.MessageRoute {Receiver = mh.MessageHub}));
+                    }
+                    else
+                    {
+                        var messageContract = new MessageIdentifier(payload.MessageContract.Identity, payload.MessageContract.Version, payload.MessageContract.Partition);
+                        messageRoutes.AddRange(internalRoutes.Actors
+                                                             .Where(r => r.Message.Equals(messageContract))
+                                                             .SelectMany(r => r.Actors
+                                                                               .Where(a => !a.LocalRegistration)
+                                                                               .Select(a => new Cluster.MessageRoute
+                                                                                            {
+                                                                                                Receiver = a,
+                                                                                                Message = messageContract
+                                                                                            })));
+                    }
+                    foreach (var messageRoute in messageRoutes)
+                    {
+                        var domains = messageRoute.Receiver.IsMessageHub()
                                           ? securityProvider.GetAllowedDomains()
-                                          : new[] {securityProvider.GetDomain(messageIdentifier.Identity)};
+                                          : new[] {securityProvider.GetDomain(messageRoute.Message.Identity)};
                         if (domains.Contains(message.Domain))
                         {
-                            clusterConnectivity.RegisterSelf(new[] {messageIdentifier}, message.Domain);
+                            clusterServices.RegisterSelf(messageRoute.ToEnumerable(), message.Domain);
                         }
                         else
                         {
-                            logger.Warn($"MessageIdentity {messageIdentifier.Identity.GetString()} doesn't belong to requested " +
-                                        $"Domain {message.Domain}!");
+                            logger.Warn($"MessageIdentity {messageRoute.Message} doesn't belong to requested Domain {message.Domain}!");
                         }
                     }
                 }

@@ -31,53 +31,54 @@ namespace kino.Actors.Diagnostics
             this.securityProvider = securityProvider;
         }
 
-        [MessageHandlerDefinition(typeof(RequestKnownMessageRoutesMessage))]
-        private async Task<IActorResult> Handler(IMessage message)
-            => new ActorResult(Message.Create(new KnownMessageRoutesMessage
-                                              {
-                                                  ExternalRoutes = GetExternalRoutes(),
-                                                  InternalRoutes = GetInternalRoutes()
-                                              },
-                                              securityProvider.GetDomain(KnownMessageRoutes.Identity)));
+        //TODO: Implement
+        //[MessageHandlerDefinition(typeof(RequestKnownMessageRoutesMessage))]
+        //private async Task<IActorResult> Handler(IMessage message)
+        //    => new ActorResult(Message.Create(new KnownMessageRoutesMessage
+        //                                      {
+        //                                          ExternalRoutes = GetExternalRoutes(),
+        //                                          InternalRoutes = GetInternalRoutes()
+        //                                      },
+        //                                      securityProvider.GetDomain(KnownMessageRoutes.Identity)));
 
-        private MessageRoute GetInternalRoutes()
-        {
-            var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
-            return new MessageRoute
-                   {
-                       SocketIdentity = scaleOutAddress.Identity,
-                       Uri = scaleOutAddress.Uri.AbsoluteUri,
-                       MessageContracts = internalRoutingTable
-                           .GetAllRoutes()
-                           .SelectMany(ir => ir.Messages)
-                           .Select(m => new MessageContract
-                                        {
-                                            Version = m.Version,
-                                            Identity = m.Identity,
-                                            Partition = m.Partition,
-                                            IsAnyIdentifier = m is AnyIdentifier
-                                        })
-                           .ToArray()
-                   };
-        }
+        //private MessageRoute GetInternalRoutes()
+        //{
+        //    var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
+        //    return new MessageRoute
+        //           {
+        //               SocketIdentity = scaleOutAddress.Identity,
+        //               Uri = scaleOutAddress.Uri.AbsoluteUri,
+        //               MessageContracts = internalRoutingTable
+        //                   .GetAllRoutes()
+        //                   .SelectMany(ir => ir.Messages)
+        //                   .Select(m => new MessageContract
+        //                                {
+        //                                    Version = m.Version,
+        //                                    Identity = m.Identity,
+        //                                    Partition = m.Partition,
+        //                                    IsAnyIdentifier = m is AnyIdentifier
+        //                                })
+        //                   .ToArray()
+        //           };
+        //}
 
-        private IEnumerable<MessageRoute> GetExternalRoutes()
-            => externalRoutingTable
-                .GetAllRoutes()
-                .Select(mr => new MessageRoute
-                              {
-                                  SocketIdentity = mr.Connection.Node.SocketIdentity,
-                                  Uri = mr.Connection.Node.Uri.ToSocketAddress(),
-                                  Connected = mr.Connection.Connected,
-                                  MessageContracts = mr.Messages
-                                                       .Select(m => new MessageContract
-                                                                    {
-                                                                        Version = m.Version,
-                                                                        Identity = m.Identity,
-                                                                        Partition = m.Partition,
-                                                                        IsAnyIdentifier = m is AnyIdentifier
-                                                                    })
-                                                       .ToArray()
-                              });
+        //private IEnumerable<MessageRoute> GetExternalRoutes()
+        //    => externalRoutingTable
+        //        .GetAllRoutes()
+        //        .Select(mr => new MessageRoute
+        //                      {
+        //                          SocketIdentity = mr.Connection.Node.SocketIdentity,
+        //                          Uri = mr.Connection.Node.Uri.ToSocketAddress(),
+        //                          Connected = mr.Connection.Connected,
+        //                          MessageContracts = mr.Messages
+        //                                               .Select(m => new MessageContract
+        //                                                            {
+        //                                                                Version = m.Version,
+        //                                                                Identity = m.Identity,
+        //                                                                Partition = m.Partition,
+        //                                                                IsAnyIdentifier = m is AnyIdentifier
+        //                                                            })
+        //                                               .ToArray()
+        //                      });
     }
 }

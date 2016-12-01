@@ -143,7 +143,8 @@ namespace kino.Actors
                     {
                         foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
                         {
-                            messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverIdentity,
+                            messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverNodeIdentity,
+                                                             messageContext.CallbackReceiverIdentity,
                                                              messageContext.CallbackPoint,
                                                              messageContext.CallbackKey);
                             messageOut.SetCorrelationId(messageContext.CorrelationId);
@@ -237,7 +238,8 @@ namespace kino.Actors
 
                     foreach (var messageOut in response.Cast<Message>())
                     {
-                        messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity,
+                        messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
+                                                         messageIn.CallbackReceiverIdentity,
                                                          messageIn.CallbackPoint,
                                                          messageIn.CallbackKey);
                         messageOut.SetCorrelationId(messageIn.CorrelationId);
@@ -266,7 +268,8 @@ namespace kino.Actors
                                             },
                                             securityProvider.GetDomain(KinoMessages.Exception.Identity))
                                     .As<Message>();
-            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity,
+            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
+                                             messageIn.CallbackReceiverIdentity,
                                              messageIn.CallbackPoint,
                                              messageIn.CallbackKey);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
@@ -284,6 +287,7 @@ namespace kino.Actors
                                           CallbackPoint = messageIn.CallbackPoint,
                                           CallbackKey = messageIn.CallbackKey,
                                           CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
+                                          CallbackReceiverNodeIdentity = messageIn.CallbackReceiverNodeIdentity,
                                           CorrelationId = messageIn.CorrelationId,
                                           MessageHops = messageIn.GetMessageRouting(),
                                           TraceOptions = messageIn.TraceOptions

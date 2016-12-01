@@ -14,6 +14,8 @@ namespace kino.Actors
 
         public byte[] CallbackReceiverIdentity { get; internal set; }
 
+        public byte[] CallbackReceiverNodeIdentity { get; internal set; }
+
         public long CallbackKey { get; internal set; }
 
         public IEnumerable<SocketEndpoint> MessageHops { get; internal set; }
