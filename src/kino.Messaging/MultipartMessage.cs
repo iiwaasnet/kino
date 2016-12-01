@@ -171,7 +171,7 @@ namespace kino.Messaging
             => message.Partition ?? EmptyFrame;
 
         private byte[] GetReceiverNodeIdentityFrame(Message message)
-            => message.PopReceiverNode() ?? EmptyFrame;
+            => message.ReceiverNodeIdentity ?? EmptyFrame;
 
         internal byte[] GetMessageIdentity()
             => frames[frames.Count - ReversedFramesV4.Identity];

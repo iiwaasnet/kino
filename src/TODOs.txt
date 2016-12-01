@@ -1,12 +1,3 @@
 - Remove consistency of all Debug() info, i.e. naming of nodes, sockets, actors, identities, etc...
 - Find and remove unused types
-- Decide when Increment/Decrement URI ref count should be called in ExternalRoutingTable
-
-==========
-ExternalRoutingTable
- - Increment
-    * map Actor to Node
-    * map MessageHub to Node
- - Decrement
-    * remove Node Actor 
-    * remove Node MessageHub
+- If ReceiverNode is set, it may be overwritten by callback, when it triggers. Decide if an exception should be thrown in this case

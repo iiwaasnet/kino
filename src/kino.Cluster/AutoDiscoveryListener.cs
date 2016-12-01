@@ -233,7 +233,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<DiscoverMessageRouteMessage>();
 
-                return !ThisNodeSocket(payload.RequestorSocketIdentity);
+                return !ThisNodeSocket(payload.RequestorNodeIdentity);
             }
 
             return false;
@@ -254,7 +254,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<RequestClusterMessageRoutesMessage>();
 
-                return !ThisNodeSocket(payload.RequestorSocketIdentity);
+                return !ThisNodeSocket(payload.RequestorNodeIdentity);
             }
 
             return false;
@@ -290,7 +290,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
 
-                return !ThisNodeSocket(payload.ReceiverNodeIdentity);
+                return !ThisNodeSocket(payload.NodeIdentity);
             }
 
             return false;

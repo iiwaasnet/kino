@@ -40,10 +40,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Security", "kino.Secur
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Cluster", "kino.Cluster\kino.Cluster.csproj", "{041A2E08-53AD-485E-8F57-B06ADB01C26F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Tests", "Tests\kino.Tests\kino.Tests.csproj", "{154F580E-B7AC-47E2-8F14-6481CCC99BD3}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{ED52B635-2194-4300-A2D3-EC9C41881564}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -106,10 +102,6 @@ Global
 		{041A2E08-53AD-485E-8F57-B06ADB01C26F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{041A2E08-53AD-485E-8F57-B06ADB01C26F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{041A2E08-53AD-485E-8F57-B06ADB01C26F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{154F580E-B7AC-47E2-8F14-6481CCC99BD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{154F580E-B7AC-47E2-8F14-6481CCC99BD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{154F580E-B7AC-47E2-8F14-6481CCC99BD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{154F580E-B7AC-47E2-8F14-6481CCC99BD3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -118,6 +110,5 @@ Global
 		{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F} = {B3967666-2296-4B28-BFD8-0ED4326E29C7}
 		{D5C12074-CAB2-4AED-96BC-AC322DEF4173} = {B3967666-2296-4B28-BFD8-0ED4326E29C7}
 		{C50A6AC1-FA0F-42B5-B709-13832FD604D5} = {6F259B2B-7164-4427-A89C-12254AE91EF3}
-		{154F580E-B7AC-47E2-8F14-6481CCC99BD3} = {ED52B635-2194-4300-A2D3-EC9C41881564}
 	EndGlobalSection
 EndGlobal

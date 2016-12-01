@@ -12,7 +12,7 @@ namespace kino.Messaging.Messages
         public string Uri { get; set; }
 
         [ProtoMember(2)]
-        public byte[] ReceiverNodeIdentity { get; set; }
+        public byte[] NodeIdentity { get; set; }
 
         [ProtoMember(3)]
         public RouteRegistration[] Routes { get; set; }

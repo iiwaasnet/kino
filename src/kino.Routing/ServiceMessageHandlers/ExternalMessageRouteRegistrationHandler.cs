@@ -39,7 +39,7 @@ namespace kino.Routing.ServiceMessageHandlers
                     message.As<Message>().VerifySignature(securityProvider);
 
                     var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
-                    var peer = new Node(new Uri(payload.Uri), payload.ReceiverNodeIdentity);
+                    var peer = new Node(new Uri(payload.Uri), payload.NodeIdentity);
                     var health = new Health
                                  {
                                      Uri = payload.Health.Uri,
@@ -48,7 +48,7 @@ namespace kino.Routing.ServiceMessageHandlers
 
                     foreach (var route in payload.Routes)
                     {
-                        var receiver = new ReceiverIdentifier(route.ReceiverIdentifier);
+                        var receiver = new ReceiverIdentifier(route.ReceiverIdentity);
                         foreach (var messageContract in route.MessageContracts)
                         {
                             try
@@ -56,14 +56,14 @@ namespace kino.Routing.ServiceMessageHandlers
                                 //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
                                 if (receiver.IsMessageHub() || securityProvider.GetDomain(messageContract.Identity) == message.Domain)
                                 {
-                                    clusterServices.AddPeer(new Node(payload.Uri, payload.ReceiverNodeIdentity), health);
+                                    clusterServices.AddPeer(new Node(payload.Uri, payload.NodeIdentity), health);
 
                                     var messageIdentifier = new MessageIdentifier(messageContract.Identity, messageContract.Version, messageContract.Partition);
                                     externalRoutingTable.AddMessageRoute(new ExternalRouteRegistration
                                                                          {
                                                                              Route = new MessageRoute
                                                                                      {
-                                                                                         Receiver = new ReceiverIdentifier(route.ReceiverIdentifier),
+                                                                                         Receiver = new ReceiverIdentifier(route.ReceiverIdentity),
                                                                                          Message = messageIdentifier
                                                                                      },
                                                                              Peer = peer,

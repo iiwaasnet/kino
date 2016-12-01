@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using kino.Core;
 
 namespace kino.Cluster
 {
@@ -13,11 +12,11 @@ namespace kino.Cluster
         {
         }
 
-        public void RegisterSelf(IEnumerable<Identifier> messageHandlers, string domain)
+        public void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain)
         {
         }
 
-        public void UnregisterSelf(IEnumerable<Identifier> messageIdentifiers)
+        public void UnregisterSelf(IEnumerable<MessageRoute> messageRoutes)
         {
         }
 

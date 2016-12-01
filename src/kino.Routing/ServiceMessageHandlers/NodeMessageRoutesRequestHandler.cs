@@ -1,4 +1,3 @@
-using System.Linq;
 using kino.Cluster;
 using kino.Connectivity;
 using kino.Core.Framework;
@@ -10,15 +9,15 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class NodeMessageRoutesRequestHandler : IServiceMessageHandler
     {
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterServices clusterServices;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
 
-        public NodeMessageRoutesRequestHandler(IClusterConnectivity clusterConnectivity,
+        public NodeMessageRoutesRequestHandler(IClusterServices clusterServices,
                                                IInternalRoutingTable internalRoutingTable,
                                                ISecurityProvider securityProvider)
         {
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterServices = clusterServices;
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
         }
@@ -44,7 +43,7 @@ namespace kino.Routing.ServiceMessageHandlers
 
                     if (contracts.Any())
                     {
-                        clusterConnectivity.RegisterSelf(contracts, message.Domain);
+                        clusterServices.RegisterSelf(contracts, message.Domain);
                     }
                 }
             }

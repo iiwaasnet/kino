@@ -83,7 +83,7 @@ namespace kino.Cluster
                 {
                     var message = Message.Create(new RequestClusterMessageRoutesMessage
                     {
-                        RequestorSocketIdentity = scaleOutAddress.Identity,
+                        RequestorNodeIdentity = scaleOutAddress.Identity,
                         RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
                     },
                                                  domain);

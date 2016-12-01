@@ -170,7 +170,7 @@ namespace kino.Routing
             return peers;
         }
 
-        private static T Get<T>(HashedLinkedList<T> hashSet)
+        private static T Get<T>(IList<T> hashSet)
         {
             var count = hashSet.Count;
             if (count > 0)
@@ -275,46 +275,7 @@ namespace kino.Routing
                     }
                     else
                     {
-                        //TODO: Remove all actors by message
-                        HashedLinkedList<ReceiverIdentifier> nodes;
-                        if (messageToNodeMap.TryGetValue(routeRemoval.Route.Message, out nodes))
-                        {
-                            if (nodes.Remove(nodeIdentifier))
-                            {
-                                if (!nodes.Any())
-                                {
-                                    messageToNodeMap.Remove(routeRemoval.Route.Message);
-                                }
-                                Bcl.HashSet<ReceiverIdentifier> actors;
-                                var emptyActors = new Bcl.List<ReceiverIdentifier>();
-                                if (nodeActors.TryGetValue(nodeIdentifier, out actors))
-                                {
-                                    foreach (var actor in actors)
-                                    {
-                                        Bcl.HashSet<MessageIdentifier> messages;
-                                        if (actorToMessageMap.TryGetValue(actor, out messages))
-                                        {
-                                            if (messages.Remove(routeRemoval.Route.Message))
-                                            {
-                                                if (!messages.Any())
-                                                {
-                                                    actorToMessageMap.Remove(actor);
-                                                    emptyActors.Add(actor);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    foreach (var emptyActor in emptyActors)
-                                    {
-                                        actors.Remove(emptyActor);
-                                    }
-                                    if (!actors.Any())
-                                    {
-                                        nodeActors.Remove(nodeIdentifier);
-                                    }
-                                }
-                            }
-                        }
+                        RemoveActorsByMessage(routeRemoval, nodeIdentifier);
                     }
                 }
                 if (!nodeActors.ContainsKey(nodeIdentifier) && !nodeMessageHubs.ContainsKey(nodeIdentifier))
@@ -331,6 +292,49 @@ namespace kino.Routing
                        ConnectionAction = connectionAction,
                        Uri = connection?.Node.Uri
                    };
+        }
+
+        private void RemoveActorsByMessage(ExternalRouteRemoval routeRemoval, ReceiverIdentifier nodeIdentifier)
+        {
+            HashedLinkedList<ReceiverIdentifier> nodes;
+            if (messageToNodeMap.TryGetValue(routeRemoval.Route.Message, out nodes))
+            {
+                if (nodes.Remove(nodeIdentifier))
+                {
+                    if (!nodes.Any())
+                    {
+                        messageToNodeMap.Remove(routeRemoval.Route.Message);
+                    }
+                    Bcl.HashSet<ReceiverIdentifier> actors;
+                    var emptyActors = new Bcl.List<ReceiverIdentifier>();
+                    if (nodeActors.TryGetValue(nodeIdentifier, out actors))
+                    {
+                        foreach (var actor in actors)
+                        {
+                            Bcl.HashSet<MessageIdentifier> messages;
+                            if (actorToMessageMap.TryGetValue(actor, out messages))
+                            {
+                                if (messages.Remove(routeRemoval.Route.Message))
+                                {
+                                    if (!messages.Any())
+                                    {
+                                        actorToMessageMap.Remove(actor);
+                                        emptyActors.Add(actor);
+                                    }
+                                }
+                            }
+                        }
+                        foreach (var emptyActor in emptyActors)
+                        {
+                            actors.Remove(emptyActor);
+                        }
+                        if (!actors.Any())
+                        {
+                            nodeActors.Remove(nodeIdentifier);
+                        }
+                    }
+                }
+            }
         }
 
         private void RemoveActorRoute(ExternalRouteRemoval routeRemoval)

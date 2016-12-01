@@ -86,20 +86,24 @@ namespace kino.Cluster
                 var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
                 var domains = messageRoute.Receiver.IsMessageHub()
                                   ? securityProvider.GetAllowedDomains()
-                                  : new[] {securityProvider.GetDomain(messageRoute.Message)};
+                                  : new[] {securityProvider.GetDomain(messageRoute.Message.Identity)};
                 foreach (var domain in domains)
                 {
                     var message = Message.Create(new DiscoverMessageRouteMessage
                                                  {
-                                                     RequestorSocketIdentity = scaleOutAddress.Identity,
+                                                     RequestorNodeIdentity = scaleOutAddress.Identity,
                                                      RequestorUri = scaleOutAddress.Uri.ToSocketAddress(),
-                                                     MessageContract = new MessageContract
-                                                                       {
-                                                                           Version = messageRoute.Version,
-                                                                           Identity = messageRoute.Identity,
-                                                                           Partition = messageRoute.Partition,
-                                                                           IsAnyIdentifier = messageRoute is AnyIdentifier
-                                                                       }
+                                                     ReceiverIdentity = messageRoute.Receiver.IsMessageHub()
+                                                                            ? messageRoute.Receiver.Identity
+                                                                            : null,
+                                                     MessageContract = messageRoute.Receiver.IsActor()
+                                                                           ? new MessageContract
+                                                                             {
+                                                                                 Version = messageRoute.Message.Version,
+                                                                                 Identity = messageRoute.Message.Identity,
+                                                                                 Partition = messageRoute.Message.Partition
+                                                                             }
+                                                                           : null
                                                  },
                                                  domain);
                     message.As<Message>().SignMessage(securityProvider);

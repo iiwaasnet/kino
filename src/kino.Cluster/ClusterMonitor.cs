@@ -75,7 +75,6 @@ namespace kino.Cluster
             StartProcessingClusterMessages();
         }
 
-        //TODO: Remove domain param and do grouping and sending of RegMessage per domain inside the function
         public void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain)
         {
             var receiverRoutes = registrations.GroupBy(r => r.Receiver)
@@ -91,7 +90,7 @@ namespace kino.Cluster
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
                                              Uri = scaleOutAddress.Uri.ToSocketAddress(),
-                                             ReceiverNodeIdentity = scaleOutAddress.Identity,
+                                             NodeIdentity = scaleOutAddress.Identity,
                                              Health = new Messaging.Messages.Health
                                                       {
                                                           Uri = heartBeatConfigurationProvider.GetHeartBeatAddress()
@@ -100,7 +99,7 @@ namespace kino.Cluster
                                                       },
                                              Routes = receiverRoutes.Select(r => new RouteRegistration
                                                                                  {
-                                                                                     ReceiverIdentifier = r.ReceiverIdentifier,
+                                                                                     ReceiverIdentity = r.ReceiverIdentifier,
                                                                                      MessageContracts = r.Messages.Select(m => new MessageContract
                                                                                                                                {
                                                                                                                                    Identity = m.Identity,
@@ -141,7 +140,7 @@ namespace kino.Cluster
                                                  Routes = domainRoutes.MessageRoutes
                                                                       .Select(r => new RouteRegistration
                                                                                    {
-                                                                                       ReceiverIdentifier = r.Receiver?.Identity,
+                                                                                       ReceiverIdentity = r.Receiver?.Identity,
                                                                                        MessageContracts = r.MessageContracts
                                                                                                            ?.Select(mc => new MessageContract
                                                                                                                           {
@@ -180,12 +179,5 @@ namespace kino.Cluster
 
         public void DiscoverMessageRoute(MessageRoute messageRoute)
             => routeDiscovery.RequestRouteDiscovery(messageRoute);
-    }
-
-    internal class MessageRouteDomainMap
-    {
-        internal MessageRoute MessageRoute { get; set; }
-
-        internal string Domain { get; set; }
     }
 }

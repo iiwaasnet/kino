@@ -8,13 +8,13 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class UnreachableNodeUnregistrationHandler : IServiceMessageHandler
     {
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterServices clusterServices;
         private readonly IExternalRoutingTable externalRoutingTable;
 
-        public UnreachableNodeUnregistrationHandler(IClusterConnectivity clusterConnectivity,
+        public UnreachableNodeUnregistrationHandler(IClusterServices clusterServices,
                                                     IExternalRoutingTable externalRoutingTable)
         {
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterServices = clusterServices;
             this.externalRoutingTable = externalRoutingTable;
         }
 
@@ -33,7 +33,7 @@ namespace kino.Routing.ServiceMessageHandlers
                 }
                 if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
                 {
-                    clusterConnectivity.DeletePeer(nodeIdentifier);
+                    clusterServices.DeletePeer(nodeIdentifier);
                 }
             }
 

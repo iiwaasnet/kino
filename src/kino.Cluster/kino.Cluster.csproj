@@ -103,6 +103,7 @@
     <Compile Include="IRendezvousCluster.cs" />
     <Compile Include="IRouteDiscovery.cs" />
     <Compile Include="IScaleOutListener.cs" />
+    <Compile Include="MessageRouteDomainMap.cs" />
     <Compile Include="NullClusterHealthMonitor.cs" />
     <Compile Include="NullClusterMonitor.cs" />
     <Compile Include="NullHeartBeatSender.cs" />

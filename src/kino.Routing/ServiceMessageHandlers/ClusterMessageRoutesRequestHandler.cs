@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using kino.Cluster;
 using kino.Connectivity;
@@ -6,7 +7,6 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
-using MessageRoute = kino.Cluster.MessageRoute;
 
 namespace kino.Routing.ServiceMessageHandlers
 {
@@ -35,16 +35,8 @@ namespace kino.Routing.ServiceMessageHandlers
                     message.As<Message>().VerifySignature(securityProvider);
 
                     var routes = internalRoutingTable.GetAllRoutes();
-                    var messageHubs = routes.MessageHubs;
-                    var actors = routes.Actors;
-                    var contracts = actors.SelectMany(r => r.Actors.Select(a => new MessageRoute
-                                                                                {
-                                                                                    Receiver = new ReceiverIdentifier(a.Identity),
-                                                                                    Message = r.Message
-                                                                                }))
-                                          .Where(r => securityProvider.GetDomain(r.Message.Identity) == message.Domain)
-                                          .Concat(messageHubs.Select(mh => new MessageRoute {Receiver = new ReceiverIdentifier(mh.MessageHub.Identity)}))
-                                          .ToList();
+                    var contracts = GetActorRoutes(message, routes).Concat(GetMessageHubRoutes(routes))
+                                                                   .ToList();
 
                     if (contracts.Any())
                     {
@@ -55,6 +47,23 @@ namespace kino.Routing.ServiceMessageHandlers
 
             return shouldHandle;
         }
+
+        private IEnumerable<Cluster.MessageRoute> GetActorRoutes(IMessage message, InternalRouting routes)
+            => routes.Actors.SelectMany(r => r.Actors
+                                              .Where(a => !a.LocalRegistration)
+                                              .Select(a => new Cluster.MessageRoute
+                                                           {
+                                                               Receiver = new ReceiverIdentifier(a.Identity),
+                                                               Message = r.Message
+                                                           }))
+                     .Where(r => securityProvider.GetDomain(r.Message.Identity) == message.Domain);
+
+        private static IEnumerable<Cluster.MessageRoute> GetMessageHubRoutes(InternalRouting routes)
+            => routes.MessageHubs.Where(mh => !mh.LocalRegistration)
+                     .Select(mh => new Cluster.MessageRoute
+                                   {
+                                       Receiver = new ReceiverIdentifier(mh.MessageHub.Identity)
+                                   });
 
         private static bool IsRoutesRequest(IMessage message)
             => message.Equals(KinoMessages.RequestClusterMessageRoutes);
