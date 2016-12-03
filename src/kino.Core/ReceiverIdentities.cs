@@ -17,16 +17,16 @@ namespace kino.Core
             => new ReceiverIdentifier(new byte[] {MessageHubSignature}.Concat(ReceiverIdentifier.CreateIdentity()).ToArray());
 
         public static bool IsActor(this ReceiverIdentifier identifier)
-            => identifier?.Identity?.Last() == ActorSignature;
+            => identifier?.Identity?.FirstOrDefault() == ActorSignature;
 
         public static bool IsActor(this IEnumerable<byte> identifier)
-            => identifier?.Last() == ActorSignature;
+            => identifier?.FirstOrDefault() == ActorSignature;
 
         public static bool IsMessageHub(this ReceiverIdentifier identifier)
-            => identifier?.Identity?.Last() == MessageHubSignature;
+            => identifier?.Identity?.FirstOrDefault() == MessageHubSignature;
 
         public static bool IsMessageHub(this IEnumerable<byte> identifier)
-            => identifier?.Last() == MessageHubSignature;
+            => identifier?.FirstOrDefault() == MessageHubSignature;
 
         public static bool IsSet(this ReceiverIdentifier identitifier)
             => identitifier?.Identity != null && !Unsafe.ArraysEqual(identitifier.Identity, Empty);
