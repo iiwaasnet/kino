@@ -105,6 +105,9 @@ namespace Autofac.kino
             RegisterScaleOutListener(builder);
             RegisterHeartBeatSender(builder);
             RegisterClusterHealthMonitor(builder);
+            builder.RegisterType<ClusterServices>()
+                   .As<IClusterServices>()
+                   .SingleInstance();
         }
 
         private static void RegisterClusterHealthMonitor(ContainerBuilder builder)
