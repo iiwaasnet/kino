@@ -40,12 +40,23 @@ namespace kino.Routing
                 MapMessageToNode(routeRegistration, nodeIdentifier);
                 MapActorToMessage(routeRegistration);
                 MapActorToNode(routeRegistration, nodeIdentifier);
+
+                logger.Debug("External route added " +
+                             $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
+                             $"Socket:{nodeIdentifier} " +
+                             $"Actor:{routeRegistration.Route.Receiver}" +
+                             $"Message:{routeRegistration.Route.Message}");
             }
             else
             {
                 if (routeRegistration.Route.Receiver.IsMessageHub())
                 {
                     MapMessageHubToNode(routeRegistration, nodeIdentifier);
+
+                    logger.Debug("External route added " +
+                             $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
+                             $"Socket:{nodeIdentifier} " +
+                             $"MessageHub:{routeRegistration.Route.Receiver}");
                 }
                 else
                 {

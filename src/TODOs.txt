@@ -1,3 +1,4 @@
 - Remove consistency of all Debug() info, i.e. naming of nodes, sockets, actors, identities, etc...
 - Find and remove unused types
 - If ReceiverNode is set, it may be overwritten by callback, when it triggers. Decide if an exception should be thrown in this case
+- Update message.txt with proper frames naming and description

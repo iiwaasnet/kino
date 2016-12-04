@@ -25,11 +25,11 @@ namespace kino.Cluster
         private readonly TimeSpan UnregisterMessageSendTimeout = TimeSpan.FromMilliseconds(500);
 
         public AutoDiscoverySender(IRendezvousCluster rendezvousCluster,
-                                    IScaleOutConfigurationProvider scaleOutConfigurationProvider,
-                                    ISocketFactory socketFactory,
-                                    IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
-                                    ISecurityProvider securityProvider,
-                                    ILogger logger)
+                                   IScaleOutConfigurationProvider scaleOutConfigurationProvider,
+                                   ISocketFactory socketFactory,
+                                   IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
+                                   ISecurityProvider securityProvider,
+                                   ILogger logger)
         {
             this.rendezvousCluster = rendezvousCluster;
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
@@ -82,10 +82,10 @@ namespace kino.Cluster
                 foreach (var domain in securityProvider.GetAllowedDomains())
                 {
                     var message = Message.Create(new RequestClusterMessageRoutesMessage
-                    {
-                        RequestorNodeIdentity = scaleOutAddress.Identity,
-                        RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
-                    },
+                                                 {
+                                                     RequestorNodeIdentity = scaleOutAddress.Identity,
+                                                     RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
+                                                 },
                                                  domain);
                     message.As<Message>().SignMessage(securityProvider);
 
@@ -115,7 +115,7 @@ namespace kino.Cluster
 
                 clusterMonitorSendingSocket.SendMessage(message);
             }
-            
+
             UnregisterMessageSendTimeout.Sleep();
         }
 

@@ -44,6 +44,7 @@ namespace kino.Messaging
                 frames.Add(callback.Identity);
             }
             //TODO: Optimize calculation of body, callbacks and routing frames offsets
+            frames.Add(GetCallbackReceiverNodeIdentityFrame(message)); // 17
             frames.Add(GetCallbackKeyFrame(message)); // 16
             frames.Add(GetDomainFrame(message)); // 15
             frames.Add(GetSignatureFrame(message)); // 14
@@ -149,6 +150,9 @@ namespace kino.Messaging
         private byte[] GetCallbackReceiverIdentityFrame(Message message)
             => message.CallbackReceiverIdentity ?? EmptyFrame;
 
+        private byte[] GetCallbackReceiverNodeIdentityFrame(Message message)
+            => message.CallbackReceiverNodeIdentity ?? EmptyFrame;
+
         private byte[] GetWireFormatVersionFrame(Message message)
             => message.WireFormatVersion.GetBytes();
 
@@ -214,6 +218,9 @@ namespace kino.Messaging
 
         internal byte[] GetCallbackReceiverIdentity()
             => frames[frames.Count - ReversedFramesV4.CallbackReceiverIdentity];
+
+        internal byte[] GetCallbackReceiverNodeIdentity()
+            => frames[frames.Count - ReversedFramesV4.CallbackReceiverNodeIdentity];
 
         internal byte[] GetCorrelationId()
             => frames[frames.Count - ReversedFramesV4.CorrelationId];

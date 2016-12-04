@@ -20,10 +20,11 @@
             internal const int Signature = 14;
             internal const int Domain = 15;
             internal const int CallbackKey = 16;
+            internal const int CallbackReceiverNodeIdentity = 17;
         }
 
         internal static ushort GetLastFixedFrameIndex()
-            => ReversedFramesV4.CallbackKey;
+            => ReversedFramesV4.CallbackReceiverNodeIdentity;
 
         private class ForwardFrames
         {

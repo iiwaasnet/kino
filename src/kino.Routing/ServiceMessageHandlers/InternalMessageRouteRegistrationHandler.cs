@@ -28,7 +28,8 @@ namespace kino.Routing.ServiceMessageHandlers
 
         public void Handle(InternalRouteRegistration routeRegistration)
         {
-            if (routeRegistration.MessageContracts != null)
+            if (routeRegistration.ReceiverIdentifier.IsMessageHub()
+                || routeRegistration.ReceiverIdentifier.IsActor() && routeRegistration.MessageContracts?.Any() == true)
             {
                 internalRoutingTable.AddMessageRoute(routeRegistration);
                 var routesByDomain = GetActors(routeRegistration).Concat(GetMessageHubs(routeRegistration))

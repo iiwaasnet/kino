@@ -150,9 +150,8 @@ namespace kino.Routing
                                     Distribution = message.Distribution,
                                     ReceiverNodeIdentity = new ReceiverIdentifier(message.ReceiverNodeIdentity ?? IdentityExtensions.Empty)
                                 };
-            var handleMessageLocally = Unsafe.ArraysEqual(message.ReceiverNodeIdentity, thisNodeIdentity);
-
-            //var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
+            var handleMessageLocally = !message.ReceiverNodeIdentity.IsSet()
+                                       || Unsafe.ArraysEqual(message.ReceiverNodeIdentity, thisNodeIdentity);
 
             var handled = handleMessageLocally && HandleMessageLocally(lookupRequest, message);
             if (!handled || message.Distribution == DistributionPattern.Broadcast)
@@ -253,12 +252,14 @@ namespace kino.Routing
 
                 if (message.Distribution == DistributionPattern.Broadcast)
                 {
-                    logger.Warn($"Broadcast message: {lookupRequest} didn't find any local handler and was not forwarded.");
+                    //TODO: Add proper logging of lookupRequest
+                    logger.Warn($"Broadcast message: {lookupRequest.ReceiverNodeIdentity} didn't find any local handler and was not forwarded.");
                 }
             }
             else
             {
-                logger.Warn($"Handler not found: {lookupRequest}");
+                //TODO: Add proper logging of lookupRequest
+                logger.Warn($"Handler not found: {lookupRequest.ReceiverNodeIdentity}");
             }
 
             return true;

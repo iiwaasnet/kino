@@ -33,6 +33,7 @@ namespace kino.Messaging
             Signature = IdentityExtensions.Empty;
             TraceOptions = MessageTraceOptions.None;
             ReceiverNodeIdentity = IdentityExtensions.Empty;
+            ReceiverIdentity = IdentityExtensions.Empty;
         }
 
         private Message()
@@ -93,11 +94,14 @@ namespace kino.Messaging
             Identity = multipartMessage.GetMessageIdentity();
             Version = multipartMessage.GetMessageVersion().GetUShort();
             Partition = multipartMessage.GetMessagePartition();
-            ReceiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
+
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
-            ReceiverIdentity = multipartMessage.GetReceiverIdentity();
+            CallbackReceiverNodeIdentity = multipartMessage.GetCallbackReceiverNodeIdentity();
             CallbackPoint = multipartMessage.GetCallbackPoints();
             CallbackKey = multipartMessage.GetCallbackKey();
+
+            ReceiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
+            ReceiverIdentity = multipartMessage.GetReceiverIdentity();
 
             ushort hops;
             routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting(out hops));
@@ -261,6 +265,7 @@ namespace kino.Messaging
                    TTL = TTL,
                    CorrelationId = CorrelationId,
                    ReceiverIdentity = ReceiverIdentity,
+                   ReceiverNodeIdentity = ReceiverNodeIdentity,
                    Signature = Signature,
                    //NOTE: CallbackPoint, if changed from immutable, should be deep-cloned here
                    CallbackPoint = CallbackPoint,

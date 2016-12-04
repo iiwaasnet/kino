@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using kino.Cluster;
 using kino.Connectivity;
 using kino.Core;
@@ -49,31 +50,32 @@ namespace kino.Routing.ServiceMessageHandlers
                     foreach (var route in payload.Routes)
                     {
                         var receiver = new ReceiverIdentifier(route.ReceiverIdentity);
-                        foreach (var messageContract in route.MessageContracts)
+                        var messageRoutes = receiver.IsMessageHub()
+                                                ? new MessageRoute {Receiver = receiver}.ToEnumerable()
+                                                : route.MessageContracts.Select(mc => new MessageRoute
+                                                                                      {
+                                                                                          Receiver = receiver,
+                                                                                          Message = new MessageIdentifier(mc.Identity, mc.Version, mc.Partition)
+                                                                                      });
+                        foreach (var messageRoute in messageRoutes)
                         {
                             try
                             {
                                 //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
-                                if (receiver.IsMessageHub() || securityProvider.GetDomain(messageContract.Identity) == message.Domain)
+                                if (receiver.IsMessageHub() || securityProvider.GetDomain(messageRoute.Message.Identity) == message.Domain)
                                 {
                                     clusterServices.AddPeer(new Node(payload.Uri, payload.NodeIdentity), health);
 
-                                    var messageIdentifier = new MessageIdentifier(messageContract.Identity, messageContract.Version, messageContract.Partition);
                                     externalRoutingTable.AddMessageRoute(new ExternalRouteRegistration
                                                                          {
-                                                                             Route = new MessageRoute
-                                                                                     {
-                                                                                         Receiver = new ReceiverIdentifier(route.ReceiverIdentity),
-                                                                                         Message = messageIdentifier
-                                                                                     },
+                                                                             Route = messageRoute,
                                                                              Peer = peer,
                                                                              Health = health
                                                                          });
                                 }
                                 else
                                 {
-                                    logger.Warn($"MessageIdentity {messageContract.Identity.GetAnyString()} doesn't belong to requested " +
-                                                $"Domain {message.Domain}!");
+                                    logger.Warn($"MessageIdentity {messageRoute.Message} doesn't belong to requested Domain {message.Domain}!");
                                 }
                             }
                             catch (Exception err)
