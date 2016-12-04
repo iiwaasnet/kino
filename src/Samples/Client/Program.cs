@@ -42,7 +42,7 @@ namespace Client
 
             Thread.Sleep(TimeSpan.FromSeconds(5));
             WriteLine($"Client is running... {DateTime.Now}");
-            var runs = 1;
+            var runs = 10000;
 
             //var receiverIdentity = FindReceiver(messageHub);
 
