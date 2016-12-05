@@ -19,33 +19,27 @@ namespace kino.Cluster
         private readonly IRendezvousCluster rendezvousCluster;
         private readonly ISocketFactory socketFactory;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
-        private readonly IAutoDiscoverySender autoDiscoverySender;
         private readonly ManualResetEventSlim heartBeatReceived;
         private readonly ManualResetEventSlim newRendezvousConfiguration;
         private readonly ClusterMembershipConfiguration membershipConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
-        private readonly ISecurityProvider securityProvider;
         private readonly ILocalSocket<IMessage> localRouterSocket;
 
         public AutoDiscoveryListener(IRendezvousCluster rendezvousCluster,
                                      ISocketFactory socketFactory,
                                      IScaleOutConfigurationProvider scaleOutConfigurationProvider,
-                                     IAutoDiscoverySender autoDiscoverySender,
                                      ClusterMembershipConfiguration membershipConfiguration,
                                      IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
-                                     ISecurityProvider securityProvider,
                                      ILocalSocket<IMessage> localRouterSocket,
                                      ILogger logger)
         {
             this.logger = logger;
             this.membershipConfiguration = membershipConfiguration;
             this.performanceCounterManager = performanceCounterManager;
-            this.securityProvider = securityProvider;
             this.localRouterSocket = localRouterSocket;
             this.rendezvousCluster = rendezvousCluster;
             this.socketFactory = socketFactory;
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
-            this.autoDiscoverySender = autoDiscoverySender;
             heartBeatReceived = new ManualResetEventSlim(false);
             newRendezvousConfiguration = new ManualResetEventSlim(false);
         }

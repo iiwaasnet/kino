@@ -15,7 +15,7 @@ namespace kino.Cluster
 
         void AddPeer(Node peer, Health health);
 
-        void DeletePeer(ReceiverIdentifier socketIdentifier);
+        void DeletePeer(ReceiverIdentifier nodeIdentifier);
 
         void StopClusterServices();
 

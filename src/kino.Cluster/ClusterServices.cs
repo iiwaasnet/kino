@@ -36,8 +36,8 @@ namespace kino.Cluster
         public void AddPeer(Node peer, Health health)
             => clusterHealthMonitor.AddPeer(peer, health);
 
-        public void DeletePeer(ReceiverIdentifier socketIdentifier)
-            => clusterHealthMonitor.DeletePeer(socketIdentifier);
+        public void DeletePeer(ReceiverIdentifier nodeIdentifier)
+            => clusterHealthMonitor.DeletePeer(nodeIdentifier);
 
         public void StopClusterServices()
         {

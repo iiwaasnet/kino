@@ -12,7 +12,7 @@ namespace kino.Cluster
         {
         }
 
-        public void DeletePeer(ReceiverIdentifier socketIdentifier)
+        public void DeletePeer(ReceiverIdentifier nodeIdentifier)
         {
         }
 

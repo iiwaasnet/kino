@@ -249,18 +249,11 @@ namespace kino.Routing
             if (MessageCameFromOtherNode(message))
             {
                 clusterServices.UnregisterSelf(messageRoute.ToEnumerable());
-
-                if (message.Distribution == DistributionPattern.Broadcast)
-                {
-                    //TODO: Add proper logging of lookupRequest
-                    logger.Warn($"Broadcast message: {lookupRequest.ReceiverNodeIdentity} didn't find any local handler and was not forwarded.");
-                }
             }
-            else
-            {
-                //TODO: Add proper logging of lookupRequest
-                logger.Warn($"Handler not found: {lookupRequest.ReceiverNodeIdentity}");
-            }
+            logger.Warn($"Route not found for [{lookupRequest.Distribution}] message looking up by " +
+                        $"[{nameof(lookupRequest.ReceiverNodeIdentity)}:{lookupRequest.ReceiverNodeIdentity}]-" +
+                        $"[{nameof(lookupRequest.ReceiverIdentity)}:{lookupRequest.ReceiverIdentity}]-" +
+                        $"[{nameof(lookupRequest.Message)}:{lookupRequest.Message}]");
 
             return true;
         }

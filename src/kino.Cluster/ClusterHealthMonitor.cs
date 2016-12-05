@@ -76,8 +76,8 @@ namespace kino.Cluster
                                                    }));
         }
 
-        public void DeletePeer(ReceiverIdentifier socketIdentifier)
-            => multiplexingSocket.Send(Message.Create(new DeletePeerMessage {SocketIdentity = socketIdentifier.Identity}));
+        public void DeletePeer(ReceiverIdentifier nodeIdentifier)
+            => multiplexingSocket.Send(Message.Create(new DeletePeerMessage {NodeIdentity = nodeIdentifier.Identity}));
 
         public void Start()
         {
@@ -200,7 +200,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<DeletePeerMessage>();
                 ClusterMemberMeta meta;
-                var socketIdentifier = new ReceiverIdentifier(payload.SocketIdentity);
+                var socketIdentifier = new ReceiverIdentifier(payload.NodeIdentity);
                 if (peers.Find(ref socketIdentifier, out meta))
                 {
                     peers.Remove(socketIdentifier);
@@ -209,12 +209,12 @@ namespace kino.Cluster
                     if (meta.ConnectionEstablished)
                     {
                         socket.Disconnect(new Uri(meta.HealthUri));
-                        logger.Warn($"Stopped HeartBeat monitoring peer {payload.SocketIdentity.GetAnyString()}@{meta.HealthUri}");
+                        logger.Warn($"Stopped HeartBeat monitoring peer {payload.NodeIdentity.GetAnyString()}@{meta.HealthUri}");
                     }
                 }
                 else
                 {
-                    logger.Warn($"Unable to disconnect from unknown peer: ReceiverNodeIdentity [{payload.SocketIdentity.GetAnyString()}]");
+                    logger.Warn($"Unable to disconnect from unknown peer: NodeIdentity [{payload.NodeIdentity.GetAnyString()}]");
                 }
             }
 
