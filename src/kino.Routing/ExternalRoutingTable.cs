@@ -17,7 +17,7 @@ namespace kino.Routing
         private readonly Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> actorToMessageMap;
         private readonly Bcl.IDictionary<MessageIdentifier, HashedLinkedList<ReceiverIdentifier>> messageToNodeMap;
         private readonly Bcl.IDictionary<ReceiverIdentifier, PeerConnection> nodeToConnectionMap;
-        private readonly Bcl.IDictionary<PeerConnection, Bcl.HashSet<ReceiverIdentifier>> connectionToNodeMap;
+        private readonly Bcl.IDictionary<string, Bcl.HashSet<ReceiverIdentifier>> uriToNodeMap;
         private readonly ILogger logger;
 
         public ExternalRoutingTable(ILogger logger)
@@ -28,7 +28,7 @@ namespace kino.Routing
             actorToMessageMap = new Bcl.Dictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>>();
             messageToNodeMap = new Bcl.Dictionary<MessageIdentifier, HashedLinkedList<ReceiverIdentifier>>();
             nodeToConnectionMap = new Bcl.Dictionary<ReceiverIdentifier, PeerConnection>();
-            connectionToNodeMap = new ConcurrentDictionary<PeerConnection, Bcl.HashSet<ReceiverIdentifier>>();
+            uriToNodeMap = new ConcurrentDictionary<string, Bcl.HashSet<ReceiverIdentifier>>();
         }
 
         public PeerConnection AddMessageRoute(ExternalRouteRegistration routeRegistration)
@@ -54,9 +54,9 @@ namespace kino.Routing
                     MapMessageHubToNode(routeRegistration, nodeIdentifier);
 
                     logger.Debug("External route added " +
-                             $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
-                             $"Socket:{nodeIdentifier} " +
-                             $"MessageHub:{routeRegistration.Route.Receiver}");
+                                 $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
+                                 $"Socket:{nodeIdentifier} " +
+                                 $"MessageHub:{routeRegistration.Route.Receiver}");
                 }
                 else
                 {
@@ -65,21 +65,24 @@ namespace kino.Routing
             }
 
             var connection = MapNodeToConnection(routeRegistration, nodeIdentifier);
-            MapConnectionToNode(connection, nodeIdentifier);
+            MapConnectionToNode(connection);
 
             return connection;
         }
 
-        private void MapConnectionToNode(PeerConnection connection, ReceiverIdentifier nodeIdentifier)
+        private void MapConnectionToNode(PeerConnection connection)
         {
             Bcl.HashSet<ReceiverIdentifier> nodes;
-            if (!connectionToNodeMap.TryGetValue(connection, out nodes))
+            var uri = connection.Node.Uri.ToSocketAddress();
+            if (!uriToNodeMap.TryGetValue(uri, out nodes))
             {
                 nodes = new Bcl.HashSet<ReceiverIdentifier>();
-                connectionToNodeMap[connection] = nodes;
+                uriToNodeMap[uri] = nodes;
             }
 
-            nodes.Add(nodeIdentifier);
+            nodes.Add(new ReceiverIdentifier(connection.Node.SocketIdentity));
+
+            logger.Debug($"{nodes.Count} Receivers registered at {uri}.");
         }
 
         private PeerConnection MapNodeToConnection(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
@@ -205,7 +208,7 @@ namespace kino.Routing
             if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out connection))
             {
                 nodeToConnectionMap.Remove(nodeIdentifier);
-                peerConnectionAction = RemovePeerNode(connection, nodeIdentifier);
+                peerConnectionAction = RemovePeerNode(connection);
                 nodeMessageHubs.Remove(nodeIdentifier);
                 Bcl.HashSet<ReceiverIdentifier> actors;
                 if (nodeActors.TryGetValue(nodeIdentifier, out actors))
@@ -235,8 +238,7 @@ namespace kino.Routing
                     }
                 }
 
-                logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
-                             $"Socket:{nodeIdentifier.Identity.GetAnyString()}");
+                logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} Socket:{nodeIdentifier.Identity.GetAnyString()}");
             }
             return new PeerRemoveResult
                    {
@@ -245,19 +247,24 @@ namespace kino.Routing
                    };
         }
 
-        private PeerConnectionAction RemovePeerNode(PeerConnection connection, ReceiverIdentifier nodeIdentifier)
+        private PeerConnectionAction RemovePeerNode(PeerConnection connection)
         {
             Bcl.HashSet<ReceiverIdentifier> nodes;
-            if (connectionToNodeMap.TryGetValue(connection, out nodes))
+            var uri = connection.Node.Uri.ToSocketAddress();
+            if (uriToNodeMap.TryGetValue(uri, out nodes))
             {
-                if (nodes.Remove(nodeIdentifier))
+                if (nodes.Remove(new ReceiverIdentifier(connection.Node.SocketIdentity)))
                 {
                     if (!nodes.Any())
                     {
-                        connectionToNodeMap.Remove(connection);
+                        uriToNodeMap.Remove(uri);
+
+                        logger.Debug($"No Receivers left registered at {uri}. Endpoint will be disconnected.");
 
                         return PeerConnectionAction.Disconnect;
                     }
+
+                    logger.Debug($"{nodes.Count} Receivers left at {uri}.");
 
                     return PeerConnectionAction.KeepConnection;
                 }
@@ -292,9 +299,9 @@ namespace kino.Routing
                 if (!nodeActors.ContainsKey(nodeIdentifier) && !nodeMessageHubs.ContainsKey(nodeIdentifier))
                 {
                     nodeToConnectionMap.Remove(nodeIdentifier);
-                    connectionAction = RemovePeerNode(connection, nodeIdentifier);
-                    logger.Debug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} " +
-                                 $"Socket:{nodeIdentifier}");
+                    connectionAction = RemovePeerNode(connection);
+
+                    logger.Debug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} Socket:{nodeIdentifier}");
                 }
             }
 
