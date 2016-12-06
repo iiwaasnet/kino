@@ -13,17 +13,17 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class MessageRouteDiscoveryHandler : IServiceMessageHandler
     {
-        private readonly IClusterServices clusterServices;
+        private readonly IClusterMonitor clusterMonitor;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
 
-        public MessageRouteDiscoveryHandler(IClusterServices clusterServices,
+        public MessageRouteDiscoveryHandler(IClusterMonitor clusterMonitor,
                                             IInternalRoutingTable internalRoutingTable,
                                             ISecurityProvider securityProvider,
                                             ILogger logger)
         {
-            this.clusterServices = clusterServices;
+            this.clusterMonitor = clusterMonitor;
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
             this.logger = logger;
@@ -68,7 +68,7 @@ namespace kino.Routing.ServiceMessageHandlers
                                           : new[] {securityProvider.GetDomain(messageRoute.Message.Identity)};
                         if (domains.Contains(message.Domain))
                         {
-                            clusterServices.RegisterSelf(messageRoute.ToEnumerable(), message.Domain);
+                            clusterMonitor.RegisterSelf(messageRoute.ToEnumerable(), message.Domain);
                         }
                         else
                         {

@@ -17,17 +17,17 @@ namespace kino.Routing.ServiceMessageHandlers
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ILogger logger;
         private readonly ISecurityProvider securityProvider;
-        private readonly IClusterServices clusterServices;
+        private readonly IClusterHealthMonitor clusterHealthMonitor;
 
         public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable,
                                                        ISecurityProvider securityProvider,
-                                                       IClusterServices clusterServices,
+                                                       IClusterHealthMonitor clusterHealthMonitor,
                                                        ILogger logger)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.logger = logger;
             this.securityProvider = securityProvider;
-            this.clusterServices = clusterServices;
+            this.clusterHealthMonitor = clusterHealthMonitor;
         }
 
         public bool Handle(IMessage message, ISocket _)
@@ -64,7 +64,7 @@ namespace kino.Routing.ServiceMessageHandlers
                                 //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
                                 if (receiver.IsMessageHub() || securityProvider.GetDomain(messageRoute.Message.Identity) == message.Domain)
                                 {
-                                    clusterServices.AddPeer(new Node(payload.Uri, payload.NodeIdentity), health);
+                                    clusterHealthMonitor.AddPeer(new Node(payload.Uri, payload.NodeIdentity), health);
 
                                     externalRoutingTable.AddMessageRoute(new ExternalRouteRegistration
                                                                          {

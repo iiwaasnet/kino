@@ -182,14 +182,15 @@ namespace kino.Routing
                     //TODO: HostUnreachableException will never happen here, hence NetMQ sockets are not used
                     //TODO: ILocalSocketShould throw similar exception, if no one is reading messages from the socket,
                     //TODO: which should be a trigger for deletion of the ActorHost
-                    var removedRoutes = internalRoutingTable.RemoveReceiverRoute(destination);
+                    var removedRoutes = internalRoutingTable.RemoveReceiverRoute(destination)
+                                                            .Select(rr => new Cluster.MessageRoute
+                                                                          {
+                                                                              Receiver = rr.Receiver,
+                                                                              Message = rr.Message
+                                                                          });
                     if (removedRoutes.Any())
                     {
-                        clusterServices.UnregisterSelf(removedRoutes.Select(rr => new Cluster.MessageRoute
-                                                                                  {
-                                                                                      Receiver = rr.Receiver,
-                                                                                      Message = rr.Message
-                                                                                  }));
+                        clusterServices.GetClusterMonitor().UnregisterSelf(removedRoutes);
                     }
                     logger.Error(err);
                 }
@@ -212,8 +213,8 @@ namespace kino.Routing
                     {
                         scaleOutBackend.Connect(route.Node.Uri, waitConnectionEstablishment: true);
                         route.Connected = true;
-                        clusterServices.StartPeerMonitoring(new Node(route.Node.Uri, route.Node.SocketIdentity),
-                                                            route.Health);
+                        clusterServices.GetClusterHealthMonitor()
+                                       .StartPeerMonitoring(new Node(route.Node.Uri, route.Node.SocketIdentity), route.Health);
                     }
 
                     message.SetSocketIdentity(route.Node.SocketIdentity);
@@ -244,11 +245,11 @@ namespace kino.Routing
                                    Receiver = lookupRequest.ReceiverIdentity,
                                    Message = lookupRequest.Message
                                };
-            clusterServices.DiscoverMessageRoute(messageRoute);
+            clusterServices.GetClusterMonitor().DiscoverMessageRoute(messageRoute);
 
             if (MessageCameFromOtherNode(message))
             {
-                clusterServices.UnregisterSelf(messageRoute.ToEnumerable());
+                clusterServices.GetClusterMonitor().UnregisterSelf(messageRoute.ToEnumerable());
             }
             logger.Warn($"Route not found for [{lookupRequest.Distribution}] message looking up by " +
                         $"[{nameof(lookupRequest.ReceiverNodeIdentity)}:{lookupRequest.ReceiverNodeIdentity}]-" +

@@ -10,15 +10,15 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class NodeUnregistrationHandler : IServiceMessageHandler
     {
-        private readonly IClusterServices clusterServices;
+        private readonly IClusterHealthMonitor clusterHealthMonitor;
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ISecurityProvider securityProvider;
 
-        public NodeUnregistrationHandler(IClusterServices clusterServices,
+        public NodeUnregistrationHandler(IClusterHealthMonitor clusterHealthMonitor,
                                          IExternalRoutingTable externalRoutingTable,
                                          ISecurityProvider securityProvider)
         {
-            this.clusterServices = clusterServices;
+            this.clusterHealthMonitor = clusterHealthMonitor;
             this.externalRoutingTable = externalRoutingTable;
             this.securityProvider = securityProvider;
         }
@@ -42,7 +42,7 @@ namespace kino.Routing.ServiceMessageHandlers
                     }
                     if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
                     {
-                        clusterServices.DeletePeer(nodeIdentifer);
+                        clusterHealthMonitor.DeletePeer(nodeIdentifer);
                     }
                 }
             }

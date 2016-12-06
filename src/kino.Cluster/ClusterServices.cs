@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using kino.Core;
-
-namespace kino.Cluster
+﻿namespace kino.Cluster
 {
     public class ClusterServices : IClusterServices
     {
@@ -21,23 +18,11 @@ namespace kino.Cluster
             this.clusterHealthMonitor = clusterHealthMonitor;
         }
 
-        public void DiscoverMessageRoute(MessageRoute messageRoute)
-            => clusterMonitor.DiscoverMessageRoute(messageRoute);
+        public IClusterMonitor GetClusterMonitor()
+            => clusterMonitor;
 
-        public void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain)
-            => clusterMonitor.RegisterSelf(registrations, domain);
-
-        public void UnregisterSelf(IEnumerable<MessageRoute> registrations)
-            => clusterMonitor.UnregisterSelf(registrations);
-
-        public void StartPeerMonitoring(Node node, Health health)
-            => clusterHealthMonitor.StartPeerMonitoring(node, health);
-
-        public void AddPeer(Node peer, Health health)
-            => clusterHealthMonitor.AddPeer(peer, health);
-
-        public void DeletePeer(ReceiverIdentifier nodeIdentifier)
-            => clusterHealthMonitor.DeletePeer(nodeIdentifier);
+        public IClusterHealthMonitor GetClusterHealthMonitor()
+            => clusterHealthMonitor;
 
         public void StopClusterServices()
         {

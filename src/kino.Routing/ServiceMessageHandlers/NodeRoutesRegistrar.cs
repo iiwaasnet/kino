@@ -29,7 +29,7 @@ namespace kino.Routing.ServiceMessageHandlers
 
             if (contracts.Any())
             {
-                clusterServices.RegisterSelf(contracts, domain);
+                clusterServices.GetClusterMonitor().RegisterSelf(contracts, domain);
             }
         }
 

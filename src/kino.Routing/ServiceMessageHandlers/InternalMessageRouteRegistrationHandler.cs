@@ -10,17 +10,17 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class InternalMessageRouteRegistrationHandler
     {
-        private readonly IClusterServices clusterServices;
+        private readonly IClusterMonitor clusterMonitor;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
 
-        public InternalMessageRouteRegistrationHandler(IClusterServices clusterServices,
+        public InternalMessageRouteRegistrationHandler(IClusterMonitor clusterMonitor,
                                                        IInternalRoutingTable internalRoutingTable,
                                                        ISecurityProvider securityProvider,
                                                        ILogger logger)
         {
-            this.clusterServices = clusterServices;
+            this.clusterMonitor = clusterMonitor;
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
             this.logger = logger;
@@ -36,7 +36,7 @@ namespace kino.Routing.ServiceMessageHandlers
                                                                  .GroupBy(mh => mh.Domain);
                 foreach (var route in routesByDomain)
                 {
-                    clusterServices.RegisterSelf(route.Select(r => r.MessageRoute), route.Key);
+                    clusterMonitor.RegisterSelf(route.Select(r => r.MessageRoute), route.Key);
                 }
             }
         }
