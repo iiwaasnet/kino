@@ -29,7 +29,7 @@ namespace kino.Routing.ServiceMessageHandlers
             this.logger = logger;
         }
 
-        public bool Handle(IMessage message, ISocket forwardingSocket)
+        public bool Handle(IMessage message, ISocket scaleOutBackend)
         {
             var shouldHandle = IsUnregisterMessageRouting(message);
             if (shouldHandle)
@@ -45,7 +45,7 @@ namespace kino.Routing.ServiceMessageHandlers
                         var peerRemoveResult = externalRoutingTable.RemoveMessageRoute(route);
                         if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                         {
-                            forwardingSocket.SafeDisconnect(peerRemoveResult.Uri);
+                            scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
                         }
                         if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
                         {

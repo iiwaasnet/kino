@@ -33,6 +33,7 @@ namespace kino.Client
         private readonly ILocalSocket<IMessage> receivingSocket;
         private readonly ReceiverIdentifier receiverIdentifier;
         private byte[] callbackReceiverNodeIdentity;
+        private bool isStarted;
 
         public MessageHub(ICallbackHandlerStack callbackHandlers,
                           ILocalSocket<IMessage> localRouterSocket,
@@ -56,14 +57,18 @@ namespace kino.Client
 
         public void Start()
         {
-            cancellationTokenSource = new CancellationTokenSource();
-            callbackReceiverNodeIdentity = GetBlockingCallbackReceiverNodeIdentity();
-            receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token),
-                                              cancellationTokenSource.Token,
-                                              TaskCreationOptions.LongRunning);
-            sending = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token),
-                                            cancellationTokenSource.Token,
-                                            TaskCreationOptions.LongRunning);
+            if (!isStarted)
+            {
+                cancellationTokenSource = new CancellationTokenSource();
+                callbackReceiverNodeIdentity = GetBlockingCallbackReceiverNodeIdentity();
+                receiving = Task.Factory.StartNew(_ => ReadReplies(cancellationTokenSource.Token),
+                                                  cancellationTokenSource.Token,
+                                                  TaskCreationOptions.LongRunning);
+                sending = Task.Factory.StartNew(_ => SendClientRequests(cancellationTokenSource.Token),
+                                                cancellationTokenSource.Token,
+                                                TaskCreationOptions.LongRunning);
+                isStarted = true;
+            }
         }
 
         private byte[] GetBlockingCallbackReceiverNodeIdentity()
@@ -75,6 +80,7 @@ namespace kino.Client
             sending?.Wait(TerminationWaitTimeout);
             receiving?.Wait(TerminationWaitTimeout);
             cancellationTokenSource?.Dispose();
+            isStarted = false;
         }
 
         private void SendClientRequests(CancellationToken token)

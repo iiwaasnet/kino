@@ -36,6 +36,7 @@ namespace kino.Routing
         private readonly InternalMessageRouteRegistrationHandler internalRegistrationHandler;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private byte[] thisNodeIdentity;
+        private bool isStarted;
 
         public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
@@ -66,10 +67,14 @@ namespace kino.Routing
 
         public void Start()
         {
-            //TODO: Decide on how to handle start timeout
-            cancellationTokenSource = new CancellationTokenSource();
-            localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
-            clusterServices.StartClusterServices();
+            if (!isStarted)
+            {
+                //TODO: Decide on how to handle start timeout
+                cancellationTokenSource = new CancellationTokenSource();
+                localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+                clusterServices.StartClusterServices();
+                isStarted = true;
+            }
         }
 
         public void Stop()
@@ -78,6 +83,7 @@ namespace kino.Routing
             cancellationTokenSource?.Cancel();
             localRouting?.Wait(TerminationWaitTimeout);
             cancellationTokenSource?.Dispose();
+            isStarted = false;
         }
 
         private byte[] GetBlockingReceiverNodeIdentity()

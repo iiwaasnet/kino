@@ -5,6 +5,6 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public interface IServiceMessageHandler
     {
-        bool Handle(IMessage message, ISocket forwardingSocket);
+        bool Handle(IMessage message, ISocket scaleOutBackend);
     }
 }

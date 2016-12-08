@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
-using kino.Core;
 using kino.Core.Framework;
 
 namespace kino.Security
@@ -68,7 +67,7 @@ namespace kino.Security
         }
 
         private static IDictionary<AnyVersionMessageIdentifier, DomainPrivateKey> CreateMessageMapping(IDictionary<string, DomainPrivateKey> domainKeys,
-                                                                                      IDomainScopeResolver domainScopeResolver)
+                                                                                                       IDomainScopeResolver domainScopeResolver)
         {
             var mappings = new Dictionary<AnyVersionMessageIdentifier, DomainPrivateKey>();
             var domainScopes = domainScopeResolver.GetDomainMessages(domainKeys.Select(dk => dk.Key));

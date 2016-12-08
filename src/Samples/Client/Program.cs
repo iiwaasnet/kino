@@ -21,6 +21,12 @@ namespace Client
     {
         private static void Main(string[] args)
         {
+            //kino.SetDependecyResolver(builder);
+            //kino.Start();
+            //kino.Stop();
+            //kino.GetMessageHub();
+            //kino.CreateMessageHub();
+
             //TryEncryptDecrypt();
             ////SignFile(Guid.NewGuid().ToByteArray(), @"C:\0\lps\logs\2016-06-09.log", @"c:\devnull");
             ////SignFile(Guid.NewGuid().ToByteArray(), @"C:\0\lps\logs\2016-06-09.log", @"c:\devnull");
