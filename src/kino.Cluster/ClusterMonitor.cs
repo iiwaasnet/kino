@@ -108,9 +108,10 @@ namespace kino.Cluster
                                                                                                                                })
                                                                                                          .ToArray()
                                                                                  }).ToArray()
-                                         },
-                                         domain);
-            message.As<Message>().SignMessage(securityProvider);
+                                         })
+                                 .As<Message>();
+            message.SetDomain(domain);
+            message.SignMessage(securityProvider);
             autoDiscoverySender.EnqueueMessage(message);
         }
 
@@ -151,9 +152,10 @@ namespace kino.Cluster
                                                                                                            .ToArray()
                                                                                    })
                                                                       .ToArray()
-                                             },
-                                             domainRoutes.Domain);
-                message.As<Message>().SignMessage(securityProvider);
+                                             })
+                                     .As<Message>();
+                message.SetDomain(domainRoutes.Domain);
+                message.SignMessage(securityProvider);
 
                 autoDiscoverySender.EnqueueMessage(message);
             }

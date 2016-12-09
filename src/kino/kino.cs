@@ -4,15 +4,13 @@ using kino.Client;
 
 namespace kino
 {
-    public partial class kino
+    public partial class kino : IDisposable
     {
-        private readonly IDependencyResolver resolver;
+        private IDependencyResolver resolver;
         private bool isStarted;
 
-        public kino(IDependencyResolver resolver)
-        {
-            this.resolver = resolver;
-        }
+        public void SetResolver(IDependencyResolver resolver)
+            => this.resolver = resolver;
 
         public IMessageHub GetMessageHub()
         {
@@ -34,14 +32,31 @@ namespace kino
 
         public void Start()
         {
+            AssertDependencyResolverSet();
+
+            Build();
+
             messageRouter.Start();
             isStarted = true;
+        }
+
+        private void AssertDependencyResolverSet()
+        {
+            if (resolver == null)
+            {
+                throw new ArgumentNullException(nameof(resolver), "Dependency resolver is not assigned!");
+            }
         }
 
         public void Stop()
         {
             messageRouter.Stop();
             isStarted = false;
+        }
+
+        public void Dispose()
+        {
+            actorHostManager.Dispose();
         }
 
         private void AssertKinoStarted()

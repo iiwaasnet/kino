@@ -86,6 +86,10 @@
       <Project>{6809914A-DBDF-4801-A2CA-A03FD43F1172}</Project>
       <Name>kino.Routing</Name>
     </ProjectReference>
+    <ProjectReference Include="..\kino.Security\kino.Security.csproj">
+      <Project>{33F0B37F-478E-405E-ACFB-65759C56228D}</Project>
+      <Name>kino.Security</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

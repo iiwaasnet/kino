@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using Autofac;
-using Autofac.kino;
+using kino;
 using kino.Actors;
-using kino.Routing;
 using static System.Console;
 
 namespace Server
@@ -15,30 +14,51 @@ namespace Server
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule<MainModule>();
-            builder.RegisterModule<KinoModule>();
             builder.RegisterModule<SecurityModule>();
 
             var container = builder.Build();
+            var kino = new kino.kino();
+            kino.SetResolver(new DependencyResolver(container));
+            kino.Start();
 
-            var messageRouter = container.Resolve<IMessageRouter>();
-            messageRouter.Start();
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
             Thread.Sleep(TimeSpan.FromMilliseconds(30));
 
-            var actorHostManager = container.Resolve<IActorHostManager>();
+            //var actorHostManager = container.Resolve<IActorHostManager>();
             foreach (var actor in container.Resolve<IEnumerable<IActor>>())
             {
-                actorHostManager.AssignActor(actor);
+                kino.AssignActor(actor);
             }
 
             WriteLine("ActorHost started...");
             ReadLine();
 
-            actorHostManager.Dispose();
-            messageRouter.Stop();
+            kino.Stop();
             container.Dispose();
 
             WriteLine("ActorHost stopped.");
+        }
+    }
+
+    public class DependencyResolver : IDependencyResolver
+    {
+        private readonly IContainer container;
+
+        public DependencyResolver(IContainer container)
+        {
+            this.container = container;
+        }
+
+        public T Resolve<T>()
+        {
+            try
+            {
+                return container.Resolve<T>();
+            }
+            catch (Exception)
+            {
+                return default(T);
+            }
         }
     }
 }

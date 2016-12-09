@@ -104,9 +104,10 @@ namespace kino.Cluster
                                                                                  Partition = messageRoute.Message.Partition
                                                                              }
                                                                            : null
-                                                 },
-                                                 domain);
-                    message.As<Message>().SignMessage(securityProvider);
+                                                 })
+                                         .As<Message>();
+                    message.SetDomain(domain);
+                    message.SignMessage(securityProvider);
                     autoDiscoverySender.EnqueueMessage(message);
                 }
             }

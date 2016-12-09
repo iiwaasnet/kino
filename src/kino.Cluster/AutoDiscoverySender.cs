@@ -85,8 +85,9 @@ namespace kino.Cluster
                                                  {
                                                      RequestorNodeIdentity = scaleOutAddress.Identity,
                                                      RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
-                                                 },
-                                                 domain);
+                                                 })
+                                         .As<Message>();
+                    message.SetDomain(domain);
                     message.As<Message>().SignMessage(securityProvider);
 
                     clusterMonitorSendingSocket.SendMessage(message);
@@ -109,9 +110,10 @@ namespace kino.Cluster
                                              {
                                                  Uri = scaleOutAddress.Uri.ToSocketAddress(),
                                                  ReceiverNodeIdentity = scaleOutAddress.Identity,
-                                             },
-                                             domain);
-                message.As<Message>().SignMessage(securityProvider);
+                                             })
+                                     .As<Message>();
+                message.SetDomain(domain);
+                message.SignMessage(securityProvider);
 
                 clusterMonitorSendingSocket.SendMessage(message);
             }

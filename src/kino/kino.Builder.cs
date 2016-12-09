@@ -40,7 +40,9 @@ namespace kino
             var instanceNameResolver = resolver.Resolve<IInstanceNameResolver>() ?? new InstanceNameResolver();
             var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver,
                                                                                                    logger);
-            var securityProvider = new SecurityProvider(() => HMAC.Create("HMACMD5"),
+            var hashCodeProvider = resolver.Resolve<Func<HMAC>>() ?? (() => HMAC.Create("HMACMD5"));
+
+            var securityProvider = new SecurityProvider(hashCodeProvider,
                                                         resolver.Resolve<IDomainScopeResolver>(),
                                                         resolver.Resolve<IDomainPrivateKeyProvider>());
             var heartBeatSenderConfigurationManager = new HeartBeatSenderConfigurationManager(heartBeatSenderConfiguration);
@@ -152,17 +154,17 @@ namespace kino
                                                                                       externalRoutingTable)
                                          };
             messageRouter = new MessageRouter(socketFactory,
-                                                  internalRoutingTable,
-                                                  externalRoutingTable,
-                                                  scaleoutConfigurationProvider,
-                                                  clusterServices,
-                                                  serviceMessageHandlers,
-                                                  performanceCounterManager,
-                                                  securityProvider,
-                                                  routerLocalSocket,
-                                                  internalRegistrationSocket,
-                                                  internalMessageRouteRegistrationHandler,
-                                                  logger);
+                                              internalRoutingTable,
+                                              externalRoutingTable,
+                                              scaleoutConfigurationProvider,
+                                              clusterServices,
+                                              serviceMessageHandlers,
+                                              performanceCounterManager,
+                                              securityProvider,
+                                              routerLocalSocket,
+                                              internalRegistrationSocket,
+                                              internalMessageRouteRegistrationHandler,
+                                              logger);
             var actorHostFactory = new ActorHostFactory(securityProvider,
                                                         routerLocalSocket,
                                                         internalRegistrationSocket,
@@ -174,6 +176,7 @@ namespace kino
                                                              internalRegistrationSocket,
                                                              localSocketFactory,
                                                              scaleoutConfigurationProvider,
+                                                             securityProvider, 
                                                              logger,
                                                              keepLocal);
             var messageHub = createMessageHub(false);

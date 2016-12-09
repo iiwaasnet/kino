@@ -11,6 +11,7 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Routing;
+using kino.Security;
 
 namespace kino.Client
 {
@@ -25,6 +26,7 @@ namespace kino.Client
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
+        private readonly ISecurityProvider securityProvider;
         private readonly bool keepRegistrationLocal;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
@@ -40,6 +42,7 @@ namespace kino.Client
                           ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
                           ILocalSocketFactory localSocketFactory,
                           IScaleOutConfigurationProvider scaleOutConfigurationProvider,
+                          ISecurityProvider securityProvider,
                           ILogger logger,
                           bool keepRegistrationLocal = false)
         {
@@ -47,6 +50,7 @@ namespace kino.Client
             this.localRouterSocket = localRouterSocket;
             this.internalRegistrationsSender = internalRegistrationsSender;
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
+            this.securityProvider = securityProvider;
             this.keepRegistrationLocal = keepRegistrationLocal;
             hubRegistered = new ManualResetEventSlim();
             this.callbackHandlers = callbackHandlers;
@@ -197,10 +201,17 @@ namespace kino.Client
         }
 
         public IPromise EnqueueRequest(IMessage message, CallbackPoint callbackPoint)
-            => InternalEnqueueRequest(message, callbackPoint);
+        {
+            message.As<Message>().SetDomain(securityProvider.GetDomain(message.Identity));
+
+            return InternalEnqueueRequest(message, callbackPoint);
+        }
 
         public void SendOneWay(IMessage message)
-            => registrationsQueue.Add(new CallbackRegistration {Message = message});
+        {
+            message.As<Message>().SetDomain(securityProvider.GetDomain(message.Identity));
+            registrationsQueue.Add(new CallbackRegistration {Message = message});
+        }
 
         private IPromise InternalEnqueueRequest(IMessage message, CallbackPoint callbackPoint)
         {

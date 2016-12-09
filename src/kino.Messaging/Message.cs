@@ -18,9 +18,9 @@ namespace kino.Messaging
         private List<SocketEndpoint> routing;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
-        private Message(IPayload payload, string domain)
+        private Message(IPayload payload)
         {
-            Domain = domain ?? string.Empty;
+            Domain = string.Empty;
             WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
             CallbackPoint = Enumerable.Empty<MessageIdentifier>();
@@ -40,29 +40,22 @@ namespace kino.Messaging
         {
         }
 
-        public static IMessage CreateFlowStartMessage(IPayload payload, string domain = null)
-            => new Message(payload, domain)
+        public static IMessage CreateFlowStartMessage(IPayload payload)
+            => new Message(payload)
                {
                    Distribution = DistributionPattern.Unicast,
                    CorrelationId = GenerateCorrelationId()
                };
 
-        internal static IMessage Create(IPayload payload,
-                                        DistributionPattern distributionPattern = DistributionPattern.Unicast)
-            => new Message(payload, null)
+        public static IMessage Create(IPayload payload, DistributionPattern distributionPattern = DistributionPattern.Unicast)
+            => new Message(payload)
                {
                    Distribution = distributionPattern,
                    CorrelationId = EmptyCorrelationId
                };
 
-        public static IMessage Create(IPayload payload,
-                                      string domain,
-                                      DistributionPattern distributionPattern = DistributionPattern.Unicast)
-            => new Message(payload, domain)
-               {
-                   Distribution = distributionPattern,
-                   CorrelationId = EmptyCorrelationId
-               };
+        internal void SetDomain(string domain)
+            => Domain = domain ?? string.Empty;
 
         private static byte[] GenerateCorrelationId()
             //TODO: Better implementation

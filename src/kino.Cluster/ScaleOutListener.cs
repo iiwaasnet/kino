@@ -141,9 +141,9 @@ namespace kino.Cluster
                                             {
                                                 Exception = err,
                                                 StackTrace = err.StackTrace
-                                            },
-                                            securityProvider.GetDomain(KinoMessages.Exception.Identity))
+                                            })
                                     .As<Message>();
+            messageOut.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
             messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
                                              messageIn.CallbackReceiverIdentity,
                                              messageIn.CallbackPoint,

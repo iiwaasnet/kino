@@ -143,6 +143,7 @@ namespace kino.Actors
                     {
                         foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
                         {
+                            messageOut.SetDomain(securityProvider.GetDomain(messageOut.Identity));
                             messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverNodeIdentity,
                                                              messageContext.CallbackReceiverIdentity,
                                                              messageContext.CallbackPoint,
@@ -238,6 +239,7 @@ namespace kino.Actors
 
                     foreach (var messageOut in response.Cast<Message>())
                     {
+                        messageOut.SetDomain(securityProvider.GetDomain(messageOut.Identity));
                         messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
                                                          messageIn.CallbackReceiverIdentity,
                                                          messageIn.CallbackPoint,
@@ -265,9 +267,9 @@ namespace kino.Actors
                                             {
                                                 Exception = err,
                                                 StackTrace = err.StackTrace
-                                            },
-                                            securityProvider.GetDomain(KinoMessages.Exception.Identity))
+                                            })
                                     .As<Message>();
+            messageOut.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
             messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
                                              messageIn.CallbackReceiverIdentity,
                                              messageIn.CallbackPoint,
@@ -299,22 +301,25 @@ namespace kino.Actors
         {
             if (task.IsCanceled)
             {
-                return new ActorResult(Message.Create(new ExceptionMessage
-                                                      {
-                                                          Exception = new OperationCanceledException()
-                                                      },
-                                                      securityProvider.GetDomain(KinoMessages.Exception.Identity)));
+                var message = Message.Create(new ExceptionMessage
+                                              {
+                                                  Exception = new OperationCanceledException()
+                                              }).As<Message>();
+                message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
+                return new ActorResult(message);
             }
             if (task.IsFaulted)
             {
                 var err = task.Exception?.InnerException ?? task.Exception;
 
-                return new ActorResult(Message.Create(new ExceptionMessage
-                                                      {
-                                                          Exception = err,
-                                                          StackTrace = err?.StackTrace
-                                                      },
-                                                      securityProvider.GetDomain(KinoMessages.Exception.Identity)));
+                var message = Message.Create(new ExceptionMessage
+                                              {
+                                                  Exception = err,
+                                                  StackTrace = err?.StackTrace
+                                              })
+                                      .As<Message>();
+                message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
+                return new ActorResult(message);
             }
 
             return task.Result ?? ActorResult.Empty;

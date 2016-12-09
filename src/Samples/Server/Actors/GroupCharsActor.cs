@@ -27,8 +27,7 @@ namespace Server.Actors
                                             {
                                                 Groups = ehllo.Ehllo.GroupBy(c => c).Select(g => new GroupInfo {Char = g.Key, Count = g.Count()}),
                                                 Text = ehllo.Ehllo
-                                            },
-                                            securityProvider.GetDomain(GroupCharResponse.Identity));
+                                            });
 
             return new ActorResult(messageOut);
         }

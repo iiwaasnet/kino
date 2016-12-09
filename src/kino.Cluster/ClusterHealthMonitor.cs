@@ -255,7 +255,9 @@ namespace kino.Cluster
                             {
                                 socket.SetMandatoryRouting();
                                 socket.Connect(uri, true);
-                                var message = Message.Create(new PingMessage(), securityProvider.GetDomain(KinoMessages.Ping.Identity)).As<Message>();
+                                var message = Message.Create(new PingMessage())
+                                                     .As<Message>();
+                                message.SetDomain(securityProvider.GetDomain(KinoMessages.Ping.Identity));
                                 message.SetSocketIdentity(staleNode.Key.Identity);
                                 message.SignMessage(securityProvider);
                                 socket.SendMessage(message);
