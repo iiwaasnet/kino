@@ -25,9 +25,13 @@ namespace Server
             Thread.Sleep(TimeSpan.FromMilliseconds(30));
 
             //var actorHostManager = container.Resolve<IActorHostManager>();
-            foreach (var actor in container.Resolve<IEnumerable<IActor>>())
+            for (var i = 0; i < 2; i++)
             {
-                kino.AssignActor(actor);
+                foreach (var actor in container.Resolve<IEnumerable<IActor>>())
+                {
+                    kino.AssignActor(actor);
+                    WriteLine($"Actor {actor.Identifier} registered");
+                }
             }
 
             WriteLine("ActorHost started...");

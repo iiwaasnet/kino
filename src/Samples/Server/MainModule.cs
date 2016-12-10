@@ -16,12 +16,10 @@ namespace Server
                    .SingleInstance();
 
             builder.RegisterType<RevertStringActor>()
-                   .As<IActor>()
-                   .SingleInstance();
+                   .As<IActor>();
 
             builder.RegisterType<GroupCharsActor>()
-                   .As<IActor>()
-                   .SingleInstance();
+                   .As<IActor>();
 
             builder.RegisterType<ConfigProvider>()
                    .As<IConfigProvider>()

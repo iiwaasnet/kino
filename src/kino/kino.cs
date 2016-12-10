@@ -1,11 +1,17 @@
 ﻿using System;
 using kino.Actors;
 using kino.Client;
+using kino.Routing;
 
 namespace kino
 {
     public partial class kino : IDisposable
     {
+        private Func<IMessageHub> getMessageHub;
+        private Func<bool, IMessageHub> createMessageHub;
+        private IActorHostManager actorHostManager;
+        private IMessageRouter messageRouter;
+        private ActorHostManager internalActorHostManager;
         private IDependencyResolver resolver;
         private bool isStarted;
 
@@ -57,6 +63,7 @@ namespace kino
         public void Dispose()
         {
             actorHostManager.Dispose();
+            internalActorHostManager.Dispose();
         }
 
         private void AssertKinoStarted()

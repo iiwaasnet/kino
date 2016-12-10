@@ -312,6 +312,31 @@ namespace kino.Routing
                    };
         }
 
+        public Bcl.IEnumerable<NodeActors> FindAllActors(MessageIdentifier messageIdentifier)
+        {
+            var messageRoutes = new Bcl.List<NodeActors>();
+            HashedLinkedList<ReceiverIdentifier> nodes;
+            if (messageToNodeMap.TryGetValue(messageIdentifier, out nodes))
+            {
+                foreach (var node in nodes)
+                {
+                    Bcl.HashSet<ReceiverIdentifier> actors;
+                    if (nodeActors.TryGetValue(node, out actors))
+                    {
+                        messageRoutes.Add(new NodeActors
+                                          {
+                                              NodeIdentifier = node,
+                                              Actors = actorToMessageMap.Where(kv => actors.Contains(kv.Key)
+                                                                                     && kv.Value.Contains(messageIdentifier))
+                                                                        .Select(kv => kv.Key)
+                                                                        .ToList()
+                                          });
+                    }
+                }
+            }
+            return messageRoutes;
+        }
+
         private void RemoveActorsByMessage(ExternalRouteRemoval routeRemoval, ReceiverIdentifier nodeIdentifier)
         {
             HashedLinkedList<ReceiverIdentifier> nodes;

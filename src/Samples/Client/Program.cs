@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Autofac;
 using Client.Messages;
 using kino;
 using kino.Client;
 using kino.Core;
+using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using static System.Console;
@@ -35,6 +37,20 @@ namespace Client
             WriteLine($"Client is running... {DateTime.Now}");
             var runs = 10000;
 
+            var messageIdentifier = MessageIdentifier.Create<HelloMessage>();
+            var routesRequest = Message.CreateFlowStartMessage(new RequestMessageExternalRoutesMessage
+                                                               {
+                                                                   MessageContract = new MessageContract
+                                                                                     {
+                                                                                         Identity = messageIdentifier.Identity,
+                                                                                         Version = messageIdentifier.Version,
+                                                                                         Partition = messageIdentifier.Partition
+                                                                                     }
+                                                               });
+            var response = messageHub.EnqueueRequest(routesRequest, CallbackPoint.Create<MessageExternalRoutesMessage>());
+            response.GetResponse().Wait();
+            var route = response.GetResponse().Result.GetPayload<MessageExternalRoutesMessage>().Routes.First();
+
             //Thread.Sleep(TimeSpan.FromSeconds(5));
             while (true)
             {
@@ -47,7 +63,7 @@ namespace Client
                 {
                     var request = Message.CreateFlowStartMessage(new HelloMessage {Greeting = Guid.NewGuid().ToString()});
                     request.TraceOptions = MessageTraceOptions.None;
-                    //request.SetReceiverNode(receiverIdentity);
+                    //request.SetReceiverActor(new ReceiverIdentifier(route.NodeIdentity), new ReceiverIdentifier(route.ReceiverIdentity.First()));
                     var callbackPoint = CallbackPoint.Create<GroupCharsResponseMessage>();
                     promises.Add(messageHub.EnqueueRequest(request, callbackPoint));
                 }
@@ -87,7 +103,7 @@ namespace Client
                                       : "Infinite";
                 WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} ms with {performance} msg/sec");
 
-                Thread.Sleep(TimeSpan.FromSeconds(2));
+                //Thread.Sleep(TimeSpan.FromSeconds(2));
             }
 
             ReadLine();

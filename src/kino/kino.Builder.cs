@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 using kino.Actors;
+using kino.Actors.Internal;
 using kino.Client;
 using kino.Cluster;
 using kino.Cluster.Configuration;
@@ -17,11 +18,6 @@ namespace kino
 {
     public partial class kino
     {
-        private Func<IMessageHub> getMessageHub;
-        private Func<bool, IMessageHub> createMessageHub;
-        private IActorHostManager actorHostManager;
-        private IMessageRouter messageRouter;
-
         private void Build()
         {
             var configurationProvider = new ConfigurationProvider(resolver.Resolve<ApplicationConfiguration>());
@@ -176,12 +172,16 @@ namespace kino
                                                              internalRegistrationSocket,
                                                              localSocketFactory,
                                                              scaleoutConfigurationProvider,
-                                                             securityProvider, 
+                                                             securityProvider,
                                                              logger,
                                                              keepLocal);
             var messageHub = createMessageHub(false);
             getMessageHub = () => messageHub;
             actorHostManager = new ActorHostManager(actorHostFactory, logger);
+
+            internalActorHostManager = new ActorHostManager(actorHostFactory, logger);
+            var internalActor = new MessageRoutesActor(externalRoutingTable);
+            internalActorHostManager.AssignActor(internalActor);
         }
     }
 }

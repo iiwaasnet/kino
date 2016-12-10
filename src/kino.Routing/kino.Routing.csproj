@@ -63,6 +63,7 @@
     <Compile Include="MessageHubRoute.cs" />
     <Compile Include="MessageActorRoute.cs" />
     <Compile Include="MessageRoute.cs" />
+    <Compile Include="NodeActors.cs" />
     <Compile Include="ReceiverIdentifierRegistration.cs" />
     <Compile Include="IExternalRoutingTable.cs" />
     <Compile Include="IInternalRoutingTable.cs" />

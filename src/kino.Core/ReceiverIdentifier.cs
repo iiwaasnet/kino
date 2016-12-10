@@ -34,11 +34,11 @@ namespace kino.Core
                    && StructuralCompare((ReceiverIdentifier)obj);
         }
 
-        public static bool operator ==(ReceiverIdentifier left, ReceiverIdentifier right)
-            => left != null && left.Equals(right);
+        //public static bool operator ==(ReceiverIdentifier left, ReceiverIdentifier right)
+        //    => left != null && left.Equals(right);
 
-        public static bool operator !=(ReceiverIdentifier left, ReceiverIdentifier right)
-            => !(left == right);
+        //public static bool operator !=(ReceiverIdentifier left, ReceiverIdentifier right)
+        //    => !(left == right);
 
         public override int GetHashCode()
             => hashCode;

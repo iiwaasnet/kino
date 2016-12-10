@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using kino.Actors;
 using kino.Core;
@@ -20,6 +21,7 @@ namespace Server.Actors
         [MessageHandlerDefinition(typeof(HelloMessage))]
         private async Task<IActorResult> StartProcess(IMessage message)
         {
+            //Console.WriteLine($"Received by {Identifier}");
             var hello = message.GetPayload<HelloMessage>();
 
             //var reversedString = new string(hello.Greeting.Reverse().ToArray());

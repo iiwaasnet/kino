@@ -24,5 +24,6 @@ namespace kino.Messaging.Messages
         public static readonly MessageIdentifier DeletePeer = MessageIdentifier.Create<DeletePeerMessage>();
         public static readonly MessageIdentifier AddPeer = MessageIdentifier.Create<AddPeerMessage>();
         public static readonly MessageIdentifier RequestMessageExternalRoutes = MessageIdentifier.Create<RequestMessageExternalRoutesMessage>();
+        public static readonly MessageIdentifier MessageExternalRoutes = MessageIdentifier.Create<MessageExternalRoutesMessage>();
     }
 }
