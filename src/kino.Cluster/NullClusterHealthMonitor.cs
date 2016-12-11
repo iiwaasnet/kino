@@ -12,6 +12,10 @@ namespace kino.Cluster
         {
         }
 
+        public void ScheduleConnectivityCheck(ReceiverIdentifier nodeIdentifier)
+        {
+        }
+
         public void DeletePeer(ReceiverIdentifier nodeIdentifier)
         {
         }

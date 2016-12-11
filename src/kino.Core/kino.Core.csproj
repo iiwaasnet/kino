@@ -89,7 +89,6 @@
     <Compile Include="Framework\ThreadExtensions.cs" />
     <Compile Include="ReceiverIdentifier.cs" />
     <Compile Include="SocketEndpoint.cs" />
-    <Compile Include="SocketIdentifier.cs" />
     <Compile Include="Diagnostics\ILogger.cs" />
     <Compile Include="Framework\AsyncQueue.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />

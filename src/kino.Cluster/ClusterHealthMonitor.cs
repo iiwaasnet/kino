@@ -146,6 +146,12 @@ namespace kino.Cluster
             logger.Warn($"{GetType().Name} message processing stopped.");
         }
 
+        public void ScheduleConnectivityCheck(ReceiverIdentifier nodeIdentifier)
+            => multiplexingSocket.Send(Message.Create(new CheckPeerConnectionMessage
+                                                      {
+                                                          SocketIdentity = nodeIdentifier.Identity
+                                                      }));
+
         private void ProcessMessages(CancellationToken token, Barrier barrier)
         {
             try
@@ -190,7 +196,8 @@ namespace kino.Cluster
                     || ProcessAddPeerMessage(message, socket)
                     || ProcessCheckDeadPeersMessage(message)
                     || ProcessCheckStalePeersMessage(message)
-                    || ProcessDeletePeerMessage(message, socket);
+                    || ProcessDeletePeerMessage(message, socket)
+                    || ProcessCheckPeerConnectionMessage(message, socket);
         }
 
         private bool ProcessDeletePeerMessage(IMessage message, ISocket socket)
@@ -239,6 +246,23 @@ namespace kino.Cluster
             return shouldHandle;
         }
 
+        private bool ProcessCheckPeerConnectionMessage(IMessage message, ISocket socket)
+        {
+            var shouldHandle = IsCheckPeerConnectionMessage(message);
+            if (shouldHandle)
+            {
+                var suspeciousNode = new ReceiverIdentifier(message.GetPayload<CheckPeerConnectionMessage>().SocketIdentity);
+                logger.Debug($"Connectivity check requested for node {suspeciousNode}");
+                ClusterMemberMeta meta;
+                if (peers.Find(ref suspeciousNode, out meta))
+                {
+                    CheckPeerConnection(suspeciousNode, meta);
+                }
+            }
+
+            return shouldHandle;
+        }
+
         private void CheckConnectivity(CancellationToken token, System.Collections.Generic.IReadOnlyList<KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>> staleNodes)
         {
             try
@@ -246,36 +270,41 @@ namespace kino.Cluster
                 for (var i = 0; i < staleNodes.Count && !token.IsCancellationRequested; i++)
                 {
                     var staleNode = staleNodes[i];
-                    if (!staleNode.Value.ConnectionEstablished)
-                    {
-                        using (var socket = socketFactory.CreateRouterSocket())
-                        {
-                            var uri = new Uri(staleNode.Value.ScaleOutUri);
-                            try
-                            {
-                                socket.SetMandatoryRouting();
-                                socket.Connect(uri, true);
-                                var message = Message.Create(new PingMessage())
-                                                     .As<Message>();
-                                message.SetDomain(securityProvider.GetDomain(KinoMessages.Ping.Identity));
-                                message.SetSocketIdentity(staleNode.Key.Identity);
-                                message.SignMessage(securityProvider);
-                                socket.SendMessage(message);
-                                socket.Disconnect(uri);
-                                staleNode.Value.LastKnownHeartBeat = DateTime.UtcNow;
-                            }
-                            catch (Exception err)
-                            {
-                                routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = staleNode.Key.Identity}));
-                                logger.Error($"Failed trying to check connectivity to peer {staleNode.Key}@{uri.ToSocketAddress()}. Peer deletion scheduled. {err}");
-                            }
-                        }
-                    }
+                    CheckPeerConnection(staleNode.Key, staleNode.Value);
                 }
             }
             catch (Exception err)
             {
                 logger.Error(err);
+            }
+        }
+
+        private void CheckPeerConnection(ReceiverIdentifier nodeIdentifier, ClusterMemberMeta meta)
+        {
+            if (!meta.ConnectionEstablished)
+            {
+                using (var socket = socketFactory.CreateRouterSocket())
+                {
+                    var uri = new Uri(meta.ScaleOutUri);
+                    try
+                    {
+                        socket.SetMandatoryRouting();
+                        socket.Connect(uri, true);
+                        var message = Message.Create(new PingMessage())
+                                             .As<Message>();
+                        message.SetDomain(securityProvider.GetDomain(KinoMessages.Ping.Identity));
+                        message.SetSocketIdentity(nodeIdentifier.Identity);
+                        message.SignMessage(securityProvider);
+                        socket.SendMessage(message);
+                        socket.Disconnect(uri);
+                        meta.LastKnownHeartBeat = DateTime.UtcNow;
+                    }
+                    catch (Exception err)
+                    {
+                        routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = nodeIdentifier.Identity}));
+                        logger.Error($"Failed trying to check connectivity to peer {nodeIdentifier}@{uri.ToSocketAddress()}. Peer deletion scheduled. {err}");
+                    }
+                }
             }
         }
 
@@ -290,7 +319,7 @@ namespace kino.Cluster
                 foreach (var deadNode in deadNodes)
                 {
                     routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = deadNode.Key.Identity}));
-                    logger.Debug($"Unreachable node {deadNode.Key}@{deadNode.Value.ScaleOutUri} detected. Route deletion scheduled.");
+                    logger.Debug($"Unreachable node {deadNode.Key}@{deadNode.Value.ScaleOutUri} with LastKnownHeartBeat {deadNode.Value.LastKnownHeartBeat} detected. Route deletion scheduled.");
                 }
             }
 
@@ -427,5 +456,8 @@ namespace kino.Cluster
 
         private bool IsCheckStalePeersMessage(IMessage message)
             => message.Equals(KinoMessages.CheckStalePeers);
+
+        private bool IsCheckPeerConnectionMessage(IMessage message)
+            => message.Equals(KinoMessages.CheckPeerConnection);
     }
 }

@@ -34,6 +34,7 @@ namespace kino.Routing
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver;
         private readonly InternalMessageRouteRegistrationHandler internalRegistrationHandler;
+        private readonly IClusterHealthMonitor clusterHealthMonitor;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private byte[] thisNodeIdentity;
         private bool isStarted;
@@ -49,6 +50,7 @@ namespace kino.Routing
                              ILocalSocket<IMessage> localRouterSocket,
                              ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver,
                              InternalMessageRouteRegistrationHandler internalRegistrationHandler,
+                             IClusterHealthMonitor clusterHealthMonitor,
                              ILogger logger)
         {
             this.logger = logger;
@@ -63,6 +65,7 @@ namespace kino.Routing
             this.localRouterSocket = localRouterSocket;
             this.internalRegistrationsReceiver = internalRegistrationsReceiver;
             this.internalRegistrationHandler = internalRegistrationHandler;
+            this.clusterHealthMonitor = clusterHealthMonitor;
         }
 
         public void Start()
@@ -180,6 +183,7 @@ namespace kino.Routing
                                   ? message.Clone().As<Message>()
                                   : message;
 
+                    message.SetSocketIdentity(destination.As<LocalSocket<IMessage>>().GetIdentity().Identity);
                     destination.Send(message);
                     RoutedToLocalActor(message);
                 }
@@ -232,6 +236,11 @@ namespace kino.Routing
                     scaleOutBackend.SendMessage(message);
 
                     ForwardedToOtherNode(message);
+                }
+                catch (TimeoutException err)
+                {
+                    clusterHealthMonitor.ScheduleConnectivityCheck(new ReceiverIdentifier(route.Node.SocketIdentity));
+                    logger.Error(err);
                 }
                 catch (HostUnreachableException err)
                 {
