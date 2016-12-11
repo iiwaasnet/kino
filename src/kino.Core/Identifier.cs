@@ -30,7 +30,14 @@ namespace kino.Core
         }
 
         public static bool operator ==(Identifier left, Identifier right)
-            => left != null && left.Equals(right);
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
+
+            return left.Equals(right);
+        }
 
         public static bool operator !=(Identifier left, Identifier right)
             => !(left == right);

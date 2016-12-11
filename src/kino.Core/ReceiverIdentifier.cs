@@ -31,14 +31,21 @@ namespace kino.Core
                 return true;
             }
             return obj.GetType() == GetType()
-                   && StructuralCompare((ReceiverIdentifier)obj);
+                   && StructuralCompare((ReceiverIdentifier) obj);
         }
 
-        //public static bool operator ==(ReceiverIdentifier left, ReceiverIdentifier right)
-        //    => left != null && left.Equals(right);
+        public static bool operator ==(ReceiverIdentifier left, ReceiverIdentifier right)
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
 
-        //public static bool operator !=(ReceiverIdentifier left, ReceiverIdentifier right)
-        //    => !(left == right);
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ReceiverIdentifier left, ReceiverIdentifier right)
+            => !(left == right);
 
         public override int GetHashCode()
             => hashCode;
