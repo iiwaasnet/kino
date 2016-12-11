@@ -82,7 +82,7 @@ namespace kino.Routing
 
             nodes.Add(new ReceiverIdentifier(connection.Node.SocketIdentity));
 
-            logger.Debug($"[{nodes.Count}] receiver(s) registered at {uri}.");
+            logger.Debug($"[{nodes.Count}] node(s) registered at {uri}.");
         }
 
         private PeerConnection MapNodeToConnection(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
@@ -259,12 +259,12 @@ namespace kino.Routing
                     {
                         uriToNodeMap.Remove(uri);
 
-                        logger.Debug($"Zero receivers left registered at {uri}. Endpoint will be disconnected.");
+                        logger.Debug($"Zero nodes left registered at {uri}. Endpoint will be disconnected.");
 
                         return PeerConnectionAction.Disconnect;
                     }
 
-                    logger.Debug($"[{nodes.Count}] receiver(s) left at {uri}.");
+                    logger.Debug($"[{nodes.Count}] node(s) left at {uri}.");
 
                     return PeerConnectionAction.KeepConnection;
                 }
