@@ -59,7 +59,10 @@ namespace kino.Cluster
                     while (!token.IsCancellationRequested)
                     {
                         socket.SendMessage(Message.Create(heartBeatMessage));
-                        await Task.Delay(config.GetHeartBeatInterval(), token);
+                        //logger.Debug($"HeartBeat sent at {DateTime.UtcNow} UTC");
+                        //TODO: Allow cancellation of Sleep() with token
+                        config.GetHeartBeatInterval().Sleep();
+                        //await Task.Delay(config.GetHeartBeatInterval(), token);
                     }
                 }
             }
