@@ -28,6 +28,31 @@ namespace kino.Connectivity
             dataAvailable.Set();
         }
 
+        public T TryReceive()
+        {
+            T lookup,
+              message;
+            if (!lookAheadQueue.TryTake(out message))
+            {
+                messageQueue.TryTake(out message);
+            }
+            if (!messageQueue.TryTake(out lookup))
+            {
+                dataAvailable.Reset();
+                if (messageQueue.TryTake(out lookup))
+                {
+                    lookAheadQueue.Add(lookup);
+                    dataAvailable.Set();                    
+                }
+            }
+            else
+            {
+                lookAheadQueue.Add(lookup);
+            }
+
+            return message;
+        }
+
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj))
@@ -62,25 +87,7 @@ namespace kino.Connectivity
         public override int GetHashCode()
             => hashCode;
 
-        public T TryReceive()
-        {
-            T lookup,
-              message;
-            if (!lookAheadQueue.TryTake(out message))
-            {
-                messageQueue.TryTake(out message);
-            }
-            if (!messageQueue.TryTake(out lookup))
-            {
-                dataAvailable.Reset();
-            }
-            else
-            {
-                lookAheadQueue.Add(lookup);
-            }
-
-            return message;
-        }
+       
 
         public WaitHandle CanReceive()
             => dataAvailable;
