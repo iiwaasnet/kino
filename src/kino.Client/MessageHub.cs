@@ -102,14 +102,12 @@ namespace kino.Client
                         {
                             var promise = callbackRegistration.Promise;
                             var callbackPoint = callbackRegistration.CallbackPoint;
-                            var callbackKey = lastCallbackKey++;
                             message.RegisterCallbackPoint(callbackReceiverNodeIdentity,
                                                           receiverIdentifier.Identity,
                                                           callbackPoint.MessageIdentifiers,
-                                                          callbackKey);
+                                                          promise.CallbackKey.Value);
 
-                            callbackHandlers.Push(callbackKey,
-                                                  promise,
+                            callbackHandlers.Push(promise,
                                                   callbackPoint.MessageIdentifiers.Concat(new[] {ExceptionMessageIdentifier}));
                             CallbackRegistered(message);
                         }
@@ -217,7 +215,7 @@ namespace kino.Client
         {
             hubRegistered.Wait();
 
-            var promise = new Promise();
+            var promise = new Promise(Interlocked.Increment(ref lastCallbackKey));
             registrationsQueue.Add(new CallbackRegistration
                                    {
                                        Message = message,

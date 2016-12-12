@@ -11,10 +11,11 @@ namespace kino.Client
         private volatile Action<CallbackKey> removeCallbackHandler;
         private volatile bool isDisposed;
 
-        internal Promise()
+        internal Promise(long callbackKey)
         {
             isDisposed = false;
             result = new TaskCompletionSource<IMessage>();
+            CallbackKey = new CallbackKey(callbackKey);
         }
 
         public Task<IMessage> GetResponse()
@@ -61,12 +62,9 @@ namespace kino.Client
             }
         }
 
-        internal void SetRemoveCallbackHandler(long callbackKey, Action<CallbackKey> removeCallbackHandler)
-        {
-            CallbackKey = new CallbackKey(callbackKey);
-            this.removeCallbackHandler = removeCallbackHandler;
-        }
+        internal void SetRemoveCallbackHandler(Action<CallbackKey> removeCallbackHandler)
+            => this.removeCallbackHandler = removeCallbackHandler;
 
-        public CallbackKey CallbackKey { get; private set; }
+        public CallbackKey CallbackKey { get; }
     }
 }

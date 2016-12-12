@@ -16,15 +16,15 @@ namespace kino.Client
             handlers = new ConcurrentDictionary<long, IDictionary<MessageIdentifier, IPromise>>();
         }
 
-        public void Push(long callbackKey, IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers)
+        public void Push(IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers)
         {
-            if (handlers.TryAdd(callbackKey, messageIdentifiers.ToDictionary(mp => mp, mp => promise)))
+            if (handlers.TryAdd(promise.CallbackKey.Value, messageIdentifiers.ToDictionary(mp => mp, mp => promise)))
             {
-                ((Promise) promise).SetRemoveCallbackHandler(callbackKey, RemoveCallback);
+                ((Promise) promise).SetRemoveCallbackHandler(RemoveCallback);
             }
             else
             {
-                throw new DuplicatedKeyException($"Duplicated {nameof(callbackKey)} [{callbackKey}]");
+                throw new DuplicatedKeyException($"Duplicated {nameof(promise.CallbackKey)} [{promise.CallbackKey.Value}]");
             }
         }
 
