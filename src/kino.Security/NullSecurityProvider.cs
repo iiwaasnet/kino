@@ -23,5 +23,8 @@ namespace kino.Security
 
         public IEnumerable<string> GetAllowedDomains()
             => allowedDomains;
+
+        public bool SigningEnabled()
+            => false;
     }
 }

@@ -9,6 +9,7 @@ namespace kino.Security
 {
     public class SecurityProvider : ISecurityProvider
     {
+        private readonly bool disableSigning;
         private readonly IDictionary<string, DomainPrivateKey> nameToDomainMap;
         private readonly IDictionary<AnyVersionMessageIdentifier, DomainPrivateKey> messageToDomainMap;
         private readonly KeyedHashAlgorithm mac;
@@ -16,8 +17,10 @@ namespace kino.Security
 
         public SecurityProvider(Func<HMAC> macImplFactory,
                                 IDomainScopeResolver domainScopeResolver,
-                                IDomainPrivateKeyProvider domainPrivateKeyProvider)
+                                IDomainPrivateKeyProvider domainPrivateKeyProvider,
+                                bool disableSigning = false)
         {
+            this.disableSigning = disableSigning;
             nameToDomainMap = domainPrivateKeyProvider.GetAllowedDomainKeys()
                                                       .ToDictionary(dk => dk.Domain, dk => dk);
             messageToDomainMap = CreateMessageMapping(nameToDomainMap, domainScopeResolver);
@@ -100,5 +103,8 @@ namespace kino.Security
 
             return mappings;
         }
+
+        public bool SigningEnabled()
+            => !disableSigning;
     }
 }

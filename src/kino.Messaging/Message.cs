@@ -164,18 +164,24 @@ namespace kino.Messaging
 
         internal void SignMessage(ISignatureProvider signatureProvider)
         {
-            AssertDomainIsSet();
+            if (signatureProvider.SigningEnabled())
+            {
+                AssertDomainIsSet();
 
-            Signature = signatureProvider.CreateSignature(Domain, GetSignatureFields());
+                Signature = signatureProvider.CreateSignature(Domain, GetSignatureFields());
+            }
         }
 
         internal void VerifySignature(ISignatureProvider signatureProvider)
         {
-            var mac = signatureProvider.CreateSignature(Domain, GetSignatureFields());
-
-            if (!Unsafe.ArraysEqual(Signature, mac))
+            if (signatureProvider.SigningEnabled())
             {
-                throw new WrongMessageSignatureException();
+                var mac = signatureProvider.CreateSignature(Domain, GetSignatureFields());
+
+                if (!Unsafe.ArraysEqual(Signature, mac))
+                {
+                    throw new WrongMessageSignatureException();
+                }
             }
         }
 
