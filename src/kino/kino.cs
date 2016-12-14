@@ -1,6 +1,7 @@
 ﻿using System;
 using kino.Actors;
 using kino.Client;
+using kino.Core.Framework;
 using kino.Routing;
 
 namespace kino
@@ -14,6 +15,7 @@ namespace kino
         private ActorHostManager internalActorHostManager;
         private IDependencyResolver resolver;
         private bool isStarted;
+        private readonly TimeSpan startupDelay = TimeSpan.FromMilliseconds(300);
 
         public void SetResolver(IDependencyResolver resolver)
             => this.resolver = resolver;
@@ -41,8 +43,8 @@ namespace kino
             AssertDependencyResolverSet();
 
             Build();
-
             messageRouter.Start();
+            startupDelay.Sleep();
             isStarted = true;
         }
 
