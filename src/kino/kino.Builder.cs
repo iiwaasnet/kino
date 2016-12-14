@@ -85,10 +85,8 @@ namespace kino
                                                           new NullScaleOutListener())
                 .GetService();
             var autoDiscoverSender = new AutoDiscoverySender(rendezvousCluster,
-                                                             scaleoutConfigurationProvider,
                                                              socketFactory,
                                                              performanceCounterManager,
-                                                             securityProvider,
                                                              logger);
             var autoDiscoveryListener = new AutoDiscoveryListener(rendezvousCluster,
                                                                   socketFactory,
@@ -110,7 +108,8 @@ namespace kino
                                                                          autoDiscoveryListener,
                                                                          heartBeatSenderConfigurationManager,
                                                                          routeDiscovery,
-                                                                         securityProvider),
+                                                                         securityProvider,
+                                                                         logger),
                                                       new NullClusterMonitor())
                 .GetService();
             var clusterServices = new ClusterServices(clusterMonitor,

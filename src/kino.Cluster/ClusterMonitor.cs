@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Cluster.Configuration;
 using kino.Core;
+using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
@@ -22,13 +24,17 @@ namespace kino.Cluster
         private readonly IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider;
         private readonly IRouteDiscovery routeDiscovery;
         private readonly ISecurityProvider securityProvider;
+        private readonly ILogger logger;
+        //TODO: Move to config
+        private readonly TimeSpan unregisterMessageSendTimeout = TimeSpan.FromMilliseconds(500);
 
         public ClusterMonitor(IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                               IAutoDiscoverySender autoDiscoverySender,
                               IAutoDiscoveryListener autoDiscoveryListener,
                               IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider,
                               IRouteDiscovery routeDiscovery,
-                              ISecurityProvider securityProvider)
+                              ISecurityProvider securityProvider,
+                              ILogger logger)
         {
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.autoDiscoverySender = autoDiscoverySender;
@@ -36,13 +42,20 @@ namespace kino.Cluster
             this.heartBeatConfigurationProvider = heartBeatConfigurationProvider;
             this.routeDiscovery = routeDiscovery;
             this.securityProvider = securityProvider;
+            this.logger = logger;
         }
 
         public void Start()
-            => StartProcessingClusterMessages();
+        {
+            StartProcessingClusterMessages();
+            RequestClusterRoutesAsync();
+        }
 
         public void Stop()
-            => StopProcessingClusterMessages();
+        {
+            UnregisterSelf();
+            StopProcessingClusterMessages();
+        }
 
         private void StartProcessingClusterMessages()
         {
@@ -73,6 +86,58 @@ namespace kino.Cluster
         {
             StopProcessingClusterMessages();
             StartProcessingClusterMessages();
+        }
+
+        private void RequestClusterRoutesAsync()
+            => Task.Factory.StartNew(RequestClusterRoutes);
+
+        private void RequestClusterRoutes()
+        {
+            try
+            {
+                var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
+                foreach (var domain in securityProvider.GetAllowedDomains())
+                {
+                    var message = Message.Create(new RequestClusterMessageRoutesMessage
+                                                 {
+                                                     RequestorNodeIdentity = scaleOutAddress.Identity,
+                                                     RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
+                                                 })
+                                         .As<Message>();
+                    message.SetDomain(domain);
+                    message.As<Message>().SignMessage(securityProvider);
+
+                    autoDiscoverySender.EnqueueMessage(message);
+
+                    logger.Info($"Request to discover cluster routes for Domain [{domain}] sent.");
+                }
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
+        }
+
+        private void UnregisterSelf()
+        {
+            var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
+            foreach (var domain in securityProvider.GetAllowedDomains())
+            {
+                var message = Message.Create(new UnregisterNodeMessage
+                                             {
+                                                 Uri = scaleOutAddress.Uri.ToSocketAddress(),
+                                                 ReceiverNodeIdentity = scaleOutAddress.Identity,
+                                             })
+                                     .As<Message>();
+                message.SetDomain(domain);
+                message.SignMessage(securityProvider);
+
+                autoDiscoverySender.EnqueueMessage(message);
+
+                logger.Debug($"Unregistering self {scaleOutAddress.Identity.GetAnyString()} from Domain {domain}");
+            }
+
+            unregisterMessageSendTimeout.Sleep();
         }
 
         public void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain)
