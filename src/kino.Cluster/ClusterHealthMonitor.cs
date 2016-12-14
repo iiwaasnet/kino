@@ -302,7 +302,7 @@ namespace kino.Cluster
                     catch (Exception err)
                     {
                         routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = nodeIdentifier.Identity}));
-                        logger.Error($"Failed trying to check connectivity to peer {nodeIdentifier}@{uri.ToSocketAddress()}. Peer deletion scheduled. {err}");
+                        logger.Warn($"Failed trying to check connectivity to peer {nodeIdentifier}@{uri.ToSocketAddress()}. Peer deletion scheduled. {err}");
                     }
                 }
             }
