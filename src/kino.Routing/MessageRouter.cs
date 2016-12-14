@@ -72,11 +72,16 @@ namespace kino.Routing
         {
             if (!isStarted)
             {
-                //TODO: Decide on how to handle start timeout
-                cancellationTokenSource = new CancellationTokenSource();
-                localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
-                clusterServices.StartClusterServices();
-                isStarted = true;
+                using (var barrier = new Barrier(2))
+                {
+                    //TODO: Decide on how to handle start timeout
+                    cancellationTokenSource = new CancellationTokenSource();
+                    clusterServices.StartClusterServices();
+                    localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning);
+                    barrier.SignalAndWait();
+                    isStarted = true;
+                }
+                
             }
         }
 
@@ -92,7 +97,7 @@ namespace kino.Routing
         private byte[] GetBlockingReceiverNodeIdentity()
             => scaleOutConfigurationProvider.GetScaleOutAddress().Identity;
 
-        private void RouteLocalMessages(CancellationToken token)
+        private void RouteLocalMessages(CancellationToken token, Barrier barrier)
         {
             try
             {
@@ -108,6 +113,7 @@ namespace kino.Routing
                                   };
                 using (var scaleOutBackend = CreateScaleOutBackendSocket())
                 {
+                    barrier.SignalAndWait(token);
                     while (!token.IsCancellationRequested)
                     {
                         try
