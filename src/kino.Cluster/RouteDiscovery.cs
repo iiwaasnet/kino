@@ -96,7 +96,7 @@ namespace kino.Cluster
                                                      ReceiverIdentity = messageRoute.Receiver.IsMessageHub()
                                                                             ? messageRoute.Receiver.Identity
                                                                             : null,
-                                                     MessageContract = messageRoute.Receiver.IsActor()
+                                                     MessageContract = messageRoute.Message != null
                                                                            ? new MessageContract
                                                                              {
                                                                                  Version = messageRoute.Message.Version,
