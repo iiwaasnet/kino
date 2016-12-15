@@ -2,7 +2,7 @@
 
 namespace kino.Core.Diagnostics.Performance
 {
-    public interface IPerformanceCounterManager<TCategory> : IDisposable
+    public interface IPerformanceCounterManager<in TCategory> : IDisposable
         where TCategory : struct
     {
         IPerformanceCounter GetCounter(TCategory counter);

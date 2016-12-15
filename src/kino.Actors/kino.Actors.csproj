@@ -62,7 +62,6 @@
     <Compile Include="ActorResult.cs" />
     <Compile Include="AsyncMessageContext.cs" />
     <Compile Include="Diagnostics\ExceptionHandlerActor.cs" />
-    <Compile Include="Diagnostics\KnownMessageRoutesActor.cs" />
     <Compile Include="IActor.cs" />
     <Compile Include="IActorHandlerMap.cs" />
     <Compile Include="IActorHost.cs" />

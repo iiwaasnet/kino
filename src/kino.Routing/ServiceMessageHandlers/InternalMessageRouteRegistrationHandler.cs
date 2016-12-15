@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using kino.Cluster;
 using kino.Core;
-using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Security;
 
@@ -13,17 +12,14 @@ namespace kino.Routing.ServiceMessageHandlers
         private readonly IClusterMonitor clusterMonitor;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
-        private readonly ILogger logger;
 
         public InternalMessageRouteRegistrationHandler(IClusterMonitor clusterMonitor,
                                                        IInternalRoutingTable internalRoutingTable,
-                                                       ISecurityProvider securityProvider,
-                                                       ILogger logger)
+                                                       ISecurityProvider securityProvider)
         {
             this.clusterMonitor = clusterMonitor;
             this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
-            this.logger = logger;
         }
 
         public void Handle(InternalRouteRegistration routeRegistration)

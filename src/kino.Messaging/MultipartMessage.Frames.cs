@@ -23,7 +23,7 @@
             internal const int CallbackReceiverNodeIdentity = 17;
         }
 
-        internal static ushort GetLastFixedFrameIndex()
+        private static ushort GetLastFixedFrameIndex()
             => ReversedFramesV4.CallbackReceiverNodeIdentity;
 
         private class ForwardFrames

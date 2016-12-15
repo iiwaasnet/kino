@@ -6,8 +6,5 @@
 
         public static bool IsSet(this byte[] buffer)
             => buffer != null && !Unsafe.ArraysEqual(buffer, Empty);
-
-        public static bool IsMessageHub(this Identifier identity)
-            => identity is AnyIdentifier;
     }
 }

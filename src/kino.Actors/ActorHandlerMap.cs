@@ -62,9 +62,6 @@ namespace kino.Actors
             throw new KeyNotFoundException(identifier.ToString());
         }
 
-        internal IEnumerable<MessageIdentifier> GetMessageHandlerIdentifiers()
-            => messageHandlers.Keys;
-
         private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandlerDefinition>> GetActorRegistrations(IActor actor)
             => actor
                 .GetInterfaceDefinition()

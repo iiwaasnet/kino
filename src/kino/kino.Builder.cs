@@ -121,8 +121,7 @@ namespace kino
                                                               securityProvider);
             var internalMessageRouteRegistrationHandler = new InternalMessageRouteRegistrationHandler(clusterMonitor,
                                                                                                       internalRoutingTable,
-                                                                                                      securityProvider,
-                                                                                                      logger);
+                                                                                                      securityProvider);
             var serviceMessageHandlers = new IServiceMessageHandler[]
                                          {
                                              new ClusterMessageRoutesRequestHandler(securityProvider,

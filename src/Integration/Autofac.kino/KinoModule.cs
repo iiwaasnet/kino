@@ -258,10 +258,6 @@ namespace Autofac.kino
 
         private void RegisterFrameworkActors(ContainerBuilder builder)
         {
-            builder.RegisterType<KnownMessageRoutesActor>()
-                   .As<IActor>()
-                   .SingleInstance();
-
             builder.RegisterType<ExceptionHandlerActor>()
                    .As<IActor>()
                    .SingleInstance();

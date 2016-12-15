@@ -82,10 +82,11 @@ namespace kino.Security
                                                                             Domain = dm.Domain
                                                                         }))
             {
-                DomainPrivateKey key, _;
+                DomainPrivateKey key;
                 if (domainKeys.TryGetValue(message.Domain, out key))
                 {
                     var messageIdentifier = new AnyVersionMessageIdentifier(message.Identity.GetBytes());
+                    DomainPrivateKey _;
                     if (!mappings.TryGetValue(messageIdentifier, out _))
                     {
                         mappings.Add(messageIdentifier, key);

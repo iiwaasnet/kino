@@ -48,6 +48,3 @@ Storage
 ==============
 MVP => [{RN, [A]}]
 RN => [MH]
-
-40 x 30 x 20
-H x B x T

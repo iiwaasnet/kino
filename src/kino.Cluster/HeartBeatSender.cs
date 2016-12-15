@@ -45,7 +45,7 @@ namespace kino.Cluster
             cancellationTokenSource?.Dispose();
         }
 
-        private async void SendHeartBeat(CancellationToken token)
+        private void SendHeartBeat(CancellationToken token)
         {
             try
             {

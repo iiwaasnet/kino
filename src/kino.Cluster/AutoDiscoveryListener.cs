@@ -9,7 +9,6 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
-using kino.Security;
 
 namespace kino.Cluster
 {

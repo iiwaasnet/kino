@@ -11,10 +11,10 @@ namespace kino.Core
         private static readonly byte[] Empty = new byte[0];
 
         public static ReceiverIdentifier CreateForActor()
-            => new ReceiverIdentifier(new byte[] {ActorSignature}.Concat(ReceiverIdentifier.CreateIdentity()).ToArray());
+            => new ReceiverIdentifier(new [] {ActorSignature}.Concat(ReceiverIdentifier.CreateIdentity()).ToArray());
 
         public static ReceiverIdentifier CreateForMessageHub()
-            => new ReceiverIdentifier(new byte[] {MessageHubSignature}.Concat(ReceiverIdentifier.CreateIdentity()).ToArray());
+            => new ReceiverIdentifier(new [] {MessageHubSignature}.Concat(ReceiverIdentifier.CreateIdentity()).ToArray());
 
         public static bool IsActor(this ReceiverIdentifier identifier)
             => identifier?.Identity?.Length > 0

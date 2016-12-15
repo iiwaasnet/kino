@@ -67,7 +67,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ReceiverIdentities.cs" />
-    <Compile Include="AnyIdentifier.cs" />
     <Compile Include="Framework\DateTimeExtensions.cs" />
     <Compile Include="Identifier.cs" />
     <Compile Include="IIdentifier.cs" />
@@ -93,8 +92,6 @@
     <Compile Include="Framework\AsyncQueue.cs" />
     <Compile Include="Framework\DuplicatedKeyException.cs" />
     <Compile Include="Framework\IAsyncQueue.cs" />
-    <Compile Include="Framework\IExpirableItemCollection.cs" />
-    <Compile Include="Framework\IExpirableItem.cs" />
     <Compile Include="Framework\IdentityExtensions.cs" />
     <Compile Include="Framework\LinqExtensions.cs" />
     <Compile Include="Framework\Unsafe.cs" />

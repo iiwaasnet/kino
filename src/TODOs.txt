@@ -1,4 +1,5 @@
-- Remove consistency of all Debug() info, i.e. naming of nodes, sockets, actors, identities, etc...
-- Find and remove unused types
+- Implement disabling of per Message signing
 - If ReceiverNode is set, it may be overwritten by callback, when it triggers. Decide if an exception should be thrown in this case
 - Update message.txt with proper frames naming and description
+- Add sending of self-registrations with specified period
+- Check if it's possible to wait for auto-discovery response for full start of the MessageRouter

@@ -53,8 +53,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExternalRoute.cs" />
-    <Compile Include="ExternalRouteDefinition.cs" />
     <Compile Include="ExternalRouteLookupRequest.cs" />
     <Compile Include="ExternalRouteRegistration.cs" />
     <Compile Include="ExternalRouteRemoval.cs" />
@@ -80,7 +78,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceMessageHandlers\ClusterMessageRoutesRequestHandler.cs" />
     <Compile Include="ServiceMessageHandlers\ExternalMessageRouteRegistrationHandler.cs" />
-    <Compile Include="ServiceMessageHandlers\IdentityDomainMap.cs" />
     <Compile Include="ServiceMessageHandlers\INodeRoutesRegistrar.cs" />
     <Compile Include="ServiceMessageHandlers\InternalMessageRouteRegistrationHandler.cs" />
     <Compile Include="ServiceMessageHandlers\IServiceMessageHandler.cs" />

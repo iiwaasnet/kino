@@ -87,6 +87,7 @@ namespace kino.Cluster
             {
                 receivingMessages = Task.Factory.StartNew(_ => ReceiveMessages(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
                 processingMessages = Task.Factory.StartNew(_ => ProcessMessages(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
+                //TODO: Check if better implementation is possible
                 barrier.SignalAndWait(cancellationTokenSource.Token);
                 barrier.SignalAndWait(cancellationTokenSource.Token);
             }
@@ -238,7 +239,7 @@ namespace kino.Cluster
                                       .ToList();
                 if (staleNodes.Any())
                 {
-                    logger.Debug($"Stale nodes detected: {staleNodes.Count()}. Connectivity check scheduled.");
+                    logger.Debug($"Stale nodes detected: {staleNodes.Count}. Connectivity check scheduled.");
                     Task.Factory.StartNew(() => CheckConnectivity(cancellationTokenSource.Token, staleNodes), TaskCreationOptions.LongRunning);
                 }
             }
@@ -324,7 +325,7 @@ namespace kino.Cluster
                                                           }));
                     logger.Debug($"Unreachable node {deadNode.Key}@{deadNode.Value.ScaleOutUri} " +
                                  $"with LastKnownHeartBeat {deadNode.Value.LastKnownHeartBeat} detected. " +
-                                 $"Route deletion scheduled.");
+                                 "Route deletion scheduled.");
                 }
             }
 

@@ -316,7 +316,7 @@ namespace kino.Messaging
 
         public MessageTraceOptions TraceOptions { get; set; }
 
-        public DistributionPattern Distribution { get; set; }
+        public DistributionPattern Distribution { get; private set; }
 
         public ushort Hops { get; private set; }
 
