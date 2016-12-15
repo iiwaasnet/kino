@@ -89,6 +89,7 @@
     </Compile>
     <Compile Include="Actors\GroupCharsActor.cs" />
     <Compile Include="Actors\RevertStringActor.cs" />
+    <Compile Include="DependencyResolver.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Messages\GroupCharsResponseMessage.cs" />
     <Compile Include="MainModule.cs" />

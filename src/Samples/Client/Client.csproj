@@ -81,6 +81,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DependencyResolver.cs" />
     <Compile Include="DomainPrivateKeyProvider.cs" />
     <Compile Include="DomainScopeResolver.cs" />
     <Compile Include="Logger.cs" />

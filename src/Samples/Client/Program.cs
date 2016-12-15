@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading;
 using Autofac;
 using Client.Messages;
-using kino;
 using kino.Client;
 using kino.Core;
-using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using static System.Console;
@@ -23,19 +19,18 @@ namespace Client
             builder.RegisterModule<MainModule>();
             builder.RegisterModule<SecurityModule>();
             var container = builder.Build();
+            //var logger = container.Resolve<ILogger>();
             var kino = new kino.kino();
             kino.SetResolver(new DependencyResolver(container));
             kino.Start();
 
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
-            Thread.Sleep(TimeSpan.FromMilliseconds(300));
 
             var messageHub = kino.GetMessageHub();
             messageHub.Start();
 
-            Thread.Sleep(TimeSpan.FromSeconds(5));
             WriteLine($"Client is running... {DateTime.Now}");
-            var runs = 10000;
+            var runs = 1;
 
             var messageIdentifier = MessageIdentifier.Create<HelloMessage>();
             var routesRequest = Message.CreateFlowStartMessage(new RequestMessageExternalRoutesMessage
@@ -48,8 +43,7 @@ namespace Client
                                                                                      }
                                                                });
             var response = messageHub.EnqueueRequest(routesRequest, CallbackPoint.Create<MessageExternalRoutesMessage>());
-            response.GetResponse().Wait();
-            var route = response.GetResponse().Result.GetPayload<MessageExternalRoutesMessage>().Routes.First();
+            //var route = response.GetResponse().Result.GetPayload<MessageExternalRoutesMessage>().Routes.First();
 
             //Thread.Sleep(TimeSpan.FromSeconds(5));
             while (true)
@@ -64,6 +58,7 @@ namespace Client
                     var request = Message.CreateFlowStartMessage(new HelloMessage {Greeting = Guid.NewGuid().ToString()});
                     request.TraceOptions = MessageTraceOptions.None;
                     //request.SetReceiverActor(new ReceiverIdentifier(route.NodeIdentity), new ReceiverIdentifier(route.ReceiverIdentity.First()));
+                    //request.SetReceiverNode(new ReceiverIdentifier(route.NodeIdentity));
                     var callbackPoint = CallbackPoint.Create<GroupCharsResponseMessage>();
                     promises.Add(messageHub.EnqueueRequest(request, callbackPoint));
                 }
@@ -76,12 +71,6 @@ namespace Client
                         if (promise.GetResponse().Wait(timeout))
                         {
                             promise.GetResponse().Result.GetPayload<GroupCharsResponseMessage>();
-
-                            //WriteLine($"Text: {response.Text}");
-                            //foreach (var groupInfo in response.Groups)
-                            //{
-                            //    WriteLine($"Char: {groupInfo.Char} - {groupInfo.Count} times");
-                            //}
                         }
                         else
                         {
@@ -112,41 +101,6 @@ namespace Client
             container.Dispose();
 
             WriteLine("Client stopped.");
-        }
-
-        private static ReceiverIdentifier FindReceiver(IMessageHub messageHub)
-        {
-            var request = Message.CreateFlowStartMessage(new RequestKnownMessageRoutesMessage());
-            var callback = CallbackPoint.Create<KnownMessageRoutesMessage>();
-            using (var promise = messageHub.EnqueueRequest(request, callback))
-            {
-                var response = promise.GetResponse().Result;
-                var registeredRoutes = response.GetPayload<KnownMessageRoutesMessage>();
-
-                return new ReceiverIdentifier(registeredRoutes.InternalRoutes.SocketIdentity);
-            }
-        }
-    }
-
-    public class DependencyResolver : IDependencyResolver
-    {
-        private readonly IContainer container;
-
-        public DependencyResolver(IContainer container)
-        {
-            this.container = container;
-        }
-
-        public T Resolve<T>()
-        {
-            try
-            {
-                return container.Resolve<T>();
-            }
-            catch (Exception)
-            {
-                return default(T);
-            }
         }
     }
 }
