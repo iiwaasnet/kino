@@ -43,7 +43,7 @@ namespace kino.Routing
 
                 logger.Debug("External route added " +
                              $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
-                             $"Socket:{nodeIdentifier} " +
+                             $"Node:{nodeIdentifier} " +
                              $"Actor:{routeRegistration.Route.Receiver}" +
                              $"Message:{routeRegistration.Route.Message}");
             }
@@ -55,7 +55,7 @@ namespace kino.Routing
 
                     logger.Debug("External route added " +
                                  $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
-                                 $"Socket:{nodeIdentifier} " +
+                                 $"Node:{nodeIdentifier} " +
                                  $"MessageHub:{routeRegistration.Route.Receiver}");
                 }
                 else
@@ -238,7 +238,8 @@ namespace kino.Routing
                     }
                 }
 
-                logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} Socket:{nodeIdentifier.Identity.GetAnyString()}");
+                logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
+                             $"Node:{nodeIdentifier.Identity.GetAnyString()}");
             }
             return new PeerRemoveResult
                    {
@@ -301,7 +302,7 @@ namespace kino.Routing
                     nodeToConnectionMap.Remove(nodeIdentifier);
                     connectionAction = RemovePeerNode(connection);
 
-                    logger.Debug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} Socket:{nodeIdentifier}");
+                    logger.Debug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} Node:{nodeIdentifier}");
                 }
             }
 
@@ -393,7 +394,7 @@ namespace kino.Routing
                     RemoveNodeActor(routeRemoval, nodeIdentifier);
                 }
                 logger.Debug("External message route removed " +
-                             $"Socket:{nodeIdentifier} " +
+                             $"Node:[{nodeIdentifier}] " +
                              $"Message:[{routeRemoval.Route.Message}]");
             }
         }

@@ -272,7 +272,7 @@ namespace kino.Routing
             {
                 clusterServices.GetClusterMonitor().UnregisterSelf(messageRoute.ToEnumerable());
             }
-            logger.Warn($"Route not found for {nameof(lookupRequest.Message)}:{lookupRequest.Message} lookup by " +
+            logger.Warn($"Route not found for Message:{lookupRequest.Message} lookup by " +
                         $"[{nameof(lookupRequest.ReceiverNodeIdentity)}:{lookupRequest.ReceiverNodeIdentity}]-" +
                         $"[{nameof(lookupRequest.ReceiverIdentity)}:{lookupRequest.ReceiverIdentity}]-" +
                         $"[{lookupRequest.Distribution}]");

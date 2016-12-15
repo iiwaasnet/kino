@@ -212,16 +212,16 @@ namespace kino.Cluster
                 {
                     peers.Remove(socketIdentifier);
 
-                    logger.Debug($"Left {peers.Count} to monitor.");
+                    logger.Debug($"Left {peers.Count} nodes to monitor.");
                     if (meta.ConnectionEstablished)
                     {
                         socket.Disconnect(new Uri(meta.HealthUri));
-                        logger.Warn($"Stopped HeartBeat monitoring peer {payload.NodeIdentity.GetAnyString()}@{meta.HealthUri}");
+                        logger.Warn($"Stopped HeartBeat monitoring node {payload.NodeIdentity.GetAnyString()}@{meta.HealthUri}");
                     }
                 }
                 else
                 {
-                    logger.Warn($"Unable to disconnect from unknown peer: NodeIdentity [{payload.NodeIdentity.GetAnyString()}]");
+                    logger.Warn($"Unable to disconnect from unknown node [{payload.NodeIdentity.GetAnyString()}]");
                 }
             }
 
@@ -302,7 +302,7 @@ namespace kino.Cluster
                     catch (Exception err)
                     {
                         routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = nodeIdentifier.Identity}));
-                        logger.Warn($"Failed trying to check connectivity to peer {nodeIdentifier}@{uri.ToSocketAddress()}. Peer deletion scheduled. {err}");
+                        logger.Warn($"Failed trying to check connectivity to node {nodeIdentifier}@{uri.ToSocketAddress()}. Peer deletion scheduled. {err}");
                     }
                 }
             }
@@ -318,8 +318,13 @@ namespace kino.Cluster
                                      .ToList();
                 foreach (var deadNode in deadNodes)
                 {
-                    routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = deadNode.Key.Identity}));
-                    logger.Debug($"Unreachable node {deadNode.Key}@{deadNode.Value.ScaleOutUri} with LastKnownHeartBeat {deadNode.Value.LastKnownHeartBeat} detected. Route deletion scheduled.");
+                    routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage
+                                                          {
+                                                              ReceiverNodeIdentity = deadNode.Key.Identity
+                                                          }));
+                    logger.Debug($"Unreachable node {deadNode.Key}@{deadNode.Value.ScaleOutUri} " +
+                                 $"with LastKnownHeartBeat {deadNode.Value.LastKnownHeartBeat} detected. " +
+                                 $"Route deletion scheduled.");
                 }
             }
 
@@ -341,7 +346,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<AddPeerMessage>();
 
-                logger.Debug($"New peer {payload.SocketIdentity.GetAnyString()} added.");
+                logger.Debug($"New node {payload.SocketIdentity.GetAnyString()} added.");
 
                 var meta = new ClusterMemberMeta
                            {
@@ -377,7 +382,7 @@ namespace kino.Cluster
                 StartDeadPeersCheck(meta.HeartBeatInterval);
                 socket.Connect(new Uri(meta.HealthUri));
 
-                logger.Debug($"Connected to peer {payload.SocketIdentity.GetAnyString()}@{meta.HealthUri} for HeartBeat monitoring.");
+                logger.Debug($"Connected to node {payload.SocketIdentity.GetAnyString()}@{meta.HealthUri} for HeartBeat monitoring.");
             }
 
             return shouldHandle;
@@ -415,7 +420,7 @@ namespace kino.Cluster
                 else
                 {
                     //TODO: Send DicoveryMessage? What if peer is not supporting message Domains to be used by this node?
-                    logger.Warn($"HeartBeat came from unknown peer: ReceiverNodeIdentity [{payload.SocketIdentity.GetAnyString()}]");
+                    logger.Warn($"HeartBeat came from unknown node [{payload.SocketIdentity.GetAnyString()}]");
                 }
             }
 
