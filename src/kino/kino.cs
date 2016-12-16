@@ -17,6 +17,16 @@ namespace kino
         private bool isStarted;
         private readonly TimeSpan startupDelay = TimeSpan.FromMilliseconds(300);
 
+        public kino()
+            :this(null)
+        {
+        }
+
+        public kino(IDependencyResolver resolver)
+        {
+            this.resolver = resolver;
+        }
+
         public void SetResolver(IDependencyResolver resolver)
             => this.resolver = resolver;
 
