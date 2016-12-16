@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using Autofac;
 using kino.Actors;
@@ -17,18 +18,19 @@ namespace Server
 
             var container = builder.Build();
             var logger = container.Resolve<ILogger>();
-            var kino = new kino.kino();
-            kino.SetResolver(new DependencyResolver(container));
+            var kino = container.Resolve<kino.kino>();
+            //kino.SetResolver(new DependencyResolver(container));
             kino.Start();
 
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
-            for (var i = 0; i < 5; i++)
+            for (var i = 0; i < 300; i++)
             {
                 foreach (var actor in container.Resolve<IEnumerable<IActor>>())
                 {
                     kino.AssignActor(actor);
                     logger.Debug($"Actor {actor.Identifier} registered");
                 }
+                Thread.Sleep(TimeSpan.FromMilliseconds(200));
             }
 
             logger.Debug("ActorHost started...");

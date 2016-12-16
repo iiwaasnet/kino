@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using Autofac;
 using Client.Messages;
 using kino.Client;
@@ -20,8 +21,8 @@ namespace Client
             builder.RegisterModule<SecurityModule>();
             var container = builder.Build();
             //var logger = container.Resolve<ILogger>();
-            var kino = new kino.kino();
-            kino.SetResolver(new DependencyResolver(container));
+            var kino = container.Resolve<kino.kino>();
+            //kino.SetResolver(new DependencyResolver(container));
             kino.Start();
 
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
@@ -30,7 +31,7 @@ namespace Client
             messageHub.Start();
 
             WriteLine($"Client is running... {DateTime.Now}");
-            var runs = 1;
+            var runs = 10000;
 
             var messageIdentifier = MessageIdentifier.Create<HelloMessage>();
             var routesRequest = Message.CreateFlowStartMessage(new RequestMessageExternalRoutesMessage

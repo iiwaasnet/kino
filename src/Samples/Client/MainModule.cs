@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using kino;
 using kino.Configuration;
 using kino.Core.Diagnostics;
 using TypedConfigProvider;
@@ -23,6 +24,14 @@ namespace Client
 
             builder.Register(c => new Logger("default"))
                    .As<ILogger>()
+                   .SingleInstance();
+
+            builder.Register(c => new DependencyResolver(c))
+                   .As<IDependencyResolver>()
+                   .SingleInstance();
+
+            builder.Register(c => new kino.kino(c.Resolve<IDependencyResolver>()))
+                   .AsSelf()
                    .SingleInstance();
         }
     }
