@@ -1,23 +1,13 @@
 using System.Linq;
 using System.Threading.Tasks;
 using kino.Actors;
-using kino.Core;
 using kino.Messaging;
-using kino.Security;
 using Server.Messages;
 
 namespace Server.Actors
 {
     public class GroupCharsActor : Actor
     {
-        private readonly ISecurityProvider securityProvider;
-        private static readonly MessageIdentifier GroupCharResponse = MessageIdentifier.Create<GroupCharsResponseMessage>();
-
-        public GroupCharsActor(ISecurityProvider securityProvider)
-        {
-            this.securityProvider = securityProvider;
-        }
-
         [MessageHandlerDefinition(typeof(EhlloMessage))]
         private async Task<IActorResult> StartProcess(IMessage message)
         {
