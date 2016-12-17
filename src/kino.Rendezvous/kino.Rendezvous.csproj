@@ -44,8 +44,8 @@
       <HintPath>..\packages\AsyncIO.0.1.26.0\lib\net40\AsyncIO.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Autofac, Version=4.2.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.4.2.0\lib\net45\Autofac.dll</HintPath>
+    <Reference Include="Autofac, Version=4.2.1.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\packages\Autofac.4.2.1\lib\net45\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="C5, Version=2.4.5947.17248, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
@@ -99,7 +99,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="WindowsServiceHost, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\WindowsService.Host.0.0.0.6\lib\net46\WindowsServiceHost.dll</HintPath>
+      <HintPath>..\packages\WindowsService.Host.0.0.0.7\lib\net46\WindowsServiceHost.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>
