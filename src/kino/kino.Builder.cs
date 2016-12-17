@@ -38,9 +38,10 @@ namespace kino
                                                                                                    logger);
             var hashCodeProvider = resolver.Resolve<Func<HMAC>>() ?? (() => HMAC.Create("HMACMD5"));
 
-            var securityProvider = new SecurityProvider(hashCodeProvider,
-                                                        resolver.Resolve<IDomainScopeResolver>(),
-                                                        resolver.Resolve<IDomainPrivateKeyProvider>());
+            var securityProvider = resolver.Resolve<ISecurityProvider>()
+                                   ?? new SecurityProvider(hashCodeProvider,
+                                                           resolver.Resolve<IDomainScopeResolver>(),
+                                                           resolver.Resolve<IDomainPrivateKeyProvider>());
             var heartBeatSenderConfigurationManager = new HeartBeatSenderConfigurationManager(heartBeatSenderConfiguration);
             var configurationStorage = resolver.Resolve<IConfigurationStorage<RendezvousClusterConfiguration>>()
                                        ?? new RendezvousClusterConfigurationReadonlyStorage(rendezvousEndpoints);
