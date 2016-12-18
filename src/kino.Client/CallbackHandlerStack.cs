@@ -9,16 +9,16 @@ namespace kino.Client
 {
     public class CallbackHandlerStack : ICallbackHandlerStack
     {
-        private readonly ConcurrentDictionary<long, IDictionary<MessageIdentifier, IPromise>> handlers;
+        private readonly ConcurrentDictionary<long, IDictionary<MessageIdentifier, IPromise>> keyPromiseMap;
 
         public CallbackHandlerStack()
         {
-            handlers = new ConcurrentDictionary<long, IDictionary<MessageIdentifier, IPromise>>();
+            keyPromiseMap = new ConcurrentDictionary<long, IDictionary<MessageIdentifier, IPromise>>();
         }
 
         public void Push(IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers)
         {
-            if (handlers.TryAdd(promise.CallbackKey.Value, messageIdentifiers.ToDictionary(mp => mp, mp => promise)))
+            if (keyPromiseMap.TryAdd(promise.CallbackKey.Value, messageIdentifiers.ToDictionary(mp => mp, mp => promise)))
             {
                 ((Promise) promise).SetRemoveCallbackHandler(RemoveCallback);
             }
@@ -33,7 +33,7 @@ namespace kino.Client
             IPromise promise = null;
 
             IDictionary<MessageIdentifier, IPromise> messageHandlers;
-            if (handlers.TryRemove(callbackIdentifier.CallbackKey, out messageHandlers))
+            if (keyPromiseMap.TryRemove(callbackIdentifier.CallbackKey, out messageHandlers))
             {
                 var massageHandlerId = new MessageIdentifier(callbackIdentifier.Identity, callbackIdentifier.Version, callbackIdentifier.Partition);
                 messageHandlers.TryGetValue(massageHandlerId, out promise);
@@ -45,7 +45,7 @@ namespace kino.Client
         private void RemoveCallback(CallbackKey callbackKey)
         {
             IDictionary<MessageIdentifier, IPromise> _;
-            handlers.TryRemove(callbackKey.Value, out _);
+            keyPromiseMap.TryRemove(callbackKey.Value, out _);
         }
     }
 }
