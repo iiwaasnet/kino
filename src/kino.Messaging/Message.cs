@@ -164,7 +164,7 @@ namespace kino.Messaging
 
         internal void SignMessage(ISignatureProvider signatureProvider)
         {
-            if (signatureProvider.SignMessages())
+            if (signatureProvider.ShouldSignMessage(Domain, Identity))
             {
                 AssertDomainIsSet();
 
@@ -174,7 +174,7 @@ namespace kino.Messaging
 
         internal void VerifySignature(ISignatureProvider signatureProvider)
         {
-            if (signatureProvider.SignMessages())
+            if (signatureProvider.ShouldSignMessage(Domain, Identity))
             {
                 var mac = signatureProvider.CreateSignature(Domain, GetSignatureFields());
 

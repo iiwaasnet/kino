@@ -14,6 +14,7 @@ namespace kino.Security
         private readonly IDictionary<AnyVersionMessageIdentifier, DomainPrivateKey> messageToDomainMap;
         private readonly KeyedHashAlgorithm mac;
         private readonly object @lock = new object();
+        private readonly Dictionary<string, HashSet<EquatableIdentity>> unsignableDomains;
 
         public SecurityProvider(Func<HMAC> macImplFactory,
                                 IDomainScopeResolver domainScopeResolver,
@@ -25,6 +26,7 @@ namespace kino.Security
                                                       .ToDictionary(dk => dk.Domain, dk => dk);
             messageToDomainMap = CreateMessageMapping(nameToDomainMap, domainScopeResolver);
             mac = macImplFactory();
+            unsignableDomains = domainPrivateKeyProvider.GetUnsignableDomains();
         }
 
         public byte[] CreateSignature(string domain, byte[] buffer)
@@ -105,7 +107,25 @@ namespace kino.Security
             return mappings;
         }
 
-        public bool SignMessages()
-            => !disableSigning;
+        public bool ShouldSignMessage(string domain, byte[] identity)
+        {
+            if (disableSigning)
+            {
+                return false;
+            }
+
+            HashSet<EquatableIdentity> messages = null;
+            if (unsignableDomains?.TryGetValue(domain, out messages) == true)
+            {
+                if (messages == null
+                    || !messages.Any()
+                    || messages.Contains(new EquatableIdentity(identity)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }
