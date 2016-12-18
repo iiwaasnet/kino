@@ -105,7 +105,7 @@ namespace kino.Security
             return mappings;
         }
 
-        public bool SigningEnabled()
+        public bool SignMessages()
             => !disableSigning;
     }
 }

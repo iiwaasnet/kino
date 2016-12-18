@@ -24,7 +24,7 @@ namespace kino.Security
         public IEnumerable<string> GetAllowedDomains()
             => allowedDomains;
 
-        public bool SigningEnabled()
+        public bool SignMessages()
             => false;
     }
 }

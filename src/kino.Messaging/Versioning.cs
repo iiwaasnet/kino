@@ -2,7 +2,7 @@
 {
     public class Versioning
     {
-        public const int WireFormatV4 = 4;
-        public const int CurrentWireFormatVersion = WireFormatV4;
+        public const int WireFormatV5 = 5;
+        public const int CurrentWireFormatVersion = WireFormatV5;
     }
 }

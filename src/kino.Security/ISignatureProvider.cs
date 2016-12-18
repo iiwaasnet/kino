@@ -4,6 +4,6 @@
     {
         byte[] CreateSignature(string domain, byte[] buffer);
 
-        bool SigningEnabled();
+        bool SignMessages();
     }
 }

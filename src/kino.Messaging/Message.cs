@@ -67,10 +67,10 @@ namespace kino.Messaging
         internal Message(MultipartMessage multipartMessage)
         {
             ReadWireFormatVersion(multipartMessage);
-            ReadV4Frames(multipartMessage);
+            ReadV5Frames(multipartMessage);
         }
 
-        private void ReadV4Frames(MultipartMessage multipartMessage)
+        private void ReadV5Frames(MultipartMessage multipartMessage)
         {
             Body = multipartMessage.GetMessageBody();
             TTL = multipartMessage.GetMessageTTL();
@@ -164,7 +164,7 @@ namespace kino.Messaging
 
         internal void SignMessage(ISignatureProvider signatureProvider)
         {
-            if (signatureProvider.SigningEnabled())
+            if (signatureProvider.SignMessages())
             {
                 AssertDomainIsSet();
 
@@ -174,7 +174,7 @@ namespace kino.Messaging
 
         internal void VerifySignature(ISignatureProvider signatureProvider)
         {
-            if (signatureProvider.SigningEnabled())
+            if (signatureProvider.SignMessages())
             {
                 var mac = signatureProvider.CreateSignature(Domain, GetSignatureFields());
 
