@@ -20,6 +20,8 @@ namespace kino.Routing
 {
     public partial class MessageRouter : IMessageRouter
     {
+        private const int LocalRouterSocketId = 0;
+        private const int InternalRegistrationsReceiverId = 1;
         private CancellationTokenSource cancellationTokenSource;
         private Task localRouting;
         private readonly IInternalRoutingTable internalRoutingTable;
@@ -35,7 +37,6 @@ namespace kino.Routing
         private readonly ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver;
         private readonly InternalMessageRouteRegistrationHandler internalRegistrationHandler;
         private readonly IClusterHealthMonitor clusterHealthMonitor;
-        private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private byte[] thisNodeIdentity;
         private bool isStarted;
 
@@ -81,7 +82,6 @@ namespace kino.Routing
                     barrier.SignalAndWait();
                     isStarted = true;
                 }
-                
             }
         }
 
@@ -89,7 +89,7 @@ namespace kino.Routing
         {
             clusterServices.StopClusterServices();
             cancellationTokenSource?.Cancel();
-            localRouting?.Wait(TerminationWaitTimeout);
+            localRouting?.Wait();
             cancellationTokenSource?.Dispose();
             isStarted = false;
         }
@@ -103,8 +103,6 @@ namespace kino.Routing
             {
                 thisNodeIdentity = GetBlockingReceiverNodeIdentity();
 
-                const int LocalRouterSocketId = 0;
-                const int InternalRegistrationsReceiverId = 1;
                 var waitHandles = new[]
                                   {
                                       localRouterSocket.CanReceive(),
@@ -298,13 +296,15 @@ namespace kino.Routing
         private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
         {
             var handled = false;
-            var enumerator = serviceMessageHandlers.GetEnumerator();
-            while (enumerator.MoveNext() && !handled)
+            using (var enumerator = serviceMessageHandlers.GetEnumerator())
             {
-                handled = enumerator.Current.Handle(message, scaleOutBackend);
-            }
+                while (enumerator.MoveNext() && !handled)
+                {
+                    handled = enumerator.Current.Handle(message, scaleOutBackend);
+                }
 
-            return handled;
+                return handled;
+            }
         }
     }
 }

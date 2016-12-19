@@ -42,8 +42,12 @@ namespace kino.Cluster
         public void Start()
         {
             cancellationTokenSource = new CancellationTokenSource();
-            listening = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token),
-                                              TaskCreationOptions.LongRunning);
+            using (var barrier = new Barrier(2))
+            {
+                listening = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, barrier),
+                                                  TaskCreationOptions.LongRunning);
+                barrier.SignalAndWait(cancellationTokenSource.Token);
+            }
         }
 
         public void Stop()
@@ -53,12 +57,14 @@ namespace kino.Cluster
             cancellationTokenSource?.Dispose();
         }
 
-        private void RoutePeerMessages(CancellationToken token)
+        private void RoutePeerMessages(CancellationToken token, Barrier barrier)
         {
             try
             {
                 using (var scaleOutFrontend = CreateScaleOutFrontendSocket())
                 {
+                    barrier.SignalAndWait(token);
+
                     while (!token.IsCancellationRequested)
                     {
                         Message message = null;

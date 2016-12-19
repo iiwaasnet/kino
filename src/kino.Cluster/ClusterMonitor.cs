@@ -48,7 +48,7 @@ namespace kino.Cluster
         public void Start()
         {
             StartProcessingClusterMessages();
-            RequestClusterRoutesAsync();
+            RequestClusterRoutes();
         }
 
         public void Stop()
@@ -87,9 +87,6 @@ namespace kino.Cluster
             StopProcessingClusterMessages();
             StartProcessingClusterMessages();
         }
-
-        private void RequestClusterRoutesAsync()
-            => Task.Factory.StartNew(RequestClusterRoutes);
 
         private void RequestClusterRoutes()
         {

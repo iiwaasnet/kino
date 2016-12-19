@@ -27,15 +27,17 @@
         public void StopClusterServices()
         {
             clusterMonitor.Stop();
-            scaleOutListener.Stop();
             heartBeatSender.Stop();
             clusterHealthMonitor.Stop();
+            scaleOutListener.Stop();
         }
 
         public void StartClusterServices()
         {
-            clusterMonitor.Start();
+            //NOTE: Should be started first to set SetActiveScaleOutAddress() used by other services
             scaleOutListener.Start();
+
+            clusterMonitor.Start();
             heartBeatSender.Start();
             clusterHealthMonitor.Start();
         }
