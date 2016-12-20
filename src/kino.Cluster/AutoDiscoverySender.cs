@@ -61,7 +61,7 @@ namespace kino.Cluster
             var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateDealerSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.AutoDiscoverySenderSocketSendRate);
-            socket.Connect(rendezvousServer.UnicastUri);
+            socket.Connect(rendezvousServer.UnicastUri, waitConnectionEstablishment: true);
 
             return socket;
         }

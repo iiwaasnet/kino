@@ -25,8 +25,11 @@ namespace kino.Cluster
         private readonly IRouteDiscovery routeDiscovery;
         private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
+        private DateTime startTime;
         //TODO: Move to config
         private readonly TimeSpan unregisterMessageSendTimeout = TimeSpan.FromMilliseconds(500);
+        //TODO: Move to config
+        private readonly TimeSpan requestClusterRoutesOnStartWindow = TimeSpan.FromSeconds(30);
 
         public ClusterMonitor(IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                               IAutoDiscoverySender autoDiscoverySender,
@@ -47,6 +50,7 @@ namespace kino.Cluster
 
         public void Start()
         {
+            startTime = DateTime.UtcNow;
             StartProcessingClusterMessages();
             RequestClusterRoutes();
         }
@@ -63,10 +67,12 @@ namespace kino.Cluster
             const int participantCount = 3;
             using (var gateway = new Barrier(participantCount))
             {
-                sendingMessages = Task.Factory.StartNew(_ => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
-                                                        TaskCreationOptions.LongRunning);
+                // 1. Start listening for messages
                 listenningMessages = Task.Factory.StartNew(_ => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
                                                            TaskCreationOptions.LongRunning);
+                // 2. Start sending
+                sendingMessages = Task.Factory.StartNew(_ => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
+                                                        TaskCreationOptions.LongRunning);
                 gateway.SignalAndWait(messageProcessingToken.Token);
 
                 routeDiscovery.Start();
@@ -86,32 +92,36 @@ namespace kino.Cluster
         {
             StopProcessingClusterMessages();
             StartProcessingClusterMessages();
+            RequestClusterRoutes();
         }
 
         private void RequestClusterRoutes()
         {
-            try
+            if (startTime - DateTime.UtcNow < requestClusterRoutesOnStartWindow)
             {
-                var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
-                foreach (var domain in securityProvider.GetAllowedDomains())
+                try
                 {
-                    var message = Message.Create(new RequestClusterMessageRoutesMessage
-                                                 {
-                                                     RequestorNodeIdentity = scaleOutAddress.Identity,
-                                                     RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
-                                                 })
-                                         .As<Message>();
-                    message.SetDomain(domain);
-                    message.As<Message>().SignMessage(securityProvider);
+                    var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
+                    foreach (var domain in securityProvider.GetAllowedDomains())
+                    {
+                        var message = Message.Create(new RequestClusterMessageRoutesMessage
+                                                     {
+                                                         RequestorNodeIdentity = scaleOutAddress.Identity,
+                                                         RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
+                                                     })
+                                             .As<Message>();
+                        message.SetDomain(domain);
+                        message.As<Message>().SignMessage(securityProvider);
 
-                    autoDiscoverySender.EnqueueMessage(message);
+                        autoDiscoverySender.EnqueueMessage(message);
 
-                    logger.Info($"Request to discover cluster routes for Domain [{domain}] sent.");
+                        logger.Info($"Request to discover cluster routes for Domain [{domain}] sent.");
+                    }
                 }
-            }
-            catch (Exception err)
-            {
-                logger.Error(err);
+                catch (Exception err)
+                {
+                    logger.Error(err);
+                }
             }
         }
 

@@ -132,7 +132,7 @@ namespace kino.Cluster
             var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateSubscriberSocket();
             socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.AutoDiscoveryListenerSocketReceiveRate);
-            socket.Connect(rendezvousServer.BroadcastUri);
+            socket.Connect(rendezvousServer.BroadcastUri, waitConnectionEstablishment: true);
             socket.Subscribe();
 
             logger.Info($"Connected to Rendezvous {rendezvousServer.BroadcastUri.AbsoluteUri}");
