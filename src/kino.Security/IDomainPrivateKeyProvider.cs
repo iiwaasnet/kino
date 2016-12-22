@@ -6,6 +6,7 @@ namespace kino.Security
     {
         IEnumerable<DomainPrivateKey> GetAllowedDomainKeys();
 
+        //TODO: Rename to GetUnsignedDomains()
         Dictionary<string, HashSet<EquatableIdentity>> GetUnsignableDomains();
     }
 }

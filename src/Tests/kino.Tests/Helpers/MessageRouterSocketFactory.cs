@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Framework;
@@ -13,15 +12,13 @@ namespace kino.Tests.Helpers
 
     public class MessageRouterSocketFactory
     {
-        private readonly RouterConfiguration config;
         private readonly SocketEndpoint scaleOutAddress;
         private readonly ConcurrentBag<MockSocket> sockets;
         private readonly TimeSpan socketWaitTimeout;
         private readonly int socketWaitRetries = 5;
 
-        public MessageRouterSocketFactory(RouterConfiguration config, SocketEndpoint scaleOutAddress)
+        public MessageRouterSocketFactory(SocketEndpoint scaleOutAddress)
         {
-            this.config = config;
             this.scaleOutAddress = scaleOutAddress;
             sockets = new ConcurrentBag<MockSocket>();
             socketWaitTimeout = TimeSpan.FromSeconds(5);

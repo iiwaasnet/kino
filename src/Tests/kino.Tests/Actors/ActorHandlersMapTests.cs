@@ -49,18 +49,19 @@ namespace kino.Tests.Actors
                                                               });
 
             actorHandlersMap.Add(simpleMessageActor);
-            Assert.AreEqual(1, actorHandlersMap.GetMessageHandlerIdentifiers().Count());
+            Assert.DoesNotThrow(() => actorHandlersMap.Get(MessageIdentifier.Create<SimpleMessage>()));
 
             Assert.Throws<DuplicatedKeyException>(() => { actorHandlersMap.Add(exceptionMessageActor); });
 
-            Assert.AreEqual(1, actorHandlersMap.GetMessageHandlerIdentifiers().Count());
+            Assert.DoesNotThrow(() => actorHandlersMap.Get(MessageIdentifier.Create<SimpleMessage>()));
+            Assert.Throws<KeyNotFoundException>(() => actorHandlersMap.Get(MessageIdentifier.Create<ExceptionMessage>()));
         }
 
         [Test]
         public void ActorHandlersMap_CanAddTwoActorsHandlingSameMessageTypeInDifferentPartitions()
         {
             var actorHandlersMap = new ActorHandlerMap();
-
+            var partition = Guid.NewGuid().ToByteArray();
             var actorWithoutPartition = new ConfigurableActor(new[]
                                                               {
                                                                   new MessageHandlerDefinition
@@ -69,19 +70,21 @@ namespace kino.Tests.Actors
                                                                       Message = MessageDefinition.Create<SimpleMessage>()
                                                                   }
                                                               });
+
             var actorWithPartition = new ConfigurableActor(new[]
                                                            {
                                                                new MessageHandlerDefinition
                                                                {
                                                                    Handler = null,
-                                                                   Message = MessageDefinition.Create<SimpleMessage>(Guid.NewGuid().ToByteArray())
+                                                                   Message = MessageDefinition.Create<SimpleMessage>(partition)
                                                                }
                                                            });
 
             actorHandlersMap.Add(actorWithoutPartition);
             actorHandlersMap.Add(actorWithPartition);
 
-            Assert.AreEqual(2, actorHandlersMap.GetMessageHandlerIdentifiers().Count());
+            Assert.DoesNotThrow(() => actorHandlersMap.Get(MessageIdentifier.Create(typeof(SimpleMessage), partition)));
+            Assert.DoesNotThrow(() => actorHandlersMap.Get(MessageIdentifier.Create(typeof(SimpleMessage))));
         }
 
         [Test]
@@ -112,22 +115,6 @@ namespace kino.Tests.Actors
             var actor = new EchoActor();
 
             Assert.IsTrue(actorHandlersMap.CanAdd(actor));
-        }
-
-        [Test]
-        public void GetRegisteredIdentifiers_ReturnsAllRegisteredMessageHandlers()
-        {
-            var actorHandlersMap = new ActorHandlerMap();
-            var actor = new EchoActor();
-
-            actorHandlersMap.Add(actor);
-
-            var identifiers = actorHandlersMap.GetMessageHandlerIdentifiers();
-
-            Assert.AreEqual(3, identifiers.Count());
-            CollectionAssert.Contains(identifiers, MessageIdentifier.Create<SimpleMessage>());
-            CollectionAssert.Contains(identifiers, MessageIdentifier.Create<AsyncMessage>());
-            CollectionAssert.Contains(identifiers, MessageIdentifier.Create<LocalMessage>());
         }
 
         [Test]

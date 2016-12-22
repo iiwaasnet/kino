@@ -160,25 +160,14 @@ namespace kino.Tests.Messaging
         [Test]
         public void ReceiverNode_IsConsistentlyTransferredViaMultipartMessage()
         {
-            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
-            var socketIdentity = ReceiverIdentifier.Create();
-            message.SetReceiverNode(socketIdentity);
+            var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
+            var receiverNode = ReceiverIdentifier.Create();
+            message.SetReceiverNode(receiverNode);
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            CollectionAssert.AreEqual(socketIdentity.Identity, message.PopReceiverNode());
-        }
-
-        [Test]
-        public void PopReceiverNode_RemovesReceiverNode()
-        {
-            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
-            var socketIdentity = ReceiverIdentifier.Create();
-            message.SetReceiverNode(socketIdentity);
-
-            CollectionAssert.AreEqual(socketIdentity.Identity, message.PopReceiverNode());
-            Assert.IsNull(message.PopReceiverNode());
+            CollectionAssert.AreEqual(receiverNode.Identity, message.ReceiverNodeIdentity);
         }
 
         [Test]
@@ -197,39 +186,51 @@ namespace kino.Tests.Messaging
         [Test]
         public void RegisteringCallbackPoint_SetsCallbackIdentityAndCallbackReceiverIdentity()
         {
-            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
 
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
-            var callbackMessageIdentifiers = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
-                                                                   Randomizer.UInt16(),
-                                                                   Guid.NewGuid().ToByteArray());
+            var callbackReceiverNodeIdentity = Guid.NewGuid().ToByteArray();
+            var callbackMessageIdentifier = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                  Randomizer.UInt16(),
+                                                                  Guid.NewGuid().ToByteArray());
             var callbackKey = Randomizer.Int32();
-            message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifiers, callbackKey);
+            message.RegisterCallbackPoint(callbackReceiverNodeIdentity,
+                                          callbackReceiverIdentity,
+                                          callbackMessageIdentifier,
+                                          callbackKey);
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifiers);
+            CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifier);
             CollectionAssert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
+            CollectionAssert.AreEqual(callbackReceiverNodeIdentity, message.CallbackReceiverNodeIdentity);
             CollectionAssert.IsEmpty(message.ReceiverIdentity);
         }
 
         [Test]
-        public void IfCallbackIdentityIsEqualToMessageIdentity_ReceiverIdentityIsSetToCallbackReceiverIdentity()
+        public void IfCallbackIdentityIsEqualToMessageIdentity_ReceiverIdentitiesAreSetToCallbackReceiverIdentities()
         {
-            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
 
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
-            var callbackIdentifier = MessageIdentifier.Create<SimpleMessage>();
+            var callbackReceiverNodeIdentity = Guid.NewGuid().ToByteArray();
+            var callbackMessageIdentifier = MessageIdentifier.Create<SimpleMessage>();
             var callbackKey = Randomizer.Int32();
-            message.RegisterCallbackPoint(callbackReceiverIdentity, callbackIdentifier, callbackKey);
+
+            message.RegisterCallbackPoint(callbackReceiverNodeIdentity,
+                                          callbackReceiverIdentity,
+                                          callbackMessageIdentifier,
+                                          callbackKey);
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
 
-            CollectionAssert.Contains(message.CallbackPoint, callbackIdentifier);
+            CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifier);
             CollectionAssert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
             CollectionAssert.AreEqual(callbackReceiverIdentity, message.ReceiverIdentity);
+            CollectionAssert.AreEqual(callbackReceiverNodeIdentity, message.CallbackReceiverNodeIdentity);
+            CollectionAssert.AreEqual(callbackReceiverNodeIdentity, message.ReceiverNodeIdentity);
         }
 
         [Test]
@@ -237,8 +238,7 @@ namespace kino.Tests.Messaging
         [TestCase(DistributionPattern.Unicast)]
         public void MessageDistribution_IsConsistentlyTransferredViaMultipartMessage(DistributionPattern distributionPattern)
         {
-            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
-            message.Distribution = distributionPattern;
+            var message = Message.Create(new SimpleMessage(), distributionPattern).As<Message>();
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
@@ -278,9 +278,9 @@ namespace kino.Tests.Messaging
         [Test]
         public void MessageWireFormatVersion_IsConsistentlyTransferredViaMultipartMessage()
         {
-            const int wireMessageFormat = 4;
+            const int wireMessageFormat = 5;
 
-            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
             Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
 
             var multipart = new MultipartMessage(message);
@@ -320,7 +320,8 @@ namespace kino.Tests.Messaging
         public void SecurityDomain_IsConsistentlyTransferredViaMultipartMessage()
         {
             var securityDomain = Guid.NewGuid().ToString();
-            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage(), securityDomain);
+            var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
+            message.SetDomain(securityDomain);
 
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
@@ -331,10 +332,12 @@ namespace kino.Tests.Messaging
         [Test]
         public void CallbackKey_IsConsistentlyTransferredViaMultipartMessage()
         {
-            var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
+            var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
             var callbackKey = Randomizer.Int32(1, Int32.MaxValue);
+            var callbackMessageIdentifier = MessageIdentifier.Create<SimpleMessage>();
             message.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
-                                          MessageIdentifier.Create<SimpleMessage>(),
+                                          Guid.NewGuid().ToByteArray(),
+                                          callbackMessageIdentifier,
                                           callbackKey);
             var multipart = new MultipartMessage(message);
             message = new Message(multipart);
@@ -347,7 +350,8 @@ namespace kino.Tests.Messaging
         {
             var simpleMessage = new SimpleMessage();
             var securityDomain = securityProvider.GetDomain(simpleMessage.Identity);
-            var message = (Message) Message.CreateFlowStartMessage(simpleMessage, securityDomain);
+            var message = Message.CreateFlowStartMessage(simpleMessage).As<Message>();
+            message.SetDomain(securityDomain);
             message.SignMessage(securityProvider);
 
             var multipart = new MultipartMessage(message);
@@ -360,6 +364,7 @@ namespace kino.Tests.Messaging
         public void CallbackTriggeresForEveryMessageInCallbackPoint()
         {
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
+            var callbackReceiverNodeIdentity = Guid.NewGuid().ToByteArray();
             var callbackMessageIdentifier = new[]
                                             {
                                                 MessageIdentifier.Create<SimpleMessage>(),
@@ -375,7 +380,10 @@ namespace kino.Tests.Messaging
 
             foreach (var message in messages.OfType<Message>())
             {
-                message.RegisterCallbackPoint(callbackReceiverIdentity, callbackMessageIdentifier, Randomizer.Int32());
+                message.RegisterCallbackPoint(callbackReceiverNodeIdentity,
+                                              callbackReceiverIdentity,
+                                              callbackMessageIdentifier,
+                                              Randomizer.Int32());
                 CollectionAssert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
             }
         }

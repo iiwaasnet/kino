@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using kino.Actors;
@@ -47,7 +46,7 @@ namespace kino.Tests.Actors
             asyncQueue = new Mock<IAsyncQueue<AsyncMessageContext>>();
             actorHost = new ActorHost(actorHandlersMap,
                                       asyncQueue.Object,
-                                      new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
+                                      new AsyncQueue<ActorRegistration>(),
                                       securityProvider.Object,
                                       localRouterSocket.Object,
                                       internalRegistrationSender.Object,
@@ -168,7 +167,7 @@ namespace kino.Tests.Actors
                 StartActorHost(actorHost);
                 (AsyncOpCompletionDelay + AsyncOp).Sleep();
                 //
-                asyncQueue.Verify(m => m.Enqueue(It.Is<AsyncMessageContext>( c => c.OutMessages.First().Equals(KinoMessages.Exception)), It.IsAny<CancellationToken>()), Times.Once);
+                asyncQueue.Verify(m => m.Enqueue(It.Is<AsyncMessageContext>(c => c.OutMessages.First().Equals(KinoMessages.Exception)), It.IsAny<CancellationToken>()), Times.Once);
             }
             finally
             {
