@@ -8,6 +8,10 @@ namespace Server
     {
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterType<NullSecurityProvider>()
+                   .As<ISecurityProvider>()
+                   .SingleInstance();
+
             builder.RegisterType<DomainPrivateKeyProvider>()
                    .As<IDomainPrivateKeyProvider>()
                    .SingleInstance();

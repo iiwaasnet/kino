@@ -60,7 +60,7 @@ namespace Client
                     request.TraceOptions = MessageTraceOptions.None;
                     //request.SetReceiverActor(new ReceiverIdentifier(route.NodeIdentity), new ReceiverIdentifier(route.ReceiverIdentity.First()));
                     //request.SetReceiverNode(new ReceiverIdentifier(route.NodeIdentity));
-                    var callbackPoint = CallbackPoint.Create<GroupCharsResponseMessage>();
+                    var callbackPoint = CallbackPoint.Create<EhlloMessage>();
                     promises.Add(messageHub.EnqueueRequest(request, callbackPoint));
                 }
 
@@ -71,7 +71,7 @@ namespace Client
                     {
                         if (promise.GetResponse().Wait(timeout))
                         {
-                            promise.GetResponse().Result.GetPayload<GroupCharsResponseMessage>();
+                            promise.GetResponse().Result.GetPayload<EhlloMessage>();
                         }
                         else
                         {
@@ -87,7 +87,7 @@ namespace Client
 
                 timer.Stop();
 
-                var messagesPerTest = 3;
+                var messagesPerTest = 2;
                 var performance = (timer.ElapsedMilliseconds > 0)
                                       ? ((messagesPerTest * runs) / (double) timer.ElapsedMilliseconds * 1000).ToString("##.00")
                                       : "Infinite";
