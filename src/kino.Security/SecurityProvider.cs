@@ -26,7 +26,7 @@ namespace kino.Security
                                                       .ToDictionary(dk => dk.Domain, dk => dk);
             messageToDomainMap = CreateMessageMapping(nameToDomainMap, domainScopeResolver);
             mac = macImplFactory();
-            unsignableDomains = domainPrivateKeyProvider.GetUnsignableDomains();
+            unsignableDomains = domainPrivateKeyProvider.GetUnsignedDomains();
         }
 
         public byte[] CreateSignature(string domain, byte[] buffer)

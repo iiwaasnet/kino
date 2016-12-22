@@ -34,7 +34,7 @@ namespace Client
             }
         }
 
-        public Dictionary<string, HashSet<EquatableIdentity>> GetUnsignableDomains()
+        public Dictionary<string, HashSet<EquatableIdentity>> GetUnsignedDomains()
             => domains.ToDictionary(d => d, d => (HashSet<EquatableIdentity>) null);
     }
 }

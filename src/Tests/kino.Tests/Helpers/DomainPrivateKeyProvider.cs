@@ -19,7 +19,7 @@ namespace kino.Tests.Helpers
             }
         }
 
-        public Dictionary<string, HashSet<EquatableIdentity>> GetUnsignableDomains()
+        public Dictionary<string, HashSet<EquatableIdentity>> GetUnsignedDomains()
             => new Dictionary<string, HashSet<EquatableIdentity>>();
     }
 }
