@@ -99,6 +99,7 @@
     <Compile Include="Actors\Setup\NullActor.cs" />
     <Compile Include="Actors\Setup\NullMessage.cs" />
     <Compile Include="Actors\Setup\SimpleMessage.cs" />
+    <Compile Include="Framework\HashedQueueTests.cs" />
     <Compile Include="Helpers\ClusterMonitorSocketFactory.cs" />
     <Compile Include="Helpers\DomainPrivateKeyProvider.cs" />
     <Compile Include="Helpers\DomainScopeResolver.cs" />
