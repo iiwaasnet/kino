@@ -99,6 +99,7 @@
     <Compile Include="Actors\Setup\NullActor.cs" />
     <Compile Include="Actors\Setup\NullMessage.cs" />
     <Compile Include="Actors\Setup\SimpleMessage.cs" />
+    <Compile Include="Connectivity\ClusterMessageRoutesRequestHandlerTests.cs" />
     <Compile Include="Framework\HashedQueueTests.cs" />
     <Compile Include="Helpers\ClusterMonitorSocketFactory.cs" />
     <Compile Include="Helpers\DomainPrivateKeyProvider.cs" />
@@ -157,6 +158,7 @@
       <Name>kino.Security</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

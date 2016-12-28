@@ -296,87 +296,74 @@ namespace kino.Tests.Actors
             }
         }
 
-        //}
+        [Test]
+        public void IfCallbackIsRegistered_AsyncExceptionMessageIsDeliveredToCallbackReceiver()
+        {
+            try
+            {
+                actorHost = new ActorHost(actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<ActorRegistration>(),
+                                          securityProvider.Object,
+                                          localRouterSocket.Object,
+                                          internalRegistrationSender.Object,
+                                          localSocketFactory.Object,
+                                          logger.Object);
+                actorHost.AssignActor(new ExceptionActor());
+                var messageIn = Message.CreateFlowStartMessage(new AsyncExceptionMessage {Delay = AsyncOp}).As<Message>();
+                var callbackReceiver = Guid.NewGuid().ToByteArray();
+                var callbackReceiverNode = Guid.NewGuid().ToByteArray();
+                var callbackPoints = new[] {MessageIdentifier.Create<SimpleMessage>(), KinoMessages.Exception};
+                messageIn.RegisterCallbackPoint(callbackReceiverNode,
+                                                callbackReceiver,
+                                                callbackPoints,
+                                                Randomizer.Int32());
+                SetupMessageSend(receivingSocket, messageIn);
+                //
+                StartActorHost(actorHost);
+                //
+                Func<Message, bool> assertCallbackPropertiesCopied = messageOut => messageOut.Equals(KinoMessages.Exception) &&
+                                                                                   messageIn.CallbackPoint.SequenceEqual(messageOut.CallbackPoint) &&
+                                                                                   Unsafe.ArraysEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity) &&
+                                                                                   Unsafe.ArraysEqual(messageIn.CallbackReceiverNodeIdentity, messageOut.CallbackReceiverNodeIdentity);
+                WaitUntilResponseSent(localRouterSocket, m => assertCallbackPropertiesCopied(m.As<Message>()));
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
+        }
 
-        //[Test]
-        //public void IfCallbackIsRegistered_AsyncExceptionMessageIsDeliveredToCallbackReceiver()
-        //{
-        //    var actorHost = new ActorHost(socketFactory.Object,
-        //                                  actorHandlersMap,
-        //                                  new AsyncQueue<AsyncMessageContext>(),
-        //                                  new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
-        //                                  routerConfiguration,
-        //                                  securityProvider.Object,
-        //                                  performanceCounterManager.Object,
-        //                                  logger);
-        //    actorHost.AssignActor(new ExceptionActor());
-        //    try
-        //    {
-        //        StartActorHost(actorHost);
-
-        //        var error = Guid.NewGuid().ToString();
-        //        var asyncMessage = new AsyncExceptionMessage
-        //                           {
-        //                               Delay = AsyncOp,
-        //                               ErrorMessage = error
-        //                           };
-        //        var messageIn = (Message) Message.CreateFlowStartMessage(asyncMessage);
-        //        var callbackReceiver = Guid.NewGuid().ToByteArray();
-        //        var callbackPoints = new[] {MessageIdentifier.Create<SimpleMessage>(), KinoMessages.Exception};
-        //        messageIn.RegisterCallbackPoint(callbackReceiver, callbackPoints);
-
-        //        actorHostSocketFactory.GetRoutableSocket().DeliverMessage(messageIn);
-
-        //        (AsyncOpCompletionDelay + AsyncOp).Sleep();
-
-        //        var messageOut = (Message) actorHostSocketFactory.GetAsyncCompletionSocket().GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
-
-        //        Assert.AreEqual(error, messageOut.GetPayload<ExceptionMessage>().Exception.Message);
-        //        Assert.IsTrue(messageOut.Equals(KinoMessages.Exception));
-        //        CollectionAssert.Contains(messageOut.CallbackPoint, KinoMessages.Exception);
-        //        CollectionAssert.AreEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity);
-        //    }
-        //    finally
-        //    {
-        //        actorHost.Stop();
-        //    }
-        //}
-
-        //[Test]
-        //public void ExceptionMessage_HasDomainSet()
-        //{
-        //    var kinoDomain = Guid.NewGuid().ToString();
-        //    securityProvider.Setup(m => m.GetDomain(KinoMessages.Exception.Identity)).Returns(kinoDomain);
-
-        //    var actorHost = new ActorHost(socketFactory.Object,
-        //                                  actorHandlersMap,
-        //                                  new AsyncQueue<AsyncMessageContext>(),
-        //                                  new AsyncQueue<IEnumerable<ActorMessageHandlerIdentifier>>(),
-        //                                  routerConfiguration,
-        //                                  securityProvider.Object,
-        //                                  performanceCounterManager.Object,
-        //                                  logger);
-        //    actorHost.AssignActor(new ExceptionActor());
-        //    try
-        //    {
-        //        StartActorHost(actorHost);
-
-        //        var messageIn = Message.CreateFlowStartMessage(new SimpleMessage());
-        //        var socket = actorHostSocketFactory.GetRoutableSocket();
-        //        socket.DeliverMessage(messageIn);
-
-        //        var messageOut = socket.GetSentMessages().BlockingLast(AsyncOpCompletionDelay);
-
-        //        Assert.AreEqual(kinoDomain, messageOut.Domain);
-        //    }
-        //    finally
-        //    {
-        //        actorHost.Stop();
-        //    }
-        //}
-
-        private static bool IsAsyncMessage(AsyncMessageContext amc)
-            => amc.OutMessages.First().Equals(MessageIdentifier.Create<AsyncMessage>());
+        [Test]
+        public void ExceptionMessage_HasDomainSet()
+        {
+            var kinoDomain = Guid.NewGuid().ToString();
+            securityProvider.Setup(m => m.GetDomain(KinoMessages.Exception.Identity)).Returns(kinoDomain);
+            try
+            {
+                actorHost = new ActorHost(actorHandlersMap,
+                                          new AsyncQueue<AsyncMessageContext>(),
+                                          new AsyncQueue<ActorRegistration>(),
+                                          securityProvider.Object,
+                                          localRouterSocket.Object,
+                                          internalRegistrationSender.Object,
+                                          localSocketFactory.Object,
+                                          logger.Object);
+                actorHost.AssignActor(new ExceptionActor());
+                var messageIn = Message.CreateFlowStartMessage(new SimpleMessage());
+                SetupMessageSend(receivingSocket, messageIn);
+                //
+                StartActorHost(actorHost);
+                //
+                Func<Message, bool> assertCallbackPropertiesCopied = messageOut => messageOut.Equals(KinoMessages.Exception) &&
+                                                                                   messageOut.Domain == kinoDomain;
+                WaitUntilResponseSent(localRouterSocket, m => assertCallbackPropertiesCopied(m.As<Message>()));
+            }
+            finally
+            {
+                actorHost.Stop();
+            }
+        }
 
         private static void StartActorHost(IActorHost actorHost)
         {
