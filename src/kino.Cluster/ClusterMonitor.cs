@@ -156,7 +156,18 @@ namespace kino.Cluster
                                                                Messages = g.Key.IsActor()
                                                                               ? g.Select(x => x.Message)
                                                                               : Enumerable.Empty<MessageIdentifier>()
-                                                           });
+                                                           })
+                                              .Select(r => new RouteRegistration
+                                                           {
+                                                               ReceiverIdentity = r.ReceiverIdentifier,
+                                                               MessageContracts = r.Messages.Select(m => new MessageContract
+                                                                                                         {
+                                                                                                             Identity = m.Identity,
+                                                                                                             Partition = m.Partition,
+                                                                                                             Version = m.Version
+                                                                                                         })
+                                                                                   .ToArray()
+                                                           }).ToArray();
             var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
 
             var message = Message.Create(new RegisterExternalMessageRouteMessage
@@ -169,17 +180,7 @@ namespace kino.Cluster
                                                                                               .ToSocketAddress(),
                                                           HeartBeatInterval = heartBeatConfigurationProvider.GetHeartBeatInterval()
                                                       },
-                                             Routes = receiverRoutes.Select(r => new RouteRegistration
-                                                                                 {
-                                                                                     ReceiverIdentity = r.ReceiverIdentifier,
-                                                                                     MessageContracts = r.Messages.Select(m => new MessageContract
-                                                                                                                               {
-                                                                                                                                   Identity = m.Identity,
-                                                                                                                                   Partition = m.Partition,
-                                                                                                                                   Version = m.Version
-                                                                                                                               })
-                                                                                                         .ToArray()
-                                                                                 }).ToArray()
+                                             Routes = receiverRoutes
                                          })
                                  .As<Message>();
             message.SetDomain(domain);

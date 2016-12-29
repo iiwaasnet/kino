@@ -1,14 +1,14 @@
 ﻿using System;
+using System.Linq;
 using kino.Cluster;
 using kino.Cluster.Configuration;
-using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
-using kino.Core.Diagnostics.Performance;
+using kino.Core.Framework;
 using kino.Messaging;
+using kino.Messaging.Messages;
 using kino.Security;
 using kino.Tests.Actors.Setup;
-using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
 
@@ -29,6 +29,8 @@ namespace kino.Tests.Connectivity
         private Mock<IAutoDiscoverySender> autoDiscoverySender;
         private Mock<IAutoDiscoveryListener> autoDiscoveryListener;
         private Mock<IHeartBeatSenderConfigurationProvider> heartBeatSenderConfigProvider;
+        private Uri heartBeatUri;
+        private TimeSpan heartBeatInterval;
 
         [SetUp]
         public void Setup()
@@ -45,7 +47,10 @@ namespace kino.Tests.Connectivity
             autoDiscoverySender = new Mock<IAutoDiscoverySender>();
             autoDiscoveryListener = new Mock<IAutoDiscoveryListener>();
             heartBeatSenderConfigProvider = new Mock<IHeartBeatSenderConfigurationProvider>();
-
+            heartBeatUri = new Uri("tcp://127.0.0.1:890");
+            heartBeatSenderConfigProvider.Setup(m => m.GetHeartBeatAddress()).Returns(heartBeatUri);
+            heartBeatInterval = TimeSpan.FromSeconds(5);
+            heartBeatSenderConfigProvider.Setup(m => m.GetHeartBeatInterval()).Returns(heartBeatInterval);
             clusterMonitor = new ClusterMonitor(scaleOutConfigurationProvider.Object,
                                                 autoDiscoverySender.Object,
                                                 autoDiscoveryListener.Object,
@@ -58,18 +63,51 @@ namespace kino.Tests.Connectivity
         [Test]
         public void RegisterSelf_SendRegistrationMessageToAutoDiscoverySender()
         {
+            var actorIdentifier = ReceiverIdentities.CreateForActor();
+            var messageHubIdentifier = ReceiverIdentities.CreateForMessageHub();
             var registrations = new[]
                                 {
                                     new MessageRoute
                                     {
                                         Message = MessageIdentifier.Create<SimpleMessage>(),
-                                        Receiver = ReceiverIdentifier.Create()
+                                        Receiver = actorIdentifier
+                                    },
+                                    new MessageRoute
+                                    {
+                                        Message = MessageIdentifier.Create<ExceptionMessage>(),
+                                        Receiver = actorIdentifier
+                                    },
+                                    new MessageRoute
+                                    {
+                                        Receiver = messageHubIdentifier
                                     }
                                 };
             //
             clusterMonitor.RegisterSelf(registrations, domain);
             //
-            autoDiscoverySender.Verify(m => m.EnqueueMessage(It.IsAny<IMessage>()), Times.Once);
+            Func<IMessage, bool> messageIsConsistent = msg =>
+                                                       {
+                                                           var payload = msg.GetPayload<RegisterExternalMessageRouteMessage>();
+
+                                                           Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
+                                                           Assert.IsTrue(Unsafe.ArraysEqual(payload.NodeIdentity, scaleOutAddress.Identity));
+                                                           Assert.AreEqual(payload.Health.Uri, heartBeatUri.ToSocketAddress());
+                                                           Assert.AreEqual(payload.Health.HeartBeatInterval, heartBeatInterval);
+                                                           var actorRoutes = payload.Routes
+                                                                                    .First(r => Unsafe.ArraysEqual(r.ReceiverIdentity, actorIdentifier.Identity));
+                                                           foreach (var registration in registrations.Where(r => r.Receiver == actorIdentifier))
+                                                           {
+                                                               Assert.IsTrue(actorRoutes.MessageContracts.Any(mc => Unsafe.ArraysEqual(mc.Identity, registration.Message.Identity)
+                                                                                                                    && Unsafe.ArraysEqual(mc.Partition, registration.Message.Partition)
+                                                                                                                    && mc.Version == registration.Message.Version));
+                                                           }
+                                                           var messageHub = payload.Routes
+                                                                                   .First(r => Unsafe.ArraysEqual(r.ReceiverIdentity, messageHubIdentifier.Identity));
+                                                           Assert.IsNull(messageHub.MessageContracts);
+
+                                                           return true;
+                                                       };
+            autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => messageIsConsistent(msg))), Times.Once);
         }
 
         //[Test]
