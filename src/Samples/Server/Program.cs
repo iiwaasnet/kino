@@ -23,7 +23,7 @@ namespace Server
             kino.Start();
 
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
-            for (var i = 0; i < 5; i++)
+            for (var i = 0; i < 1; i++)
             {
                 foreach (var actor in container.Resolve<IEnumerable<IActor>>())
                 {
