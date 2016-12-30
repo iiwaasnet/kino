@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using kino.Core.Framework;
 
 namespace kino.Core
 {
-    public class SocketIdentifier : IEquatable<SocketIdentifier>
+    public class ReceiverIdentifier : IEquatable<ReceiverIdentifier>
     {
         private readonly int hashCode;
 
-        public SocketIdentifier(byte[] identity)
+        public ReceiverIdentifier(byte[] identity)
         {
             Identity = identity;
 
@@ -17,8 +17,8 @@ namespace kino.Core
         public static byte[] CreateIdentity()
             => Guid.NewGuid().ToString().GetBytes();
 
-        public static SocketIdentifier Create()
-            => new SocketIdentifier(CreateIdentity());
+        public static ReceiverIdentifier Create()
+            => new ReceiverIdentifier(CreateIdentity());
 
         public override bool Equals(object obj)
         {
@@ -31,13 +31,20 @@ namespace kino.Core
                 return true;
             }
             return obj.GetType() == GetType()
-                   && StructuralCompare((SocketIdentifier) obj);
+                   && StructuralCompare((ReceiverIdentifier) obj);
         }
 
-        public static bool operator ==(SocketIdentifier left, SocketIdentifier right)
-            => left != null && left.Equals(right);
+        public static bool operator ==(ReceiverIdentifier left, ReceiverIdentifier right)
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
 
-        public static bool operator !=(SocketIdentifier left, SocketIdentifier right)
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(ReceiverIdentifier left, ReceiverIdentifier right)
             => !(left == right);
 
         public override int GetHashCode()
@@ -46,7 +53,7 @@ namespace kino.Core
         private int CalculateHashCode()
             => Identity.ComputeHash();
 
-        public bool Equals(SocketIdentifier other)
+        public bool Equals(ReceiverIdentifier other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -63,7 +70,7 @@ namespace kino.Core
         public override string ToString()
             => Identity.GetAnyString();
 
-        private bool StructuralCompare(SocketIdentifier other)
+        private bool StructuralCompare(ReceiverIdentifier other)
             => Unsafe.ArraysEqual(Identity, other.Identity);
 
         public byte[] Identity { get; }

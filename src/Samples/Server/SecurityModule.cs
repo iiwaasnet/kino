@@ -1,6 +1,4 @@
-﻿using System;
-using System.Security.Cryptography;
-using Autofac;
+﻿using Autofac;
 using Client;
 using kino.Security;
 
@@ -10,7 +8,7 @@ namespace Server
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<SecurityProvider>()
+            builder.RegisterType<NullSecurityProvider>()
                    .As<ISecurityProvider>()
                    .SingleInstance();
 
@@ -20,10 +18,6 @@ namespace Server
 
             builder.RegisterType<DomainScopeResolver>()
                    .As<IDomainScopeResolver>()
-                   .SingleInstance();
-
-            builder.Register(m => (Func<HMAC>) (() => HMAC.Create("HMACMD5")))
-                   .As<Func<HMAC>>()
                    .SingleInstance();
         }
     }

@@ -66,6 +66,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\kino.Cluster\kino.Cluster.csproj">
+      <Project>{041A2E08-53AD-485E-8F57-B06ADB01C26F}</Project>
+      <Name>kino.Cluster</Name>
+    </ProjectReference>
     <ProjectReference Include="..\kino.Connectivity\kino.Connectivity.csproj">
       <Project>{45F6F46B-B864-4C27-9A4B-5022546AE424}</Project>
       <Name>kino.Connectivity</Name>
@@ -81,6 +85,10 @@
     <ProjectReference Include="..\kino.Routing\kino.Routing.csproj">
       <Project>{6809914A-DBDF-4801-A2CA-A03FD43F1172}</Project>
       <Name>kino.Routing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\kino.Security\kino.Security.csproj">
+      <Project>{33F0B37F-478E-405E-ACFB-65759C56228D}</Project>
+      <Name>kino.Security</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -1,5 +1,3 @@
-using System.Linq;
-using kino.Cluster;
 using kino.Connectivity;
 using kino.Core.Framework;
 using kino.Messaging;
@@ -10,17 +8,14 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class ClusterMessageRoutesRequestHandler : IServiceMessageHandler
     {
-        private readonly IClusterConnectivity clusterConnectivity;
-        private readonly IInternalRoutingTable internalRoutingTable;
         private readonly ISecurityProvider securityProvider;
+        private readonly INodeRoutesRegistrar nodeRoutesRegistrar;
 
-        public ClusterMessageRoutesRequestHandler(IClusterConnectivity clusterConnectivity,
-                                                  IInternalRoutingTable internalRoutingTable,
-                                                  ISecurityProvider securityProvider)
+        public ClusterMessageRoutesRequestHandler(ISecurityProvider securityProvider,
+                                                  INodeRoutesRegistrar nodeRoutesRegistrar)
         {
-            this.clusterConnectivity = clusterConnectivity;
-            this.internalRoutingTable = internalRoutingTable;
             this.securityProvider = securityProvider;
+            this.nodeRoutesRegistrar = nodeRoutesRegistrar;
         }
 
         public bool Handle(IMessage message, ISocket _)
@@ -32,20 +27,7 @@ namespace kino.Routing.ServiceMessageHandlers
                 {
                     message.As<Message>().VerifySignature(securityProvider);
 
-                    var messageIdentifiers = internalRoutingTable.GetMessageRegistrations();
-                    var messageHubs = messageIdentifiers.Where(mi => mi.Identifier.IsMessageHub())
-                                                        .Select(mi => mi.Identifier);
-                    //TODO: Refactor, hence !mi.IsMessageHub() should be first condition
-                    var contracts = messageIdentifiers.Where(mi => !mi.Identifier.IsMessageHub() &&
-                                                                   securityProvider.GetDomain(mi.Identifier.Identity) == message.Domain)
-                                                      .Select(mi => mi.Identifier)
-                                                      .Concat(messageHubs)
-                                                      .ToList();
-
-                    if (contracts.Any())
-                    {
-                        clusterConnectivity.RegisterSelf(contracts, message.Domain);
-                    }
+                    nodeRoutesRegistrar.RegisterOwnGlobalRoutes(message.Domain);
                 }
             }
 

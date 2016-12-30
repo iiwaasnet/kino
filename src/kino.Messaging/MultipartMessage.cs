@@ -44,6 +44,7 @@ namespace kino.Messaging
                 frames.Add(callback.Identity);
             }
             //TODO: Optimize calculation of body, callbacks and routing frames offsets
+            frames.Add(GetCallbackReceiverNodeIdentityFrame(message)); // 17
             frames.Add(GetCallbackKeyFrame(message)); // 16
             frames.Add(GetDomainFrame(message)); // 15
             frames.Add(GetSignatureFrame(message)); // 14
@@ -149,6 +150,9 @@ namespace kino.Messaging
         private byte[] GetCallbackReceiverIdentityFrame(Message message)
             => message.CallbackReceiverIdentity ?? EmptyFrame;
 
+        private byte[] GetCallbackReceiverNodeIdentityFrame(Message message)
+            => message.CallbackReceiverNodeIdentity ?? EmptyFrame;
+
         private byte[] GetWireFormatVersionFrame(Message message)
             => message.WireFormatVersion.GetBytes();
 
@@ -171,20 +175,20 @@ namespace kino.Messaging
             => message.Partition ?? EmptyFrame;
 
         private byte[] GetReceiverNodeIdentityFrame(Message message)
-            => message.PopReceiverNode() ?? EmptyFrame;
+            => message.ReceiverNodeIdentity ?? EmptyFrame;
 
         internal byte[] GetMessageIdentity()
-            => frames[frames.Count - ReversedFramesV4.Identity];
+            => frames[frames.Count - ReversedFramesV5.Identity];
 
         internal byte[] GetMessagePartition()
-            => frames[frames.Count - ReversedFramesV4.Partition];
+            => frames[frames.Count - ReversedFramesV5.Partition];
 
         internal byte[] GetMessageVersion()
-            => frames[frames.Count - ReversedFramesV4.Version];
+            => frames[frames.Count - ReversedFramesV5.Version];
 
         internal byte[] GetMessageBody()
         {
-            var data = frames[frames.Count - ReversedFramesV4.BodyDescription].GetULong();
+            var data = frames[frames.Count - ReversedFramesV5.BodyDescription].GetULong();
             ushort offset;
             data.Split(out offset);
 
@@ -192,11 +196,11 @@ namespace kino.Messaging
         }
 
         internal TimeSpan GetMessageTTL()
-            => frames[frames.Count - ReversedFramesV4.TTL].GetTimeSpan();
+            => frames[frames.Count - ReversedFramesV5.TTL].GetTimeSpan();
 
         internal void GetTraceOptionsDistributionPattern(out MessageTraceOptions traceOptions, out DistributionPattern distributionPattern)
         {
-            var data = frames[frames.Count - ReversedFramesV4.TraceOptionsDistributiomPattern].GetULong();
+            var data = frames[frames.Count - ReversedFramesV5.TraceOptionsDistributiomPattern].GetULong();
             ushort v1, v2;
             data.Split(out v1, out v2);
             traceOptions = (MessageTraceOptions) v1;
@@ -204,34 +208,37 @@ namespace kino.Messaging
         }
 
         public long GetCallbackKey()
-            => frames[frames.Count - ReversedFramesV4.CallbackKey].GetLong();
+            => frames[frames.Count - ReversedFramesV5.CallbackKey].GetLong();
 
         internal string GetDomain()
-            => frames[frames.Count - ReversedFramesV4.Domain].GetString();
+            => frames[frames.Count - ReversedFramesV5.Domain].GetString();
 
         internal byte[] GetSignature()
-            => frames[frames.Count - ReversedFramesV4.Signature];
+            => frames[frames.Count - ReversedFramesV5.Signature];
 
         internal byte[] GetCallbackReceiverIdentity()
-            => frames[frames.Count - ReversedFramesV4.CallbackReceiverIdentity];
+            => frames[frames.Count - ReversedFramesV5.CallbackReceiverIdentity];
+
+        internal byte[] GetCallbackReceiverNodeIdentity()
+            => frames[frames.Count - ReversedFramesV5.CallbackReceiverNodeIdentity];
 
         internal byte[] GetCorrelationId()
-            => frames[frames.Count - ReversedFramesV4.CorrelationId];
+            => frames[frames.Count - ReversedFramesV5.CorrelationId];
 
         internal byte[] GetReceiverIdentity()
-            => frames[frames.Count - ReversedFramesV4.ReceiverIdentity];
+            => frames[frames.Count - ReversedFramesV5.ReceiverIdentity];
 
         internal byte[] GetWireFormatVersion()
-            => frames[frames.Count - ReversedFramesV4.WireFormatVersion];
+            => frames[frames.Count - ReversedFramesV5.WireFormatVersion];
 
         internal byte[] GetReceiverNodeIdentity()
-            => frames[frames.Count - ReversedFramesV4.ReceiverNodeIdentity];
+            => frames[frames.Count - ReversedFramesV5.ReceiverNodeIdentity];
 
         internal IEnumerable<byte[]> Frames => frames;
 
         internal IEnumerable<MessageIdentifier> GetCallbackPoints()
         {
-            var data = frames[frames.Count - ReversedFramesV4.CallbackDescription].GetULong();
+            var data = frames[frames.Count - ReversedFramesV5.CallbackDescription].GetULong();
 
             ushort offset, entryCount, frameDivisor;
             data.Split(out offset, out entryCount, out frameDivisor);
@@ -259,7 +266,7 @@ namespace kino.Messaging
 
         internal IEnumerable<SocketEndpoint> GetMessageRouting(out ushort hops)
         {
-            var data = frames[frames.Count - ReversedFramesV4.RoutingDescription].GetULong();
+            var data = frames[frames.Count - ReversedFramesV5.RoutingDescription].GetULong();
 
             ushort offset, entryCount, frameDivisor;
             data.Split(out offset, out entryCount, out frameDivisor, out hops);

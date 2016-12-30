@@ -6,9 +6,11 @@ namespace kino.Cluster
     {
         void StartPeerMonitoring(Node peer, Health health);
 
+        void ScheduleConnectivityCheck(ReceiverIdentifier nodeIdentifier);
+
         void AddPeer(Node peer, Health health);
 
-        void DeletePeer(SocketIdentifier socketIdentifier);
+        void DeletePeer(ReceiverIdentifier nodeIdentifier);
 
         void Start();
 

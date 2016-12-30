@@ -1,10 +1,8 @@
-﻿using kino.Core;
-
-namespace kino.Cluster
+﻿namespace kino.Cluster
 {
     public interface IRouteDiscovery
     {
-        void RequestRouteDiscovery(Identifier messageIdentifier);
+        void RequestRouteDiscovery(MessageRoute messageRoute);
 
         void Start();
 

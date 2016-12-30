@@ -19,17 +19,14 @@ namespace kino.Configuration
         public IEnumerable<RendezvousEndpoint> GetRendezvousEndpointsConfiguration()
             => appConfig.RendezvousServers.Select(s => new RendezvousEndpoint(s.UnicastUri, s.BroadcastUri));
 
-        //TODO: Remove
-        public RouterConfiguration GetRouterConfiguration()
-            => new RouterConfiguration();
-
         public ScaleOutSocketConfiguration GetScaleOutConfiguration()
         {
             var uris = appConfig.ScaleOutAddressUri.GetAddressRange();
-            var socketIdentifier = SocketIdentifier.CreateIdentity();
+            var socketIdentifier = ReceiverIdentifier.CreateIdentity();
 
             return new ScaleOutSocketConfiguration
                    {
+                       ScaleOutReceiveMessageQueueLength = Math.Max(appConfig.ScaleOutReceiveMessageQueueLength, 10000),
                        AddressRange = uris.Select(uri => new SocketEndpoint(uri, socketIdentifier))
                                           .ToList()
                    };

@@ -9,9 +9,20 @@ namespace kino.Core.Framework
         {
             if (delay.TotalMilliseconds > 0)
             {
-                using (var @lock = new ManualResetEvent(false))
+                using (var @lock = new ManualResetEventSlim(false))
                 {
-                    @lock.WaitOne(delay);
+                    @lock.Wait(delay);
+                }
+            }
+        }
+
+        public static void Sleep(this TimeSpan delay, CancellationToken token)
+        {
+            if (delay.TotalMilliseconds > 0)
+            {
+                using (var @lock = new ManualResetEventSlim(false))
+                {
+                    @lock.Wait(delay, token);
                 }
             }
         }

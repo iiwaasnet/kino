@@ -9,7 +9,6 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
-using kino.Security;
 
 namespace kino.Cluster
 {
@@ -19,33 +18,27 @@ namespace kino.Cluster
         private readonly IRendezvousCluster rendezvousCluster;
         private readonly ISocketFactory socketFactory;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
-        private readonly IAutoDiscoverySender autoDiscoverySender;
         private readonly ManualResetEventSlim heartBeatReceived;
         private readonly ManualResetEventSlim newRendezvousConfiguration;
         private readonly ClusterMembershipConfiguration membershipConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
-        private readonly ISecurityProvider securityProvider;
         private readonly ILocalSocket<IMessage> localRouterSocket;
 
         public AutoDiscoveryListener(IRendezvousCluster rendezvousCluster,
                                      ISocketFactory socketFactory,
                                      IScaleOutConfigurationProvider scaleOutConfigurationProvider,
-                                     IAutoDiscoverySender autoDiscoverySender,
                                      ClusterMembershipConfiguration membershipConfiguration,
                                      IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
-                                     ISecurityProvider securityProvider,
                                      ILocalSocket<IMessage> localRouterSocket,
                                      ILogger logger)
         {
             this.logger = logger;
             this.membershipConfiguration = membershipConfiguration;
             this.performanceCounterManager = performanceCounterManager;
-            this.securityProvider = securityProvider;
             this.localRouterSocket = localRouterSocket;
             this.rendezvousCluster = rendezvousCluster;
             this.socketFactory = socketFactory;
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
-            this.autoDiscoverySender = autoDiscoverySender;
             heartBeatReceived = new ManualResetEventSlim(false);
             newRendezvousConfiguration = new ManualResetEventSlim(false);
         }
@@ -139,7 +132,7 @@ namespace kino.Cluster
             var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateSubscriberSocket();
             socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.AutoDiscoveryListenerSocketReceiveRate);
-            socket.Connect(rendezvousServer.BroadcastUri);
+            socket.Connect(rendezvousServer.BroadcastUri, waitConnectionEstablishment: true);
             socket.Subscribe();
 
             logger.Info($"Connected to Rendezvous {rendezvousServer.BroadcastUri.AbsoluteUri}");
@@ -233,7 +226,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<DiscoverMessageRouteMessage>();
 
-                return !ThisNodeSocket(payload.RequestorSocketIdentity);
+                return !ThisNodeSocket(payload.RequestorNodeIdentity);
             }
 
             return false;
@@ -254,7 +247,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<RequestClusterMessageRoutesMessage>();
 
-                return !ThisNodeSocket(payload.RequestorSocketIdentity);
+                return !ThisNodeSocket(payload.RequestorNodeIdentity);
             }
 
             return false;
@@ -278,7 +271,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<UnregisterNodeMessage>();
 
-                return !ThisNodeSocket(payload.SocketIdentity);
+                return !ThisNodeSocket(payload.ReceiverNodeIdentity);
             }
 
             return message.Equals(KinoMessages.UnregisterUnreachableNode);
@@ -290,7 +283,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
 
-                return !ThisNodeSocket(payload.SocketIdentity);
+                return !ThisNodeSocket(payload.NodeIdentity);
             }
 
             return false;
@@ -302,7 +295,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<UnregisterMessageRouteMessage>();
 
-                return !ThisNodeSocket(payload.SocketIdentity);
+                return !ThisNodeSocket(payload.ReceiverNodeIdentity);
             }
 
             return false;

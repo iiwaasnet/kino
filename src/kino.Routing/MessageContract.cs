@@ -4,7 +4,7 @@ namespace kino.Routing
 {
     public class MessageContract
     {
-        public Identifier Identifier { get; set; }
+        public MessageIdentifier Message { get; set; }
 
         public bool KeepRegistrationLocal { get; set; }
     }

@@ -1,0 +1,2 @@
+- If ReceiverNode is set, it may be overwritten by callback, when it triggers. Decide if an exception should be thrown in this case
+- Add sending of self-registrations with specified period

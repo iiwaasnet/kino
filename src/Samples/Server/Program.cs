@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using Autofac;
-using Autofac.kino;
 using kino.Actors;
-using kino.Routing;
+using kino.Core.Diagnostics;
 using static System.Console;
 
 namespace Server
@@ -15,30 +14,32 @@ namespace Server
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule<MainModule>();
-            builder.RegisterModule<KinoModule>();
             builder.RegisterModule<SecurityModule>();
 
             var container = builder.Build();
+            var logger = container.Resolve<ILogger>();
+            var kino = container.Resolve<kino.kino>();
+            //kino.SetResolver(new DependencyResolver(container));
+            kino.Start();
 
-            var messageRouter = container.Resolve<IMessageRouter>();
-            messageRouter.Start();
             // Needed to let router bind to socket over INPROC. To be fixed by NetMQ in future.
-            Thread.Sleep(TimeSpan.FromMilliseconds(30));
-
-            var actorHostManager = container.Resolve<IActorHostManager>();
-            foreach (var actor in container.Resolve<IEnumerable<IActor>>())
+            for (var i = 0; i < 1; i++)
             {
-                actorHostManager.AssignActor(actor);
+                foreach (var actor in container.Resolve<IEnumerable<IActor>>())
+                {
+                    kino.AssignActor(actor);
+                    logger.Debug($"Actor {actor.Identifier} registered");
+                }
+                Thread.Sleep(TimeSpan.FromMilliseconds(200));
             }
 
-            WriteLine("ActorHost started...");
+            logger.Debug("ActorHost started...");
             ReadLine();
 
-            actorHostManager.Dispose();
-            messageRouter.Stop();
+            kino.Stop();
             container.Dispose();
 
-            WriteLine("ActorHost stopped.");
+            logger.Debug("ActorHost stopped.");
         }
     }
 }

@@ -4,7 +4,7 @@ namespace kino.Security
 {
     public interface ISecurityProvider : ISignatureProvider
     {
-        string GetDomain(byte[] MessageIdentity);
+        string GetDomain(byte[] messageIdentity);
 
         bool DomainIsAllowed(string domain);
 

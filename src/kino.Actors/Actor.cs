@@ -8,6 +8,11 @@ namespace kino.Actors
 {
     public abstract class Actor : IActor
     {
+        protected Actor()
+        {
+            Identifier = ReceiverIdentities.CreateForActor();
+        }
+
         public virtual IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
             => GetActorRegistrationsByAttributes();
 
@@ -41,5 +46,7 @@ namespace kino.Actors
 
         private static bool InterfaceMethodFilter(MemberInfo memberInfo, object filterCriteria)
             => memberInfo.GetCustomAttributes((Type) filterCriteria).Any();
+
+        public ReceiverIdentifier Identifier { get; }
     }
 }

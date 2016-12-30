@@ -8,32 +8,32 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class UnreachableNodeUnregistrationHandler : IServiceMessageHandler
     {
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterHealthMonitor clusterHealthMonitor;
         private readonly IExternalRoutingTable externalRoutingTable;
 
-        public UnreachableNodeUnregistrationHandler(IClusterConnectivity clusterConnectivity,
+        public UnreachableNodeUnregistrationHandler(IClusterHealthMonitor clusterHealthMonitor,
                                                     IExternalRoutingTable externalRoutingTable)
         {
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterHealthMonitor = clusterHealthMonitor;
             this.externalRoutingTable = externalRoutingTable;
         }
 
-        public bool Handle(IMessage message, ISocket forwardingSocket)
+        public bool Handle(IMessage message, ISocket scaleOutBackend)
         {
             var shouldHandle = IsUnregisterRouting(message);
             if (shouldHandle)
             {
                 var payload = message.GetPayload<UnregisterUnreachableNodeMessage>();
 
-                var socketIdentifier = new SocketIdentifier(payload.SocketIdentity);
-                var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(socketIdentifier);
+                var nodeIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
+                var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(nodeIdentifier);
                 if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                 {
-                    forwardingSocket.SafeDisconnect(peerRemoveResult.Uri);
+                    scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
                 }
                 if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
                 {
-                    clusterConnectivity.DeletePeer(socketIdentifier);
+                    clusterHealthMonitor.DeletePeer(nodeIdentifier);
                 }
             }
 

@@ -10,20 +10,20 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class NodeUnregistrationHandler : IServiceMessageHandler
     {
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterHealthMonitor clusterHealthMonitor;
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ISecurityProvider securityProvider;
 
-        public NodeUnregistrationHandler(IClusterConnectivity clusterConnectivity,
+        public NodeUnregistrationHandler(IClusterHealthMonitor clusterHealthMonitor,
                                          IExternalRoutingTable externalRoutingTable,
                                          ISecurityProvider securityProvider)
         {
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterHealthMonitor = clusterHealthMonitor;
             this.externalRoutingTable = externalRoutingTable;
             this.securityProvider = securityProvider;
         }
 
-        public bool Handle(IMessage message, ISocket forwardingSocket)
+        public bool Handle(IMessage message, ISocket scaleOutBackend)
         {
             var shouldHandle = IsUnregisterRouting(message);
             if (shouldHandle)
@@ -34,15 +34,15 @@ namespace kino.Routing.ServiceMessageHandlers
 
                     var payload = message.GetPayload<UnregisterNodeMessage>();
 
-                    var socketIdentifier = new SocketIdentifier(payload.SocketIdentity);
-                    var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(socketIdentifier);
+                    var nodeIdentifer = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
+                    var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(nodeIdentifer);
                     if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                     {
-                        forwardingSocket.SafeDisconnect(peerRemoveResult.Uri);
+                        scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
                     }
                     if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
                     {
-                        clusterConnectivity.DeletePeer(socketIdentifier);
+                        clusterHealthMonitor.DeletePeer(nodeIdentifer);
                     }
                 }
             }

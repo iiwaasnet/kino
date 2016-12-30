@@ -3,33 +3,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security;
 using System.Security.Cryptography;
-using kino.Core;
 using kino.Core.Framework;
 
 namespace kino.Security
 {
     public class SecurityProvider : ISecurityProvider
     {
+        private readonly bool disableSigning;
         private readonly IDictionary<string, DomainPrivateKey> nameToDomainMap;
-        private readonly IDictionary<Identifier, DomainPrivateKey> messageToDomainMap;
+        private readonly IDictionary<AnyVersionMessageIdentifier, DomainPrivateKey> messageToDomainMap;
         private readonly KeyedHashAlgorithm mac;
         private readonly object @lock = new object();
+        private readonly Dictionary<string, HashSet<EquatableIdentity>> unsignableDomains;
 
         public SecurityProvider(Func<HMAC> macImplFactory,
                                 IDomainScopeResolver domainScopeResolver,
-                                IDomainPrivateKeyProvider domainPrivateKeyProvider)
+                                IDomainPrivateKeyProvider domainPrivateKeyProvider,
+                                bool disableSigning = false)
         {
+            this.disableSigning = disableSigning;
             nameToDomainMap = domainPrivateKeyProvider.GetAllowedDomainKeys()
                                                       .ToDictionary(dk => dk.Domain, dk => dk);
             messageToDomainMap = CreateMessageMapping(nameToDomainMap, domainScopeResolver);
             mac = macImplFactory();
+            unsignableDomains = domainPrivateKeyProvider.GetUnsignedDomains();
         }
 
         public byte[] CreateSignature(string domain, byte[] buffer)
             => CreateDomainSignature(FindDomain(domain), buffer);
 
         public string GetDomain(byte[] messageIdentity)
-            => FindDomain(new AnyIdentifier(messageIdentity)).Domain;
+            => FindDomain(new AnyVersionMessageIdentifier(messageIdentity)).Domain;
 
         public bool DomainIsAllowed(string domain)
             => nameToDomainMap.ContainsKey(domain);
@@ -46,7 +50,7 @@ namespace kino.Security
             }
         }
 
-        private DomainPrivateKey FindDomain(Identifier identity)
+        private DomainPrivateKey FindDomain(AnyVersionMessageIdentifier identity)
         {
             DomainPrivateKey domain;
             if (messageToDomainMap.TryGetValue(identity, out domain))
@@ -67,10 +71,10 @@ namespace kino.Security
             throw new SecurityException($"Domain {name} is not allowed!");
         }
 
-        private static IDictionary<Identifier, DomainPrivateKey> CreateMessageMapping(IDictionary<string, DomainPrivateKey> domainKeys,
-                                                                                      IDomainScopeResolver domainScopeResolver)
+        private static IDictionary<AnyVersionMessageIdentifier, DomainPrivateKey> CreateMessageMapping(IDictionary<string, DomainPrivateKey> domainKeys,
+                                                                                                       IDomainScopeResolver domainScopeResolver)
         {
-            var mappings = new Dictionary<Identifier, DomainPrivateKey>();
+            var mappings = new Dictionary<AnyVersionMessageIdentifier, DomainPrivateKey>();
             var domainScopes = domainScopeResolver.GetDomainMessages(domainKeys.Select(dk => dk.Key));
 
             foreach (var message in domainScopes.SelectMany(dm => dm.MessageIdentities,
@@ -80,10 +84,11 @@ namespace kino.Security
                                                                             Domain = dm.Domain
                                                                         }))
             {
-                DomainPrivateKey key, _;
+                DomainPrivateKey key;
                 if (domainKeys.TryGetValue(message.Domain, out key))
                 {
-                    var messageIdentifier = new AnyIdentifier(message.Identity.GetBytes());
+                    var messageIdentifier = new AnyVersionMessageIdentifier(message.Identity.GetBytes());
+                    DomainPrivateKey _;
                     if (!mappings.TryGetValue(messageIdentifier, out _))
                     {
                         mappings.Add(messageIdentifier, key);
@@ -100,6 +105,27 @@ namespace kino.Security
             }
 
             return mappings;
+        }
+
+        public bool ShouldSignMessage(string domain, byte[] identity)
+        {
+            if (disableSigning)
+            {
+                return false;
+            }
+
+            HashSet<EquatableIdentity> messages = null;
+            if (unsignableDomains?.TryGetValue(domain, out messages) == true)
+            {
+                if (messages == null
+                    || !messages.Any()
+                    || messages.Contains(new EquatableIdentity(identity)))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

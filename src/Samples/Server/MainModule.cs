@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using kino;
 using kino.Actors;
 using kino.Configuration;
 using kino.Core.Diagnostics;
@@ -16,12 +17,10 @@ namespace Server
                    .SingleInstance();
 
             builder.RegisterType<RevertStringActor>()
-                   .As<IActor>()
-                   .SingleInstance();
+                   .As<IActor>();
 
             builder.RegisterType<GroupCharsActor>()
-                   .As<IActor>()
-                   .SingleInstance();
+                   .As<IActor>();
 
             builder.RegisterType<ConfigProvider>()
                    .As<IConfigProvider>()
@@ -33,6 +32,14 @@ namespace Server
 
             builder.Register(c => c.Resolve<IConfigProvider>().GetConfiguration<ApplicationConfiguration>())
                    .As<ApplicationConfiguration>()
+                   .SingleInstance();
+
+            builder.Register(c => new DependencyResolver(c))
+                   .As<IDependencyResolver>()
+                   .SingleInstance();
+
+            builder.Register(c => new kino.kino(c.Resolve<IDependencyResolver>()))
+                   .AsSelf()
                    .SingleInstance();
         }
     }

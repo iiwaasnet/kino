@@ -2,7 +2,7 @@
 {
     internal partial class MultipartMessage
     {
-        private class ReversedFramesV4
+        private class ReversedFramesV5
         {
             internal const int WireFormatVersion = 1;
             internal const int BodyDescription = 2;
@@ -20,10 +20,11 @@
             internal const int Signature = 14;
             internal const int Domain = 15;
             internal const int CallbackKey = 16;
+            internal const int CallbackReceiverNodeIdentity = 17;
         }
 
-        internal static ushort GetLastFixedFrameIndex()
-            => ReversedFramesV4.CallbackKey;
+        private static ushort GetLastFixedFrameIndex()
+            => ReversedFramesV5.CallbackReceiverNodeIdentity;
 
         private class ForwardFrames
         {

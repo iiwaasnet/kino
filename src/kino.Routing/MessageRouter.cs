@@ -20,12 +20,14 @@ namespace kino.Routing
 {
     public partial class MessageRouter : IMessageRouter
     {
+        private const int LocalRouterSocketId = 0;
+        private const int InternalRegistrationsReceiverId = 1;
         private CancellationTokenSource cancellationTokenSource;
         private Task localRouting;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterServices clusterServices;
         private readonly ISocketFactory socketFactory;
         private readonly ILogger logger;
         private readonly IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
@@ -34,19 +36,22 @@ namespace kino.Routing
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver;
         private readonly InternalMessageRouteRegistrationHandler internalRegistrationHandler;
-        private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
+        private readonly IClusterHealthMonitor clusterHealthMonitor;
+        private byte[] thisNodeIdentity;
+        private bool isStarted;
 
         public MessageRouter(ISocketFactory socketFactory,
                              IInternalRoutingTable internalRoutingTable,
                              IExternalRoutingTable externalRoutingTable,
                              IScaleOutConfigurationProvider scaleOutConfigurationProvider,
-                             IClusterConnectivity clusterConnectivity,
+                             IClusterServices clusterServices,
                              IEnumerable<IServiceMessageHandler> serviceMessageHandlers,
                              IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                              ISecurityProvider securityProvider,
                              ILocalSocket<IMessage> localRouterSocket,
                              ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver,
                              InternalMessageRouteRegistrationHandler internalRegistrationHandler,
+                             IClusterHealthMonitor clusterHealthMonitor,
                              ILogger logger)
         {
             this.logger = logger;
@@ -54,37 +59,50 @@ namespace kino.Routing
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterServices = clusterServices;
             this.serviceMessageHandlers = serviceMessageHandlers;
             this.performanceCounterManager = performanceCounterManager;
             this.securityProvider = securityProvider;
             this.localRouterSocket = localRouterSocket;
             this.internalRegistrationsReceiver = internalRegistrationsReceiver;
             this.internalRegistrationHandler = internalRegistrationHandler;
+            this.clusterHealthMonitor = clusterHealthMonitor;
         }
 
         public void Start()
         {
-            //TODO: Decide on how to handle start timeout
-            cancellationTokenSource = new CancellationTokenSource();
-            localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
-            clusterConnectivity.StartClusterServices();
+            if (!isStarted)
+            {
+                using (var barrier = new Barrier(2))
+                {
+                    //TODO: Decide on how to handle start timeout
+                    cancellationTokenSource = new CancellationTokenSource();
+                    clusterServices.StartClusterServices();
+                    localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning);
+                    barrier.SignalAndWait();
+                    isStarted = true;
+                }
+            }
         }
 
         public void Stop()
         {
-            clusterConnectivity.StopClusterServices();
+            clusterServices.StopClusterServices();
             cancellationTokenSource?.Cancel();
-            localRouting?.Wait(TerminationWaitTimeout);
+            localRouting?.Wait();
             cancellationTokenSource?.Dispose();
+            isStarted = false;
         }
 
-        private void RouteLocalMessages(CancellationToken token)
+        private byte[] GetBlockingReceiverNodeIdentity()
+            => scaleOutConfigurationProvider.GetScaleOutAddress().Identity;
+
+        private void RouteLocalMessages(CancellationToken token, Barrier barrier)
         {
             try
             {
-                const int LocalRouterSocketId = 0;
-                const int InternalRegistrationsReceiverId = 1;
+                thisNodeIdentity = GetBlockingReceiverNodeIdentity();
+
                 var waitHandles = new[]
                                   {
                                       localRouterSocket.CanReceive(),
@@ -93,6 +111,7 @@ namespace kino.Routing
                                   };
                 using (var scaleOutBackend = CreateScaleOutBackendSocket())
                 {
+                    barrier.SignalAndWait(token);
                     while (!token.IsCancellationRequested)
                     {
                         try
@@ -137,27 +156,30 @@ namespace kino.Routing
 
         private bool HandleOperationMessage(Message message, ISocket scaleOutBackend)
         {
-            var messageHandlerIdentifier = CreateMessageHandlerIdentifier(message);
+            var lookupRequest = new ExternalRouteLookupRequest
+                                {
+                                    ReceiverIdentity = new ReceiverIdentifier(message.ReceiverIdentity),
+                                    Message = new MessageIdentifier(message),
+                                    Distribution = message.Distribution,
+                                    ReceiverNodeIdentity = new ReceiverIdentifier(message.ReceiverNodeIdentity ?? IdentityExtensions.Empty)
+                                };
+            var handleMessageLocally = !message.ReceiverNodeIdentity.IsSet()
+                                       || Unsafe.ArraysEqual(message.ReceiverNodeIdentity, thisNodeIdentity);
 
-            var handled = !message.ReceiverNodeSet()
-                          && HandleMessageLocally(messageHandlerIdentifier, message);
+            var handled = handleMessageLocally && HandleMessageLocally(lookupRequest, message);
             if (!handled || message.Distribution == DistributionPattern.Broadcast)
             {
-                handled = ForwardMessageAway(messageHandlerIdentifier, message, scaleOutBackend) || handled;
+                handled = ForwardMessageAway(lookupRequest, message, scaleOutBackend) || handled;
             }
 
-            return handled || ProcessUnhandledMessage(message, messageHandlerIdentifier);
+            return handled || ProcessUnhandledMessage(message, lookupRequest);
         }
 
-        private bool HandleMessageLocally(Identifier messageIdentifier, Message message)
+        private bool HandleMessageLocally(InternalRouteLookupRequest lookupRequest, Message message)
         {
-            var handlers = (message.Distribution == DistributionPattern.Unicast
-                                ? new[] {internalRoutingTable.FindRoute(messageIdentifier)}
-                                : internalRoutingTable.FindAllRoutes(messageIdentifier))
-                .Where(h => h != null)
-                .ToList();
+            var destinations = internalRoutingTable.FindRoutes(lookupRequest);
 
-            foreach (var handler in handlers)
+            foreach (var destination in destinations)
             {
                 try
                 {
@@ -165,46 +187,48 @@ namespace kino.Routing
                                   ? message.Clone().As<Message>()
                                   : message;
 
-                    handler.Send(message);
+                    message.SetSocketIdentity(destination.As<LocalSocket<IMessage>>().GetIdentity().Identity);
+                    destination.Send(message);
                     RoutedToLocalActor(message);
                 }
                 catch (HostUnreachableException err)
                 {
-                    var removedHandlerIdentifiers = internalRoutingTable.RemoveActorHostRoute(handler);
-                    if (removedHandlerIdentifiers.Any())
+                    //TODO: HostUnreachableException will never happen here, hence NetMQ sockets are not used
+                    //TODO: ILocalSocketShould throw similar exception, if no one is reading messages from the socket,
+                    //TODO: which should be a trigger for deletion of the ActorHost
+                    var removedRoutes = internalRoutingTable.RemoveReceiverRoute(destination)
+                                                            .Select(rr => new Cluster.MessageRoute
+                                                                          {
+                                                                              Receiver = rr.Receiver,
+                                                                              Message = rr.Message
+                                                                          });
+                    if (removedRoutes.Any())
                     {
-                        clusterConnectivity.UnregisterSelf(removedHandlerIdentifiers.Select(hi => hi.Identifier));
+                        clusterServices.GetClusterMonitor().UnregisterSelf(removedRoutes);
                     }
                     logger.Error(err);
                 }
             }
 
-            return handlers.Any();
+            return destinations.Any();
         }
 
-        private bool ForwardMessageAway(Identifier messageIdentifier, Message message, ISocket scaleOutBackend)
+        private bool ForwardMessageAway(ExternalRouteLookupRequest lookupRequest, Message message, ISocket scaleOutBackend)
         {
-            var receiverNodeIdentity = message.PopReceiverNode();
-            var routes = (message.Distribution == DistributionPattern.Unicast
-                              ? new[] {externalRoutingTable.FindRoute(messageIdentifier, receiverNodeIdentity)}
-                              : (MessageCameFromLocalActor(message)
-                                     ? externalRoutingTable.FindAllRoutes(messageIdentifier)
-                                     : Enumerable.Empty<PeerConnection>()))
-                .Where(h => h != null)
-                .ToList();
+            var routes = message.Distribution == DistributionPattern.Broadcast && !MessageCameFromLocalActor(message)
+                             ? Enumerable.Empty<PeerConnection>()
+                             : externalRoutingTable.FindRoutes(lookupRequest);
 
-            var routerConfiguration = scaleOutConfigurationProvider.GetRouterConfiguration();
             foreach (var route in routes)
             {
                 try
                 {
                     if (!route.Connected)
                     {
-                        scaleOutBackend.Connect(route.Node.Uri);
+                        scaleOutBackend.Connect(route.Node.Uri, waitConnectionEstablishment: true);
                         route.Connected = true;
-                        clusterConnectivity.StartPeerMonitoring(new Node(route.Node.Uri, route.Node.SocketIdentity),
-                                                                route.Health);
-                        routerConfiguration.ConnectionEstablishWaitTime.Sleep();
+                        clusterServices.GetClusterHealthMonitor()
+                                       .StartPeerMonitoring(new Node(route.Node.Uri, route.Node.SocketIdentity), route.Health);
                     }
 
                     message.SetSocketIdentity(route.Node.SocketIdentity);
@@ -217,9 +241,14 @@ namespace kino.Routing
 
                     ForwardedToOtherNode(message);
                 }
+                catch (TimeoutException err)
+                {
+                    clusterHealthMonitor.ScheduleConnectivityCheck(new ReceiverIdentifier(route.Node.SocketIdentity));
+                    logger.Error(err);
+                }
                 catch (HostUnreachableException err)
                 {
-                    var unregMessage = new UnregisterUnreachableNodeMessage {SocketIdentity = route.Node.SocketIdentity};
+                    var unregMessage = new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = route.Node.SocketIdentity};
                     TryHandleServiceMessage(Message.Create(unregMessage), scaleOutBackend);
                     logger.Error(err);
                 }
@@ -228,23 +257,23 @@ namespace kino.Routing
             return routes.Any();
         }
 
-        private bool ProcessUnhandledMessage(IMessage message, Identifier messageIdentifier)
+        private bool ProcessUnhandledMessage(IMessage message, ExternalRouteLookupRequest lookupRequest)
         {
-            clusterConnectivity.DiscoverMessageRoute(messageIdentifier);
+            var messageRoute = new Cluster.MessageRoute
+                               {
+                                   Receiver = lookupRequest.ReceiverIdentity,
+                                   Message = lookupRequest.Message
+                               };
+            clusterServices.GetClusterMonitor().DiscoverMessageRoute(messageRoute);
 
             if (MessageCameFromOtherNode(message))
             {
-                clusterConnectivity.UnregisterSelf(new[] {messageIdentifier});
-
-                if (message.Distribution == DistributionPattern.Broadcast)
-                {
-                    logger.Warn($"Broadcast message: {messageIdentifier} didn't find any local handler and was not forwarded.");
-                }
+                clusterServices.GetClusterMonitor().UnregisterSelf(messageRoute.ToEnumerable());
             }
-            else
-            {
-                logger.Warn($"Handler not found: {messageIdentifier}");
-            }
+            logger.Warn($"Route not found for Message:{lookupRequest.Message} lookup by " +
+                        $"[{nameof(lookupRequest.ReceiverNodeIdentity)}:{lookupRequest.ReceiverNodeIdentity}]-" +
+                        $"[{nameof(lookupRequest.ReceiverIdentity)}:{lookupRequest.ReceiverIdentity}]-" +
+                        $"[{lookupRequest.Distribution}]");
 
             return true;
         }
@@ -267,18 +296,15 @@ namespace kino.Routing
         private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
         {
             var handled = false;
-            var enumerator = serviceMessageHandlers.GetEnumerator();
-            while (enumerator.MoveNext() && !handled)
+            using (var enumerator = serviceMessageHandlers.GetEnumerator())
             {
-                handled = enumerator.Current.Handle(message, scaleOutBackend);
+                while (enumerator.MoveNext() && !handled)
+                {
+                    handled = enumerator.Current.Handle(message, scaleOutBackend);
+                }
+
+                return handled;
             }
-
-            return handled;
         }
-
-        private static Identifier CreateMessageHandlerIdentifier(Message message)
-            => message.ReceiverIdentity.IsSet()
-                   ? (Identifier) new AnyIdentifier(message.ReceiverIdentity)
-                   : (Identifier) new MessageIdentifier(message);
     }
 }

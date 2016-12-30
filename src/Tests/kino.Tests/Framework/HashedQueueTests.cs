@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
+using kino.Tests.Helpers;
 using NUnit.Framework;
 
 namespace kino.Tests.Framework
@@ -15,7 +16,7 @@ namespace kino.Tests.Framework
         {
             var queue = new HashedQueue<MessageIdentifier>();
 
-            var messageIdentifier = new MessageIdentifier(Guid.NewGuid().ToByteArray());
+            var messageIdentifier = CreateMessageIdentifier();
             Assert.IsTrue(queue.TryEnqueue(messageIdentifier));
             Assert.IsFalse(queue.TryEnqueue(messageIdentifier));
 
@@ -34,11 +35,11 @@ namespace kino.Tests.Framework
             {
                 if (i < maxQueueLength)
                 {
-                    Assert.IsTrue(queue.TryEnqueue(new MessageIdentifier(Guid.NewGuid().ToByteArray())));
+                    Assert.IsTrue(queue.TryEnqueue(CreateMessageIdentifier()));
                 }
                 else
                 {
-                    Assert.IsFalse(queue.TryEnqueue(new MessageIdentifier(Guid.NewGuid().ToByteArray())));
+                    Assert.IsFalse(queue.TryEnqueue(CreateMessageIdentifier()));
                 }
             }
 
@@ -52,8 +53,8 @@ namespace kino.Tests.Framework
         {
             var queue = new HashedQueue<MessageIdentifier>();
 
-            var ms1 = new MessageIdentifier(Guid.NewGuid().ToByteArray());
-            var ms2 = new MessageIdentifier(Guid.NewGuid().ToByteArray());
+            var ms1 = CreateMessageIdentifier();
+            var ms2 = CreateMessageIdentifier();
 
             queue.TryEnqueue(ms1);
             queue.TryEnqueue(ms2);
@@ -70,8 +71,8 @@ namespace kino.Tests.Framework
         {
             var queue = new HashedQueue<MessageIdentifier>();
 
-            var ms1 = new MessageIdentifier(Guid.NewGuid().ToByteArray());
-            var ms2 = new MessageIdentifier(Guid.NewGuid().ToByteArray());
+            var ms1 = CreateMessageIdentifier();
+            var ms2 = CreateMessageIdentifier();
 
             queue.TryEnqueue(ms1);
             queue.TryEnqueue(ms2);
@@ -93,15 +94,19 @@ namespace kino.Tests.Framework
 
             var itemsCount = 6;
             var messageIdentifiers = Enumerable.Range(0, itemsCount)
-                                               .Select(_ => new MessageIdentifier(Guid.NewGuid().ToByteArray()))
+                                               .Select(_ => CreateMessageIdentifier())
                                                .ToList();
 
             for (var i = 0; i < messageIdentifiers.Count - 2; i++)
             {
-                queue.TryEnqueue(new MessageIdentifier(Guid.NewGuid().ToByteArray()));
+                queue.TryEnqueue(CreateMessageIdentifier());
             }
 
             queue.TryDelete(messageIdentifiers);
         }
+
+        private static MessageIdentifier CreateMessageIdentifier()
+        => new MessageIdentifier(Guid.NewGuid().ToByteArray(), Randomizer.UInt16(), Guid.NewGuid().ToByteArray());
+        
     }
 }

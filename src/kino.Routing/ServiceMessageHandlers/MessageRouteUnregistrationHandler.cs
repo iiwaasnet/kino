@@ -13,23 +13,23 @@ namespace kino.Routing.ServiceMessageHandlers
 {
     public class MessageRouteUnregistrationHandler : IServiceMessageHandler
     {
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterHealthMonitor clusterHealthMonitor;
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ISecurityProvider securityProvider;
         private readonly ILogger logger;
 
-        public MessageRouteUnregistrationHandler(IClusterConnectivity clusterConnectivity,
+        public MessageRouteUnregistrationHandler(IClusterHealthMonitor clusterHealthMonitor,
                                                  IExternalRoutingTable externalRoutingTable,
                                                  ISecurityProvider securityProvider,
                                                  ILogger logger)
         {
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterHealthMonitor = clusterHealthMonitor;
             this.externalRoutingTable = externalRoutingTable;
             this.securityProvider = securityProvider;
             this.logger = logger;
         }
 
-        public bool Handle(IMessage message, ISocket forwardingSocket)
+        public bool Handle(IMessage message, ISocket scaleOutBackend)
         {
             var shouldHandle = IsUnregisterMessageRouting(message);
             if (shouldHandle)
@@ -39,36 +39,46 @@ namespace kino.Routing.ServiceMessageHandlers
                     message.As<Message>().VerifySignature(securityProvider);
 
                     var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-                    var socketIdentifier = new SocketIdentifier(payload.SocketIdentity);
-                    var messageContracts = payload.MessageContracts
-                                                  .Select(mh => mh.ToIdentifier());
-                    var messageIdentifiers = messageContracts.Where(mi => mi.IsMessageHub()
-                                                                          || securityProvider.GetDomain(mi.Identity) == message.Domain);
-
-                    var peerRemoveResult = externalRoutingTable.RemoveMessageRoute(messageIdentifiers, socketIdentifier);
-                    if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
+                    var nodeIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
+                    foreach (var route in GetUnregistrationRoutes(payload, message.Domain))
                     {
-                        forwardingSocket.SafeDisconnect(peerRemoveResult.Uri);
+                        var peerRemoveResult = externalRoutingTable.RemoveMessageRoute(route);
+                        if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
+                        {
+                            scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
+                        }
+                        if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
+                        {
+                            clusterHealthMonitor.DeletePeer(nodeIdentifier);
+                        }
                     }
-                    if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
-                    {
-                        clusterConnectivity.DeletePeer(socketIdentifier);
-                    }
-                    LogIfMessagesBelongToOtherDomain(messageIdentifiers, messageContracts, message.Domain);
                 }
             }
 
             return shouldHandle;
         }
 
-        private void LogIfMessagesBelongToOtherDomain(IEnumerable<Identifier> messageIdentifiers,
-                                                      IEnumerable<Identifier> messageContracts,
-                                                      string domain)
+        private IEnumerable<ExternalRouteRemoval> GetUnregistrationRoutes(UnregisterMessageRouteMessage payload, string domain)
         {
-            foreach (var messageContract in messageContracts.Where(mc => !messageIdentifiers.Contains(mc)))
+            var peer = new Node(payload.Uri, payload.ReceiverNodeIdentity);
+            foreach (var route in payload.Routes.SelectMany(r => r.MessageContracts.Select(mc => new MessageRoute
+                                                                                                 {
+                                                                                                     Receiver = new ReceiverIdentifier(r.ReceiverIdentity),
+                                                                                                     Message = new MessageIdentifier(mc.Identity, mc.Version, mc.Partition)
+                                                                                                 })))
             {
-                logger.Warn($"MessageIdentity {messageContract.Identity.GetString()} doesn't belong to requested " +
-                            $"Domain {domain}!");
+                if (route.Receiver.IsMessageHub() || securityProvider.GetDomain(route.Message.Identity) == domain)
+                {
+                    yield return new ExternalRouteRemoval
+                                 {
+                                     Route = route,
+                                     Peer = peer
+                                 };
+                }
+                else
+                {
+                    logger.Warn($"MessageIdentity {route.Message} doesn't belong to requested Domain {domain}!");
+                }
             }
         }
 

@@ -15,7 +15,7 @@ namespace kino.Security
         public byte[] CreateSignature(string domain, byte[] buffer)
             => IdentityExtensions.Empty;
 
-        public string GetDomain(byte[] MessageIdentity)
+        public string GetDomain(byte[] messageIdentity)
             => string.Empty;
 
         public bool DomainIsAllowed(string domain)
@@ -23,5 +23,8 @@ namespace kino.Security
 
         public IEnumerable<string> GetAllowedDomains()
             => allowedDomains;
+
+        public bool ShouldSignMessage(string domain, byte[] identity)
+            => false;
     }
 }

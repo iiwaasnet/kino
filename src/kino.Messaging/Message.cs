@@ -16,12 +16,11 @@ namespace kino.Messaging
 
         private object payload;
         private List<SocketEndpoint> routing;
-        private byte[] receiverNodeIdentity;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
-        private Message(IPayload payload, string domain)
+        private Message(IPayload payload)
         {
-            Domain = domain ?? string.Empty;
+            Domain = string.Empty;
             WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
             CallbackPoint = Enumerable.Empty<MessageIdentifier>();
@@ -33,35 +32,30 @@ namespace kino.Messaging
             Hops = 0;
             Signature = IdentityExtensions.Empty;
             TraceOptions = MessageTraceOptions.None;
+            ReceiverNodeIdentity = IdentityExtensions.Empty;
+            ReceiverIdentity = IdentityExtensions.Empty;
         }
 
         private Message()
         {
         }
 
-        public static IMessage CreateFlowStartMessage(IPayload payload, string domain = null)
-            => new Message(payload, domain)
+        public static IMessage CreateFlowStartMessage(IPayload payload)
+            => new Message(payload)
                {
                    Distribution = DistributionPattern.Unicast,
                    CorrelationId = GenerateCorrelationId()
                };
 
-        internal static IMessage Create(IPayload payload,
-                                        DistributionPattern distributionPattern = DistributionPattern.Unicast)
-            => new Message(payload, null)
+        public static IMessage Create(IPayload payload, DistributionPattern distributionPattern = DistributionPattern.Unicast)
+            => new Message(payload)
                {
                    Distribution = distributionPattern,
                    CorrelationId = EmptyCorrelationId
                };
 
-        public static IMessage Create(IPayload payload,
-                                      string domain,
-                                      DistributionPattern distributionPattern = DistributionPattern.Unicast)
-            => new Message(payload, domain)
-               {
-                   Distribution = distributionPattern,
-                   CorrelationId = EmptyCorrelationId
-               };
+        internal void SetDomain(string domain)
+            => Domain = domain ?? string.Empty;
 
         private static byte[] GenerateCorrelationId()
             //TODO: Better implementation
@@ -73,10 +67,10 @@ namespace kino.Messaging
         internal Message(MultipartMessage multipartMessage)
         {
             ReadWireFormatVersion(multipartMessage);
-            ReadV4Frames(multipartMessage);
+            ReadV5Frames(multipartMessage);
         }
 
-        private void ReadV4Frames(MultipartMessage multipartMessage)
+        private void ReadV5Frames(MultipartMessage multipartMessage)
         {
             Body = multipartMessage.GetMessageBody();
             TTL = multipartMessage.GetMessageTTL();
@@ -93,11 +87,14 @@ namespace kino.Messaging
             Identity = multipartMessage.GetMessageIdentity();
             Version = multipartMessage.GetMessageVersion().GetUShort();
             Partition = multipartMessage.GetMessagePartition();
-            receiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
+
             CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
-            ReceiverIdentity = multipartMessage.GetReceiverIdentity();
+            CallbackReceiverNodeIdentity = multipartMessage.GetCallbackReceiverNodeIdentity();
             CallbackPoint = multipartMessage.GetCallbackPoints();
             CallbackKey = multipartMessage.GetCallbackKey();
+
+            ReceiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
+            ReceiverIdentity = multipartMessage.GetReceiverIdentity();
 
             ushort hops;
             routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting(out hops));
@@ -107,43 +104,55 @@ namespace kino.Messaging
         private void ReadWireFormatVersion(MultipartMessage multipartMessage)
             => WireFormatVersion = multipartMessage.GetWireFormatVersion().GetInt();
 
-        internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, MessageIdentifier callbackMessageIdentifier, long callbackKey)
-            => RegisterCallbackPoint(callbackReceiverIdentity, new[] {callbackMessageIdentifier}, callbackKey);
+        internal void RegisterCallbackPoint(byte[] callbackReceiverNodeIdentity,
+                                            byte[] callbackReceiverIdentity,
+                                            MessageIdentifier callbackMessageIdentifier,
+                                            long callbackKey)
+            => RegisterCallbackPoint(callbackReceiverNodeIdentity,
+                                     callbackReceiverIdentity,
+                                     new[] {callbackMessageIdentifier},
+                                     callbackKey);
 
-        internal void RegisterCallbackPoint(byte[] callbackReceiverIdentity, IEnumerable<MessageIdentifier> callbackMessageIdentifiers, long callbackKey)
+        internal void RegisterCallbackPoint(byte[] callbackReceiverNodeIdentity,
+                                            byte[] callbackReceiverIdentity,
+                                            IEnumerable<MessageIdentifier> callbackMessageIdentifiers,
+                                            long callbackKey)
         {
+            CallbackReceiverNodeIdentity = callbackReceiverNodeIdentity;
             CallbackReceiverIdentity = callbackReceiverIdentity;
             CallbackPoint = callbackMessageIdentifiers;
             CallbackKey = callbackKey;
 
+            MatchMessageAgainstCallbackPoint();
+        }
+
+        private void MatchMessageAgainstCallbackPoint()
+        {
             if (CallbackPoint.Any(identifier => Unsafe.ArraysEqual(Identity, identifier.Identity)
                                                 && Version == identifier.Version
                                                 && Unsafe.ArraysEqual(Partition, identifier.Partition)))
             {
                 ReceiverIdentity = CallbackReceiverIdentity;
+                ReceiverNodeIdentity = CallbackReceiverNodeIdentity;
             }
         }
 
-        public void SetReceiverNode(SocketIdentifier socketIdentifier)
+        public void SetReceiverNode(ReceiverIdentifier receiverNode)
+            => SetReceivers(receiverNode.Identity, IdentityExtensions.Empty);
+
+        public void SetReceiverActor(ReceiverIdentifier receiverNode, ReceiverIdentifier receiverActor)
+            => SetReceivers(receiverNode.Identity, receiverActor.Identity);
+
+        private void SetReceivers(byte[] receiverNode, byte[] receiverActor)
         {
             if (Distribution == DistributionPattern.Broadcast)
             {
                 throw new ArgumentException("Receiver node cannot be set for broadcast message!");
             }
 
-            receiverNodeIdentity = socketIdentifier.Identity;
+            ReceiverIdentity = receiverActor;
+            ReceiverNodeIdentity = receiverNode;
         }
-
-        internal byte[] PopReceiverNode()
-        {
-            var tmp = receiverNodeIdentity;
-            receiverNodeIdentity = null;
-
-            return tmp;
-        }
-
-        internal bool ReceiverNodeSet()
-            => receiverNodeIdentity.IsSet();
 
         internal void PushRouterAddress(SocketEndpoint scaleOutAddress)
         {
@@ -155,18 +164,24 @@ namespace kino.Messaging
 
         internal void SignMessage(ISignatureProvider signatureProvider)
         {
-            AssertDomainIsSet();
+            if (signatureProvider.ShouldSignMessage(Domain, Identity))
+            {
+                AssertDomainIsSet();
 
-            Signature = signatureProvider.CreateSignature(Domain, GetSignatureFields());
+                Signature = signatureProvider.CreateSignature(Domain, GetSignatureFields());
+            }
         }
 
         internal void VerifySignature(ISignatureProvider signatureProvider)
         {
-            var mac = signatureProvider.CreateSignature(Domain, GetSignatureFields());
-
-            if (!Unsafe.ArraysEqual(Signature, mac))
+            if (signatureProvider.ShouldSignMessage(Domain, Identity))
             {
-                throw new WrongMessageSignatureException();
+                var mac = signatureProvider.CreateSignature(Domain, GetSignatureFields());
+
+                if (!Unsafe.ArraysEqual(Signature, mac))
+                {
+                    throw new WrongMessageSignatureException();
+                }
             }
         }
 
@@ -249,11 +264,13 @@ namespace kino.Messaging
                    TTL = TTL,
                    CorrelationId = CorrelationId,
                    ReceiverIdentity = ReceiverIdentity,
+                   ReceiverNodeIdentity = ReceiverNodeIdentity,
                    Signature = Signature,
                    //NOTE: CallbackPoint, if changed from immutable, should be deep-cloned here
                    CallbackPoint = CallbackPoint,
                    CallbackKey = CallbackKey,
                    CallbackReceiverIdentity = CallbackReceiverIdentity,
+                   CallbackReceiverNodeIdentity = CallbackReceiverNodeIdentity,
                    SocketIdentity = SocketIdentity,
                    TraceOptions = TraceOptions,
                    Distribution = Distribution,
@@ -283,6 +300,8 @@ namespace kino.Messaging
 
         public byte[] ReceiverIdentity { get; private set; }
 
+        public byte[] ReceiverNodeIdentity { get; private set; }
+
         public byte[] Signature { get; private set; }
 
         public IEnumerable<MessageIdentifier> CallbackPoint { get; private set; }
@@ -291,11 +310,13 @@ namespace kino.Messaging
 
         public byte[] CallbackReceiverIdentity { get; private set; }
 
+        public byte[] CallbackReceiverNodeIdentity { get; private set; }
+
         public byte[] SocketIdentity { get; private set; }
 
         public MessageTraceOptions TraceOptions { get; set; }
 
-        public DistributionPattern Distribution { get; set; }
+        public DistributionPattern Distribution { get; private set; }
 
         public ushort Hops { get; private set; }
 

@@ -5,18 +5,18 @@ using kino.Core;
 
 namespace kino.Connectivity
 {
-    public class LocalSocket<T> : ILocalSocket<T>, IEquatable<LocalSocket<T>>
+    public class LocalSocket<T> : ILocalSocket<T>, IEquatable<ILocalSocket<T>>
     {
         private readonly ManualResetEvent dataAvailable;
         private readonly BlockingCollection<T> messageQueue;
         private readonly BlockingCollection<T> lookAheadQueue;
-        private readonly SocketIdentifier socketIdentity;
+        private readonly ReceiverIdentifier socketIdentity;
         private readonly int hashCode;
 
         public LocalSocket()
         {
             dataAvailable = new ManualResetEvent(false);
-            socketIdentity = SocketIdentifier.Create();
+            socketIdentity = ReceiverIdentifier.Create();
             messageQueue = new BlockingCollection<T>(new ConcurrentQueue<T>());
             lookAheadQueue = new BlockingCollection<T>(new ConcurrentQueue<T>());
             hashCode = socketIdentity.GetHashCode();
@@ -26,6 +26,31 @@ namespace kino.Connectivity
         {
             messageQueue.Add(message);
             dataAvailable.Set();
+        }
+
+        public T TryReceive()
+        {
+            T lookup,
+              message;
+            if (!lookAheadQueue.TryTake(out message))
+            {
+                messageQueue.TryTake(out message);
+            }
+            if (!messageQueue.TryTake(out lookup))
+            {
+                dataAvailable.Reset();
+                if (messageQueue.TryTake(out lookup))
+                {
+                    lookAheadQueue.Add(lookup);
+                    dataAvailable.Set();                    
+                }
+            }
+            else
+            {
+                lookAheadQueue.Add(lookup);
+            }
+
+            return message;
         }
 
         public override bool Equals(object obj)
@@ -42,10 +67,10 @@ namespace kino.Connectivity
             {
                 return false;
             }
-            return Equals((LocalSocket<T>) obj);
+            return Equals((ILocalSocket<T>) obj);
         }
 
-        public bool Equals(LocalSocket<T> other)
+        public bool Equals(ILocalSocket<T> other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -62,30 +87,12 @@ namespace kino.Connectivity
         public override int GetHashCode()
             => hashCode;
 
-        public T TryReceive()
-        {
-            T lookup,
-              message;
-            if (!lookAheadQueue.TryTake(out message))
-            {
-                messageQueue.TryTake(out message);
-            }
-            if (!messageQueue.TryTake(out lookup))
-            {
-                dataAvailable.Reset();
-            }
-            else
-            {
-                lookAheadQueue.Add(lookup);
-            }
-
-            return message;
-        }
+       
 
         public WaitHandle CanReceive()
             => dataAvailable;
 
-        public SocketIdentifier GetIdentity()
+        public ReceiverIdentifier GetIdentity()
             => socketIdentity;
     }
 }

@@ -5,7 +5,7 @@ namespace kino.Client
 {
     public interface ICallbackHandlerStack
     {
-        void Push(long callbackKey, IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers);
+        void Push(IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers);
 
         IPromise Pop(CallbackHandlerKey callbackIdentifier);
     }

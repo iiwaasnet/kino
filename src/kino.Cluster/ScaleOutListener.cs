@@ -42,8 +42,12 @@ namespace kino.Cluster
         public void Start()
         {
             cancellationTokenSource = new CancellationTokenSource();
-            listening = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token),
-                                              TaskCreationOptions.LongRunning);
+            using (var barrier = new Barrier(2))
+            {
+                listening = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, barrier),
+                                                  TaskCreationOptions.LongRunning);
+                barrier.SignalAndWait(cancellationTokenSource.Token);
+            }
         }
 
         public void Stop()
@@ -53,12 +57,14 @@ namespace kino.Cluster
             cancellationTokenSource?.Dispose();
         }
 
-        private void RoutePeerMessages(CancellationToken token)
+        private void RoutePeerMessages(CancellationToken token, Barrier barrier)
         {
             try
             {
                 using (var scaleOutFrontend = CreateScaleOutFrontendSocket())
                 {
+                    barrier.SignalAndWait(token);
+
                     while (!token.IsCancellationRequested)
                     {
                         Message message = null;
@@ -93,8 +99,6 @@ namespace kino.Cluster
 
         private ISocket CreateScaleOutFrontendSocket()
         {
-            var routerConfiguration = scaleOutConfigurationManager.GetRouterConfiguration();
-
             var socket = socketFactory.CreateRouterSocket();
             foreach (var scaleOutAddress in scaleOutConfigurationManager.GetScaleOutAddressRange())
             {
@@ -102,7 +106,7 @@ namespace kino.Cluster
                 {
                     socket.SetIdentity(scaleOutAddress.Identity);
                     socket.SetMandatoryRouting();
-                    socket.SetReceiveHighWaterMark(GetScaleOutReceiveMessageQueueLength(routerConfiguration));
+                    socket.SetReceiveHighWaterMark(GetScaleOutReceiveMessageQueueLength());
                     socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutFrontendSocketReceiveRate);
 
                     socket.Bind(scaleOutAddress.Uri);
@@ -122,9 +126,9 @@ namespace kino.Cluster
             throw new Exception("Failed to bind to any of the configured ScaleOut endpoints!");
         }
 
-        private int GetScaleOutReceiveMessageQueueLength(RouterConfiguration config)
+        private int GetScaleOutReceiveMessageQueueLength()
         {
-            var hwm = config.ScaleOutReceiveMessageQueueLength;
+            var hwm = scaleOutConfigurationManager.GetScaleOutReceiveMessageQueueLength();
             var internalSocketsHWM = socketFactory.GetSocketDefaultConfiguration().ReceivingHighWatermark;
 
             if (hwm == 0 || hwm > internalSocketsHWM)
@@ -143,10 +147,13 @@ namespace kino.Cluster
                                             {
                                                 Exception = err,
                                                 StackTrace = err.StackTrace
-                                            },
-                                            securityProvider.GetDomain(KinoMessages.Exception.Identity))
+                                            })
                                     .As<Message>();
-            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverIdentity, messageIn.CallbackPoint, messageIn.CallbackKey);
+            messageOut.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
+            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
+                                             messageIn.CallbackReceiverIdentity,
+                                             messageIn.CallbackPoint,
+                                             messageIn.CallbackKey);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
             messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
             messageOut.TraceOptions |= messageIn.TraceOptions;

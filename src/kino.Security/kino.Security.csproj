@@ -40,8 +40,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnyVersionMessageIdentifier.cs" />
     <Compile Include="DomainPrivateKey.cs" />
     <Compile Include="DomainScope.cs" />
+    <Compile Include="EquatableIdentity.cs" />
     <Compile Include="IDomainPrivateKeyProvider.cs" />
     <Compile Include="IDomainScopeResolver.cs" />
     <Compile Include="ISecurityProvider.cs" />

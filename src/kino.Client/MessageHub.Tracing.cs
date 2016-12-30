@@ -11,7 +11,7 @@ namespace kino.Client
             {
                 foreach (var messageIdentifier in message.CallbackPoint)
                 {
-                    logger.Trace($"Callback registered for Message {message}: " +
+                    logger.Trace($"Callback [{message.CallbackKey}] registered for Message {message}: " +
                                  $"{nameof(message.CallbackPoint)} {messageIdentifier} " +
                                  $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetAnyString()} " +
                                  $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetAnyString()}");
@@ -19,27 +19,27 @@ namespace kino.Client
             }
         }
 
-        private void SentToRouter(IMessage message)
+        private void SentToRouter(Message message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Message {message} sent to Router.");
+                logger.Trace($"Message {message} with Callback [{message.CallbackKey}] sent to Router.");
             }
         }
 
-        private void CallbackResultSet(IMessage message)
+        private void CallbackResultSet(Message message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Callback set. Result message: {message}");
+                logger.Trace($"Callback [{message.CallbackKey}] set. Result message: {message}");
             }
         }
 
-        private void CallbackNotFound(IMessage message)
+        private void CallbackNotFound(Message message)
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.Trace($"Callback not found! Result message: {message}");
+                logger.Trace($"Callback [{message.CallbackKey}] not found! Result message: {message}");
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using kino.Cluster;
 using kino.Connectivity;
 using kino.Core;
@@ -16,17 +17,17 @@ namespace kino.Routing.ServiceMessageHandlers
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly ILogger logger;
         private readonly ISecurityProvider securityProvider;
-        private readonly IClusterConnectivity clusterConnectivity;
+        private readonly IClusterHealthMonitor clusterHealthMonitor;
 
         public ExternalMessageRouteRegistrationHandler(IExternalRoutingTable externalRoutingTable,
                                                        ISecurityProvider securityProvider,
-                                                       IClusterConnectivity clusterConnectivity,
+                                                       IClusterHealthMonitor clusterHealthMonitor,
                                                        ILogger logger)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.logger = logger;
             this.securityProvider = securityProvider;
-            this.clusterConnectivity = clusterConnectivity;
+            this.clusterHealthMonitor = clusterHealthMonitor;
         }
 
         public bool Handle(IMessage message, ISocket _)
@@ -39,39 +40,48 @@ namespace kino.Routing.ServiceMessageHandlers
                     message.As<Message>().VerifySignature(securityProvider);
 
                     var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
-                    var uri = new Uri(payload.Uri);
-                    var memberAdded = false;
+                    var peer = new Node(new Uri(payload.Uri), payload.NodeIdentity);
+                    var health = new Health
+                                 {
+                                     Uri = payload.Health.Uri,
+                                     HeartBeatInterval = payload.Health.HeartBeatInterval
+                                 };
 
-                    foreach (var registration in payload.MessageContracts)
+                    foreach (var route in payload.Routes)
                     {
-                        try
+                        var receiver = new ReceiverIdentifier(route.ReceiverIdentity);
+                        var messageRoutes = receiver.IsMessageHub()
+                                                ? new MessageRoute {Receiver = receiver}.ToEnumerable()
+                                                : route.MessageContracts.Select(mc => new MessageRoute
+                                                                                      {
+                                                                                          Receiver = receiver,
+                                                                                          Message = new MessageIdentifier(mc.Identity, mc.Version, mc.Partition)
+                                                                                      });
+                        foreach (var messageRoute in messageRoutes)
                         {
-                            var messageIdentifier = registration.ToIdentifier();
-                            //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
-                            if (messageIdentifier.IsMessageHub() || securityProvider.GetDomain(messageIdentifier.Identity) == message.Domain)
+                            try
                             {
-                                var health = new Health
-                                             {
-                                                 Uri = payload.Health.Uri,
-                                                 HeartBeatInterval = payload.Health.HeartBeatInterval
-                                             };
-                                clusterConnectivity.AddPeer(new Node(payload.Uri, payload.SocketIdentity), health);
-                                externalRoutingTable.AddMessageRoute(new ExternalRouteDefinition
-                                                                     {
-                                                                         Identifier = messageIdentifier,
-                                                                         Peer = new Node(uri, payload.SocketIdentity),
-                                                                         Health = health
-                                                                     });
+                                //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
+                                if (receiver.IsMessageHub() || securityProvider.GetDomain(messageRoute.Message.Identity) == message.Domain)
+                                {
+                                    clusterHealthMonitor.AddPeer(new Node(payload.Uri, payload.NodeIdentity), health);
+
+                                    externalRoutingTable.AddMessageRoute(new ExternalRouteRegistration
+                                                                         {
+                                                                             Route = messageRoute,
+                                                                             Peer = peer,
+                                                                             Health = health
+                                                                         });
+                                }
+                                else
+                                {
+                                    logger.Warn($"MessageIdentity {messageRoute.Message} doesn't belong to requested Domain {message.Domain}!");
+                                }
                             }
-                            else
+                            catch (Exception err)
                             {
-                                logger.Warn($"MessageIdentity {messageIdentifier.Identity.GetString()} doesn't belong to requested " +
-                                            $"Domain {message.Domain}!");
+                                logger.Error(err);
                             }
-                        }
-                        catch (Exception err)
-                        {
-                            logger.Error(err);
                         }
                     }
                 }

@@ -45,7 +45,7 @@ namespace kino.Cluster
             cancellationTokenSource?.Dispose();
         }
 
-        private async void SendHeartBeat(CancellationToken token)
+        private void SendHeartBeat(CancellationToken token)
         {
             try
             {
@@ -59,7 +59,9 @@ namespace kino.Cluster
                     while (!token.IsCancellationRequested)
                     {
                         socket.SendMessage(Message.Create(heartBeatMessage));
-                        await Task.Delay(config.GetHeartBeatInterval(), token);
+                        //logger.Debug($"HeartBeat sent at {DateTime.UtcNow} UTC");
+                        config.GetHeartBeatInterval().Sleep(token);
+                        //await Task.Delay(config.GetHeartBeatInterval(), token);
                     }
                 }
             }

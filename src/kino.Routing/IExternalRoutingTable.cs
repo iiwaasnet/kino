@@ -5,16 +5,14 @@ namespace kino.Routing
 {
     public interface IExternalRoutingTable
     {
-        PeerConnection AddMessageRoute(ExternalRouteDefinition routeDefinition);
+        PeerConnection AddMessageRoute(ExternalRouteRegistration routeRegistration);
 
-        PeerConnection FindRoute(Identifier identifier, byte[] receiverNodeIdentity);
+        IEnumerable<PeerConnection> FindRoutes(ExternalRouteLookupRequest lookupRequest);
 
-        PeerRemoveResult RemoveNodeRoute(SocketIdentifier socketIdentifier);
+        PeerRemoveResult RemoveNodeRoute(ReceiverIdentifier nodeIdentifier);
 
-        PeerRemoveResult RemoveMessageRoute(IEnumerable<Identifier> identifiers, SocketIdentifier socketIdentifier);
+        PeerRemoveResult RemoveMessageRoute(ExternalRouteRemoval routeRemoval);
 
-        IEnumerable<PeerConnection> FindAllRoutes(Identifier identifier);
-
-        IEnumerable<ExternalRoute> GetAllRoutes();
+        IEnumerable<NodeActors> FindAllActors(MessageIdentifier messageIdentifier);
     }
 }

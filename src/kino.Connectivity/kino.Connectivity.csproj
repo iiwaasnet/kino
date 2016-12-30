@@ -62,7 +62,6 @@
     <Compile Include="SocketConfiguration.cs" />
     <Compile Include="SocketExtensions.cs" />
     <Compile Include="SocketFactory.cs" />
-    <Compile Include="SocketHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\kino.Core\kino.Core.csproj">

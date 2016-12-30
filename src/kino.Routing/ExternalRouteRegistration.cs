@@ -3,9 +3,9 @@ using kino.Core;
 
 namespace kino.Routing
 {
-    public class ExternalRouteDefinition
+    public class ExternalRouteRegistration
     {
-        public Identifier Identifier { get; set; }
+        public MessageRoute Route { get; set; }
 
         public Node Peer { get; set; }
 

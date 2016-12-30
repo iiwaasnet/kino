@@ -1,71 +1,158 @@
-using System.Collections.Generic;
+using System;
 using System.Linq;
 using C5;
 using kino.Connectivity;
 using kino.Core;
 using kino.Messaging;
+using Bcl = System.Collections.Generic;
 
 namespace kino.Routing
 {
     public class InternalRoutingTable : IInternalRoutingTable
     {
-        private readonly System.Collections.Generic.IDictionary<IdentityRegistration, HashedLinkedList<ILocalSendingSocket<IMessage>>> messageToSocketMap;
-        private readonly System.Collections.Generic.IDictionary<ILocalSendingSocket<IMessage>, HashedLinkedList<IdentityRegistration>> socketToMessageMap;
+        private readonly Bcl.IDictionary<ReceiverIdentifier, ILocalSendingSocket<IMessage>> messageHubs;
+        private readonly Bcl.IDictionary<MessageIdentifier, HashedLinkedList<ReceiverIdentifier>> messageToActorMap;
+        private readonly Bcl.IDictionary<ReceiverIdentifier, ILocalSendingSocket<IMessage>> actorToSocketMap;
+        private readonly Bcl.IDictionary<ILocalSendingSocket<IMessage>, Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>>> socketToActorMessagesMap;
 
         public InternalRoutingTable()
         {
-            messageToSocketMap = new Dictionary<IdentityRegistration, HashedLinkedList<ILocalSendingSocket<IMessage>>>();
-            socketToMessageMap = new Dictionary<ILocalSendingSocket<IMessage>, HashedLinkedList<IdentityRegistration>>();
+            messageHubs = new Bcl.Dictionary<ReceiverIdentifier, ILocalSendingSocket<IMessage>>();
+            messageToActorMap = new Bcl.Dictionary<MessageIdentifier, HashedLinkedList<ReceiverIdentifier>>();
+            actorToSocketMap = new Bcl.Dictionary<ReceiverIdentifier, ILocalSendingSocket<IMessage>>();
+            socketToActorMessagesMap =
+                new Bcl.Dictionary<ILocalSendingSocket<IMessage>, Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>>>();
         }
 
-        public void AddMessageRoute(IdentityRegistration identityRegistration, ILocalSendingSocket<IMessage> receivingSocket)
+        public void AddMessageRoute(InternalRouteRegistration routeRegistration)
         {
-            MapHandlerToSocket(identityRegistration, receivingSocket);
-            MapSocketToHandler(identityRegistration, receivingSocket);
-        }
-
-        private void MapSocketToHandler(IdentityRegistration messageIdentifier, ILocalSendingSocket<IMessage> receivingSocket)
-        {
-            HashedLinkedList<IdentityRegistration> handlers;
-            if (!socketToMessageMap.TryGetValue(receivingSocket, out handlers))
+            if (routeRegistration.ReceiverIdentifier.IsMessageHub())
             {
-                handlers = new HashedLinkedList<IdentityRegistration>();
-                socketToMessageMap[receivingSocket] = handlers;
+                var registration = new ReceiverIdentifierRegistration(routeRegistration.ReceiverIdentifier,
+                                                                      routeRegistration.KeepRegistrationLocal);
+                messageHubs[registration] = routeRegistration.DestinationSocket;
             }
-            if (!handlers.Contains(messageIdentifier))
+            else
             {
-                handlers.InsertLast(messageIdentifier);
-            }
-        }
-
-        private void MapHandlerToSocket(IdentityRegistration messageIdentifier, ILocalSendingSocket<IMessage> receivingSocket)
-        {
-            HashedLinkedList<ILocalSendingSocket<IMessage>> sockets;
-            if (!messageToSocketMap.TryGetValue(messageIdentifier, out sockets))
-            {
-                sockets = new HashedLinkedList<ILocalSendingSocket<IMessage>>();
-                messageToSocketMap[messageIdentifier] = sockets;
-            }
-            if (!sockets.Contains(receivingSocket))
-            {
-                sockets.InsertLast(receivingSocket);
+                if (routeRegistration.ReceiverIdentifier.IsActor())
+                {
+                    var actorMessages = MapSocketToActor(routeRegistration);
+                    foreach (var messageContract in routeRegistration.MessageContracts)
+                    {
+                        MapMessageToActor(routeRegistration, messageContract);
+                        MapActorToMessage(routeRegistration, actorMessages, messageContract);
+                    }
+                    actorToSocketMap[routeRegistration.ReceiverIdentifier] = routeRegistration.DestinationSocket;
+                }
+                else
+                {
+                    throw new ArgumentException($"Requested registration is for unknown Receiver type: [{routeRegistration.ReceiverIdentifier}]!");
+                }
             }
         }
 
-        public ILocalSendingSocket<IMessage> FindRoute(Identifier identifier)
+        private Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> MapSocketToActor(InternalRouteRegistration routeRegistration)
         {
-            HashedLinkedList<ILocalSendingSocket<IMessage>> collection;
-            return messageToSocketMap.TryGetValue(new IdentityRegistration(identifier), out collection)
-                       ? Get(collection)
-                       : null;
+            Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> actorMessages;
+            if (!socketToActorMessagesMap.TryGetValue(routeRegistration.DestinationSocket, out actorMessages))
+            {
+                actorMessages = new Bcl.Dictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>>
+                                {
+                                    [routeRegistration.ReceiverIdentifier] = new Bcl.HashSet<MessageIdentifier>()
+                                };
+                socketToActorMessagesMap[routeRegistration.DestinationSocket] = actorMessages;
+            }
+            return actorMessages;
         }
 
-        public IEnumerable<ILocalSendingSocket<IMessage>> FindAllRoutes(Identifier identifier)
+        private static void MapActorToMessage(InternalRouteRegistration routeRegistration,
+                                              Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> actorMessages,
+                                              MessageContract messageContract)
         {
-            HashedLinkedList<ILocalSendingSocket<IMessage>> collection;
-            return messageToSocketMap.TryGetValue(new IdentityRegistration(identifier), out collection)
-                       ? collection
-                       : Enumerable.Empty<ILocalSendingSocket<IMessage>>();
+            Bcl.HashSet<MessageIdentifier> messages;
+            if (!actorMessages.TryGetValue(routeRegistration.ReceiverIdentifier, out messages))
+            {
+                messages = new Bcl.HashSet<MessageIdentifier>();
+                actorMessages[routeRegistration.ReceiverIdentifier] = messages;
+            }
+            messages.Add(messageContract.Message);
+        }
+
+        private void MapMessageToActor(InternalRouteRegistration routeRegistration, MessageContract messageContract)
+        {
+            HashedLinkedList<ReceiverIdentifier> actors;
+            if (!messageToActorMap.TryGetValue(messageContract.Message, out actors))
+            {
+                actors = new HashedLinkedList<ReceiverIdentifier>();
+                messageToActorMap[messageContract.Message] = actors;
+            }
+            if (!actors.Contains(routeRegistration.ReceiverIdentifier))
+            {
+                var registration = new ReceiverIdentifierRegistration(routeRegistration.ReceiverIdentifier,
+                                                                      messageContract.KeepRegistrationLocal);
+                actors.InsertLast(registration);
+            }
+        }
+
+        public Bcl.IEnumerable<ILocalSendingSocket<IMessage>> FindRoutes(InternalRouteLookupRequest lookupRequest)
+        {
+            HashedLinkedList<ReceiverIdentifier> actors;
+            var sockets = new Bcl.List<ILocalSendingSocket<IMessage>>();
+            ILocalSendingSocket<IMessage> socket;
+            if (lookupRequest.ReceiverIdentity.IsSet())
+            {
+                if (lookupRequest.ReceiverIdentity.IsMessageHub())
+                {
+                    if (messageHubs.TryGetValue(lookupRequest.ReceiverIdentity, out socket))
+                    {
+                        sockets.Add(socket);
+                    }
+                }
+                else
+                {
+                    if (lookupRequest.ReceiverIdentity.IsActor())
+                    {
+                        if (actorToSocketMap.TryGetValue(lookupRequest.ReceiverIdentity, out socket))
+                        {
+                            if (messageToActorMap.TryGetValue(lookupRequest.Message, out actors))
+                            {
+                                if (actors.Contains(lookupRequest.ReceiverIdentity))
+                                {
+                                    sockets.Add(socket);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (messageToActorMap.TryGetValue(lookupRequest.Message, out actors))
+                {
+                    if (lookupRequest.Distribution == DistributionPattern.Unicast)
+                    {
+                        if (actorToSocketMap.TryGetValue(Get(actors), out socket))
+                        {
+                            sockets.Add(socket);
+                        }
+                    }
+                    else
+                    {
+                        if (lookupRequest.Distribution == DistributionPattern.Broadcast)
+                        {
+                            foreach (var actor in actors)
+                            {
+                                if (actorToSocketMap.TryGetValue(actor, out socket))
+                                {
+                                    sockets.Add(socket);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return sockets;
         }
 
         private static T Get<T>(HashedLinkedList<T> hashSet)
@@ -84,49 +171,71 @@ namespace kino.Routing
             return default(T);
         }
 
-        public IEnumerable<IdentityRegistration> GetMessageRegistrations()
-            => messageToSocketMap.Keys;
+        public Bcl.IEnumerable<MessageRoute> RemoveReceiverRoute(ILocalSendingSocket<IMessage> receivingSocket)
+            => RemoveActors(receivingSocket)
+                .Concat(RemoveMessageHub(receivingSocket))
+                .ToList();
 
-        public IEnumerable<IdentityRegistration> RemoveActorHostRoute(ILocalSendingSocket<IMessage> receivingSocket)
+        private Bcl.IEnumerable<MessageRoute> RemoveMessageHub(ILocalSendingSocket<IMessage> receivingSocket)
         {
-            HashedLinkedList<IdentityRegistration> handlers;
-            if (socketToMessageMap.TryGetValue(receivingSocket, out handlers))
+            // Should not be many, we can iterate the collection
+            var messageHub = messageHubs.Where(kv => kv.Value.Equals(receivingSocket))
+                                        .Select(kv => kv.Key)
+                                        .FirstOrDefault();
+            if (messageHub != null)
             {
-                foreach (var messageHandlerIdentifier in handlers)
+                messageHubs.Remove(messageHub);
+
+                yield return new MessageRoute {Receiver = messageHub};
+            }
+        }
+
+        private Bcl.IEnumerable<MessageRoute> RemoveActors(ILocalSendingSocket<IMessage> receivingSocket)
+        {
+            Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> actorMessages;
+            if (socketToActorMessagesMap.TryGetValue(receivingSocket, out actorMessages))
+            {
+                socketToActorMessagesMap.Remove(receivingSocket);
+                foreach (var actor in actorMessages.Keys)
                 {
-                    RemoveMessageHandler(messageHandlerIdentifier, receivingSocket);
-                    if (!messageToSocketMap.ContainsKey(messageHandlerIdentifier))
+                    actorToSocketMap.Remove(actor);
+                    foreach (var message in actorMessages[actor])
                     {
-                        yield return messageHandlerIdentifier;
+                        HashedLinkedList<ReceiverIdentifier> messageHandlers;
+                        if (messageToActorMap.TryGetValue(message, out messageHandlers))
+                        {
+                            messageHandlers.Remove(actor);
+                            if (!messageHandlers.Any())
+                            {
+                                messageToActorMap.Remove(message);
+                            }
+                        }
+
+                        yield return new MessageRoute {Message = message, Receiver = actor};
                     }
                 }
             }
         }
 
-        private void RemoveMessageHandler(IdentityRegistration messageIdentifier, ILocalSendingSocket<IMessage> receivingSocket)
-        {
-            HashedLinkedList<ILocalSendingSocket<IMessage>> hashSet;
-            if (messageToSocketMap.TryGetValue(messageIdentifier, out hashSet))
-            {
-                hashSet.Remove(receivingSocket);
-                if (hashSet.Count == 0)
-                {
-                    messageToSocketMap.Remove(messageIdentifier);
-                }
-            }
-        }
-
-        public IEnumerable<InternalRoute> GetAllRoutes()
-            => socketToMessageMap.Select(sm => new InternalRoute
-                                               {
-                                                   Socket = sm.Key,
-                                                   Messages = sm.Value
-                                                                .Select(v => v.Identifier)
-                                                                .ToList()
-                                               });
-
-        public bool MessageHandlerRegisteredExternaly(Identifier identifier)
-            => messageToSocketMap.Keys
-                                 .Any(k => !k.LocalRegistration && k == new IdentityRegistration(identifier));
+        public InternalRouting GetAllRoutes()
+            => new InternalRouting
+               {
+                   MessageHubs = messageHubs.Keys
+                                            .OfType<ReceiverIdentifierRegistration>()
+                                            .Select(mh => new MessageHubRoute
+                                                          {
+                                                              MessageHub = mh,
+                                                              LocalRegistration = mh.LocalRegistration
+                                                          })
+                                            .ToList(),
+                   Actors = messageToActorMap.Select(messageActors => new MessageActorRoute
+                                                                      {
+                                                                          Message = messageActors.Key,
+                                                                          Actors = messageActors.Value
+                                                                                                .OfType<ReceiverIdentifierRegistration>()
+                                                                                                .ToList()
+                                                                      })
+                                             .ToList()
+               };
     }
 }
