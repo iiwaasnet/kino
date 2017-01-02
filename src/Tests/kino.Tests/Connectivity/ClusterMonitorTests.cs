@@ -110,6 +110,50 @@ namespace kino.Tests.Connectivity
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => messageIsConsistent(msg))), Times.Once);
         }
 
+        [Test]
+        public void UnregisterSelf_SendsOneUnregisterMessageRouteMessagePerDomain()
+        {
+            var actorIdentifier = ReceiverIdentities.CreateForActor();
+            var messageHubIdentifier = ReceiverIdentities.CreateForMessageHub();
+            var routes = new[]
+                         {
+                             new MessageRoute
+                             {
+                                 Message = MessageIdentifier.Create<SimpleMessage>(),
+                                 Receiver = actorIdentifier
+                             },
+                             new MessageRoute
+                             {
+                                 Message = MessageIdentifier.Create<ExceptionMessage>(),
+                                 Receiver = actorIdentifier
+                             },
+                             new MessageRoute
+                             {
+                                 Receiver = messageHubIdentifier
+                             }
+                         };
+            var simpleMessageDomain = Guid.NewGuid().ToString();
+            var exceptionMessageDomain = Guid.NewGuid().ToString();
+            var allowedDomains = new[] {exceptionMessageDomain, simpleMessageDomain, Guid.NewGuid().ToString()};
+            securityProvider.Setup(m => m.GetDomain(MessageIdentifier.Create<SimpleMessage>().Identity)).Returns(simpleMessageDomain);
+            securityProvider.Setup(m => m.GetDomain(MessageIdentifier.Create<ExceptionMessage>().Identity)).Returns(exceptionMessageDomain);
+            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
+            //
+            clusterMonitor.UnregisterSelf(routes);
+            //
+            Func<IMessage, bool> messageIsConsistent = msg =>
+                                                       {
+                                                           var payload = msg.GetPayload<UnregisterMessageRouteMessage>();
+
+                                                           Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
+                                                           Assert.IsTrue(Unsafe.ArraysEqual(payload.ReceiverNodeIdentity, scaleOutAddress.Identity));
+                                                           Assert.IsTrue(allowedDomains.Contains(msg.Domain));
+
+                                                           return true;
+                                                       };
+            autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => messageIsConsistent(msg))), Times.Exactly(allowedDomains.Length));
+        }
+
         //[Test]
         //public void UnregisterSelf_SendUnregisterMessageRouteMessageToRendezvous()
         //{

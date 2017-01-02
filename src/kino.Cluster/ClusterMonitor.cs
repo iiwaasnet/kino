@@ -201,7 +201,8 @@ namespace kino.Cluster
                                                                                                .Select(rg => new
                                                                                                              {
                                                                                                                  Receiver = rg.Key,
-                                                                                                                 MessageContracts = rg.Select(x => x.MessageRoute.Message)
+                                                                                                                 MessageContracts = rg.Where(x => x.MessageRoute.Message != null)
+                                                                                                                                      .Select(x => x.MessageRoute.Message)
                                                                                                              })
                                                                           });
 
@@ -216,12 +217,12 @@ namespace kino.Cluster
                                                                                    {
                                                                                        ReceiverIdentity = r.Receiver?.Identity,
                                                                                        MessageContracts = r.MessageContracts
-                                                                                                           ?.Select(mc => new MessageContract
-                                                                                                                          {
-                                                                                                                              Identity = mc.Identity,
-                                                                                                                              Version = mc.Version,
-                                                                                                                              Partition = mc.Partition
-                                                                                                                          })
+                                                                                                           .Select(mc => new MessageContract
+                                                                                                                         {
+                                                                                                                             Identity = mc.Identity,
+                                                                                                                             Version = mc.Version,
+                                                                                                                             Partition = mc.Partition
+                                                                                                                         })
                                                                                                            .ToArray()
                                                                                    })
                                                                       .ToArray()
@@ -246,11 +247,11 @@ namespace kino.Cluster
             => messageRoutes.Where(mr => mr.Receiver.IsMessageHub())
                             .SelectMany(mr => securityProvider.GetAllowedDomains()
                                                               .Select(dom =>
-                                                                          new MessageRouteDomainMap
-                                                                          {
-                                                                              MessageRoute = mr,
-                                                                              Domain = dom
-                                                                          }));
+                                                                      new MessageRouteDomainMap
+                                                                      {
+                                                                          MessageRoute = mr,
+                                                                          Domain = dom
+                                                                      }));
 
         public void DiscoverMessageRoute(MessageRoute messageRoute)
             => routeDiscovery.RequestRouteDiscovery(messageRoute);
