@@ -14,6 +14,8 @@ using kino.Security;
 using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
+using Health = kino.Messaging.Messages.Health;
+using MessageContract = kino.Messaging.Messages.MessageContract;
 
 namespace kino.Tests.Connectivity
 {
@@ -55,30 +57,7 @@ namespace kino.Tests.Connectivity
         [Test]
         public void PeerAddedToClusterHealthMonitor_OnlyOnce()
         {
-            var payload = new RegisterExternalMessageRouteMessage
-                          {
-                              Uri = "tcp://127.0.0.1:80",
-                              NodeIdentity = Guid.NewGuid().ToByteArray(),
-                              Health = new kino.Messaging.Messages.Health
-                                       {
-                                           Uri = "tcp://127.0.0.1:812",
-                                           HeartBeatInterval = TimeSpan.FromSeconds(4)
-                                       },
-                              Routes = new[]
-                                       {
-                                           new RouteRegistration
-                                           {
-                                               ReceiverIdentity = ReceiverIdentities.CreateForActor().Identity,
-                                               MessageContracts = EnumerableExtenions.Produce(Randomizer.UInt16(2, 5),
-                                                                                              () => new kino.Messaging.Messages.MessageContract
-                                                                                                    {
-                                                                                                        Identity = Guid.NewGuid().ToByteArray(),
-                                                                                                        Version = Randomizer.UInt16()
-                                                                                                    })
-                                                                                     .ToArray()
-                                           }
-                                       }
-                          };
+            var payload = CreateRegisterExternalMessageRoutePayload();
             var message = Message.Create(payload).As<Message>();
             message.SetDomain(domain);
             //
@@ -89,151 +68,93 @@ namespace kino.Tests.Connectivity
             clusterHealthMonitor.Verify(m => m.AddPeer(It.Is<Node>(p => isThisPeer(p)), It.IsAny<Cluster.Health>()), Times.Once);
         }
 
-        //[Test]
-        //public void IfPeerConnectionIsNotDeferred_ConnectionMadeToRemotePeer()
-        //{
-        //    config.DeferPeerConnection = false;
-        //    var message = Message.Create(new RegisterExternalMessageRouteMessage
-        //                                 {
-        //                                     Uri = "tcp://127.0.0.1:80",
-        //                                     MessageContracts = new[]
-        //                                                        {
-        //                                                            new MessageContract
-        //                                                            {
-        //                                                                Identity = messageIdentity,
-        //                                                                Version = Guid.NewGuid().ToByteArray()
-        //                                                            }
-        //                                                        },
-        //                                     SocketIdentity = Guid.NewGuid().ToByteArray()
-        //                                 },
-        //                                 domain);
-        //    //
-        //    handler.Handle(message, socket.Object);
-        //    //
-        //    clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Once);
-        //    externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
-        //                                                       It.IsAny<SocketIdentifier>(),
-        //                                                       It.IsAny<Uri>()),
-        //                                Times.Once);
-        //    socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Once);
-        //}
+        [Test]
+        public void IfDomainIsAllowed_AllRoutesAreAdded()
+        {
+            var payload = CreateRegisterExternalMessageRoutePayload();
+            var message = Message.Create(payload).As<Message>();
+            message.SetDomain(domain);
+            var actorRoutes = payload.Routes.First(r => r.ReceiverIdentity.IsActor());
+            var messageHub = payload.Routes.First(r => r.ReceiverIdentity.IsMessageHub());
+            //
+            handler.Handle(message, socket.Object);
+            //
+            Func<ExternalRouteRegistration,
+                MessageIdentifier,
+                bool> allActorRoutes = (er, messageIdentifer) => er.Route.Receiver.IsActor()
+                                                                 && Unsafe.ArraysEqual(er.Route.Receiver.Identity, actorRoutes.ReceiverIdentity)
+                                                                 && er.Route.Message == messageIdentifer;
+            Func<ExternalRouteRegistration, bool> thisMessageHub = er => Unsafe.ArraysEqual(er.Route.Receiver.Identity, messageHub.ReceiverIdentity);
 
-        //[Test]
-        //public void IfPeerConnectionIsNotDeferredButPeerIsAlreadyConnected_NoConnectionMadeToRemotePeer()
-        //{
-        //    externalRoutingTable.Setup(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(), It.IsAny<SocketIdentifier>(), It.IsAny<Uri>()))
-        //                        .Returns(new PeerConnection {Connected = true});
-        //    config.DeferPeerConnection = false;
+            foreach (var messageIdentifier in actorRoutes.MessageContracts
+                                                         .Select(mc => new MessageIdentifier(mc.Identity, mc.Version, mc.Partition)))
+            {
+                externalRoutingTable.Verify(m => m.AddMessageRoute(It.Is<ExternalRouteRegistration>(er => allActorRoutes(er, messageIdentifier))), Times.Once);
+            }
 
-        //    var message = Message.Create(new RegisterExternalMessageRouteMessage
-        //                                 {
-        //                                     Uri = "tcp://127.0.0.1:80",
-        //                                     MessageContracts = new[]
-        //                                                        {
-        //                                                            new MessageContract
-        //                                                            {
-        //                                                                Identity = messageIdentity,
-        //                                                                Version = Guid.NewGuid().ToByteArray()
-        //                                                            }
-        //                                                        },
-        //                                     SocketIdentity = Guid.NewGuid().ToByteArray()
-        //                                 },
-        //                                 domain);
-        //    //
-        //    handler.Handle(message, socket.Object);
-        //    //
-        //    clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Once);
-        //    externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
-        //                                                       It.IsAny<SocketIdentifier>(),
-        //                                                       It.IsAny<Uri>()),
-        //                                Times.Once);
-        //    socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never);
-        //}
+            externalRoutingTable.Verify(m => m.AddMessageRoute(It.Is<ExternalRouteRegistration>(er => thisMessageHub(er))), Times.Once);
+        }
 
-        //[Test]
-        //public void IfDomainIsNotAllowed_ClusterMemberIsNotAdded()
-        //{
-        //    var domain = Guid.NewGuid().ToString();
-        //    var message = Message.Create(new RegisterExternalMessageRouteMessage
-        //                                 {
-        //                                     Uri = "tcp://127.0.0.1:80",
-        //                                     MessageContracts = new[]
-        //                                                        {
-        //                                                            new MessageContract
-        //                                                            {
-        //                                                                Identity = messageIdentity,
-        //                                                                Version = Guid.NewGuid().ToByteArray()
-        //                                                            }
-        //                                                        },
-        //                                     SocketIdentity = Guid.NewGuid().ToByteArray()
-        //                                 },
-        //                                 domain);
-        //    //
-        //    handler.Handle(message, socket.Object);
-        //    //
-        //    clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Never);
-        //    externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
-        //                                                       It.IsAny<SocketIdentifier>(),
-        //                                                       It.IsAny<Uri>()),
-        //                                Times.Never);
-        //    socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never);
-        //}
+        [Test]
+        public void IfRegistrationDomainIsNotAllowed_RoutesAreNotAdded()
+        {
+            var payload = CreateRegisterExternalMessageRoutePayload();
+            var message = Message.Create(payload).As<Message>();
+            var notAllowedDomain = Guid.NewGuid().ToString();
+            message.SetDomain(notAllowedDomain);
+            //
+            handler.Handle(message, socket.Object);
+            //
+            externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<ExternalRouteRegistration>()), Times.Never);
+            clusterHealthMonitor.Verify(m => m.AddPeer(It.IsAny<Node>(), It.IsAny<Cluster.Health>()), Times.Never);
+        }
 
-        //[Test]
-        //public void IfMessageIdentityDoesntBelongToAllowedDomain_NoConnectionMadeToRemotePeer()
-        //{
-        //    var messageIdentity = Guid.NewGuid().ToByteArray();
-        //    var message = Message.Create(new RegisterExternalMessageRouteMessage
-        //                                 {
-        //                                     Uri = "tcp://127.0.0.1:80",
-        //                                     MessageContracts = new[]
-        //                                                        {
-        //                                                            new MessageContract
-        //                                                            {
-        //                                                                Identity = messageIdentity,
-        //                                                                Version = Guid.NewGuid().ToByteArray()
-        //                                                            }
-        //                                                        },
-        //                                     SocketIdentity = Guid.NewGuid().ToByteArray()
-        //                                 },
-        //                                 domain);
-        //    //
-        //    handler.Handle(message, socket.Object);
-        //    //
-        //    clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Never);
-        //    externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
-        //                                                       It.IsAny<SocketIdentifier>(),
-        //                                                       It.IsAny<Uri>()),
-        //                                Times.Never);
-        //    socket.Verify(m => m.Connect(It.IsAny<Uri>()), Times.Never);
-        //    logger.Verify(m => m.Warn(It.IsAny<object>()), Times.Once);
-        //}
+        [Test]
+        public void IfMessageDomainIsNotEqualToRegistrationDomain_MessageRouteIsNotAdded()
+        {
+            var payload = CreateRegisterExternalMessageRoutePayload();
+            var message = Message.Create(payload).As<Message>();
+            var notAllowedMessage = payload.Routes.First(r => r.ReceiverIdentity.IsActor()).MessageContracts.First();
+            securityProvider.Setup(m => m.GetDomain(notAllowedMessage.Identity)).Returns(Guid.NewGuid().ToString);
+            message.SetDomain(domain);
+            //
+            handler.Handle(message, socket.Object);
+            //
+            Func<ExternalRouteRegistration, bool> isNotAllowedMessage = er => er.Route.Receiver.IsActor()
+                                                                              && Unsafe.ArraysEqual(er.Route.Message.Identity, notAllowedMessage.Identity)
+                                                                              && er.Route.Message.Version == notAllowedMessage.Version
+                                                                              && Unsafe.ArraysEqual(er.Route.Message.Partition, notAllowedMessage.Partition);
+            externalRoutingTable.Verify(m => m.AddMessageRoute(It.Is<ExternalRouteRegistration>(er => isNotAllowedMessage(er))), Times.Never);
+        }
 
-        //[Test]
-        //public void IfDomainIsAllowed_MessageHubIdentityAlwaysAddedToClusterMembers()
-        //{
-        //    var messageIdentity = Guid.NewGuid().ToByteArray();
-        //    var message = Message.Create(new RegisterExternalMessageRouteMessage
-        //                                 {
-        //                                     Uri = "tcp://127.0.0.1:80",
-        //                                     MessageContracts = new[]
-        //                                                        {
-        //                                                            new MessageContract
-        //                                                            {
-        //                                                                Identity = messageIdentity
-        //                                                            }
-        //                                                        },
-        //                                     SocketIdentity = Guid.NewGuid().ToByteArray()
-        //                                 },
-        //                                 domain);
-        //    //
-        //    handler.Handle(message, socket.Object);
-        //    //
-        //    clusterMembership.Verify(m => m.AddClusterMember(It.IsAny<SocketEndpoint>()), Times.Once);
-        //    externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<MessageIdentifier>(),
-        //                                                       It.IsAny<SocketIdentifier>(),
-        //                                                       It.IsAny<Uri>()),
-        //                                Times.Once);
-        //}
+        private static RegisterExternalMessageRouteMessage CreateRegisterExternalMessageRoutePayload()
+            => new RegisterExternalMessageRouteMessage
+               {
+                   Uri = "tcp://127.0.0.1:80",
+                   NodeIdentity = Guid.NewGuid().ToByteArray(),
+                   Health = new Health
+                            {
+                                Uri = "tcp://127.0.0.1:812",
+                                HeartBeatInterval = TimeSpan.FromSeconds(4)
+                            },
+                   Routes = new[]
+                            {
+                                new RouteRegistration
+                                {
+                                    ReceiverIdentity = ReceiverIdentities.CreateForActor().Identity,
+                                    MessageContracts = EnumerableExtenions.Produce(Randomizer.UInt16(2, 5),
+                                                                                   () => new MessageContract
+                                                                                         {
+                                                                                             Identity = Guid.NewGuid().ToByteArray(),
+                                                                                             Version = Randomizer.UInt16()
+                                                                                         })
+                                                                          .ToArray()
+                                },
+                                new RouteRegistration
+                                {
+                                    ReceiverIdentity = ReceiverIdentities.CreateForMessageHub().Identity,
+                                }
+                            }
+               };
     }
 }
