@@ -61,7 +61,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void RegisterSelf_SendRegistrationMessageToAutoDiscoverySender()
+        public void RegisterSelf_SendRegistrationMessageForEachReceiver()
         {
             var actorIdentifier = ReceiverIdentities.CreateForActor();
             var messageHubIdentifier = ReceiverIdentities.CreateForMessageHub();
@@ -111,6 +111,35 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
+        public void RegisterSelf_SendOneRegistrationMessageForSpecifiedDomainButNotMessageDomain()
+        {
+            var actorIdentifier = ReceiverIdentities.CreateForActor();
+            var registrations = new[]
+                                {
+                                    new MessageRoute
+                                    {
+                                        Message = MessageIdentifier.Create<SimpleMessage>(),
+                                        Receiver = actorIdentifier
+                                    },
+                                    new MessageRoute
+                                    {
+                                        Message = MessageIdentifier.Create<ExceptionMessage>(),
+                                        Receiver = actorIdentifier
+                                    }
+                                };
+            var simpleMessageDomain = Guid.NewGuid().ToString();
+            var exceptionMessageDomain = Guid.NewGuid().ToString();
+            var allowedDomains = new[] {exceptionMessageDomain, simpleMessageDomain, Guid.NewGuid().ToString()};
+            securityProvider.Setup(m => m.GetDomain(MessageIdentifier.Create<SimpleMessage>().Identity)).Returns(simpleMessageDomain);
+            securityProvider.Setup(m => m.GetDomain(MessageIdentifier.Create<ExceptionMessage>().Identity)).Returns(exceptionMessageDomain);
+            securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
+            //
+            clusterMonitor.RegisterSelf(registrations, domain);
+            //
+            autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => msg.Domain == domain)), Times.Once);
+        }
+
+        [Test]
         public void UnregisterSelf_SendsOneUnregisterMessageRouteMessagePerDomain()
         {
             var actorIdentifier = ReceiverIdentities.CreateForActor();
@@ -154,171 +183,44 @@ namespace kino.Tests.Connectivity
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => messageIsConsistent(msg))), Times.Exactly(allowedDomains.Length));
         }
 
-        //[Test]
-        //public void UnregisterSelf_SendUnregisterMessageRouteMessageToRendezvous()
-        //{
-        //    try
-        //    {
-        //        clusterMonitor.Start(StartTimeout);
+        [Test]
+        public void UnregisterSelfForMessagesWithoutReceiver_GroupsMessagesForSendingWithoutException()
+        {
+            var unregRoutes = new[]
+                              {
+                                  new MessageRoute
+                                  {
+                                      Message = MessageIdentifier.Create<SimpleMessage>(),
+                                      Receiver = null
+                                  },
+                                  new MessageRoute
+                                  {
+                                      Message = MessageIdentifier.Create<ExceptionMessage>(),
+                                      Receiver = null
+                                  },
+                                  new MessageRoute
+                                  {
+                                      Message = MessageIdentifier.Create<AsyncExceptionMessage>(),
+                                      Receiver = null
+                                  }
+                              };
+            //
+            clusterMonitor.UnregisterSelf(unregRoutes);
+            //
+            Func<IMessage, bool> messageIsConsistent = msg =>
+                                                       {
+                                                           var payload = msg.GetPayload<UnregisterMessageRouteMessage>();
 
-        //        var messageIdentifier = new MessageIdentifier(Message.CurrentVersion);
-        //        clusterMonitor.UnregisterSelf(new[] {messageIdentifier});
+                                                           Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
+                                                           Assert.IsTrue(Unsafe.ArraysEqual(payload.ReceiverNodeIdentity, scaleOutAddress.Identity));
+                                                           Assert.AreEqual(domain, msg.Domain);
+                                                           Assert.AreEqual(1, payload.Routes.Length);
+                                                           Assert.AreEqual(payload.Routes.First().MessageContracts.Length, unregRoutes.Length);
+                                                           Assert.IsTrue(payload.Routes.All(r => r.ReceiverIdentity == null));
 
-        //        var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
-        //        var message = socket.GetSentMessages().BlockingLast(AsyncOp);
-
-        //        Assert.IsNotNull(message);
-        //        Assert.IsTrue(message.Equals(KinoMessages.UnregisterMessageRoute));
-        //        var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-        //        Assert.IsTrue(Equals(payload.SocketIdentity, scaleOutAddress.Identity));
-        //        Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
-        //        Assert.IsTrue(payload.MessageContracts.Any(mc => Equals(mc.Identity, messageIdentifier.Identity)
-        //                                                         && Equals(mc.Version, messageIdentifier.Version)
-        //                                                         && Equals(mc.Partition, messageIdentifier.Partition)));
-        //    }
-        //    finally
-        //    {
-        //        clusterMonitor.Stop();
-        //    }
-        //}
-
-        //[Test]
-        //public void DiscoverMessageRoute_SendDiscoverMessageRouteMessageToRendezvous()
-        //{
-        //    clusterMembershipConfiguration.PingSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
-        //    clusterMembershipConfiguration.PongSilenceBeforeRouteDeletion = TimeSpan.FromSeconds(10);
-        //    clusterMembershipConfiguration.RouteDiscovery.SendingPeriod = TimeSpan.FromMilliseconds(10);
-
-        //    var clusterMonitor = new ClusterMonitor(routerConfigurationProvider.Object,
-        //                                            clusterMembership.Object,
-        //                                            clusterMessageSender,
-        //                                            clusterMessageListener,
-        //                                            new RouteDiscovery(clusterMessageSender,
-        //                                                               routerConfigurationProvider.Object,
-        //                                                               clusterMembershipConfiguration,
-        //                                                               securityProvider.Object,
-        //                                                               logger.Object),
-        //                                            securityProvider.Object);
-        //    try
-        //    {
-        //        clusterMonitor.Start(StartTimeout);
-
-        //        var messageIdentifier = new MessageIdentifier(Message.CurrentVersion, Guid.NewGuid().ToByteArray(), IdentityExtensions.Empty);
-        //        clusterMonitor.DiscoverMessageRoute(messageIdentifier);
-
-        //        var socket = clusterMonitorSocketFactory.GetClusterMonitorSendingSocket();
-        //        var message = socket.GetSentMessages().BlockingLast(TimeSpan.FromSeconds(2));
-
-        //        Assert.IsNotNull(message);
-        //        Assert.IsTrue(message.Equals(KinoMessages.DiscoverMessageRoute));
-        //        var payload = message.GetPayload<DiscoverMessageRouteMessage>();
-        //        Assert.IsTrue(Equals(payload.RequestorSocketIdentity, scaleOutAddress.Identity));
-        //        Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
-        //        Assert.IsTrue(Equals(payload.MessageContract.Identity, messageIdentifier.Identity));
-        //        Assert.IsTrue(Equals(payload.MessageContract.Version, messageIdentifier.Version));
-        //        Assert.IsTrue(Equals(payload.MessageContract.Partition, messageIdentifier.Partition));
-        //    }
-        //    finally
-        //    {
-        //        clusterMonitor.Stop();
-        //    }
-        //}
-
-        //[Test]
-        //public void UnregisterSelf_SendsUnregisterMessagesForAllIdentitiesGroupedByDomain()
-        //{
-        //    var messageHubs = new[]
-        //                      {
-        //                          new MessageIdentifier(Guid.NewGuid().ToByteArray()),
-        //                          new MessageIdentifier(Guid.NewGuid().ToByteArray()),
-        //                          new MessageIdentifier(Guid.NewGuid().ToByteArray())
-        //                      };
-        //    var messageHandlers = new[]
-        //                          {
-        //                              MessageIdentifier.Create<SimpleMessage>(),
-        //                              MessageIdentifier.Create<AsyncMessage>()
-        //                          };
-        //    var allowedDomains = new[]
-        //                         {
-        //                             Guid.NewGuid().ToString(),
-        //                             Guid.NewGuid().ToString(),
-        //                             Guid.NewGuid().ToString(),
-        //                             Guid.NewGuid().ToString()
-        //                         };
-        //    securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
-        //    foreach (var domain in allowedDomains)
-        //    {
-        //        securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(domain, It.IsAny<byte[]>())).Returns(new byte[0]);
-        //    }
-        //    securityProvider.Setup(m => m.GetDomain(messageHandlers.First().Identity)).Returns(allowedDomains.First());
-        //    securityProvider.Setup(m => m.GetDomain(messageHandlers.Second().Identity)).Returns(allowedDomains.Second());
-        //    var clusterMessageSender = new Mock<IClusterMessageSender>();
-        //    var clusterMonitor = new ClusterMonitor(routerConfigurationProvider.Object,
-        //                                            clusterMembership.Object,
-        //                                            clusterMessageSender.Object,
-        //                                            clusterMessageListener,
-        //                                            routeDiscovery.Object,
-        //                                            securityProvider.Object);
-        //    //
-        //    clusterMonitor.UnregisterSelf(messageHandlers.Concat(messageHubs));
-        //    //
-        //    clusterMessageSender.Verify(m => m.EnqueueMessage(It.IsAny<IMessage>()), Times.Exactly(allowedDomains.Count()));
-        //    foreach (var domain in allowedDomains)
-        //    {
-        //        clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => msg.Domain == domain)));
-        //    }
-        //}
-
-        //[Test]
-        //public void UnregisterSelf_SendsUnregistrationMessageForEachMessageHubAndDomain()
-        //{
-        //    var messageHubs = new[]
-        //                      {
-        //                          new MessageIdentifier(Guid.NewGuid().ToByteArray()),
-        //                          new MessageIdentifier(Guid.NewGuid().ToByteArray()),
-        //                          new MessageIdentifier(Guid.NewGuid().ToByteArray())
-        //                      };
-        //    var messageHandlers = new[]
-        //                          {
-        //                              MessageIdentifier.Create<SimpleMessage>(),
-        //                              MessageIdentifier.Create<AsyncMessage>()
-        //                          };
-        //    var allowedDomains = new[] {Guid.NewGuid().ToString(), Guid.NewGuid().ToString(), Guid.NewGuid().ToString()};
-        //    securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
-        //    foreach (var domain in allowedDomains)
-        //    {
-        //        securityProvider.As<ISignatureProvider>().Setup(m => m.CreateSignature(domain, It.IsAny<byte[]>())).Returns(new byte[0]);
-        //    }
-        //    securityProvider.Setup(m => m.GetDomain(messageHandlers.First().Identity)).Returns(allowedDomains.First());
-        //    securityProvider.Setup(m => m.GetDomain(messageHandlers.Second().Identity)).Returns(allowedDomains.Second());
-        //    var clusterMessageSender = new Mock<IClusterMessageSender>();
-        //    var clusterMonitor = new ClusterMonitor(routerConfigurationProvider.Object,
-        //                                            clusterMembership.Object,
-        //                                            clusterMessageSender.Object,
-        //                                            clusterMessageListener,
-        //                                            routeDiscovery.Object,
-        //                                            securityProvider.Object);
-        //    //
-        //    clusterMonitor.UnregisterSelf(messageHandlers.Concat(messageHubs));
-        //    //
-        //    foreach (var domain in allowedDomains)
-        //    {
-        //        foreach (var messageHub in messageHubs)
-        //        {
-        //            clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => AreEqual(msg, domain, messageHub))));
-        //        }
-        //    }
-
-        //    clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => AreEqual(msg, allowedDomains.First(), messageHandlers.First()))));
-        //    clusterMessageSender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => AreEqual(msg, allowedDomains.Second(), messageHandlers.Second()))));
-        //}
-
-        //private static bool AreEqual(IMessage msg, string domain, MessageIdentifier messageHub)
-        //{
-        //    return msg.GetPayload<UnregisterMessageRouteMessage>()
-        //              .MessageContracts
-        //              .Any(mc => Equals(mc.Identity, messageHub.Identity))
-        //           && msg.Domain == domain;
-        //}
+                                                           return true;
+                                                       };
+            autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => messageIsConsistent(msg))), Times.Once);
+        }
     }
 }
