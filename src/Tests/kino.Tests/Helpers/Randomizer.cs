@@ -8,7 +8,7 @@ namespace kino.Tests.Helpers
 
         static Randomizer()
         {
-            rnd = new Random((int)(0x0000ffff & DateTime.UtcNow.Ticks));
+            rnd = new Random((int) (0x0000ffff & DateTime.UtcNow.Ticks));
         }
 
         public static int Int32()
@@ -19,5 +19,8 @@ namespace kino.Tests.Helpers
 
         public static ushort UInt16()
             => (ushort) rnd.Next();
+
+        public static ushort UInt16(int min, int max)
+            => (ushort) rnd.Next(min, max);
     }
 }

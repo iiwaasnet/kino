@@ -46,7 +46,7 @@ namespace kino.Routing.ServiceMessageHandlers
                                      Uri = payload.Health.Uri,
                                      HeartBeatInterval = payload.Health.HeartBeatInterval
                                  };
-
+                    var peerAddedForMonitoring = false;
                     foreach (var route in payload.Routes)
                     {
                         var receiver = new ReceiverIdentifier(route.ReceiverIdentity);
@@ -61,10 +61,14 @@ namespace kino.Routing.ServiceMessageHandlers
                         {
                             try
                             {
-                                //TODO: Refactor, hence messageIdentifier.IsMessageHub() should be first condition
+                                //NOTE: Keep the order in if(...), hence MessageHub is not registered to receive any specific message
                                 if (receiver.IsMessageHub() || securityProvider.GetDomain(messageRoute.Message.Identity) == message.Domain)
                                 {
-                                    clusterHealthMonitor.AddPeer(new Node(payload.Uri, payload.NodeIdentity), health);
+                                    if (!peerAddedForMonitoring)
+                                    {
+                                        clusterHealthMonitor.AddPeer(peer, health);
+                                        peerAddedForMonitoring = true;
+                                    }
 
                                     externalRoutingTable.AddMessageRoute(new ExternalRouteRegistration
                                                                          {
