@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
-using kino.Core.Sockets;
 using kino.Rendezvous.Configuration;
 using kino.Tests.Helpers;
 using Moq;
@@ -41,7 +41,7 @@ namespace kino.Tests.Consensus.Setup
                                    SendingHighWatermark = 1000,
                                    Linger = TimeSpan.Zero
                                };
-            var synodConfig = new kino.Consensus.Configuration.SynodConfiguration(new SynodConfigurationProvider(appConfig.Synod));
+            var synodConfig = new global::kino.Consensus.Configuration.SynodConfiguration(new SynodConfigurationProvider(appConfig.Synod));
             var logger = new Mock<ILogger>();
             var performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             var intercomMessageHub = new IntercomMessageHub(new SocketFactory(socketConfig),

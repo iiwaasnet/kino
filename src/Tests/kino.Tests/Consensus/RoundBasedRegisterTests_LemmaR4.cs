@@ -46,7 +46,7 @@ and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
                         Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
                         Assert.AreEqual(lease.ExpiresAt, txResult.Lease.ExpiresAt);
                         CollectionAssert.AreEqual(lease.OwnerPayload, txResult.Lease.OwnerPayload);
-                        Assert.IsTrue(Unsafe.Equals(lease.OwnerIdentity, txResult.Lease.OwnerIdentity));
+                        Assert.IsTrue(Unsafe.ArraysEqual(lease.OwnerIdentity, txResult.Lease.OwnerIdentity));
                     }
                 }
             }

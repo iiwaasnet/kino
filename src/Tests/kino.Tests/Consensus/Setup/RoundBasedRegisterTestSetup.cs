@@ -1,6 +1,6 @@
 using System;
 using kino.Consensus;
-using kino.Core.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
 
 namespace kino.Tests.Consensus.Setup

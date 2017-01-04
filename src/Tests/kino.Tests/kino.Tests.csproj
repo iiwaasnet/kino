@@ -102,6 +102,13 @@
     <Compile Include="Connectivity\ClusterMessageRoutesRequestHandlerTests.cs" />
     <Compile Include="Connectivity\ClusterMonitorTests.cs" />
     <Compile Include="Connectivity\ExternalMessageRouteRegistrationHandlerTests.cs" />
+    <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
+    <Compile Include="Consensus\BallotGeneratorTests.cs" />
+    <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR1.cs" />
+    <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR2.cs" />
+    <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR4.cs" />
+    <Compile Include="Consensus\Setup\RoundBasedRegisterTestSetup.cs" />
+    <Compile Include="Consensus\Setup\RoundBasedRegisterTestsHelper.cs" />
     <Compile Include="Framework\HashedQueueTests.cs" />
     <Compile Include="Helpers\ClusterMonitorSocketFactory.cs" />
     <Compile Include="Helpers\DomainPrivateKeyProvider.cs" />
@@ -144,6 +151,10 @@
       <Project>{45F6F46B-B864-4C27-9A4B-5022546AE424}</Project>
       <Name>kino.Connectivity</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\kino.Consensus\kino.Consensus.csproj">
+      <Project>{1143EA92-6006-4FA1-B844-1E7078D5CBDA}</Project>
+      <Name>kino.Consensus</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\kino.Core\kino.Core.csproj">
       <Project>{AC984F96-6D8F-466B-B6A7-B241A7C5DEC1}</Project>
       <Name>kino.Core</Name>
@@ -152,6 +163,10 @@
       <Project>{6282F68E-6D06-4DAB-8D8C-B8FCD4F18F9D}</Project>
       <Name>kino.Messaging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\kino.Rendezvous\kino.Rendezvous.csproj">
+      <Project>{4680D77E-3310-4FF1-ADBF-D728C3E1C317}</Project>
+      <Name>kino.Rendezvous</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\kino.Routing\kino.Routing.csproj">
       <Project>{6809914a-dbdf-4801-a2ca-a03fd43f1172}</Project>
       <Name>kino.Routing</Name>
@@ -159,6 +174,10 @@
     <ProjectReference Include="..\..\kino.Security\kino.Security.csproj">
       <Project>{33F0B37F-478E-405E-ACFB-65759C56228D}</Project>
       <Name>kino.Security</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kino\kino.csproj">
+      <Project>{DD0C07ED-15DB-4A33-B796-2AD4058E7433}</Project>
+      <Name>kino</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
