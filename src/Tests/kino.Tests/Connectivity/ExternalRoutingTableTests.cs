@@ -151,13 +151,37 @@ namespace kino.Tests.Connectivity
             Assert.DoesNotThrow(() => externalRoutingTable.FindRoutes(externalRouteLookupRequest).Single());
         }
 
+        [Test]
+        public void RemoveNodeRoute_RemovesAllNodeRoutes()
+        {
+            var nodeIdentifier = Guid.NewGuid().ToByteArray();
+            var routeRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(3, 10),
+                                                                 () => CreateActorRouteRegistration(new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                                                                          Randomizer.UInt16(),
+                                                                                                                          Guid.NewGuid().ToByteArray()),
+                                                                                                    nodeIdentifier));
+            routeRegistrations.ForEach(r => externalRoutingTable.AddMessageRoute(r));
+            //
+            externalRoutingTable.RemoveNodeRoute(new ReceiverIdentifier(nodeIdentifier));
+            //
+            var externalRouteLookupRequest = new ExternalRouteLookupRequest
+                                             {
+                                                 ReceiverNodeIdentity = new ReceiverIdentifier(nodeIdentifier)
+                                             };
+            CollectionAssert.IsEmpty(externalRoutingTable.FindRoutes(externalRouteLookupRequest));
+        }
+
         private static ExternalRouteRegistration CreateActorRouteRegistration()
-            => CreateActorRouteRegistration(MessageIdentifier.Create<SimpleMessage>());
+            => CreateActorRouteRegistration(MessageIdentifier.Create<SimpleMessage>(), Guid.NewGuid().ToByteArray());
 
         private static ExternalRouteRegistration CreateActorRouteRegistration(MessageIdentifier messageIdentifier)
+            => CreateActorRouteRegistration(messageIdentifier, Guid.NewGuid().ToByteArray());
+
+        private static ExternalRouteRegistration CreateActorRouteRegistration(MessageIdentifier messageIdentifier,
+                                                                              byte[] nodeIdentity)
             => new ExternalRouteRegistration
                {
-                   Peer = new Node("tcp://127.0.0.2:8080", Guid.NewGuid().ToByteArray()),
+                   Peer = new Node("tcp://127.0.0.2:8080", nodeIdentity),
                    Health = new Health
                             {
                                 Uri = "tcp://192.168.0.1:9090",
