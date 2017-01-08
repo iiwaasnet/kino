@@ -153,11 +153,13 @@ namespace kino.Routing
         public Bcl.IEnumerable<PeerConnection> FindRoutes(ExternalRouteLookupRequest lookupRequest)
         {
             var peers = new Bcl.List<PeerConnection>();
-            PeerConnection peerConnection;
-            if (lookupRequest.ReceiverNodeIdentity.IsSet()
-                && nodeToConnectionMap.TryGetValue(lookupRequest.ReceiverNodeIdentity, out peerConnection))
+            if (lookupRequest.ReceiverNodeIdentity.IsSet())
             {
-                peers.Add(peerConnection);
+                PeerConnection peerConnection;
+                if (nodeToConnectionMap.TryGetValue(lookupRequest.ReceiverNodeIdentity, out peerConnection))
+                {
+                    peers.Add(peerConnection);
+                }
             }
             else
             {

@@ -3,8 +3,11 @@ using System.Linq;
 using kino.Cluster;
 using kino.Core;
 using kino.Core.Diagnostics;
+using kino.Core.Framework;
+using kino.Messaging;
 using kino.Routing;
 using kino.Tests.Actors.Setup;
+using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
 using MessageRoute = kino.Routing.MessageRoute;
@@ -27,21 +30,8 @@ namespace kino.Tests.Connectivity
         [Test]
         public void AddMessageRoute_AddsActorRoute()
         {
-            var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            var routeRegistration = new ExternalRouteRegistration
-                                    {
-                                        Peer = new Node("tcp://127.0.0.2:8080", Guid.NewGuid().ToByteArray()),
-                                        Health = new Health
-                                                 {
-                                                     Uri = "tcp://192.168.0.1:9090",
-                                                     HeartBeatInterval = TimeSpan.FromSeconds(4)
-                                                 },
-                                        Route = new MessageRoute
-                                                {
-                                                    Message = messageIdentifier,
-                                                    Receiver = ReceiverIdentities.CreateForActor()
-                                                }
-                                    };
+            var routeRegistration = CreateActorRouteRegistration();
+            var messageIdentifier = routeRegistration.Route.Message;
             //
             externalRoutingTable.AddMessageRoute(routeRegistration);
             var route = externalRoutingTable.FindRoutes(new ExternalRouteLookupRequest
@@ -86,5 +76,98 @@ namespace kino.Tests.Connectivity
             Assert.AreEqual(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
             Assert.IsFalse(route.Connected);
         }
+
+        [Test]
+        public void FindRoutesByReceiverNode_ReturnsRouteRegardlessOfMessage()
+        {
+            var routeRegistration = CreateActorRouteRegistration();
+            var receiverIdentity = new ReceiverIdentifier(routeRegistration.Peer.SocketIdentity);
+            externalRoutingTable.AddMessageRoute(routeRegistration);
+            //
+            var route = externalRoutingTable.FindRoutes(new ExternalRouteLookupRequest
+                                                        {
+                                                            ReceiverNodeIdentity = receiverIdentity
+                                                        })
+                                            .First();
+            //
+            Assert.AreEqual(routeRegistration.Peer, route.Node);
+            Assert.AreEqual(routeRegistration.Health.Uri, route.Health.Uri);
+            Assert.AreEqual(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
+            Assert.IsFalse(route.Connected);
+        }
+
+        [Test]
+        public void FindRoutesByMessage_ReturnsRouteRegardlessOfReceiverNode()
+        {
+            var routeRegistration = CreateActorRouteRegistration();
+            var messageIdentifier = routeRegistration.Route.Message;
+            externalRoutingTable.AddMessageRoute(routeRegistration);
+            //
+            var externalRouteLookupRequest = new ExternalRouteLookupRequest
+                                             {
+                                                 Message = messageIdentifier,
+                                                 ReceiverNodeIdentity = null
+                                             };
+            var route = externalRoutingTable.FindRoutes(externalRouteLookupRequest)
+                                            .First();
+            //
+            Assert.AreEqual(routeRegistration.Peer, route.Node);
+            Assert.AreEqual(routeRegistration.Health.Uri, route.Health.Uri);
+            Assert.AreEqual(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
+            Assert.IsFalse(route.Connected);
+        }
+
+        [Test]
+        public void FindRoutesByMessageSentBroadcast_ReturnsAllRegisteredRoutes()
+        {
+            var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
+            var routeRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(3, 10),
+                                                                 () => CreateActorRouteRegistration(messageIdentifier));
+            routeRegistrations.ForEach(r => externalRoutingTable.AddMessageRoute(r));
+            //
+            var externalRouteLookupRequest = new ExternalRouteLookupRequest
+                                             {
+                                                 Message = messageIdentifier,
+                                                 Distribution = DistributionPattern.Broadcast
+                                             };
+            var routes = externalRoutingTable.FindRoutes(externalRouteLookupRequest);
+            //
+            Assert.AreEqual(routeRegistrations.Count(), routes.Count());
+        }
+
+        [Test]
+        public void FindRoutesByMessageSentUnicast_ReturnsOneRoutes()
+        {
+            var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
+            var routeRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(3, 10),
+                                                                 () => CreateActorRouteRegistration(messageIdentifier));
+            routeRegistrations.ForEach(r => externalRoutingTable.AddMessageRoute(r));
+            //
+            var externalRouteLookupRequest = new ExternalRouteLookupRequest
+                                             {
+                                                 Message = messageIdentifier,
+                                                 Distribution = DistributionPattern.Unicast
+                                             };
+            Assert.DoesNotThrow(() => externalRoutingTable.FindRoutes(externalRouteLookupRequest).Single());
+        }
+
+        private static ExternalRouteRegistration CreateActorRouteRegistration()
+            => CreateActorRouteRegistration(MessageIdentifier.Create<SimpleMessage>());
+
+        private static ExternalRouteRegistration CreateActorRouteRegistration(MessageIdentifier messageIdentifier)
+            => new ExternalRouteRegistration
+               {
+                   Peer = new Node("tcp://127.0.0.2:8080", Guid.NewGuid().ToByteArray()),
+                   Health = new Health
+                            {
+                                Uri = "tcp://192.168.0.1:9090",
+                                HeartBeatInterval = TimeSpan.FromSeconds(4)
+                            },
+                   Route = new MessageRoute
+                           {
+                               Message = messageIdentifier,
+                               Receiver = ReceiverIdentities.CreateForActor()
+                           }
+               };
     }
 }
