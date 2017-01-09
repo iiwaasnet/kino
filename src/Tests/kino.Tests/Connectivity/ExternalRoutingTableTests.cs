@@ -171,6 +171,91 @@ namespace kino.Tests.Connectivity
             CollectionAssert.IsEmpty(externalRoutingTable.FindRoutes(externalRouteLookupRequest));
         }
 
+        [Test]
+        public void RemoveMessageRouteForMessageHub_RemovesOneMessageHubAndKeepsPeerConnection()
+        {
+            var node = new Node("tcp://127.0.0.2:8080", Guid.NewGuid().ToByteArray());
+            var health = new Health
+                         {
+                             Uri = "tcp://192.168.0.1:9090",
+                             HeartBeatInterval = TimeSpan.FromSeconds(4)
+                         };
+            var messageHubRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+                                                                      () => new ExternalRouteRegistration
+                                                                            {
+                                                                                Peer = node,
+                                                                                Health = health,
+                                                                                Route = new MessageRoute
+                                                                                        {
+                                                                                            Receiver = ReceiverIdentities.CreateForMessageHub()
+                                                                                        }
+                                                                            });
+            messageHubRegistrations.ForEach(r => externalRoutingTable.AddMessageRoute(r));
+            var messageHubToRemove = messageHubRegistrations.First().Route.Receiver;
+            //
+            var res = externalRoutingTable.RemoveMessageRoute(new ExternalRouteRemoval
+                                                              {
+                                                                  Peer = node,
+                                                                  Route = new MessageRoute {Receiver = messageHubToRemove}
+                                                              });
+            //
+            Assert.AreEqual(PeerConnectionAction.KeepConnection, res.ConnectionAction);
+            var peer = externalRoutingTable.FindRoutes(new ExternalRouteLookupRequest
+                                                       {
+                                                           ReceiverNodeIdentity = new ReceiverIdentifier(node.SocketIdentity)
+                                                       }).First();
+            Assert.AreEqual(node, peer.Node);
+        }
+
+        [Test]
+        public void IfLastMessageHubRouteIsRemoved_PeerWillBeDisconnected()
+        {
+            var node = new Node("tcp://127.0.0.2:8080", Guid.NewGuid().ToByteArray());
+            var health = new Health
+                         {
+                             Uri = "tcp://192.168.0.1:9090",
+                             HeartBeatInterval = TimeSpan.FromSeconds(4)
+                         };
+            var messageHubRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+                                                                      () => new ExternalRouteRegistration
+                                                                            {
+                                                                                Peer = node,
+                                                                                Health = health,
+                                                                                Route = new MessageRoute
+                                                                                        {
+                                                                                            Receiver = ReceiverIdentities.CreateForMessageHub()
+                                                                                        }
+                                                                            });
+            messageHubRegistrations.ForEach(r => externalRoutingTable.AddMessageRoute(r));
+            //
+            for (var i = 0; i < messageHubRegistrations.Count(); i++)
+            {
+                var messageHubToRemove = messageHubRegistrations.ElementAt(i).Route.Receiver;
+                var res = externalRoutingTable.RemoveMessageRoute(new ExternalRouteRemoval
+                                                                  {
+                                                                      Peer = node,
+                                                                      Route = new MessageRoute {Receiver = messageHubToRemove}
+                                                                  });
+                if (LastMessageHubRemoved(i, messageHubRegistrations.Count()))
+                {
+                    Assert.AreEqual(PeerConnectionAction.Disconnect, res.ConnectionAction);
+                }
+                else
+                {
+                    Assert.AreEqual(PeerConnectionAction.KeepConnection, res.ConnectionAction);
+                }
+            }
+            //
+            var peers = externalRoutingTable.FindRoutes(new ExternalRouteLookupRequest
+                                                        {
+                                                            ReceiverNodeIdentity = new ReceiverIdentifier(node.SocketIdentity)
+                                                        });
+            CollectionAssert.IsEmpty(peers);
+        }
+
+        private static bool LastMessageHubRemoved(int i, int count)
+            => i == count - 1;
+
         private static ExternalRouteRegistration CreateActorRouteRegistration()
             => CreateActorRouteRegistration(MessageIdentifier.Create<SimpleMessage>(), Guid.NewGuid().ToByteArray());
 

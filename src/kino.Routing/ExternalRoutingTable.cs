@@ -284,6 +284,8 @@ namespace kino.Routing
             var nodeIdentifier = new ReceiverIdentifier(routeRemoval.Peer.SocketIdentity);
             if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out connection))
             {
+                connectionAction = PeerConnectionAction.KeepConnection;
+
                 if (routeRemoval.Route.Receiver.IsMessageHub())
                 {
                     RemoveMessageHubRoute(routeRemoval);
