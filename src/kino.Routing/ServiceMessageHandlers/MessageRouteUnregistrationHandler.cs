@@ -60,7 +60,6 @@ namespace kino.Routing.ServiceMessageHandlers
 
         private IEnumerable<ExternalRouteRemoval> GetUnregistrationRoutes(UnregisterMessageRouteMessage payload, string domain)
         {
-            var peer = new Node(payload.Uri, payload.ReceiverNodeIdentity);
             foreach (var route in payload.Routes.SelectMany(r => r.MessageContracts.Select(mc => new MessageRoute
                                                                                                  {
                                                                                                      Receiver = new ReceiverIdentifier(r.ReceiverIdentity),
@@ -72,7 +71,7 @@ namespace kino.Routing.ServiceMessageHandlers
                     yield return new ExternalRouteRemoval
                                  {
                                      Route = route,
-                                     Peer = peer
+                                     NodeIdentifier = payload.ReceiverNodeIdentity
                                  };
                 }
                 else

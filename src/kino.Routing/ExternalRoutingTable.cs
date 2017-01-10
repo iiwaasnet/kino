@@ -281,7 +281,7 @@ namespace kino.Routing
             PeerConnection connection = null;
             var connectionAction = PeerConnectionAction.NotFound;
 
-            var nodeIdentifier = new ReceiverIdentifier(routeRemoval.Peer.SocketIdentity);
+            var nodeIdentifier = new ReceiverIdentifier(routeRemoval.NodeIdentifier);
             if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out connection))
             {
                 connectionAction = PeerConnectionAction.KeepConnection;
@@ -387,7 +387,7 @@ namespace kino.Routing
 
         private void RemoveActorRoute(ExternalRouteRemoval routeRemoval)
         {
-            var nodeIdentifier = new ReceiverIdentifier(routeRemoval.Peer.SocketIdentity);
+            var nodeIdentifier = new ReceiverIdentifier(routeRemoval.NodeIdentifier);
             Bcl.HashSet<MessageIdentifier> messages;
             if (actorToMessageMap.TryGetValue(routeRemoval.Route.Receiver, out messages))
             {
@@ -434,7 +434,7 @@ namespace kino.Routing
 
         private void RemoveMessageHubRoute(ExternalRouteRemoval routeRemoval)
         {
-            var nodeIdentifier = new ReceiverIdentifier(routeRemoval.Peer.SocketIdentity);
+            var nodeIdentifier = new ReceiverIdentifier(routeRemoval.NodeIdentifier);
             Bcl.HashSet<ReceiverIdentifier> messageHubs;
             if (nodeMessageHubs.TryGetValue(nodeIdentifier, out messageHubs))
             {

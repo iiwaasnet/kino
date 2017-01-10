@@ -6,6 +6,6 @@ namespace kino.Routing
     {
         public MessageRoute Route { get; set; }
 
-        public Node Peer { get; set; }
+        public byte[] NodeIdentifier { get; set; }
     }
 }
