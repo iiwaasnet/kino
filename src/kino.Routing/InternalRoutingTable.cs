@@ -20,8 +20,7 @@ namespace kino.Routing
             messageHubs = new Bcl.Dictionary<ReceiverIdentifier, ILocalSendingSocket<IMessage>>();
             messageToActorMap = new Bcl.Dictionary<MessageIdentifier, HashedLinkedList<ReceiverIdentifier>>();
             actorToSocketMap = new Bcl.Dictionary<ReceiverIdentifier, ILocalSendingSocket<IMessage>>();
-            socketToActorMessagesMap =
-                new Bcl.Dictionary<ILocalSendingSocket<IMessage>, Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>>>();
+            socketToActorMessagesMap = new Bcl.Dictionary<ILocalSendingSocket<IMessage>, Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>>>();
         }
 
         public void AddMessageRoute(InternalRouteRegistration routeRegistration)
