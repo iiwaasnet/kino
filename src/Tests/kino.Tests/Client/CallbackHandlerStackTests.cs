@@ -1,11 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using kino.Client;
 using kino.Core;
 using kino.Core.Framework;
-using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Tests.Actors.Setup;
+using kino.Tests.Helpers;
 using NUnit.Framework;
 
 namespace kino.Tests.Client
@@ -13,39 +12,41 @@ namespace kino.Tests.Client
     [TestFixture]
     public class CallbackHandlerStackTests
     {
-        [Test]
-        public void AddingHandlersForExistingCorrelation_ThrowsDuplicatedKeyException()
+        private CallbackHandlerStack callbackHandlerStack;
+
+        [SetUp]
+        public void Setup()
         {
-            var callbackHandlerStack = new CallbackHandlerStack();
-
-            var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
-            var promise = new Promise();
-            callbackHandlerStack.Push(correlationId, promise, Enumerable.Empty<MessageIdentifier>());
-
-            Assert.Throws<DuplicatedKeyException>(() => { callbackHandlerStack.Push(correlationId, promise, Enumerable.Empty<MessageIdentifier>()); });
+            callbackHandlerStack = new CallbackHandlerStack();
         }
 
         [Test]
-        public void PopCallBackHandlerForSpecificMessage_RemovesAllOtherHandlersForThisCorrelationId()
+        public void PushCallbackWithSamePromiseTwice_ThrowsDuplicatedKeyException()
         {
-            var callbackHandlerStack = new CallbackHandlerStack();
+            var promise = new Promise(Randomizer.Int64());
+            callbackHandlerStack.Push(promise, Enumerable.Empty<MessageIdentifier>());
+            //
+            Assert.Throws<DuplicatedKeyException>(() => { callbackHandlerStack.Push(promise, Enumerable.Empty<MessageIdentifier>()); });
+        }
 
-            var correlationId = new CorrelationId(Guid.NewGuid().ToByteArray());
-            var promise = new Promise();
+        [Test]
+        public void PopCallBackHandlerForSpecificCallbackKey_RemovesAllOtherHandlersForThisCallbackKey()
+        {
+            var promise = new Promise(Randomizer.Int64());
             var simpleMessageIdentifier = MessageIdentifier.Create<SimpleMessage>();
             var messageHandlerIdentifiers = new[]
                                             {
                                                 simpleMessageIdentifier,
                                                 MessageIdentifier.Create<ExceptionMessage>()
                                             };
-            callbackHandlerStack.Push(correlationId, promise, messageHandlerIdentifiers);
-
+            callbackHandlerStack.Push(promise, messageHandlerIdentifiers);
+            //
             var handler = callbackHandlerStack.Pop(new CallbackHandlerKey
                                                    {
                                                        Identity = simpleMessageIdentifier.Identity,
                                                        Version = simpleMessageIdentifier.Version,
                                                        Partition = simpleMessageIdentifier.Partition,
-                                                       Correlation = correlationId.Value
+                                                       CallbackKey = promise.CallbackKey.Value
                                                    });
 
             Assert.IsNotNull(handler);
@@ -54,7 +55,7 @@ namespace kino.Tests.Client
                                                {
                                                    Identity = KinoMessages.Exception.Identity,
                                                    Version = KinoMessages.Exception.Version,
-                                                   Correlation = correlationId.Value
+                                                   CallbackKey = promise.CallbackKey.Value
                                                });
             Assert.IsNull(handler);
         }

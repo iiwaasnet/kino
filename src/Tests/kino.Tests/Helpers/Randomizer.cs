@@ -14,6 +14,9 @@ namespace kino.Tests.Helpers
         public static int Int32()
             => rnd.Next();
 
+        public static long Int64()
+            => rnd.Next();
+
         public static int Int32(int min, int max)
             => rnd.Next(min, max);
 

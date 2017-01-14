@@ -99,6 +99,7 @@
     <Compile Include="Actors\Setup\NullActor.cs" />
     <Compile Include="Actors\Setup\NullMessage.cs" />
     <Compile Include="Actors\Setup\SimpleMessage.cs" />
+    <Compile Include="Client\CallbackHandlerStackTests.cs" />
     <Compile Include="Connectivity\ClusterMessageRoutesRequestHandlerTests.cs" />
     <Compile Include="Connectivity\ClusterMonitorTests.cs" />
     <Compile Include="Connectivity\ExternalMessageRouteRegistrationHandlerTests.cs" />
