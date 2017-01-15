@@ -1,4 +1,5 @@
-﻿using kino.Messaging;
+﻿using kino.Core;
+using kino.Messaging;
 
 namespace kino.Client
 {
@@ -11,5 +12,7 @@ namespace kino.Client
         void Start();
 
         void Stop();
+
+        ReceiverIdentifier ReceiverIdentifier { get; }
     }
 }

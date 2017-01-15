@@ -100,6 +100,7 @@
     <Compile Include="Actors\Setup\NullMessage.cs" />
     <Compile Include="Actors\Setup\SimpleMessage.cs" />
     <Compile Include="Client\CallbackHandlerStackTests.cs" />
+    <Compile Include="Client\MessagHubTests.cs" />
     <Compile Include="Connectivity\ClusterMessageRoutesRequestHandlerTests.cs" />
     <Compile Include="Connectivity\ClusterMonitorTests.cs" />
     <Compile Include="Connectivity\ExternalMessageRouteRegistrationHandlerTests.cs" />
@@ -116,6 +117,7 @@
     <Compile Include="Helpers\DomainScopeResolver.cs" />
     <Compile Include="Helpers\EnumerableExtenions.cs" />
     <Compile Include="Helpers\IntercomMessageHubSocketFactory.cs" />
+    <Compile Include="Helpers\LocalSocketHelpers.cs" />
     <Compile Include="Helpers\MessageHubSocketFactory.cs" />
     <Compile Include="Helpers\ActorHostSocketFactory.cs" />
     <Compile Include="Helpers\MessageRouterSocketFactory.cs" />

@@ -33,7 +33,6 @@ namespace kino.Client
         private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception);
         private long lastCallbackKey = 0;
         private readonly ILocalSocket<IMessage> receivingSocket;
-        private readonly ReceiverIdentifier receiverIdentifier;
         private byte[] callbackReceiverNodeIdentity;
         private bool isStarted;
 
@@ -56,7 +55,7 @@ namespace kino.Client
             this.callbackHandlers = callbackHandlers;
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
             receivingSocket = localSocketFactory.Create<IMessage>();
-            receiverIdentifier = ReceiverIdentities.CreateForMessageHub();
+            ReceiverIdentifier = ReceiverIdentities.CreateForMessageHub();
         }
 
         public void Start()
@@ -103,7 +102,7 @@ namespace kino.Client
                             var promise = callbackRegistration.Promise;
                             var callbackPoint = callbackRegistration.CallbackPoint;
                             message.RegisterCallbackPoint(callbackReceiverNodeIdentity,
-                                                          receiverIdentifier.Identity,
+                                                          ReceiverIdentifier.Identity,
                                                           callbackPoint.MessageIdentifiers,
                                                           promise.CallbackKey.Value);
 
@@ -190,7 +189,7 @@ namespace kino.Client
         {
             var registration = new InternalRouteRegistration
                                {
-                                   ReceiverIdentifier = receiverIdentifier,
+                                   ReceiverIdentifier = ReceiverIdentifier,
                                    KeepRegistrationLocal = keepRegistrationLocal,
                                    DestinationSocket = receivingSocket
                                };
@@ -225,5 +224,7 @@ namespace kino.Client
 
             return promise;
         }
+
+        public ReceiverIdentifier ReceiverIdentifier { get; }
     }
 }
