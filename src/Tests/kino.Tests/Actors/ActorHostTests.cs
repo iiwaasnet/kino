@@ -92,11 +92,11 @@ namespace kino.Tests.Actors
             {
                 actorHost.AssignActor(new EchoActor());
                 var messageIn = Message.CreateFlowStartMessage(new SimpleMessage());
-                receivingSocket.SetupMessageSend(messageIn);
+                receivingSocket.SetupMessageReceived(messageIn);
                 //
                 StartActorHost(actorHost);
 
-                receivingSocket.WaitUntilMessageSent();
+                localRouterSocket.WaitUntilMessageSent();
                 //
                 asyncQueue.Verify(m => m.Enqueue(It.IsAny<AsyncMessageContext>(), It.IsAny<CancellationToken>()), Times.Never);
             }
@@ -115,12 +115,12 @@ namespace kino.Tests.Actors
             {
                 actorHost.AssignActor(new ExceptionActor());
                 var messageIn = Message.CreateFlowStartMessage(new SimpleMessage {Content = errorMessage});
-                receivingSocket.SetupMessageSend(messageIn);
+                receivingSocket.SetupMessageReceived(messageIn);
                 //
                 StartActorHost(actorHost);
                 //
                 Func<IMessage, bool> isExceptionMessage = m => m.GetPayload<ExceptionMessage>().Exception.Message == errorMessage;
-                receivingSocket.WaitUntilMessageSent(isExceptionMessage);
+                localRouterSocket.WaitUntilMessageSent(isExceptionMessage);
             }
             finally
             {
@@ -137,7 +137,7 @@ namespace kino.Tests.Actors
 
                 var asyncMessage = new AsyncMessage {Delay = AsyncOp};
                 var messageIn = Message.CreateFlowStartMessage(asyncMessage);
-                receivingSocket.SetupMessageSend(messageIn);
+                receivingSocket.SetupMessageReceived(messageIn);
                 //
                 StartActorHost(actorHost);
                 (AsyncOpCompletionDelay + AsyncOp).Sleep();
@@ -163,7 +163,7 @@ namespace kino.Tests.Actors
                                        ErrorMessage = error
                                    };
                 var messageIn = Message.CreateFlowStartMessage(asyncMessage);
-                receivingSocket.SetupMessageSend(messageIn);
+                receivingSocket.SetupMessageReceived(messageIn);
                 //
                 StartActorHost(actorHost);
                 (AsyncOpCompletionDelay + AsyncOp).Sleep();
@@ -185,7 +185,7 @@ namespace kino.Tests.Actors
                 var delay = AsyncOp;
                 var asyncMessage = new AsyncMessage {Delay = delay};
                 var messageIn = Message.CreateFlowStartMessage(asyncMessage);
-                receivingSocket.SetupMessageSend(messageIn);
+                receivingSocket.SetupMessageReceived(messageIn);
                 //
                 StartActorHost(actorHost);
                 //
@@ -214,14 +214,15 @@ namespace kino.Tests.Actors
                                                 callbackReceiver,
                                                 MessageIdentifier.Create<SimpleMessage>(),
                                                 Randomizer.Int32());
-                receivingSocket.SetupMessageSend(messageIn);
+                receivingSocket.SetupMessageReceived(messageIn);
                 //
                 StartActorHost(actorHost);
                 //
-                Func<Message, bool> assertCallbackPropertiesCopied = messageOut => messageIn.CallbackPoint.SequenceEqual(messageOut.CallbackPoint) &&
-                                                                                   Unsafe.ArraysEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity) &&
-                                                                                   Unsafe.ArraysEqual(messageIn.CallbackReceiverNodeIdentity, messageOut.CallbackReceiverNodeIdentity);
-                receivingSocket.WaitUntilMessageSent(m => assertCallbackPropertiesCopied(m.As<Message>()));
+                Func<Message, bool> assertCallbackPropertiesCopied = messageOut =>
+                                                                         messageIn.CallbackPoint.SequenceEqual(messageOut.CallbackPoint) &&
+                                                                         Unsafe.ArraysEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity) &&
+                                                                         Unsafe.ArraysEqual(messageIn.CallbackReceiverNodeIdentity, messageOut.CallbackReceiverNodeIdentity);
+                localRouterSocket.WaitUntilMessageSent(assertCallbackPropertiesCopied);
             }
             finally
             {
@@ -251,14 +252,14 @@ namespace kino.Tests.Actors
                                                 callbackReceiver,
                                                 MessageIdentifier.Create<SimpleMessage>(),
                                                 Randomizer.Int32());
-                receivingSocket.SetupMessageSend(messageIn);
+                receivingSocket.SetupMessageReceived(messageIn);
                 //
                 StartActorHost(actorHost);
                 //
                 Func<Message, bool> assertCallbackPropertiesCopied = messageOut => messageIn.CallbackPoint.SequenceEqual(messageOut.CallbackPoint) &&
                                                                                    Unsafe.ArraysEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity) &&
                                                                                    Unsafe.ArraysEqual(messageIn.CallbackReceiverNodeIdentity, messageOut.CallbackReceiverNodeIdentity);
-                receivingSocket.WaitUntilMessageSent(m => assertCallbackPropertiesCopied(m.As<Message>()));
+                localRouterSocket.WaitUntilMessageSent(assertCallbackPropertiesCopied);
             }
             finally
             {
@@ -280,7 +281,7 @@ namespace kino.Tests.Actors
                                                 callbackReceiver,
                                                 callbackPoints,
                                                 Randomizer.Int32());
-                receivingSocket.SetupMessageSend(messageIn);
+                receivingSocket.SetupMessageReceived(messageIn);
                 //
                 StartActorHost(actorHost);
                 //
@@ -288,7 +289,7 @@ namespace kino.Tests.Actors
                                                                                    messageIn.CallbackPoint.SequenceEqual(messageOut.CallbackPoint) &&
                                                                                    Unsafe.ArraysEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity) &&
                                                                                    Unsafe.ArraysEqual(messageIn.CallbackReceiverNodeIdentity, messageOut.CallbackReceiverNodeIdentity);
-                receivingSocket.WaitUntilMessageSent(m => assertCallbackPropertiesCopied(m.As<Message>()));
+                localRouterSocket.WaitUntilMessageSent(assertCallbackPropertiesCopied);
             }
             finally
             {
@@ -318,7 +319,7 @@ namespace kino.Tests.Actors
                                                 callbackReceiver,
                                                 callbackPoints,
                                                 Randomizer.Int32());
-                receivingSocket.SetupMessageSend(messageIn);
+                receivingSocket.SetupMessageReceived(messageIn);
                 //
                 StartActorHost(actorHost);
                 //
@@ -326,7 +327,7 @@ namespace kino.Tests.Actors
                                                                                    messageIn.CallbackPoint.SequenceEqual(messageOut.CallbackPoint) &&
                                                                                    Unsafe.ArraysEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity) &&
                                                                                    Unsafe.ArraysEqual(messageIn.CallbackReceiverNodeIdentity, messageOut.CallbackReceiverNodeIdentity);
-                receivingSocket.WaitUntilMessageSent(m => assertCallbackPropertiesCopied(m.As<Message>()));
+                localRouterSocket.WaitUntilMessageSent(assertCallbackPropertiesCopied);
             }
             finally
             {
@@ -351,13 +352,13 @@ namespace kino.Tests.Actors
                                           logger.Object);
                 actorHost.AssignActor(new ExceptionActor());
                 var messageIn = Message.CreateFlowStartMessage(new SimpleMessage());
-                receivingSocket.SetupMessageSend(messageIn);
+                receivingSocket.SetupMessageReceived(messageIn);
                 //
                 StartActorHost(actorHost);
                 //
                 Func<Message, bool> assertCallbackPropertiesCopied = messageOut => messageOut.Equals(KinoMessages.Exception) &&
                                                                                    messageOut.Domain == kinoDomain;
-                receivingSocket.WaitUntilMessageSent(m => assertCallbackPropertiesCopied(m.As<Message>()));
+                localRouterSocket.WaitUntilMessageSent(assertCallbackPropertiesCopied);
             }
             finally
             {

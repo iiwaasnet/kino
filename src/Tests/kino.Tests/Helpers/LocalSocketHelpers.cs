@@ -14,16 +14,16 @@ namespace kino.Tests.Helpers
         internal static void WaitUntilMessageSent(this Mock<ILocalSocket<IMessage>> mock)
             => WaitUntilMessageSent(mock, _ => true);
 
-        internal static void WaitUntilMessageSent(this Mock<ILocalSocket<IMessage>> mock, Func<IMessage, bool> predicate)
+        internal static void WaitUntilMessageSent(this Mock<ILocalSocket<IMessage>> mock, Func<Message, bool> predicate)
         {
-            var retryCount = 20;
+            var retryCount = 40;
             Exception error = null;
             do
             {
                 AsyncOp.Sleep();
                 try
                 {
-                    mock.Verify(m => m.Send(It.Is<IMessage>(msg => predicate(msg))), Times.AtLeastOnce());
+                    mock.Verify(m => m.Send(It.Is<IMessage>(msg => predicate(msg.As<Message>()))), Times.AtLeastOnce());
                 }
                 catch (Exception err)
                 {
@@ -37,7 +37,7 @@ namespace kino.Tests.Helpers
             }
         }
 
-        internal static void SetupMessageSend(this Mock<ILocalSocket<IMessage>> mock, IMessage messageIn)
+        internal static void SetupMessageReceived(this Mock<ILocalSocket<IMessage>> mock, IMessage messageIn)
         {
             var waitHandle = new AutoResetEvent(true);
             mock.Setup(m => m.CanReceive()).Returns(waitHandle);

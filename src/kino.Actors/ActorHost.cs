@@ -133,42 +133,6 @@ namespace kino.Actors
             internalRegistrationsSender.Send(routeReg);
         }
 
-        private void ProcessAsyncResponses(CancellationToken token)
-        {
-            try
-            {
-                foreach (var messageContext in asyncQueue.GetConsumingEnumerable(token))
-                {
-                    try
-                    {
-                        foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
-                        {
-                            messageOut.SetDomain(securityProvider.GetDomain(messageOut.Identity));
-                            messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverNodeIdentity,
-                                                             messageContext.CallbackReceiverIdentity,
-                                                             messageContext.CallbackPoint,
-                                                             messageContext.CallbackKey);
-                            messageOut.SetCorrelationId(messageContext.CorrelationId);
-                            messageOut.CopyMessageRouting(messageContext.MessageHops);
-                            messageOut.TraceOptions |= messageContext.TraceOptions;
-
-                            localRouterSocket.Send(messageOut);
-
-                            ResponseSent(messageOut, false);
-                        }
-                    }
-                    catch (Exception err)
-                    {
-                        logger.Error(err);
-                    }
-                }
-            }
-            finally
-            {
-                asyncQueue.Dispose();
-            }
-        }
-
         private void ProcessRequests(CancellationToken token)
         {
             try
@@ -225,6 +189,42 @@ namespace kino.Actors
                 logger.Error(err);
             }
             logger.Warn($"{GetType().Name} requests processing stopped.");
+        }
+
+        private void ProcessAsyncResponses(CancellationToken token)
+        {
+            try
+            {
+                foreach (var messageContext in asyncQueue.GetConsumingEnumerable(token))
+                {
+                    try
+                    {
+                        foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
+                        {
+                            messageOut.SetDomain(securityProvider.GetDomain(messageOut.Identity));
+                            messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverNodeIdentity,
+                                                             messageContext.CallbackReceiverIdentity,
+                                                             messageContext.CallbackPoint,
+                                                             messageContext.CallbackKey);
+                            messageOut.SetCorrelationId(messageContext.CorrelationId);
+                            messageOut.CopyMessageRouting(messageContext.MessageHops);
+                            messageOut.TraceOptions |= messageContext.TraceOptions;
+
+                            localRouterSocket.Send(messageOut);
+
+                            ResponseSent(messageOut, false);
+                        }
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
+                    }
+                }
+            }
+            finally
+            {
+                asyncQueue.Dispose();
+            }
         }
 
         private void HandleTaskResult(CancellationToken token, Task<IActorResult> task, Message messageIn)
@@ -302,9 +302,9 @@ namespace kino.Actors
             if (task.IsCanceled)
             {
                 var message = Message.Create(new ExceptionMessage
-                                              {
-                                                  Exception = new OperationCanceledException()
-                                              }).As<Message>();
+                                             {
+                                                 Exception = new OperationCanceledException()
+                                             }).As<Message>();
                 message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
                 return new ActorResult(message);
             }
@@ -313,11 +313,11 @@ namespace kino.Actors
                 var err = task.Exception?.InnerException ?? task.Exception;
 
                 var message = Message.Create(new ExceptionMessage
-                                              {
-                                                  Exception = err,
-                                                  StackTrace = err?.StackTrace
-                                              })
-                                      .As<Message>();
+                                             {
+                                                 Exception = err,
+                                                 StackTrace = err?.StackTrace
+                                             })
+                                     .As<Message>();
                 message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
                 return new ActorResult(message);
             }

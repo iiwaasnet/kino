@@ -66,58 +66,86 @@ namespace kino.Tests.Client
         [TestCase(false)]
         public void WhenMessageHubStarts_RegistrationMessageIsSentAsWithProperGlobalVisibility(bool keepRegistrationLocal)
         {
-            messageHub = CreateMessageHub(keepRegistrationLocal);
-            //
-            messageHub.Start();
-            //
-            Func<InternalRouteRegistration, bool> globalRegistration = msg => msg.KeepRegistrationLocal == keepRegistrationLocal
-                                                                              && msg.DestinationSocket == receivingSocket.Object;
-            registrationSocket.Verify(m => m.Send(It.Is<InternalRouteRegistration>(msg => globalRegistration(msg))));
+            try
+            {
+                messageHub = CreateMessageHub(keepRegistrationLocal);
+                //
+                messageHub.Start();
+                //
+                Func<InternalRouteRegistration, bool> globalRegistration = msg => msg.KeepRegistrationLocal == keepRegistrationLocal
+                                                                                  && msg.DestinationSocket == receivingSocket.Object;
+                registrationSocket.Verify(m => m.Send(It.Is<InternalRouteRegistration>(msg => globalRegistration(msg))));
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
         }
 
         [Test]
         public void EnqueueRequest_RegistersMessageAndExceptionHandlers()
         {
-            messageHub.Start();
-            var message = Message.CreateFlowStartMessage(new SimpleMessage());
-            var callback = CallbackPoint.Create<SimpleMessage>();
-            //
-            messageHub.EnqueueRequest(message, callback);
-            AsyncOp.Sleep();
-            //
-            callbackHandlerStack.Verify(m => m.Push(It.IsAny<IPromise>(),
-                                                    It.Is<IEnumerable<MessageIdentifier>>(en => ContainsMessageAndExceptionRegistrations(en))),
-                                        Times.Once);
+            try
+            {
+                messageHub.Start();
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage>();
+                //
+                messageHub.EnqueueRequest(message, callback);
+                AsyncOp.Sleep();
+                //
+                callbackHandlerStack.Verify(m => m.Push(It.IsAny<IPromise>(),
+                                                        It.Is<IEnumerable<MessageIdentifier>>(en => ContainsMessageAndExceptionRegistrations(en))),
+                                            Times.Once);
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
         }
 
         [Test]
         public void EnqueueRequest_SendsMessageWithCallbackSetToThisMessageHub()
         {
-            messageHub.Start();
-            var message = Message.CreateFlowStartMessage(new SimpleMessage());
-            var callback = CallbackPoint.Create<SimpleMessage>();
-            //
-            messageHub.EnqueueRequest(message, callback);
-            AsyncOp.Sleep();
-            //
-            Func<IMessage, bool> routerSocketIsReceiver = msg => Unsafe.ArraysEqual(msg.As<Message>().ReceiverNodeIdentity, scaleOutAddress.Identity)
-                                                                 && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
-            routerSocket.WaitUntilMessageSent(routerSocketIsReceiver);
+            try
+            {
+                messageHub.Start();
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage>();
+                //
+                messageHub.EnqueueRequest(message, callback);
+                AsyncOp.Sleep();
+                //
+                Func<IMessage, bool> routerSocketIsReceiver = msg => Unsafe.ArraysEqual(msg.As<Message>().ReceiverNodeIdentity, scaleOutAddress.Identity)
+                                                                     && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
+                routerSocket.WaitUntilMessageSent(routerSocketIsReceiver);
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
         }
 
         [Test]
         public void WhenMessageReceived_CorrespondingPromiseResultSet()
         {
-            var message = Message.CreateFlowStartMessage(new SimpleMessage());
-            var callback = CallbackPoint.Create<SimpleMessage>();
-            var promise = messageHub.EnqueueRequest(message, callback);
-            callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
-            //
-            receivingSocket.SetupMessageSend(message);
-            messageHub.Start();
-            var response = promise.GetResponse().Result;
-            //
-            Assert.AreEqual(message, response);
+            try
+            {
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage>();
+                var promise = messageHub.EnqueueRequest(message, callback);
+                callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
+                //
+                receivingSocket.SetupMessageReceived(message);
+                messageHub.Start();
+                var response = promise.GetResponse().Result;
+                //
+                Assert.AreEqual(message, response);
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
         }
 
         //[Test]
