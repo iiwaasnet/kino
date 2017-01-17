@@ -105,31 +105,20 @@ namespace kino.Tests.Client
             routerSocket.WaitUntilMessageSent(routerSocketIsReceiver);
         }
 
-        //[Test]
-        //public void WhenMessageReceived_CorrespondingPromiseResultSet()
-        //{
-        //    var messageHub = CreateMessageHub();
-        //    try
-        //    {
-        //        messageHub.Start();
-
-        //        var message = Message.CreateFlowStartMessage(new SimpleMessage());
-        //        var callback = CallbackPoint.Create<SimpleMessage>();
-
-        //        var promise = messageHub.EnqueueRequest(message, callback);
-        //        callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
-        //        messageHubSocketFactory.GetReceivingSocket().DeliverMessage(message);
-
-        //        var response = promise.GetResponse().Result;
-
-        //        Assert.IsNotNull(response);
-        //        Assert.AreEqual(message, response);
-        //    }
-        //    finally
-        //    {
-        //        messageHub.Stop();
-        //    }
-        //}
+        [Test]
+        public void WhenMessageReceived_CorrespondingPromiseResultSet()
+        {
+            var message = Message.CreateFlowStartMessage(new SimpleMessage());
+            var callback = CallbackPoint.Create<SimpleMessage>();
+            var promise = messageHub.EnqueueRequest(message, callback);
+            callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
+            //
+            receivingSocket.SetupMessageSend(message);
+            messageHub.Start();
+            var response = promise.GetResponse().Result;
+            //
+            Assert.AreEqual(message, response);
+        }
 
         //[Test]
         //public void WhenResultMessageIsDelivered_PromiseIsDisposedAndItsCallbackIsRemoved()

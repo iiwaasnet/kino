@@ -22,7 +22,6 @@ namespace kino.Client
         private Task receiving;
         private readonly BlockingCollection<CallbackRegistration> registrationsQueue;
         private CancellationTokenSource cancellationTokenSource;
-        private readonly ManualResetEventSlim hubRegistered;
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
@@ -51,7 +50,6 @@ namespace kino.Client
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.securityProvider = securityProvider;
             this.keepRegistrationLocal = keepRegistrationLocal;
-            hubRegistered = new ManualResetEventSlim();
             this.callbackHandlers = callbackHandlers;
             registrationsQueue = new BlockingCollection<CallbackRegistration>(new ConcurrentQueue<CallbackRegistration>());
             receivingSocket = localSocketFactory.Create<IMessage>();
@@ -194,7 +192,6 @@ namespace kino.Client
                                    DestinationSocket = receivingSocket
                                };
             internalRegistrationsSender.Send(registration);
-            hubRegistered.Set();
         }
 
         public IPromise EnqueueRequest(IMessage message, CallbackPoint callbackPoint)
@@ -212,8 +209,6 @@ namespace kino.Client
 
         private IPromise InternalEnqueueRequest(IMessage message, CallbackPoint callbackPoint)
         {
-            hubRegistered.Wait();
-
             var promise = new Promise(Interlocked.Increment(ref lastCallbackKey));
             registrationsQueue.Add(new CallbackRegistration
                                    {
