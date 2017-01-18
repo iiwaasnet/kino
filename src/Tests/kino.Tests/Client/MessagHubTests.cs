@@ -148,134 +148,119 @@ namespace kino.Tests.Client
             }
         }
 
-        //[Test]
-        //public void WhenResultMessageIsDelivered_PromiseIsDisposedAndItsCallbackIsRemoved()
-        //{
-        //    var callbackHandlerStack = new CallbackHandlerStack();
-        //    var messageHub = new MessageHub(socketFactory.Object,
-        //                                    callbackHandlerStack,
-        //                                    routerConfigurationProvider.Object,
-        //                                    securityProvider.Object,
-        //                                    performanceCounterManager.Object,
-        //                                    logger);
-        //    try
-        //    {
-        //        messageHub.Start();
+        [Test]
+        public void WhenResultMessageIsDelivered_PromiseIsDisposedAndItsCallbackIsRemoved()
+        {
+            var callbackHandlerStack = new CallbackHandlerStack();
+            var messageHub = new MessageHub(callbackHandlerStack,
+                                            routerSocket.Object,
+                                            registrationSocket.Object,
+                                            localSocketFactory.Object,
+                                            scaleOutConfigurationProvider.Object,
+                                            securityProvider.Object,
+                                            logger);
+            try
+            {
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<NullMessage>();
+                var promise = messageHub.EnqueueRequest(message, callback);
+                var callbackMessage = Message.Create(new NullMessage()).As<Message>();
+                callbackMessage.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
+                                                      Guid.NewGuid().ToByteArray(),
+                                                      callback.MessageIdentifiers,
+                                                      promise.CallbackKey.Value);
+                receivingSocket.SetupMessageReceived(callbackMessage, AsyncOpCompletionDelay);
+                //
+                messageHub.Start();
+                AsyncOpCompletionDelay.Sleep();
+                //
+                Assert.IsNull(callbackHandlerStack.Pop(new CallbackHandlerKey
+                                                       {
+                                                           Version = callback.MessageIdentifiers.Single().Version,
+                                                           Identity = callback.MessageIdentifiers.Single().Identity,
+                                                           Partition = callback.MessageIdentifiers.Single().Partition,
+                                                           CallbackKey = promise.CallbackKey.Value
+                                                       }));
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
 
-        //        var message = Message.CreateFlowStartMessage(new SimpleMessage());
-        //        var callback = CallbackPoint.Create<SimpleMessage>();
-        //        //
-        //        var promise = messageHub.EnqueueRequest(message, callback);
+        [Test]
+        public void WhenExceptionMessageReceived_PromiseThrowsException()
+        {
+            var callbackHandlerStack = new CallbackHandlerStack();
+            var messageHub = new MessageHub(callbackHandlerStack,
+                                            routerSocket.Object,
+                                            registrationSocket.Object,
+                                            localSocketFactory.Object,
+                                            scaleOutConfigurationProvider.Object,
+                                            securityProvider.Object,
+                                            logger);
+            try
+            {
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<NullMessage>();
+                var promise = messageHub.EnqueueRequest(message, callback);
+                var errorMessage = Guid.NewGuid().ToString();
+                var exception = Message.Create(new ExceptionMessage {Exception = new Exception(errorMessage)}).As<Message>();
+                exception.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
+                                                Guid.NewGuid().ToByteArray(),
+                                                callback.MessageIdentifiers,
+                                                promise.CallbackKey.Value);
+                receivingSocket.SetupMessageReceived(exception, AsyncOpCompletionDelay);
+                //
+                messageHub.Start();
+                AsyncOpCompletionDelay.Sleep();
+                //
+                Assert.Throws<AggregateException>(() =>
+                                                  {
+                                                      var _ = promise.GetResponse().Result;
+                                                  },
+                                                  errorMessage);
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
 
-        //        AsyncOpCompletionDelay.Sleep();
-
-        //        messageHubSocketFactory.GetReceivingSocket().DeliverMessage(message);
-
-        //        AsyncOpCompletionDelay.Sleep();
-        //        //
-        //        Assert.IsNull(callbackHandlerStack.Pop(new CallbackHandlerKey
-        //                                               {
-        //                                                   Version = callback.MessageIdentifiers.Single().Version,
-        //                                                   Identity = callback.MessageIdentifiers.Single().Identity,
-        //                                                   Partition = callback.MessageIdentifiers.Single().Partition,
-        //                                                   Correlation = promise.CorrelationId.Value
-        //                                               }));
-        //    }
-        //    finally
-        //    {
-        //        messageHub.Stop();
-        //    }
-        //}
-
-        //[Test]
-        //public void WhenPromiseResultIsSet_ItsCallbackIsRemoved()
-        //{
-        //    var callbackHandlerStack = new CallbackHandlerStack();
-        //    var messageHub = new MessageHub(socketFactory.Object,
-        //                                    callbackHandlerStack,
-        //                                    routerConfigurationProvider.Object,
-        //                                    securityProvider.Object,
-        //                                    performanceCounterManager.Object,
-        //                                    logger);
-        //    try
-        //    {
-        //        messageHub.Start();
-
-        //        var message = Message.CreateFlowStartMessage(new SimpleMessage());
-        //        var callback = CallbackPoint.Create<SimpleMessage>();
-
-        //        var promise = messageHub.EnqueueRequest(message, callback);
-        //        AsyncOpCompletionDelay.Sleep();
-
-        //        promise.Dispose();
-
-        //        Assert.IsNull(callbackHandlerStack.Pop(new CallbackHandlerKey
-        //                                               {
-        //                                                   Version = callback.MessageIdentifiers.Single().Version,
-        //                                                   Identity = callback.MessageIdentifiers.Single().Identity,
-        //                                                   Partition = callback.MessageIdentifiers.Single().Partition,
-        //                                                   Correlation = promise.CorrelationId.Value
-        //                                               }));
-        //    }
-        //    finally
-        //    {
-        //        messageHub.Stop();
-        //    }
-        //}
-
-        //[Test]
-        //public void WhenExceptionMessageReceived_PromiseThrowsException()
-        //{
-        //    var messageHub = CreateMessageHub();
-        //    try
-        //    {
-        //        messageHub.Start();
-
-        //        var message = Message.CreateFlowStartMessage(new SimpleMessage());
-        //        var callback = CallbackPoint.Create<SimpleMessage>();
-
-        //        var promise = messageHub.EnqueueRequest(message, callback);
-        //        callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
-        //        var errorMessage = Guid.NewGuid().ToString();
-        //        var exception = Message.Create(new ExceptionMessage {Exception = new Exception(errorMessage)});
-        //        messageHubSocketFactory.GetReceivingSocket().DeliverMessage(exception);
-
-        //        Assert.Throws<AggregateException>(() =>
-        //                                          {
-        //                                              var response = promise.GetResponse().Result;
-        //                                          },
-        //                                          errorMessage);
-        //    }
-        //    finally
-        //    {
-        //        messageHub.Stop();
-        //    }
-        //}
-
-        //[Test]
-        //public void WhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
-        //{
-        //    var messageHub = CreateMessageHub();
-        //    try
-        //    {
-        //        messageHub.Start();
-
-        //        var message = Message.CreateFlowStartMessage(new SimpleMessage());
-        //        var callback = CallbackPoint.Create<SimpleMessage>();
-
-        //        var promise = messageHub.EnqueueRequest(message, callback);
-        //        callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns((IPromise) null);
-        //        messageHubSocketFactory.GetReceivingSocket().DeliverMessage(message);
-
-        //        AsyncOpCompletionDelay.Sleep();
-
-        //        Assert.IsFalse(promise.GetResponse().Wait(AsyncOpCompletionDelay));
-        //    }
-        //    finally
-        //    {
-        //        messageHub.Stop();
-        //    }
-        //}
+        [Test]
+        public void WhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
+        {
+            var callbackHandlerStack = new CallbackHandlerStack();
+            var messageHub = new MessageHub(callbackHandlerStack,
+                                            routerSocket.Object,
+                                            registrationSocket.Object,
+                                            localSocketFactory.Object,
+                                            scaleOutConfigurationProvider.Object,
+                                            securityProvider.Object,
+                                            logger);
+            try
+            {
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<NullMessage>();
+                var promise = messageHub.EnqueueRequest(message, callback);
+                var callbackMessage = Message.Create(new NullMessage()).As<Message>();
+                var nonExistingCallbackKey = -1L;
+                callbackMessage.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
+                                                      Guid.NewGuid().ToByteArray(),
+                                                      callback.MessageIdentifiers,
+                                                      nonExistingCallbackKey);
+                receivingSocket.SetupMessageReceived(callbackMessage, AsyncOpCompletionDelay);
+                //
+                messageHub.Start();
+                AsyncOpCompletionDelay.Sleep();
+                //
+                Assert.IsFalse(promise.GetResponse().Wait(AsyncOpCompletionDelay));
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
 
         private MessageHub CreateMessageHub(bool keepRegistrationLocal = false)
             => new MessageHub(callbackHandlerStack.Object,
