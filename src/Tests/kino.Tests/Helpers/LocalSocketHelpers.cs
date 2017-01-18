@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using kino.Connectivity;
 using kino.Core.Framework;
 using kino.Messaging;
@@ -38,14 +39,22 @@ namespace kino.Tests.Helpers
         }
 
         internal static void SetupMessageReceived(this Mock<ILocalSocket<IMessage>> mock, IMessage messageIn)
+            => mock.SetupMessageReceived(messageIn, TimeSpan.Zero);
+
+        internal static void SetupMessageReceived(this Mock<ILocalSocket<IMessage>> mock, IMessage messageIn, TimeSpan receiveAfter)
         {
-            var waitHandle = new AutoResetEvent(true);
+            var delaySend = receiveAfter != TimeSpan.Zero;
+            var waitHandle = new AutoResetEvent(!delaySend);
             mock.Setup(m => m.CanReceive()).Returns(waitHandle);
             mock.Setup(m => m.TryReceive()).Returns(() =>
                                                     {
                                                         waitHandle.Reset();
                                                         return messageIn;
                                                     });
+            if (delaySend)
+            {
+                Task.Delay(receiveAfter).ContinueWith(_ => waitHandle.Set());
+            }
         }
     }
 }
