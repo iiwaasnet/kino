@@ -105,6 +105,7 @@
     <Compile Include="Connectivity\ClusterMonitorTests.cs" />
     <Compile Include="Connectivity\ExternalMessageRouteRegistrationHandlerTests.cs" />
     <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
+    <Compile Include="Connectivity\MessageRouterTests.cs" />
     <Compile Include="Consensus\BallotGeneratorTests.cs" />
     <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR1.cs" />
     <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR2.cs" />

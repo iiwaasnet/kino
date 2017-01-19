@@ -7,7 +7,7 @@ using kino.Security;
 
 namespace kino.Routing.ServiceMessageHandlers
 {
-    public class InternalMessageRouteRegistrationHandler
+    public class InternalMessageRouteRegistrationHandler : IInternalMessageRouteRegistrationHandler
     {
         private readonly IClusterMonitor clusterMonitor;
         private readonly IInternalRoutingTable internalRoutingTable;

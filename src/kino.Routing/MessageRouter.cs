@@ -35,7 +35,7 @@ namespace kino.Routing
         private readonly ISecurityProvider securityProvider;
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver;
-        private readonly InternalMessageRouteRegistrationHandler internalRegistrationHandler;
+        private readonly IInternalMessageRouteRegistrationHandler internalRegistrationHandler;
         private readonly IClusterHealthMonitor clusterHealthMonitor;
         private byte[] thisNodeIdentity;
         private bool isStarted;
@@ -50,7 +50,7 @@ namespace kino.Routing
                              ISecurityProvider securityProvider,
                              ILocalSocket<IMessage> localRouterSocket,
                              ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver,
-                             InternalMessageRouteRegistrationHandler internalRegistrationHandler,
+                             IInternalMessageRouteRegistrationHandler internalRegistrationHandler,
                              IClusterHealthMonitor clusterHealthMonitor,
                              ILogger logger)
         {
@@ -296,6 +296,7 @@ namespace kino.Routing
         private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
         {
             var handled = false;
+            //TODO: Replace with dictionary lookup based on MessageIdentifer of ServiceMessageHandler
             using (var enumerator = serviceMessageHandlers.GetEnumerator())
             {
                 while (enumerator.MoveNext() && !handled)

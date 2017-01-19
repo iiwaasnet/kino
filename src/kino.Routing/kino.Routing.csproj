@@ -78,6 +78,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ServiceMessageHandlers\ClusterMessageRoutesRequestHandler.cs" />
     <Compile Include="ServiceMessageHandlers\ExternalMessageRouteRegistrationHandler.cs" />
+    <Compile Include="ServiceMessageHandlers\IInternalMessageRouteRegistrationHandler.cs" />
     <Compile Include="ServiceMessageHandlers\INodeRoutesRegistrar.cs" />
     <Compile Include="ServiceMessageHandlers\InternalMessageRouteRegistrationHandler.cs" />
     <Compile Include="ServiceMessageHandlers\IServiceMessageHandler.cs" />

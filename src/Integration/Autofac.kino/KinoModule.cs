@@ -282,7 +282,7 @@ namespace Autofac.kino
                    .SingleInstance();
 
             builder.RegisterType<InternalMessageRouteRegistrationHandler>()
-                   .As<InternalMessageRouteRegistrationHandler>()
+                   .As<IInternalMessageRouteRegistrationHandler>()
                    .SingleInstance();
 
             builder.RegisterType<MessageRouteDiscoveryHandler>()
