@@ -183,7 +183,7 @@ namespace kino.Routing
                 try
                 {
                     message = MessageCameFromLocalActor(message)
-                                  ? message.Clone().As<Message>()
+                                  ? message.Clone()
                                   : message;
 
                     message.SetSocketIdentity(destination.As<LocalSocket<IMessage>>().GetIdentity().Identity);

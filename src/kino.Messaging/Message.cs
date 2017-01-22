@@ -239,7 +239,7 @@ namespace kino.Messaging
         }
 
         //TODO: Think of deep cloning byte arrays
-        internal IMessage Clone()
+        internal Message Clone()
             => new Message(Identity, Version, Partition)
                {
                    Body = Body,
