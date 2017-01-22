@@ -6,10 +6,14 @@ using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
+using kino.Core.Framework;
 using kino.Messaging;
+using kino.Messaging.Messages;
 using kino.Routing;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
+using kino.Tests.Actors.Setup;
+using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
 
@@ -19,8 +23,7 @@ namespace kino.Tests.Connectivity
     public class MessageRouterTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
-        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(4);
-        private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(3);
+        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(2);
         private Mock<ISocketFactory> socketFactory;
         private Mock<ILogger> logger;
         private Mock<IClusterHealthMonitor> clusterHealthMonitor;
@@ -105,6 +108,52 @@ namespace kino.Tests.Connectivity
             localRouterSocketWaitHandle.Set();
             //
             localRouterSocket.Verify(m => m.TryReceive(), Times.Once);
+            internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Never);
+        }
+
+        [Test]
+        public void IfInternalRegistrationsReceiverIsReadyToReceive_ItsTryReceiveMethidIsCalled()
+        {
+            internalRegistrationsReceiver.Setup(m => m.TryReceive()).Returns(() =>
+                                                                             {
+                                                                                 internalRegistrationsReceiverWaitHandle.Reset();
+                                                                                 return null;
+                                                                             });
+            messageRouter.Start();
+            //
+            internalRegistrationsReceiverWaitHandle.Set();
+            //
+            internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Once);
+            localRouterSocket.Verify(m => m.TryReceive(), Times.Never);
+        }
+
+        [Test]
+        public void ReceivedOverLocalRouterSocketMessage_AlwaysPassedToServiceMessageHandlers()
+        {
+            var message = Message.Create(new SimpleMessage());
+            localRouterSocket.SetupMessageReceived(message, AsyncOpCompletionDelay);
+            //
+            messageRouter.Start();
+            AsyncOpCompletionDelay.Sleep();
+            //
+            serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
+        }
+
+        [Test]
+        public void IfMessageProcessedByServiceMessageHandler_InternalRoutingTableIsNotLookedUp()
+        {
+            var internalRoutingTable = new Mock<IInternalRoutingTable>();
+            messageRouter = CreateMessageRouter(internalRoutingTable.Object);
+            var message = Message.Create(new DiscoverMessageRouteMessage()).As<Message>();
+            localRouterSocket.SetupMessageReceived(message, AsyncOpCompletionDelay);
+            var serviceMessageHandler = new Mock<IServiceMessageHandler>();
+            serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(message)).Returns(serviceMessageHandler.Object);
+            //
+            messageRouter.Start();
+            AsyncOpCompletionDelay.Sleep();
+            //
+            internalRoutingTable.Verify(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>()), Times.Never);
+            serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
         }
 
         //[Test]
