@@ -3,7 +3,7 @@ using kino.Core;
 
 namespace kino.Messaging
 {
-    public interface IMessage : IIdentifier
+    public interface IMessage : IIdentifier, IEquatable<IIdentifier>
     {
         T GetPayload<T>() where T : IPayload, new();
 
@@ -14,8 +14,6 @@ namespace kino.Messaging
         void EncryptPayload();
 
         void DecryptPayload();
-
-        bool Equals(MessageIdentifier messageIdentifier);
 
         DistributionPattern Distribution { get; }
 

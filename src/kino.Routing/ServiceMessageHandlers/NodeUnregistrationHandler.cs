@@ -23,34 +23,27 @@ namespace kino.Routing.ServiceMessageHandlers
             this.securityProvider = securityProvider;
         }
 
-        public bool Handle(IMessage message, ISocket scaleOutBackend)
+        public void Handle(IMessage message, ISocket scaleOutBackend)
         {
-            var shouldHandle = IsUnregisterRouting(message);
-            if (shouldHandle)
+            if (securityProvider.DomainIsAllowed(message.Domain))
             {
-                if (securityProvider.DomainIsAllowed(message.Domain))
+                message.As<Message>().VerifySignature(securityProvider);
+
+                var payload = message.GetPayload<UnregisterNodeMessage>();
+
+                var nodeIdentifer = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
+                var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(nodeIdentifer);
+                if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                 {
-                    message.As<Message>().VerifySignature(securityProvider);
-
-                    var payload = message.GetPayload<UnregisterNodeMessage>();
-
-                    var nodeIdentifer = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
-                    var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(nodeIdentifer);
-                    if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
-                    {
-                        scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
-                    }
-                    if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
-                    {
-                        clusterHealthMonitor.DeletePeer(nodeIdentifer);
-                    }
+                    scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
+                }
+                if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
+                {
+                    clusterHealthMonitor.DeletePeer(nodeIdentifer);
                 }
             }
-
-            return shouldHandle;
         }
 
-        private static bool IsUnregisterRouting(IMessage message)
-            => message.Equals(KinoMessages.UnregisterNode);
+        public MessageIdentifier TargetMessage => KinoMessages.UnregisterNode;
     }
 }

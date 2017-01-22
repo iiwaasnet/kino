@@ -1,10 +1,13 @@
 ﻿using kino.Connectivity;
+using kino.Core;
 using kino.Messaging;
 
 namespace kino.Routing.ServiceMessageHandlers
 {
     public interface IServiceMessageHandler
     {
-        bool Handle(IMessage message, ISocket scaleOutBackend);
+        void Handle(IMessage message, ISocket scaleOutBackend);
+
+        MessageIdentifier TargetMessage { get; }
     }
 }

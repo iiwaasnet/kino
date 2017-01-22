@@ -75,7 +75,7 @@ namespace kino.Connectivity
                     if (frames.Count > 0)
                     {
                         ReceiveRate?.Increment();
-                        return new Message(new MultipartMessage(frames));
+                        return Message.FromMultipartMessage(new MultipartMessage(frames));
                     }
                 }
                 finally

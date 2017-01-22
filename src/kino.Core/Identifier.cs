@@ -3,9 +3,9 @@ using kino.Core.Framework;
 
 namespace kino.Core
 {
-    public abstract class Identifier : IEquatable<Identifier>, IIdentifier
+    public abstract class Identifier : IIdentifier, IEquatable<IIdentifier>
     {
-        public abstract bool Equals(Identifier other);
+        public abstract bool Equals(IIdentifier other);
 
         public override int GetHashCode()
         {
@@ -22,11 +22,11 @@ namespace kino.Core
             {
                 return true;
             }
-            if (obj.GetType() != GetType())
+            if (!(obj is IIdentifier))
             {
                 return false;
             }
-            return Equals((Identifier) obj);
+            return Equals((IIdentifier) obj);
         }
 
         public static bool operator ==(Identifier left, Identifier right)

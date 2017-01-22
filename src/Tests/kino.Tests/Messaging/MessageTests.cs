@@ -139,7 +139,7 @@ namespace kino.Tests.Messaging
             }
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
         }
@@ -152,7 +152,7 @@ namespace kino.Tests.Messaging
             message.SetCorrelationId(correlationId);
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             CollectionAssert.AreEqual(correlationId, message.CorrelationId);
         }
@@ -165,7 +165,7 @@ namespace kino.Tests.Messaging
             message.SetReceiverNode(receiverNode);
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             CollectionAssert.AreEqual(receiverNode.Identity, message.ReceiverNodeIdentity);
         }
@@ -177,7 +177,7 @@ namespace kino.Tests.Messaging
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage {Content = messageText});
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             Assert.AreEqual(messageText, message.GetPayload<SimpleMessage>().Content);
             Assert.IsTrue(message.Equals(MessageIdentifier.Create<SimpleMessage>()));
@@ -200,7 +200,7 @@ namespace kino.Tests.Messaging
                                           callbackKey);
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifier);
             CollectionAssert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
@@ -224,7 +224,7 @@ namespace kino.Tests.Messaging
                                           callbackKey);
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifier);
             CollectionAssert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
@@ -241,7 +241,7 @@ namespace kino.Tests.Messaging
             var message = Message.Create(new SimpleMessage(), distributionPattern).As<Message>();
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             Assert.AreEqual(distributionPattern, message.Distribution);
         }
@@ -256,7 +256,7 @@ namespace kino.Tests.Messaging
             var partition = message.Partition;
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             Assert.IsTrue(Unsafe.ArraysEqual(partition, message.Partition));
         }
@@ -270,7 +270,7 @@ namespace kino.Tests.Messaging
             var hops = message.Hops;
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             Assert.AreEqual(hops, message.Hops);
         }
@@ -284,7 +284,7 @@ namespace kino.Tests.Messaging
             Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
         }
@@ -298,7 +298,7 @@ namespace kino.Tests.Messaging
             message.TraceOptions = routeOptions;
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             Assert.AreEqual(routeOptions, message.TraceOptions);
         }
@@ -311,7 +311,7 @@ namespace kino.Tests.Messaging
             message.TTL = ttl;
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             Assert.AreEqual(ttl, message.TTL);
         }
@@ -324,7 +324,7 @@ namespace kino.Tests.Messaging
             message.SetDomain(securityDomain);
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             Assert.AreEqual(securityDomain, message.Domain);
         }
@@ -340,7 +340,7 @@ namespace kino.Tests.Messaging
                                           callbackMessageIdentifier,
                                           callbackKey);
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             Assert.AreEqual(callbackKey, message.CallbackKey);
         }
@@ -355,7 +355,7 @@ namespace kino.Tests.Messaging
             message.SignMessage(securityProvider);
 
             var multipart = new MultipartMessage(message);
-            message = new Message(multipart);
+            message = Message.FromMultipartMessage(multipart);
 
             message.VerifySignature(securityProvider);
         }

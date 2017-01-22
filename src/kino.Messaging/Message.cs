@@ -9,7 +9,7 @@ using kino.Security;
 
 namespace kino.Messaging
 {
-    public class Message : IMessage
+    public class Message : MessageIdentifier, IMessage
     {
         public static readonly ushort CurrentVersion = 1;
         public static readonly string KinoMessageNamespace = "KINO";
@@ -19,15 +19,13 @@ namespace kino.Messaging
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
         private Message(IPayload payload)
+            : base(payload.Identity, payload.Version, payload.Partition)
         {
             Domain = string.Empty;
             WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
             CallbackPoint = Enumerable.Empty<MessageIdentifier>();
             Body = Serialize(payload);
-            Version = payload.Version;
-            Identity = payload.Identity;
-            Partition = payload.Partition;
             TTL = TimeSpan.Zero;
             Hops = 0;
             Signature = IdentityExtensions.Empty;
@@ -36,7 +34,8 @@ namespace kino.Messaging
             ReceiverIdentity = IdentityExtensions.Empty;
         }
 
-        private Message()
+        private Message(byte[] identity, ushort version, byte[] partition)
+            : base(identity, version, partition)
         {
         }
 
@@ -61,48 +60,35 @@ namespace kino.Messaging
             //TODO: Better implementation
             => Guid.NewGuid().ToString().GetBytes();
 
-        public bool Equals(MessageIdentifier messageIdentifier)
-            => messageIdentifier.Equals(new MessageIdentifier(Identity, Version, Partition));
-
-        internal Message(MultipartMessage multipartMessage)
+        internal static Message FromMultipartMessage(MultipartMessage multipartMessage)
         {
-            ReadWireFormatVersion(multipartMessage);
-            ReadV5Frames(multipartMessage);
-        }
-
-        private void ReadV5Frames(MultipartMessage multipartMessage)
-        {
-            Body = multipartMessage.GetMessageBody();
-            TTL = multipartMessage.GetMessageTTL();
-            CorrelationId = multipartMessage.GetCorrelationId();
-            Signature = multipartMessage.GetSignature();
-            Domain = multipartMessage.GetDomain();
-
             MessageTraceOptions traceOptions;
             DistributionPattern distributionPattern;
             multipartMessage.GetTraceOptionsDistributionPattern(out traceOptions, out distributionPattern);
-            TraceOptions = traceOptions;
-            Distribution = distributionPattern;
-
-            Identity = multipartMessage.GetMessageIdentity();
-            Version = multipartMessage.GetMessageVersion().GetUShort();
-            Partition = multipartMessage.GetMessagePartition();
-
-            CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity();
-            CallbackReceiverNodeIdentity = multipartMessage.GetCallbackReceiverNodeIdentity();
-            CallbackPoint = multipartMessage.GetCallbackPoints();
-            CallbackKey = multipartMessage.GetCallbackKey();
-
-            ReceiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity();
-            ReceiverIdentity = multipartMessage.GetReceiverIdentity();
-
             ushort hops;
-            routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting(out hops));
-            Hops = hops;
-        }
 
-        private void ReadWireFormatVersion(MultipartMessage multipartMessage)
-            => WireFormatVersion = multipartMessage.GetWireFormatVersion().GetInt();
+            return new Message(multipartMessage.GetMessageIdentity(),
+                               multipartMessage.GetMessageVersion().GetUShort(),
+                               multipartMessage.GetMessagePartition())
+                   {
+                       WireFormatVersion = multipartMessage.GetWireFormatVersion().GetInt(),
+                       Body = multipartMessage.GetMessageBody(),
+                       TTL = multipartMessage.GetMessageTTL(),
+                       CorrelationId = multipartMessage.GetCorrelationId(),
+                       Signature = multipartMessage.GetSignature(),
+                       Domain = multipartMessage.GetDomain(),
+                       TraceOptions = traceOptions,
+                       Distribution = distributionPattern,
+                       CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity(),
+                       CallbackReceiverNodeIdentity = multipartMessage.GetCallbackReceiverNodeIdentity(),
+                       CallbackPoint = multipartMessage.GetCallbackPoints(),
+                       CallbackKey = multipartMessage.GetCallbackKey(),
+                       ReceiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity(),
+                       ReceiverIdentity = multipartMessage.GetReceiverIdentity(),
+                       routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting(out hops)),
+                       Hops = hops
+                   };
+        }
 
         internal void RegisterCallbackPoint(byte[] callbackReceiverNodeIdentity,
                                             byte[] callbackReceiverIdentity,
@@ -254,13 +240,10 @@ namespace kino.Messaging
 
         //TODO: Think of deep cloning byte arrays
         internal IMessage Clone()
-            => new Message
+            => new Message(Identity, Version, Partition)
                {
                    Body = Body,
                    WireFormatVersion = WireFormatVersion,
-                   Identity = Identity,
-                   Partition = Partition,
-                   Version = Version,
                    TTL = TTL,
                    CorrelationId = CorrelationId,
                    ReceiverIdentity = ReceiverIdentity,
@@ -287,12 +270,6 @@ namespace kino.Messaging
                $"{Distribution}";
 
         public byte[] Body { get; private set; }
-
-        public byte[] Identity { get; private set; }
-
-        public byte[] Partition { get; private set; }
-
-        public ushort Version { get; private set; }
 
         public TimeSpan TTL { get; set; }
 

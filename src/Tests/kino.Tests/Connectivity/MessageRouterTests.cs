@@ -31,7 +31,6 @@ namespace kino.Tests.Connectivity
         private Mock<ILocalReceivingSocket<InternalRouteRegistration>> internalRegistrationsReceiver;
         private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
         private Mock<IClusterServices> clusterServices;
-        private IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> perfCounterManager;
         private Mock<ISecurityProvider> securityProvider;
         private Mock<ILocalSocket<IMessage>> localRouterSocket;
@@ -40,6 +39,7 @@ namespace kino.Tests.Connectivity
         private ManualResetEventSlim internalRegistrationsReceiverWaitHandle;
         private Mock<ISocket> routerSocket;
         private Mock<IPerformanceCounter> perfCounter;
+        private Mock<IServiceMessageHandlerRegistry> serviceMessageHandlerRegistry;
 
         [SetUp]
         public void Setup()
@@ -52,7 +52,8 @@ namespace kino.Tests.Connectivity
             var socketEndpoint = new SocketEndpoint("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(socketEndpoint);
             clusterServices = new Mock<IClusterServices>();
-            serviceMessageHandlers = Enumerable.Empty<IServiceMessageHandler>();
+            serviceMessageHandlerRegistry = new Mock<IServiceMessageHandlerRegistry>();
+            serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(It.IsAny<MessageIdentifier>())).Returns((IServiceMessageHandler)null);
             perfCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             perfCounter = new Mock<IPerformanceCounter>();
             perfCounterManager.Setup(m => m.GetCounter(It.IsAny<KinoPerformanceCounters>())).Returns(perfCounter.Object);
@@ -1261,7 +1262,7 @@ namespace kino.Tests.Connectivity
                                  externalRoutingTable ?? new ExternalRoutingTable(logger.Object),
                                  scaleOutConfigurationProvider.Object,
                                  clusterServices.Object,
-                                 serviceMessageHandlers,
+                                 serviceMessageHandlerRegistry.Object,
                                  perfCounterManager.Object,
                                  securityProvider.Object,
                                  localRouterSocket.Object,

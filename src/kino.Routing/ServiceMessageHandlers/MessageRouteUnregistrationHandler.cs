@@ -29,33 +29,27 @@ namespace kino.Routing.ServiceMessageHandlers
             this.logger = logger;
         }
 
-        public bool Handle(IMessage message, ISocket scaleOutBackend)
+        public void Handle(IMessage message, ISocket scaleOutBackend)
         {
-            var shouldHandle = IsUnregisterMessageRouting(message);
-            if (shouldHandle)
+            if (securityProvider.DomainIsAllowed(message.Domain))
             {
-                if (securityProvider.DomainIsAllowed(message.Domain))
-                {
-                    message.As<Message>().VerifySignature(securityProvider);
+                message.As<Message>().VerifySignature(securityProvider);
 
-                    var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-                    var nodeIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
-                    foreach (var route in GetUnregistrationRoutes(payload, message.Domain))
+                var payload = message.GetPayload<UnregisterMessageRouteMessage>();
+                var nodeIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
+                foreach (var route in GetUnregistrationRoutes(payload, message.Domain))
+                {
+                    var peerRemoveResult = externalRoutingTable.RemoveMessageRoute(route);
+                    if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                     {
-                        var peerRemoveResult = externalRoutingTable.RemoveMessageRoute(route);
-                        if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
-                        {
-                            scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
-                        }
-                        if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
-                        {
-                            clusterHealthMonitor.DeletePeer(nodeIdentifier);
-                        }
+                        scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
+                    }
+                    if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
+                    {
+                        clusterHealthMonitor.DeletePeer(nodeIdentifier);
                     }
                 }
             }
-
-            return shouldHandle;
         }
 
         private IEnumerable<ExternalRouteRemoval> GetUnregistrationRoutes(UnregisterMessageRouteMessage payload, string domain)
@@ -81,7 +75,6 @@ namespace kino.Routing.ServiceMessageHandlers
             }
         }
 
-        private bool IsUnregisterMessageRouting(IMessage message)
-            => message.Equals(KinoMessages.UnregisterMessageRoute);
+        public MessageIdentifier TargetMessage => KinoMessages.UnregisterMessageRoute;
     }
 }

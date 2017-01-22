@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,9 +27,9 @@ namespace kino.Routing
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly IClusterServices clusterServices;
+        private readonly IServiceMessageHandlerRegistry serviceMessageHandlerRegistry;
         private readonly ISocketFactory socketFactory;
         private readonly ILogger logger;
-        private readonly IEnumerable<IServiceMessageHandler> serviceMessageHandlers;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ISecurityProvider securityProvider;
         private readonly ILocalSocket<IMessage> localRouterSocket;
@@ -45,7 +44,7 @@ namespace kino.Routing
                              IExternalRoutingTable externalRoutingTable,
                              IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                              IClusterServices clusterServices,
-                             IEnumerable<IServiceMessageHandler> serviceMessageHandlers,
+                             IServiceMessageHandlerRegistry serviceMessageHandlerRegistry,
                              IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                              ISecurityProvider securityProvider,
                              ILocalSocket<IMessage> localRouterSocket,
@@ -60,7 +59,7 @@ namespace kino.Routing
             this.externalRoutingTable = externalRoutingTable;
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.clusterServices = clusterServices;
-            this.serviceMessageHandlers = serviceMessageHandlers;
+            this.serviceMessageHandlerRegistry = serviceMessageHandlerRegistry;
             this.performanceCounterManager = performanceCounterManager;
             this.securityProvider = securityProvider;
             this.localRouterSocket = localRouterSocket;
@@ -119,7 +118,7 @@ namespace kino.Routing
                             var receiverId = WaitHandle.WaitAny(waitHandles);
                             if (receiverId == LocalRouterSocketId)
                             {
-                                var message = (Message) localRouterSocket.TryReceive();
+                                var message = localRouterSocket.TryReceive().As<Message>();
                                 if (message != null)
                                 {
                                     var _ = TryHandleServiceMessage(message, scaleOutBackend)
@@ -249,7 +248,7 @@ namespace kino.Routing
                 catch (HostUnreachableException err)
                 {
                     var unregMessage = new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = route.Node.SocketIdentity};
-                    TryHandleServiceMessage(Message.Create(unregMessage), scaleOutBackend);
+                    TryHandleServiceMessage(Message.Create(unregMessage).As<Message>(), scaleOutBackend);
                     logger.Error(err);
                 }
             }
@@ -293,19 +292,13 @@ namespace kino.Routing
             return socket;
         }
 
-        private bool TryHandleServiceMessage(IMessage message, ISocket scaleOutBackend)
+        private bool TryHandleServiceMessage(Message message, ISocket scaleOutBackend)
         {
-            var handled = false;
-            //TODO: Replace with dictionary lookup based on MessageIdentifer of ServiceMessageHandler
-            using (var enumerator = serviceMessageHandlers.GetEnumerator())
-            {
-                while (enumerator.MoveNext() && !handled)
-                {
-                    handled = enumerator.Current.Handle(message, scaleOutBackend);
-                }
+            var serviceMessageHandler = serviceMessageHandlerRegistry.GetMessageHandler(message);
 
-                return handled;
-            }
+            serviceMessageHandler?.Handle(message, scaleOutBackend);
+
+            return serviceMessageHandler != null;
         }
     }
 }

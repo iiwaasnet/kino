@@ -265,6 +265,10 @@ namespace Autofac.kino
 
         private void RegisterServiceMessageHandlers(ContainerBuilder builder)
         {
+            builder.RegisterType<ServiceMessageHandlerRegistry>()
+                   .As<IServiceMessageHandlerRegistry>()
+                   .SingleInstance();
+
             builder.RegisterType<NodeRoutesRegistrar>()
                    .As<INodeRoutesRegistrar>()
                    .SingleInstance();

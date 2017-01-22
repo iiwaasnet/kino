@@ -148,12 +148,13 @@ namespace kino
                                              new UnreachableNodeUnregistrationHandler(clusterHealthMonitor,
                                                                                       externalRoutingTable)
                                          };
+            var serviceMessageHandlerRegistry = new ServiceMessageHandlerRegistry(serviceMessageHandlers);
             messageRouter = new MessageRouter(socketFactory,
                                               internalRoutingTable,
                                               externalRoutingTable,
                                               scaleoutConfigurationProvider,
                                               clusterServices,
-                                              serviceMessageHandlers,
+                                              serviceMessageHandlerRegistry,
                                               performanceCounterManager,
                                               securityProvider,
                                               routerLocalSocket,

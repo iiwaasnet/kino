@@ -58,7 +58,7 @@ namespace kino.Core
         public override int GetHashCode()
             => hashCode;
 
-        public override bool Equals(Identifier other)
+        public override bool Equals(IIdentifier other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -71,7 +71,7 @@ namespace kino.Core
             return StructuralCompare(other);
         }
 
-        private bool StructuralCompare(Identifier other)
+        private bool StructuralCompare(IIdentifier other)
             => Unsafe.ArraysEqual(Identity, other.Identity)
                && Version == other.Version
                && Unsafe.ArraysEqual(Partition, other.Partition);

@@ -30,71 +30,64 @@ namespace kino.Routing.ServiceMessageHandlers
             this.clusterHealthMonitor = clusterHealthMonitor;
         }
 
-        public bool Handle(IMessage message, ISocket _)
+        public void Handle(IMessage message, ISocket _)
         {
-            var shouldHandle = IsExternalRouteRegistration(message);
-            if (shouldHandle)
+            if (securityProvider.DomainIsAllowed(message.Domain))
             {
-                if (securityProvider.DomainIsAllowed(message.Domain))
+                message.As<Message>().VerifySignature(securityProvider);
+
+                var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
+                var peer = new Node(new Uri(payload.Uri), payload.NodeIdentity);
+                var health = new Health
+                             {
+                                 Uri = payload.Health.Uri,
+                                 HeartBeatInterval = payload.Health.HeartBeatInterval
+                             };
+                var peerAddedForMonitoring = false;
+                foreach (var route in payload.Routes)
                 {
-                    message.As<Message>().VerifySignature(securityProvider);
-
-                    var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
-                    var peer = new Node(new Uri(payload.Uri), payload.NodeIdentity);
-                    var health = new Health
-                                 {
-                                     Uri = payload.Health.Uri,
-                                     HeartBeatInterval = payload.Health.HeartBeatInterval
-                                 };
-                    var peerAddedForMonitoring = false;
-                    foreach (var route in payload.Routes)
+                    var receiver = new ReceiverIdentifier(route.ReceiverIdentity);
+                    var messageRoutes = receiver.IsMessageHub()
+                                            ? new MessageRoute {Receiver = receiver}.ToEnumerable()
+                                            : route.MessageContracts.Select(mc => new MessageRoute
+                                                                                  {
+                                                                                      Receiver = receiver,
+                                                                                      Message = new MessageIdentifier(mc.Identity, mc.Version, mc.Partition)
+                                                                                  });
+                    foreach (var messageRoute in messageRoutes)
                     {
-                        var receiver = new ReceiverIdentifier(route.ReceiverIdentity);
-                        var messageRoutes = receiver.IsMessageHub()
-                                                ? new MessageRoute {Receiver = receiver}.ToEnumerable()
-                                                : route.MessageContracts.Select(mc => new MessageRoute
-                                                                                      {
-                                                                                          Receiver = receiver,
-                                                                                          Message = new MessageIdentifier(mc.Identity, mc.Version, mc.Partition)
-                                                                                      });
-                        foreach (var messageRoute in messageRoutes)
+                        try
                         {
-                            try
+                            //NOTE: Keep the order in if(...), hence MessageHub is not registered to receive any specific message
+                            if (receiver.IsMessageHub() || securityProvider.GetDomain(messageRoute.Message.Identity) == message.Domain)
                             {
-                                //NOTE: Keep the order in if(...), hence MessageHub is not registered to receive any specific message
-                                if (receiver.IsMessageHub() || securityProvider.GetDomain(messageRoute.Message.Identity) == message.Domain)
+                                if (!peerAddedForMonitoring)
                                 {
-                                    if (!peerAddedForMonitoring)
-                                    {
-                                        clusterHealthMonitor.AddPeer(peer, health);
-                                        peerAddedForMonitoring = true;
-                                    }
+                                    clusterHealthMonitor.AddPeer(peer, health);
+                                    peerAddedForMonitoring = true;
+                                }
 
-                                    externalRoutingTable.AddMessageRoute(new ExternalRouteRegistration
-                                                                         {
-                                                                             Route = messageRoute,
-                                                                             Peer = peer,
-                                                                             Health = health
-                                                                         });
-                                }
-                                else
-                                {
-                                    logger.Warn($"MessageIdentity {messageRoute.Message} doesn't belong to requested Domain {message.Domain}!");
-                                }
+                                externalRoutingTable.AddMessageRoute(new ExternalRouteRegistration
+                                                                     {
+                                                                         Route = messageRoute,
+                                                                         Peer = peer,
+                                                                         Health = health
+                                                                     });
                             }
-                            catch (Exception err)
+                            else
                             {
-                                logger.Error(err);
+                                logger.Warn($"MessageIdentity {messageRoute.Message} doesn't belong to requested Domain {message.Domain}!");
                             }
+                        }
+                        catch (Exception err)
+                        {
+                            logger.Error(err);
                         }
                     }
                 }
             }
-
-            return shouldHandle;
         }
 
-        private static bool IsExternalRouteRegistration(IMessage message)
-            => message.Equals(KinoMessages.RegisterExternalMessageRoute);
+        public MessageIdentifier TargetMessage => KinoMessages.RegisterExternalMessageRoute;
     }
 }

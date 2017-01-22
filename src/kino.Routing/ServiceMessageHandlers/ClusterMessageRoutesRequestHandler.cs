@@ -1,4 +1,5 @@
 using kino.Connectivity;
+using kino.Core;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
@@ -18,23 +19,16 @@ namespace kino.Routing.ServiceMessageHandlers
             this.nodeRoutesRegistrar = nodeRoutesRegistrar;
         }
 
-        public bool Handle(IMessage message, ISocket _)
+        public void Handle(IMessage message, ISocket _)
         {
-            var shouldHandle = IsRoutesRequest(message);
-            if (shouldHandle)
+            if (securityProvider.DomainIsAllowed(message.Domain))
             {
-                if (securityProvider.DomainIsAllowed(message.Domain))
-                {
-                    message.As<Message>().VerifySignature(securityProvider);
+                message.As<Message>().VerifySignature(securityProvider);
 
-                    nodeRoutesRegistrar.RegisterOwnGlobalRoutes(message.Domain);
-                }
+                nodeRoutesRegistrar.RegisterOwnGlobalRoutes(message.Domain);
             }
-
-            return shouldHandle;
         }
 
-        private static bool IsRoutesRequest(IMessage message)
-            => message.Equals(KinoMessages.RequestClusterMessageRoutes);
+        public MessageIdentifier TargetMessage => KinoMessages.RequestClusterMessageRoutes;
     }
 }

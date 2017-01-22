@@ -18,29 +18,22 @@ namespace kino.Routing.ServiceMessageHandlers
             this.externalRoutingTable = externalRoutingTable;
         }
 
-        public bool Handle(IMessage message, ISocket scaleOutBackend)
+        public void Handle(IMessage message, ISocket scaleOutBackend)
         {
-            var shouldHandle = IsUnregisterRouting(message);
-            if (shouldHandle)
+            var payload = message.GetPayload<UnregisterUnreachableNodeMessage>();
+
+            var nodeIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
+            var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(nodeIdentifier);
+            if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
             {
-                var payload = message.GetPayload<UnregisterUnreachableNodeMessage>();
-
-                var nodeIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
-                var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(nodeIdentifier);
-                if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
-                {
-                    scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
-                }
-                if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
-                {
-                    clusterHealthMonitor.DeletePeer(nodeIdentifier);
-                }
+                scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
             }
-
-            return shouldHandle;
+            if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
+            {
+                clusterHealthMonitor.DeletePeer(nodeIdentifier);
+            }
         }
 
-        private static bool IsUnregisterRouting(IMessage message)
-            => message.Equals(KinoMessages.UnregisterUnreachableNode);
+        public MessageIdentifier TargetMessage => KinoMessages.UnregisterUnreachableNode;
     }
 }

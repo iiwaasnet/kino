@@ -18,7 +18,7 @@ namespace kino.Security
             hashCode = CalculateHashCode();
         }
 
-        public override bool Equals(Identifier other)
+        public override bool Equals(IIdentifier other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -31,7 +31,7 @@ namespace kino.Security
             return StructuralCompare(other);
         }
 
-        private bool StructuralCompare(Identifier other)
+        private bool StructuralCompare(IIdentifier other)
             => Unsafe.ArraysEqual(Identity, other.Identity);
 
         private int CalculateHashCode()
