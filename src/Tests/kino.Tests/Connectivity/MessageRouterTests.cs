@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using kino.Cluster;
 using kino.Cluster.Configuration;
@@ -53,7 +50,7 @@ namespace kino.Tests.Connectivity
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(socketEndpoint);
             clusterServices = new Mock<IClusterServices>();
             serviceMessageHandlerRegistry = new Mock<IServiceMessageHandlerRegistry>();
-            serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(It.IsAny<MessageIdentifier>())).Returns((IServiceMessageHandler)null);
+            serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(It.IsAny<MessageIdentifier>())).Returns((IServiceMessageHandler) null);
             perfCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             perfCounter = new Mock<IPerformanceCounter>();
             perfCounterManager.Setup(m => m.GetCounter(It.IsAny<KinoPerformanceCounters>())).Returns(perfCounter.Object);
@@ -75,23 +72,40 @@ namespace kino.Tests.Connectivity
             messageRouter.Start();
             //
             clusterServices.Verify(m => m.StartClusterServices(), Times.Once);
+            scaleOutConfigurationProvider.Verify(m => m.GetScaleOutAddress(), Times.Once);
         }
 
-        //[Test]
-        //public void MessageRouterUponStart_CreatesRouterLocalAndTwoScaleoutSockets()
-        //{
-        //    var router = CreateMessageRouter();
-        //    try
-        //    {
-        //        StartMessageRouter(router);
+        [Test]
+        public void WhenMessageRouterStarts_SocketWaitHandlesAreRetreived()
+        {
+            messageRouter.Start();
+            //
+            localRouterSocket.Verify(m => m.CanReceive(), Times.Once);
+            internalRegistrationsReceiver.Verify(m => m.CanReceive(), Times.Once);
+        }
 
-        //        socketFactory.Verify(m => m.CreateRouterSocket(), Times.Exactly(3));
-        //    }
-        //    finally
-        //    {
-        //        router.Stop();
-        //    }
-        //}
+        [Test]
+        public void WhenMessageRouterStarts_ScaleOutBackendSocketIsCreated()
+        {
+            messageRouter.Start();
+            //
+            socketFactory.Verify(m => m.CreateRouterSocket(), Times.Once);
+        }
+
+        [Test]
+        public void IfLocalRouterSocketIsReadyToReceive_ItsTryReceiveMethidIsCalled()
+        {
+            localRouterSocket.Setup(m => m.TryReceive()).Returns(() =>
+                                                                 {
+                                                                     localRouterSocketWaitHandle.Reset();
+                                                                     return null;
+                                                                 });
+            messageRouter.Start();
+            //
+            localRouterSocketWaitHandle.Set();
+            //
+            localRouterSocket.Verify(m => m.TryReceive(), Times.Once);
+        }
 
         //[Test]
         //public void RegisterLocalMessageHandlers_AddsActorIdentifier()
