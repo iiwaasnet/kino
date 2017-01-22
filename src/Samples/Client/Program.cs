@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using Autofac;
 using Client.Messages;
@@ -43,7 +44,7 @@ namespace Client
                                                                                          Partition = messageIdentifier.Partition
                                                                                      }
                                                                });
-            var response = messageHub.EnqueueRequest(routesRequest, CallbackPoint.Create<MessageExternalRoutesMessage>());
+            //var response = messageHub.EnqueueRequest(routesRequest, CallbackPoint.Create<MessageExternalRoutesMessage>());
             //var route = response.GetResponse().Result.GetPayload<MessageExternalRoutesMessage>().Routes.First();
 
             //Thread.Sleep(TimeSpan.FromSeconds(5));
