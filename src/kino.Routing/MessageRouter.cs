@@ -186,7 +186,7 @@ namespace kino.Routing
                                   ? message.Clone()
                                   : message;
 
-                    message.SetSocketIdentity(destination.As<LocalSocket<IMessage>>().GetIdentity().Identity);
+                    message.SetSocketIdentity(destination.As<ILocalSocket<IMessage>>().GetIdentity().Identity);
                     destination.Send(message);
                     RoutedToLocalActor(message);
                 }
