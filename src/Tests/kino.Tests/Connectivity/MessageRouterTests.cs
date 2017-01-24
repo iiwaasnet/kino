@@ -22,8 +22,9 @@ namespace kino.Tests.Connectivity
     [TestFixture]
     public class MessageRouterTests
     {
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
-        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromMilliseconds(100);        
         private Mock<ISocketFactory> socketFactory;
         private Mock<ILogger> logger;
         private Mock<IClusterHealthMonitor> clusterHealthMonitor;
@@ -108,6 +109,7 @@ namespace kino.Tests.Connectivity
             messageRouter.Start();
             //
             localRouterSocketWaitHandle.Set();
+            AsyncOpCompletionDelay.Sleep();
             //
             localRouterSocket.Verify(m => m.TryReceive(), Times.Once);
             internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Never);
@@ -133,10 +135,10 @@ namespace kino.Tests.Connectivity
         public void ReceivedOverLocalRouterSocketMessage_AlwaysPassedToServiceMessageHandlers()
         {
             var message = Message.Create(new SimpleMessage());
-            localRouterSocket.SetupMessageReceived(message, AsyncOpCompletionDelay);
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
             messageRouter.Start();
-            AsyncOpCompletionDelay.Sleep();
+            ReceiveMessageCompletionDelay.Sleep();
             //
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
         }
@@ -144,10 +146,10 @@ namespace kino.Tests.Connectivity
         [Test]
         public void IfLocalRouterSocketReceivesNullMessage_ServiceMessageHandlersAreNotCalled()
         {
-            localRouterSocket.SetupMessageReceived(null, AsyncOpCompletionDelay);
+            localRouterSocket.SetupMessageReceived(null, ReceiveMessageDelay);
             //
             messageRouter.Start();
-            AsyncOpCompletionDelay.Sleep();
+            ReceiveMessageCompletionDelay.Sleep();
             //
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.IsAny<MessageIdentifier>()), Times.Never);
         }
@@ -157,12 +159,12 @@ namespace kino.Tests.Connectivity
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object);
             var message = Message.Create(new DiscoverMessageRouteMessage()).As<Message>();
-            localRouterSocket.SetupMessageReceived(message, AsyncOpCompletionDelay);
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             var serviceMessageHandler = new Mock<IServiceMessageHandler>();
             serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(message)).Returns(serviceMessageHandler.Object);
             //
             messageRouter.Start();
-            AsyncOpCompletionDelay.Sleep();
+            ReceiveMessageCompletionDelay.Sleep();
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>()), Times.Never);
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
@@ -180,6 +182,7 @@ namespace kino.Tests.Connectivity
             messageRouter.Start();
             //
             internalRegistrationsReceiverWaitHandle.Set();
+            AsyncOpCompletionDelay.Sleep();
             //
             internalRegistrationHandler.Verify(m => m.Handle(internalRouteRegistration), Times.Once);
         }
@@ -205,11 +208,11 @@ namespace kino.Tests.Connectivity
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object);
             var message = Message.Create(new SimpleMessage()).As<Message>();
-            localRouterSocket.SetupMessageReceived(message, AsyncOpCompletionDelay);
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(message)).Returns((IServiceMessageHandler) null);
             //
             messageRouter.Start();
-            AsyncOpCompletionDelay.Sleep();
+            ReceiveMessageCompletionDelay.Sleep();
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
@@ -224,10 +227,10 @@ namespace kino.Tests.Connectivity
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
             var message = Message.Create(new SimpleMessage());
-            localRouterSocket.SetupMessageReceived(message, AsyncOpCompletionDelay);
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
             messageRouter.Start();
-            AsyncOpCompletionDelay.Sleep();
+            ReceiveMessageCompletionDelay.Sleep();
             //
             localSocket.Verify(m => m.Send(It.Is<IMessage>(msg => !ReferenceEquals(msg, message))), Times.Once);
         }
@@ -242,10 +245,10 @@ namespace kino.Tests.Connectivity
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
             var message = Message.Create(new SimpleMessage()).As<Message>();
             message.AddHop();
-            localRouterSocket.SetupMessageReceived(message, AsyncOpCompletionDelay);
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
             messageRouter.Start();
-            AsyncOpCompletionDelay.Sleep();
+            ReceiveMessageCompletionDelay.Sleep();
             //
             localSocket.Verify(m => m.Send(It.Is<IMessage>(msg => ReferenceEquals(msg, message))), Times.Once);
         }
