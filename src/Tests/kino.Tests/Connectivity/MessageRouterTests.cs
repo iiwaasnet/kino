@@ -23,7 +23,7 @@ namespace kino.Tests.Connectivity
     public class MessageRouterTests
     {
         private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
-        private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromMilliseconds(100);        
         private Mock<ISocketFactory> socketFactory;
         private Mock<ILogger> logger;
