@@ -351,6 +351,7 @@ namespace kino.Tests.Connectivity
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message) && req.ReceiverNodeIdentity == otherNode)), Times.Once);
+            scaleOutSocket.Verify(m => m.Connect(It.Is<Uri>(uri => uri == peerConnection.Node.Uri), true), Times.Once);
             scaleOutSocket.Verify(m => m.SendMessage(message));
         }
 
