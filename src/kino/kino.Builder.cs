@@ -160,7 +160,6 @@ namespace kino
                                               routerLocalSocket,
                                               internalRegistrationSocket,
                                               internalMessageRouteRegistrationHandler,
-                                              clusterHealthMonitor,
                                               logger);
             var actorHostFactory = new ActorHostFactory(securityProvider,
                                                         routerLocalSocket,

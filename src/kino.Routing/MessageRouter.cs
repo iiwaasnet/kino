@@ -35,7 +35,6 @@ namespace kino.Routing
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver;
         private readonly IInternalMessageRouteRegistrationHandler internalRegistrationHandler;
-        private readonly IClusterHealthMonitor clusterHealthMonitor;
         private byte[] thisNodeIdentity;
         private bool isStarted;
 
@@ -50,7 +49,6 @@ namespace kino.Routing
                              ILocalSocket<IMessage> localRouterSocket,
                              ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver,
                              IInternalMessageRouteRegistrationHandler internalRegistrationHandler,
-                             IClusterHealthMonitor clusterHealthMonitor,
                              ILogger logger)
         {
             this.logger = logger;
@@ -65,7 +63,6 @@ namespace kino.Routing
             this.localRouterSocket = localRouterSocket;
             this.internalRegistrationsReceiver = internalRegistrationsReceiver;
             this.internalRegistrationHandler = internalRegistrationHandler;
-            this.clusterHealthMonitor = clusterHealthMonitor;
         }
 
         public void Start()
@@ -242,7 +239,8 @@ namespace kino.Routing
                 }
                 catch (TimeoutException err)
                 {
-                    clusterHealthMonitor.ScheduleConnectivityCheck(new ReceiverIdentifier(route.Node.SocketIdentity));
+                    clusterServices.GetClusterHealthMonitor()
+                                   .ScheduleConnectivityCheck(new ReceiverIdentifier(route.Node.SocketIdentity));
                     logger.Error(err);
                 }
                 catch (HostUnreachableException err)
