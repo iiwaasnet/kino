@@ -42,6 +42,7 @@ namespace kino.Tests.Connectivity
         private Mock<IPerformanceCounter> perfCounter;
         private Mock<IServiceMessageHandlerRegistry> serviceMessageHandlerRegistry;
         private Mock<IInternalRoutingTable> internalRoutingTable;
+        private Mock<IExternalRoutingTable> externalRoutingTable;
 
         [SetUp]
         public void Setup()
@@ -69,6 +70,7 @@ namespace kino.Tests.Connectivity
             internalRegistrationHandler = new Mock<IInternalMessageRouteRegistrationHandler>();
             clusterHealthMonitor = new Mock<IClusterHealthMonitor>();
             internalRoutingTable = new Mock<IInternalRoutingTable>();
+            externalRoutingTable = new Mock<IExternalRoutingTable>();
             messageRouter = CreateMessageRouter();
         }
 
@@ -251,6 +253,43 @@ namespace kino.Tests.Connectivity
             ReceiveMessageCompletionDelay.Sleep();
             //
             localSocket.Verify(m => m.Send(It.Is<IMessage>(msg => ReferenceEquals(msg, message))), Times.Once);
+        }
+
+        [Test]
+        public void BrodcastMessageFromLocalActor_IsSentToLocalAndRemoteActors()
+        {
+            messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
+            var localSocket = new Mock<ILocalSocket<IMessage>>();
+            localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
+            var routes = new[] { localSocket.Object };
+            internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
+            var message = Message.Create(new SimpleMessage(), DistributionPattern.Broadcast).As<Message>();
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
+            //
+            messageRouter.Start();
+            ReceiveMessageCompletionDelay.Sleep();
+            //
+            internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
+            externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
+        }
+
+        [Test]
+        public void BrodcastMessageFromRemoteActor_IsSentOnlyToLocalActors()
+        {
+            messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
+            var localSocket = new Mock<ILocalSocket<IMessage>>();
+            localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
+            var routes = new[] { localSocket.Object };
+            internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
+            var message = Message.Create(new SimpleMessage(), DistributionPattern.Broadcast).As<Message>();
+            message.AddHop();
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
+            //
+            messageRouter.Start();
+            ReceiveMessageCompletionDelay.Sleep();
+            //
+            internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
+            externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
         }
 
         private MessageRouter CreateMessageRouter(IInternalRoutingTable internalRoutingTable = null,
