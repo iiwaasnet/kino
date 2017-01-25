@@ -15,7 +15,9 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
+using NetMQ;
 using NUnit.Framework;
+using Health = kino.Cluster.Health;
 
 namespace kino.Tests.Connectivity
 {
@@ -55,7 +57,7 @@ namespace kino.Tests.Connectivity
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
             localNodeEndpoint = new SocketEndpoint("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(localNodeEndpoint);
-            clusterServices = new Mock<IClusterServices>();            
+            clusterServices = new Mock<IClusterServices>();
             serviceMessageHandlerRegistry = new Mock<IServiceMessageHandlerRegistry>();
             serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(It.IsAny<MessageIdentifier>())).Returns((IServiceMessageHandler) null);
             perfCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
@@ -103,7 +105,7 @@ namespace kino.Tests.Connectivity
         }
 
         [Test]
-        public void IfLocalRouterSocketIsReadyToReceive_ItsTryReceiveMethidIsCalled()
+        public void IfLocalRouterSocketIsReadyToReceive_ItsTryReceiveMethodIsCalled()
         {
             localRouterSocket.Setup(m => m.TryReceive()).Returns(() =>
                                                                  {
@@ -354,6 +356,82 @@ namespace kino.Tests.Connectivity
             scaleOutSocket.Verify(m => m.Connect(It.Is<Uri>(uri => uri == peerConnection.Node.Uri), true), Times.Once);
             scaleOutSocket.Verify(m => m.SendMessage(message));
         }
+
+        [Test]
+        public void IfScaleOutSocketWasNotConnectedToRemoteNode_ConnectionIsEstablished()
+        {
+            messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
+            var localSocket = new Mock<ILocalSocket<IMessage>>();
+            localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
+            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var otherNodeIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            var otherNode = new Node("tcp://127.0.0.1:9009", otherNodeIdentifier.Identity);
+            var peerConnection = new PeerConnection
+                                 {
+                                     Node = otherNode,
+                                     Health = new Health {Uri = "tcp://127.0.0.1:6767"}
+                                 };
+            message.SetReceiverNode(otherNodeIdentifier);
+
+            externalRoutingTable.Setup(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.ReceiverNodeIdentity == otherNodeIdentifier))).Returns(new[] {peerConnection});
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
+            //
+            messageRouter.Start();
+            ReceiveMessageCompletionDelay.Sleep();
+            //
+            externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message) && req.ReceiverNodeIdentity == otherNodeIdentifier)), Times.Once);
+            scaleOutSocket.Verify(m => m.Connect(It.Is<Uri>(uri => uri == peerConnection.Node.Uri), true), Times.Once);
+            clusterHealthMonitor.Verify(m => m.StartPeerMonitoring(It.Is<Node>(node => node.Equals(otherNode)),
+                                                                   It.Is<Health>(health => health == peerConnection.Health)),
+                                        Times.Once);
+            Assert.IsTrue(peerConnection.Connected);
+        }
+
+        [Test]
+        public void IfScaleOutBackendSocketSendMessageThrowsTimeoutException_ConnectivityCheckIsScheduled()
+        {
+            messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
+            var localSocket = new Mock<ILocalSocket<IMessage>>();
+            localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
+            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            message.SetReceiverNode(otherNode);
+            var peerConnection = new PeerConnection { Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity) };
+            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] { peerConnection });
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
+            scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<TimeoutException>();
+            //
+            messageRouter.Start();
+            ReceiveMessageCompletionDelay.Sleep();
+            //
+            clusterHealthMonitor.Verify(m => m.ScheduleConnectivityCheck(It.Is<ReceiverIdentifier>(id => Unsafe.ArraysEqual(id.Identity, peerConnection.Node.SocketIdentity))), Times.Once);
+        }
+
+        [Test]
+        public void IfScaleOutBackendSocketSendMessageThrowsHostUnreachableException_UnreachableNodeIsUnregistered()
+        {
+            messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
+            var localSocket = new Mock<ILocalSocket<IMessage>>();
+            localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
+            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            message.SetReceiverNode(otherNode);
+            var peerConnection = new PeerConnection { Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity) };
+            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] { peerConnection });
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
+            scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
+            var unregPayload = new UnregisterUnreachableNodeMessage { ReceiverNodeIdentity = peerConnection.Node.SocketIdentity };
+            var unregMessage = Message.Create(unregPayload);
+            var serviceMessageHandler = new Mock<IServiceMessageHandler>();
+            serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(It.Is<MessageIdentifier>(msg => msg.Equals(unregMessage)))).Returns(serviceMessageHandler.Object);
+            //
+            messageRouter.Start();
+            ReceiveMessageCompletionDelay.Sleep();
+            //
+            serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(msg => msg.Equals(unregMessage))), Times.Once);
+            serviceMessageHandler.Verify(m => m.Handle(unregMessage, scaleOutSocket.Object));
+        }
+
 
         private MessageRouter CreateMessageRouter(IInternalRoutingTable internalRoutingTable = null,
                                                   IExternalRoutingTable externalRoutingTable = null)
