@@ -12,7 +12,7 @@ using kino.Tests.Actors.Setup;
 using Moq;
 using NUnit.Framework;
 
-namespace kino.Tests.Connectivity
+namespace kino.Tests.Cluster
 {
     [TestFixture]
     public class ClusterMonitorTests

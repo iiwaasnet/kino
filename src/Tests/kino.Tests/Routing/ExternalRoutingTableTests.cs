@@ -12,7 +12,7 @@ using Moq;
 using NUnit.Framework;
 using MessageRoute = kino.Routing.MessageRoute;
 
-namespace kino.Tests.Connectivity
+namespace kino.Tests.Routing
 {
     [TestFixture]
     public class ExternalRoutingTableTests

@@ -22,7 +22,7 @@ using NUnit.Framework;
 using Health = kino.Cluster.Health;
 using MessageRoute = kino.Cluster.MessageRoute;
 
-namespace kino.Tests.Connectivity
+namespace kino.Tests.Routing
 {
     [TestFixture]
     public class MessageRouterTests
@@ -444,7 +444,7 @@ namespace kino.Tests.Connectivity
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
             //
-            clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<Cluster.MessageRoute>(mr => mr.Message.Equals(message))), Times.Once);
+            clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<global::kino.Cluster.MessageRoute>(mr => mr.Message.Equals(message))), Times.Once);
         }
 
         [Test]

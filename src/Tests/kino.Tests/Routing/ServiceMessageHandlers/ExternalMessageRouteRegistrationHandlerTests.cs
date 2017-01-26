@@ -17,7 +17,7 @@ using NUnit.Framework;
 using Health = kino.Messaging.Messages.Health;
 using MessageContract = kino.Messaging.Messages.MessageContract;
 
-namespace kino.Tests.Connectivity
+namespace kino.Tests.Routing.ServiceMessageHandlers
 {
     [TestFixture]
     public class ExternalMessageRouteRegistrationHandlerTests
@@ -65,7 +65,7 @@ namespace kino.Tests.Connectivity
             //
             Func<Node, bool> isThisPeer = p => p.Uri.ToSocketAddress() == payload.Uri
                                                && Unsafe.ArraysEqual(p.SocketIdentity, payload.NodeIdentity);
-            clusterHealthMonitor.Verify(m => m.AddPeer(It.Is<Node>(p => isThisPeer(p)), It.IsAny<Cluster.Health>()), Times.Once);
+            clusterHealthMonitor.Verify(m => m.AddPeer(It.Is<Node>(p => isThisPeer(p)), It.IsAny<global::kino.Cluster.Health>()), Times.Once);
         }
 
         [Test]
@@ -106,7 +106,7 @@ namespace kino.Tests.Connectivity
             handler.Handle(message, socket.Object);
             //
             externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<ExternalRouteRegistration>()), Times.Never);
-            clusterHealthMonitor.Verify(m => m.AddPeer(It.IsAny<Node>(), It.IsAny<Cluster.Health>()), Times.Never);
+            clusterHealthMonitor.Verify(m => m.AddPeer(It.IsAny<Node>(), It.IsAny<global::kino.Cluster.Health>()), Times.Never);
         }
 
         [Test]

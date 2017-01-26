@@ -8,7 +8,7 @@ using kino.Security;
 using Moq;
 using NUnit.Framework;
 
-namespace kino.Tests.Connectivity
+namespace kino.Tests.Routing.ServiceMessageHandlers
 {
     [TestFixture]
     public class ClusterMessageRoutesRequestHandlerTests

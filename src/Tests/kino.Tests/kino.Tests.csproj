@@ -101,11 +101,11 @@
     <Compile Include="Actors\Setup\SimpleMessage.cs" />
     <Compile Include="Client\CallbackHandlerStackTests.cs" />
     <Compile Include="Client\MessagHubTests.cs" />
-    <Compile Include="Connectivity\ClusterMessageRoutesRequestHandlerTests.cs" />
-    <Compile Include="Connectivity\ClusterMonitorTests.cs" />
-    <Compile Include="Connectivity\ExternalMessageRouteRegistrationHandlerTests.cs" />
-    <Compile Include="Connectivity\ExternalRoutingTableTests.cs" />
-    <Compile Include="Connectivity\MessageRouterTests.cs" />
+    <Compile Include="Routing\ServiceMessageHandlers\ClusterMessageRoutesRequestHandlerTests.cs" />
+    <Compile Include="Cluster\ClusterMonitorTests.cs" />
+    <Compile Include="Routing\ServiceMessageHandlers\ExternalMessageRouteRegistrationHandlerTests.cs" />
+    <Compile Include="Routing\ExternalRoutingTableTests.cs" />
+    <Compile Include="Routing\MessageRouterTests.cs" />
     <Compile Include="Consensus\BallotGeneratorTests.cs" />
     <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR1.cs" />
     <Compile Include="Consensus\RoundBasedRegisterTests_LemmaR2.cs" />
@@ -185,7 +185,9 @@
       <Name>kino</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Connectivity\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
