@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using kino.Cluster;
 using kino.Cluster.Configuration;
@@ -18,13 +20,14 @@ using Moq;
 using NetMQ;
 using NUnit.Framework;
 using Health = kino.Cluster.Health;
+using MessageRoute = kino.Cluster.MessageRoute;
 
 namespace kino.Tests.Connectivity
 {
     [TestFixture]
     public class MessageRouterTests
     {
-        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromMilliseconds(100);
         private Mock<ISocketFactory> socketFactory;
@@ -46,6 +49,7 @@ namespace kino.Tests.Connectivity
         private Mock<IInternalRoutingTable> internalRoutingTable;
         private Mock<IExternalRoutingTable> externalRoutingTable;
         private SocketEndpoint localNodeEndpoint;
+        private Mock<IClusterMonitor> clusterMonitor;
 
         [SetUp]
         public void Setup()
@@ -73,6 +77,8 @@ namespace kino.Tests.Connectivity
             internalRegistrationHandler = new Mock<IInternalMessageRouteRegistrationHandler>();
             clusterHealthMonitor = new Mock<IClusterHealthMonitor>();
             clusterServices.Setup(m => m.GetClusterHealthMonitor()).Returns(clusterHealthMonitor.Object);
+            clusterMonitor = new Mock<IClusterMonitor>();
+            clusterServices.Setup(m => m.GetClusterMonitor()).Returns(clusterMonitor.Object);
             internalRoutingTable = new Mock<IInternalRoutingTable>();
             externalRoutingTable = new Mock<IExternalRoutingTable>();
             messageRouter = CreateMessageRouter();
@@ -361,8 +367,6 @@ namespace kino.Tests.Connectivity
         public void IfScaleOutSocketWasNotConnectedToRemoteNode_ConnectionIsEstablished()
         {
             messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
-            var localSocket = new Mock<ILocalSocket<IMessage>>();
-            localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var message = Message.Create(new SimpleMessage()).As<Message>();
             var otherNodeIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             var otherNode = new Node("tcp://127.0.0.1:9009", otherNodeIdentifier.Identity);
@@ -391,8 +395,6 @@ namespace kino.Tests.Connectivity
         public void IfScaleOutBackendSocketSendMessageThrowsTimeoutException_ConnectivityCheckIsScheduled()
         {
             messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
-            var localSocket = new Mock<ILocalSocket<IMessage>>();
-            localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var message = Message.Create(new SimpleMessage()).As<Message>();
             var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             message.SetReceiverNode(otherNode);
@@ -411,8 +413,6 @@ namespace kino.Tests.Connectivity
         public void IfScaleOutBackendSocketSendMessageThrowsHostUnreachableException_UnreachableNodeIsUnregistered()
         {
             messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
-            var localSocket = new Mock<ILocalSocket<IMessage>>();
-            localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var message = Message.Create(new SimpleMessage()).As<Message>();
             var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             message.SetReceiverNode(otherNode);
@@ -432,6 +432,36 @@ namespace kino.Tests.Connectivity
             serviceMessageHandler.Verify(m => m.Handle(unregMessage, scaleOutSocket.Object));
         }
 
+        [Test]
+        public void IfMessageFromLocalActorIsUnhandled_RequestToDiscoverUnhandledMessageRouteIsSent()
+        {
+            var message = Message.Create(new SimpleMessage()).As<Message>();
+            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(Enumerable.Empty<PeerConnection>());
+            internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(Enumerable.Empty<ILocalSendingSocket<IMessage>>());
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
+            scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
+            //
+            messageRouter.Start();
+            ReceiveMessageCompletionDelay.Sleep();
+            //
+            clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<Cluster.MessageRoute>(mr => mr.Message.Equals(message))), Times.Once);
+        }
+
+        [Test]
+        public void IfMessageFromRemoteActorIsUnhandled_NodeUnregistersSelfFromHandlingThisMesssage()
+        {
+            var message = Message.Create(new SimpleMessage()).As<Message>();
+            message.AddHop();
+            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(Enumerable.Empty<PeerConnection>());
+            internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(Enumerable.Empty<ILocalSendingSocket<IMessage>>());
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
+            scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
+            //
+            messageRouter.Start();
+            ReceiveMessageCompletionDelay.Sleep();
+            //
+            clusterMonitor.Verify(m => m.UnregisterSelf(It.Is<IEnumerable<MessageRoute>>(mr => mr.First().Message.Equals(message))), Times.Once);
+        }
 
         private MessageRouter CreateMessageRouter(IInternalRoutingTable internalRoutingTable = null,
                                                   IExternalRoutingTable externalRoutingTable = null)
