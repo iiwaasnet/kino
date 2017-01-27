@@ -34,8 +34,8 @@ namespace kino.Cluster
         public ClusterHealthMonitor(ISocketFactory socketFactory,
                                     ILocalSocketFactory localSocketFactory,
                                     ISecurityProvider securityProvider,
-                                    ClusterHealthMonitorConfiguration config,
                                     ILocalSendingSocket<IMessage> routerLocalSocket,
+                                    ClusterHealthMonitorConfiguration config,
                                     ILogger logger)
         {
             deadPeersCheckInterval = TimeSpan.FromDays(1);
@@ -252,12 +252,12 @@ namespace kino.Cluster
             var shouldHandle = IsCheckPeerConnectionMessage(message);
             if (shouldHandle)
             {
-                var suspeciousNode = new ReceiverIdentifier(message.GetPayload<CheckPeerConnectionMessage>().SocketIdentity);
-                logger.Debug($"Connectivity check requested for node {suspeciousNode}");
+                var suspiciousNode = new ReceiverIdentifier(message.GetPayload<CheckPeerConnectionMessage>().SocketIdentity);
+                logger.Debug($"Connectivity check requested for node {suspiciousNode}");
                 ClusterMemberMeta meta;
-                if (peers.Find(ref suspeciousNode, out meta))
+                if (peers.Find(ref suspiciousNode, out meta))
                 {
-                    CheckPeerConnection(suspeciousNode, meta);
+                    CheckPeerConnection(suspiciousNode, meta);
                 }
             }
 

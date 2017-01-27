@@ -59,8 +59,8 @@ namespace kino
                                                                   new ClusterHealthMonitor(socketFactory,
                                                                                            localSocketFactory,
                                                                                            securityProvider,
-                                                                                           clusterHealthMonitorConfiguration,
                                                                                            routerLocalSocket,
+                                                                                           clusterHealthMonitorConfiguration,
                                                                                            logger),
                                                                   new NullClusterHealthMonitor())
                 .GetService();
