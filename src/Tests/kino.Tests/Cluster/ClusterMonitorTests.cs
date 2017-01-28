@@ -19,7 +19,6 @@ namespace kino.Tests.Cluster
     public class ClusterMonitorTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
-        private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(3);
         private Mock<ILogger> logger;
         private Mock<IRouteDiscovery> routeDiscovery;
         private Mock<ISecurityProvider> securityProvider;

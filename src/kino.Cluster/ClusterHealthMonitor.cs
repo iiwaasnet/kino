@@ -29,7 +29,7 @@ namespace kino.Cluster
         private Task receivingMessages;
         private TimeSpan deadPeersCheckInterval;
         private IDisposable deadPeersCheckObserver;
-        private readonly IDisposable stalePeersCheckObserver;
+        private IDisposable stalePeersCheckObserver;
 
         public ClusterHealthMonitor(ISocketFactory socketFactory,
                                     ILocalSocketFactory localSocketFactory,
@@ -39,7 +39,6 @@ namespace kino.Cluster
                                     ILogger logger)
         {
             deadPeersCheckInterval = TimeSpan.FromDays(1);
-            stalePeersCheckObserver = Observable.Interval(config.StalePeersCheckInterval).Subscribe(_ => CheckStalePeers());
             this.socketFactory = socketFactory;
             this.securityProvider = securityProvider;
             peers = new HashDictionary<ReceiverIdentifier, ClusterMemberMeta>();
@@ -81,6 +80,8 @@ namespace kino.Cluster
 
         public void Start()
         {
+            stalePeersCheckObserver = Observable.Interval(config.StalePeersCheckInterval)
+                                                .Subscribe(_ => CheckStalePeers());
             cancellationTokenSource = new CancellationTokenSource();
             var participantsCount = 3;
             using (var barrier = new Barrier(participantsCount))
@@ -198,12 +199,12 @@ namespace kino.Cluster
                     || ProcessCheckDeadPeersMessage(message)
                     || ProcessCheckStalePeersMessage(message)
                     || ProcessDeletePeerMessage(message, socket)
-                    || ProcessCheckPeerConnectionMessage(message, socket);
+                    || ProcessCheckPeerConnectionMessage(message);
         }
 
         private bool ProcessDeletePeerMessage(IMessage message, ISocket socket)
         {
-            var shouldHandle = IsDeletePeerMessage(message);
+            var shouldHandle = message.Equals(KinoMessages.DeletePeer);
             if (shouldHandle)
             {
                 var payload = message.GetPayload<DeletePeerMessage>();
@@ -231,7 +232,7 @@ namespace kino.Cluster
 
         private bool ProcessCheckStalePeersMessage(IMessage message)
         {
-            var shouldHandle = IsCheckStalePeersMessage(message);
+            var shouldHandle = message.Equals(KinoMessages.CheckStalePeers);
             if (shouldHandle)
             {
                 var now = DateTime.UtcNow;
@@ -247,9 +248,9 @@ namespace kino.Cluster
             return shouldHandle;
         }
 
-        private bool ProcessCheckPeerConnectionMessage(IMessage message, ISocket socket)
+        private bool ProcessCheckPeerConnectionMessage(IMessage message)
         {
-            var shouldHandle = IsCheckPeerConnectionMessage(message);
+            var shouldHandle = message.Equals(KinoMessages.CheckPeerConnection);
             if (shouldHandle)
             {
                 var suspiciousNode = new ReceiverIdentifier(message.GetPayload<CheckPeerConnectionMessage>().SocketIdentity);
@@ -311,7 +312,7 @@ namespace kino.Cluster
 
         private bool ProcessCheckDeadPeersMessage(IMessage message)
         {
-            var shouldHandle = IsCheckDeadPeersMessage(message);
+            var shouldHandle = message.Equals(KinoMessages.CheckDeadPeers);
             if (shouldHandle)
             {
                 var now = DateTime.UtcNow;
@@ -332,17 +333,17 @@ namespace kino.Cluster
             return shouldHandle;
         }
 
-        private bool PeerIsStale(DateTime now, KeyValuePair<ReceiverIdentifier, ClusterMemberMeta> p)
-            => !p.Value.ConnectionEstablished
-               && now - p.Value.LastKnownHeartBeat > config.PeerIsStaleAfter;
+        private bool PeerIsStale(DateTime now, KeyValuePair<ReceiverIdentifier, ClusterMemberMeta> peer)
+            => !peer.Value.ConnectionEstablished
+               && now - peer.Value.LastKnownHeartBeat > config.PeerIsStaleAfter;
 
-        private bool HeartBeatExpired(DateTime now, KeyValuePair<ReceiverIdentifier, ClusterMemberMeta> p)
-            => p.Value.ConnectionEstablished
-               && now - p.Value.LastKnownHeartBeat > p.Value.HeartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion);
+        private bool HeartBeatExpired(DateTime now, KeyValuePair<ReceiverIdentifier, ClusterMemberMeta> peer)
+            => peer.Value.ConnectionEstablished
+               && now - peer.Value.LastKnownHeartBeat > peer.Value.HeartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion);
 
         private bool ProcessAddPeerMessage(IMessage message, ISocket _)
         {
-            var shouldHandle = IsAddPeerMessage(message);
+            var shouldHandle = message.Equals(KinoMessages.AddPeer);
             if (shouldHandle)
             {
                 var payload = message.GetPayload<AddPeerMessage>();
@@ -364,7 +365,7 @@ namespace kino.Cluster
 
         private bool ProcessStartPeerMonitoringMessage(IMessage message, ISocket socket)
         {
-            var shouldHandle = IsStartPeerMonitoringMessage(message);
+            var shouldHandle = message.Equals(KinoMessages.StartPeerMonitoring);
             if (shouldHandle)
             {
                 var payload = message.GetPayload<StartPeerMonitoringMessage>();
@@ -395,7 +396,8 @@ namespace kino.Cluster
             {
                 deadPeersCheckInterval = newHeartBeatInterval;
                 deadPeersCheckObserver?.Dispose();
-                deadPeersCheckObserver = Observable.Interval(deadPeersCheckInterval).Subscribe(_ => CheckDeadPeers());
+                deadPeersCheckObserver = Observable.Interval(deadPeersCheckInterval)
+                                                   .Subscribe(_ => CheckDeadPeers());
             }
         }
 
@@ -407,7 +409,7 @@ namespace kino.Cluster
 
         private bool ProcessHeartBeatMessage(IMessage message)
         {
-            var shouldHandle = IsHeartBeatMessage(message);
+            var shouldHandle = message.Equals(KinoMessages.HeartBeat);
             if (shouldHandle)
             {
                 var payload = message.GetPayload<HeartBeatMessage>();
@@ -444,26 +446,5 @@ namespace kino.Cluster
 
             return socket;
         }
-
-        private static bool IsHeartBeatMessage(IMessage message)
-            => message.Equals(KinoMessages.HeartBeat);
-
-        private static bool IsCheckDeadPeersMessage(IMessage message)
-            => message.Equals(KinoMessages.CheckDeadPeers);
-
-        private static bool IsStartPeerMonitoringMessage(IMessage message)
-            => message.Equals(KinoMessages.StartPeerMonitoring);
-
-        private static bool IsAddPeerMessage(IMessage message)
-            => message.Equals(KinoMessages.AddPeer);
-
-        private static bool IsDeletePeerMessage(IMessage message)
-            => message.Equals(KinoMessages.DeletePeer);
-
-        private bool IsCheckStalePeersMessage(IMessage message)
-            => message.Equals(KinoMessages.CheckStalePeers);
-
-        private bool IsCheckPeerConnectionMessage(IMessage message)
-            => message.Equals(KinoMessages.CheckPeerConnection);
     }
 }

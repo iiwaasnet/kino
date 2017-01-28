@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
@@ -8,6 +9,8 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
+using kino.Tests.Actors.Setup;
+using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
 using Health = kino.Cluster.Health;
@@ -17,6 +20,9 @@ namespace kino.Tests.Cluster
     [TestFixture]
     public class ClusterHealthMonitorTests
     {
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private Mock<ISocketFactory> socketFactory;
         private Mock<ISocket> publisherSocket;
         private ClusterHealthMonitor clusterHealthMonitor;
@@ -70,7 +76,7 @@ namespace kino.Tests.Cluster
             //
             Func<IMessage, bool> isStartMonitoringMessage = msg =>
                                                             {
-                                                                if (msg.Equals(MessageIdentifier.Create<StartPeerMonitoringMessage>()))
+                                                                if (msg.Equals(KinoMessages.StartPeerMonitoring))
                                                                 {
                                                                     var payload = msg.GetPayload<StartPeerMonitoringMessage>();
                                                                     Assert.IsTrue(Unsafe.ArraysEqual(peer.SocketIdentity, payload.SocketIdentity));
@@ -99,7 +105,7 @@ namespace kino.Tests.Cluster
             //
             Func<IMessage, bool> isAddPeerMessage = msg =>
                                                     {
-                                                        if (msg.Equals(MessageIdentifier.Create<AddPeerMessage>()))
+                                                        if (msg.Equals(KinoMessages.AddPeer))
                                                         {
                                                             var payload = msg.GetPayload<AddPeerMessage>();
                                                             Assert.IsTrue(Unsafe.ArraysEqual(peer.SocketIdentity, payload.SocketIdentity));
@@ -123,7 +129,7 @@ namespace kino.Tests.Cluster
             //
             Func<IMessage, bool> isDeletePeerMessage = msg =>
                                                        {
-                                                           if (msg.Equals(MessageIdentifier.Create<DeletePeerMessage>()))
+                                                           if (msg.Equals(KinoMessages.DeletePeer))
                                                            {
                                                                var payload = msg.GetPayload<DeletePeerMessage>();
                                                                Assert.IsTrue(Unsafe.ArraysEqual(receiverIdentifier.Identity, payload.NodeIdentity));
@@ -133,6 +139,79 @@ namespace kino.Tests.Cluster
                                                            return false;
                                                        };
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isDeletePeerMessage(msg))), Times.Once);
+        }
+
+        [Test]
+        public void MessageReceiverOverMultiplexingSocket_IsSentToPublisherSocket()
+        {
+            var message = Message.Create(new SimpleMessage());
+            multiplexingSocket.SetupMessageReceived(message, ReceiveMessageDelay);
+            //
+            clusterHealthMonitor.Start();
+            ReceiveMessageCompletionDelay.Sleep();
+            //
+            publisherSocket.Verify(m => m.SendMessage(message), Times.Once);
+        }
+
+        [Test]
+        public void WhenClusterHealthMonitorStarts_ItStartsSendingCheckStalePeersMessage()
+        {
+            config.StalePeersCheckInterval = TimeSpan.FromMilliseconds(500);
+            //
+            clusterHealthMonitor.Start();
+            config.StalePeersCheckInterval.MultiplyBy(2).Sleep();
+            //
+            multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.CheckStalePeers))), Times.AtLeastOnce);
+        }
+
+        [Test]
+        public void IfStartPeerMonitoringMessadeReceived_ConnectsToPeerHealthUri()
+        {
+            var healthUri = new Uri("tcp://127.0.0.2:9090");
+            var message = Message.Create(new StartPeerMonitoringMessage
+                                         {
+                                             Uri = "tcp://127.0.0.1:800",
+                                             SocketIdentity = Guid.NewGuid().ToByteArray(),
+                                             Health = new global::kino.Messaging.Messages.Health
+                                                      {
+                                                          Uri = healthUri.ToSocketAddress(),
+                                                          HeartBeatInterval = TimeSpan.FromSeconds(3)
+                                                      }
+                                         });
+            var times = 0;
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
+            //
+            clusterHealthMonitor.Start();
+            TimeSpan.FromMilliseconds(100).Sleep();
+            clusterHealthMonitor.Stop();
+            //
+            subscriberSocket.Verify(m => m.Connect(healthUri, false), Times.Once);
+        }
+
+
+        [Test]
+        public void IfStartPeerMonitoringMessadeReceived_CheckDeadPeersMessageAfterPeerHeartBeatInterval()
+        {
+            var healthUri = new Uri("tcp://127.0.0.2:9090");
+            var heartBeatInterval = TimeSpan.FromMilliseconds(100);
+            var message = Message.Create(new StartPeerMonitoringMessage
+                                         {
+                                             Uri = "tcp://127.0.0.1:800",
+                                             SocketIdentity = Guid.NewGuid().ToByteArray(),
+                                             Health = new global::kino.Messaging.Messages.Health
+                                                      {
+                                                          Uri = healthUri.ToSocketAddress(),
+                                                          HeartBeatInterval = heartBeatInterval
+                                                      }
+                                         });
+            var times = 0;
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
+            //
+            clusterHealthMonitor.Start();
+            heartBeatInterval.MultiplyBy(2).Sleep();
+            clusterHealthMonitor.Stop();
+            //
+            multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.CheckDeadPeers))), Times.AtLeastOnce);
         }
     }
 }
