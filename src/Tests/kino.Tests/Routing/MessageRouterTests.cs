@@ -266,7 +266,7 @@ namespace kino.Tests.Routing
         }
 
         [Test]
-        public void BrodcastMessageFromLocalActor_IsSentToLocalAndRemoteActors()
+        public void BroadcastMessageFromLocalActor_IsSentToLocalAndRemoteActors()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
             var localSocket = new Mock<ILocalSocket<IMessage>>();
@@ -284,7 +284,7 @@ namespace kino.Tests.Routing
         }
 
         [Test]
-        public void BrodcastMessageFromRemoteActor_IsSentOnlyToLocalActors()
+        public void BroadcastMessageFromRemoteActor_IsSentOnlyToLocalActors()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
             var localSocket = new Mock<ILocalSocket<IMessage>>();

@@ -259,8 +259,89 @@ namespace kino.Tests.Cluster
             connectedPeerRegistry.Setup(m => m.Find(peerIdentifier)).Returns(meta);
             //
             clusterHealthMonitor.Start();
+            AsyncOp.Sleep();
             //
-            Assert.LessOrEqual(TimeSpan.FromMilliseconds(200), DateTime.UtcNow - meta.LastKnownHeartBeat);
+            Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, TimeSpan.FromMilliseconds(200) + AsyncOp);
+        }
+
+        [Test]
+        public void WhenAddPeerMessageArrives_PeerIsAddedToConnectedPeerRegistry()
+        {
+            var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            var payload = new AddPeerMessage
+                          {
+                              SocketIdentity = peerIdentifier.Identity,
+                              Uri = "tcp://127.0.0.1:8080",
+                              Health = new global::kino.Messaging.Messages.Health
+                                       {
+                                           Uri = "tcp://127.0.0.2:9090",
+                                           HeartBeatInterval = TimeSpan.FromSeconds(10)
+                                       }
+                          };
+            var message = Message.Create(payload);
+            var times = 0;
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
+            //
+            clusterHealthMonitor.Start();
+            AsyncOp.Sleep();
+            //
+            Func<ClusterMemberMeta, bool> isPeerMetadata = meta =>
+                                                               payload.Health.Uri == meta.HealthUri
+                                                               && payload.Health.HeartBeatInterval == meta.HeartBeatInterval
+                                                               && payload.Uri == meta.ScaleOutUri;
+            connectedPeerRegistry.Verify(m => m.FindOrAdd(peerIdentifier, It.Is<ClusterMemberMeta>(meta => isPeerMetadata(meta))), Times.Once);
+        }
+
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
+        public void WhenDeletePeerMessageArrives_PeerIsRemovedFromRegistryAndHealthUriDisconnected(bool connectionEstablished)
+        {
+            var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            var payload = new DeletePeerMessage {NodeIdentity = peerIdentifier.Identity};
+            var message = Message.Create(payload);
+            var times = 0;
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
+            var meta = new ClusterMemberMeta
+                       {
+                           HealthUri = "tcp://127.0.0.2:9009",
+                           ConnectionEstablished = connectionEstablished
+                       };
+            connectedPeerRegistry.Setup(m => m.Find(peerIdentifier)).Returns(meta);
+            //
+            clusterHealthMonitor.Start();
+            AsyncOp.Sleep();
+            //
+            connectedPeerRegistry.Verify(m => m.Remove(peerIdentifier), Times.Once);
+            subscriberSocket.Verify(m => m.Disconnect(new Uri(meta.HealthUri)), Times.Exactly(connectionEstablished ? 1 : 0));
+        }
+
+        [Test]
+        public void WhenCheckPeerConnectionMessageArrives_ConnectionToPeerEstablishedAndMessageIsSent()
+        {
+            var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            var payload = new CheckPeerConnectionMessage {SocketIdentity = peerIdentifier.Identity};
+            var message = Message.Create(payload);
+            var times = 0;
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
+            var meta = new ClusterMemberMeta
+                       {
+                           ScaleOutUri = "tcp://127.0.0.2:9009",
+                           ConnectionEstablished = false,
+                           LastKnownHeartBeat = DateTime.UtcNow - TimeSpan.FromMinutes(30)
+                       };
+            connectedPeerRegistry.Setup(m => m.Find(peerIdentifier)).Returns(meta);
+            //
+            clusterHealthMonitor.Start();
+            AsyncOp.Sleep();
+            clusterHealthMonitor.Stop();
+            //
+            socketFactory.Verify(m => m.CreateRouterSocket(), Times.Once);
+            routerSocket.Verify(m => m.SetMandatoryRouting(true), Times.Once);
+            routerSocket.Verify(m => m.Connect(new Uri(meta.ScaleOutUri), true), Times.Once);
+            routerSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(KinoMessages.Ping))), Times.Once);
+            routerSocket.Verify(m => m.Disconnect(new Uri(meta.ScaleOutUri)), Times.Once);
+            Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, TimeSpan.FromMilliseconds(200) + AsyncOp);
         }
     }
 }
