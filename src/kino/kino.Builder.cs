@@ -48,42 +48,44 @@ namespace kino
             var rendezvousCluster = new RendezvousCluster(configurationStorage);
 
             var scaleoutConfigurationProvider = new ServiceLocator<ScaleOutConfigurationManager,
-                                                    NullScaleOutConfigurationManager,
-                                                    IScaleOutConfigurationManager>(clusterMembershipConfiguration,
-                                                                                   new ScaleOutConfigurationManager(scaleOutSocketConfiguration),
-                                                                                   new NullScaleOutConfigurationManager())
+                    NullScaleOutConfigurationManager,
+                    IScaleOutConfigurationManager>(clusterMembershipConfiguration,
+                                                   new ScaleOutConfigurationManager(scaleOutSocketConfiguration),
+                                                   new NullScaleOutConfigurationManager())
                 .GetService();
+            var connectedPeerRegistry = new ConnectedPeerRegistry(clusterHealthMonitorConfiguration);
             var clusterHealthMonitor = new ServiceLocator<ClusterHealthMonitor,
-                                           NullClusterHealthMonitor,
-                                           IClusterHealthMonitor>(clusterMembershipConfiguration,
-                                                                  new ClusterHealthMonitor(socketFactory,
-                                                                                           localSocketFactory,
-                                                                                           securityProvider,
-                                                                                           routerLocalSocket,
-                                                                                           clusterHealthMonitorConfiguration,
-                                                                                           logger),
-                                                                  new NullClusterHealthMonitor())
+                    NullClusterHealthMonitor,
+                    IClusterHealthMonitor>(clusterMembershipConfiguration,
+                                           new ClusterHealthMonitor(socketFactory,
+                                                                    localSocketFactory,
+                                                                    securityProvider,
+                                                                    routerLocalSocket,
+                                                                    connectedPeerRegistry,
+                                                                    clusterHealthMonitorConfiguration,
+                                                                    logger),
+                                           new NullClusterHealthMonitor())
                 .GetService();
 
             var heartBeatSender = new ServiceLocator<HeartBeatSender,
-                                      NullHeartBeatSender,
-                                      IHeartBeatSender>(clusterMembershipConfiguration,
-                                                        new HeartBeatSender(socketFactory,
-                                                                            heartBeatSenderConfigurationManager,
-                                                                            scaleoutConfigurationProvider,
-                                                                            logger),
-                                                        new NullHeartBeatSender())
+                    NullHeartBeatSender,
+                    IHeartBeatSender>(clusterMembershipConfiguration,
+                                      new HeartBeatSender(socketFactory,
+                                                          heartBeatSenderConfigurationManager,
+                                                          scaleoutConfigurationProvider,
+                                                          logger),
+                                      new NullHeartBeatSender())
                 .GetService();
             var scaleOutListener = new ServiceLocator<ScaleOutListener,
-                                       NullScaleOutListener,
-                                       IScaleOutListener>(clusterMembershipConfiguration,
-                                                          new ScaleOutListener(socketFactory,
-                                                                               routerLocalSocket,
-                                                                               scaleoutConfigurationProvider,
-                                                                               securityProvider,
-                                                                               performanceCounterManager,
-                                                                               logger),
-                                                          new NullScaleOutListener())
+                    NullScaleOutListener,
+                    IScaleOutListener>(clusterMembershipConfiguration,
+                                       new ScaleOutListener(socketFactory,
+                                                            routerLocalSocket,
+                                                            scaleoutConfigurationProvider,
+                                                            securityProvider,
+                                                            performanceCounterManager,
+                                                            logger),
+                                       new NullScaleOutListener())
                 .GetService();
             var autoDiscoverSender = new AutoDiscoverySender(rendezvousCluster,
                                                              socketFactory,
@@ -102,16 +104,16 @@ namespace kino
                                                     securityProvider,
                                                     logger);
             var clusterMonitor = new ServiceLocator<ClusterMonitor,
-                                     NullClusterMonitor,
-                                     IClusterMonitor>(clusterMembershipConfiguration,
-                                                      new ClusterMonitor(scaleoutConfigurationProvider,
-                                                                         autoDiscoverSender,
-                                                                         autoDiscoveryListener,
-                                                                         heartBeatSenderConfigurationManager,
-                                                                         routeDiscovery,
-                                                                         securityProvider,
-                                                                         logger),
-                                                      new NullClusterMonitor())
+                    NullClusterMonitor,
+                    IClusterMonitor>(clusterMembershipConfiguration,
+                                     new ClusterMonitor(scaleoutConfigurationProvider,
+                                                        autoDiscoverSender,
+                                                        autoDiscoveryListener,
+                                                        heartBeatSenderConfigurationManager,
+                                                        routeDiscovery,
+                                                        securityProvider,
+                                                        logger),
+                                     new NullClusterMonitor())
                 .GetService();
             var clusterServices = new ClusterServices(clusterMonitor,
                                                       scaleOutListener,

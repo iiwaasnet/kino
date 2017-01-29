@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using C5;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core;
@@ -12,6 +11,7 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
+using Bcl = System.Collections.Generic;
 
 namespace kino.Cluster
 {
@@ -21,11 +21,11 @@ namespace kino.Cluster
         private readonly ISecurityProvider securityProvider;
         private readonly ClusterHealthMonitorConfiguration config;
         private readonly ILocalSendingSocket<IMessage> routerLocalSocket;
+        private readonly IConnectedPeerRegistry connectedPeerRegistry;
         private readonly ILogger logger;
         private CancellationTokenSource cancellationTokenSource;
         private Task processingMessages;
         private readonly ILocalSocket<IMessage> multiplexingSocket;
-        private readonly IDictionary<ReceiverIdentifier, ClusterMemberMeta> peers;
         private Task receivingMessages;
         private TimeSpan deadPeersCheckInterval;
         private IDisposable deadPeersCheckObserver;
@@ -35,16 +35,17 @@ namespace kino.Cluster
                                     ILocalSocketFactory localSocketFactory,
                                     ISecurityProvider securityProvider,
                                     ILocalSendingSocket<IMessage> routerLocalSocket,
+                                    IConnectedPeerRegistry connectedPeerRegistry,
                                     ClusterHealthMonitorConfiguration config,
                                     ILogger logger)
         {
             deadPeersCheckInterval = TimeSpan.FromDays(1);
             this.socketFactory = socketFactory;
             this.securityProvider = securityProvider;
-            peers = new HashDictionary<ReceiverIdentifier, ClusterMemberMeta>();
             multiplexingSocket = localSocketFactory.Create<IMessage>();
             this.config = config;
             this.routerLocalSocket = routerLocalSocket;
+            this.connectedPeerRegistry = connectedPeerRegistry;
             this.logger = logger;
         }
 
@@ -208,13 +209,13 @@ namespace kino.Cluster
             if (shouldHandle)
             {
                 var payload = message.GetPayload<DeletePeerMessage>();
-                ClusterMemberMeta meta;
                 var socketIdentifier = new ReceiverIdentifier(payload.NodeIdentity);
-                if (peers.Find(ref socketIdentifier, out meta))
+                var meta = connectedPeerRegistry.Find(socketIdentifier);
+                if (meta != null)
                 {
-                    peers.Remove(socketIdentifier);
+                    connectedPeerRegistry.Remove(socketIdentifier);
 
-                    logger.Debug($"Left {peers.Count} nodes to monitor.");
+                    logger.Debug($"Left {connectedPeerRegistry.Count()} nodes to monitor.");
                     if (meta.ConnectionEstablished)
                     {
                         socket.Disconnect(new Uri(meta.HealthUri));
@@ -235,12 +236,10 @@ namespace kino.Cluster
             var shouldHandle = message.Equals(KinoMessages.CheckStalePeers);
             if (shouldHandle)
             {
-                var now = DateTime.UtcNow;
-                var staleNodes = peers.Where(p => PeerIsStale(now, p))
-                                      .ToList();
+                var staleNodes = connectedPeerRegistry.GetPeersWithExpiredHeartBeat();
                 if (staleNodes.Any())
                 {
-                    logger.Debug($"Stale nodes detected: {staleNodes.Count}. Connectivity check scheduled.");
+                    logger.Debug($"Stale nodes detected: {staleNodes.Count()}. Connectivity check scheduled.");
                     Task.Factory.StartNew(() => CheckConnectivity(cancellationTokenSource.Token, staleNodes), TaskCreationOptions.LongRunning);
                 }
             }
@@ -255,8 +254,8 @@ namespace kino.Cluster
             {
                 var suspiciousNode = new ReceiverIdentifier(message.GetPayload<CheckPeerConnectionMessage>().SocketIdentity);
                 logger.Debug($"Connectivity check requested for node {suspiciousNode}");
-                ClusterMemberMeta meta;
-                if (peers.Find(ref suspiciousNode, out meta))
+                var meta = connectedPeerRegistry.Find(suspiciousNode);
+                if (meta != null)
                 {
                     CheckPeerConnection(suspiciousNode, meta);
                 }
@@ -265,13 +264,13 @@ namespace kino.Cluster
             return shouldHandle;
         }
 
-        private void CheckConnectivity(CancellationToken token, System.Collections.Generic.IReadOnlyList<KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>> staleNodes)
+        private void CheckConnectivity(CancellationToken token, Bcl.IEnumerable<Bcl.KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>> staleNodes)
         {
             try
             {
-                for (var i = 0; i < staleNodes.Count && !token.IsCancellationRequested; i++)
+                for (var i = 0; i < staleNodes.Count() && !token.IsCancellationRequested; i++)
                 {
-                    var staleNode = staleNodes[i];
+                    var staleNode = staleNodes.ElementAt(i);
                     CheckPeerConnection(staleNode.Key, staleNode.Value);
                 }
             }
@@ -315,9 +314,7 @@ namespace kino.Cluster
             var shouldHandle = message.Equals(KinoMessages.CheckDeadPeers);
             if (shouldHandle)
             {
-                var now = DateTime.UtcNow;
-                var deadNodes = peers.Where(p => HeartBeatExpired(now, p))
-                                     .ToList();
+                var deadNodes = connectedPeerRegistry.GetPeersWithExpiredHeartBeat();
                 foreach (var deadNode in deadNodes)
                 {
                     routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage
@@ -332,14 +329,6 @@ namespace kino.Cluster
 
             return shouldHandle;
         }
-
-        private bool PeerIsStale(DateTime now, KeyValuePair<ReceiverIdentifier, ClusterMemberMeta> peer)
-            => !peer.Value.ConnectionEstablished
-               && now - peer.Value.LastKnownHeartBeat > config.PeerIsStaleAfter;
-
-        private bool HeartBeatExpired(DateTime now, KeyValuePair<ReceiverIdentifier, ClusterMemberMeta> peer)
-            => peer.Value.ConnectionEstablished
-               && now - peer.Value.LastKnownHeartBeat > peer.Value.HeartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion);
 
         private bool ProcessAddPeerMessage(IMessage message, ISocket _)
         {
@@ -357,7 +346,7 @@ namespace kino.Cluster
                                ScaleOutUri = payload.Uri,
                                LastKnownHeartBeat = DateTime.UtcNow
                            };
-                peers.FindOrAdd(new ReceiverIdentifier(payload.SocketIdentity), ref meta);
+                connectedPeerRegistry.FindOrAdd(new ReceiverIdentifier(payload.SocketIdentity), meta);
             }
 
             return shouldHandle;
@@ -379,7 +368,7 @@ namespace kino.Cluster
                                ScaleOutUri = payload.Uri,
                                LastKnownHeartBeat = DateTime.UtcNow
                            };
-                peers.FindOrAdd(new ReceiverIdentifier(payload.SocketIdentity), ref meta);
+                meta = connectedPeerRegistry.FindOrAdd(new ReceiverIdentifier(payload.SocketIdentity), meta);
                 meta.ConnectionEstablished = true;
                 StartDeadPeersCheck(meta.HeartBeatInterval);
                 socket.Connect(new Uri(meta.HealthUri));
@@ -414,15 +403,15 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<HeartBeatMessage>();
                 var socketIdentifier = new ReceiverIdentifier(payload.SocketIdentity);
-                ClusterMemberMeta meta;
-                if (peers.Find(ref socketIdentifier, out meta))
+                var meta = connectedPeerRegistry.Find(socketIdentifier);
+                if (meta != null)
                 {
                     meta.LastKnownHeartBeat = DateTime.UtcNow;
                     //logger.Debug($"Received HeartBeat from node {socketIdentifier}");
                 }
                 else
                 {
-                    //TODO: Send DicoveryMessage? What if peer is not supporting message Domains to be used by this node?
+                    //TODO: Send DiscoveryMessage? What if peer is not supporting message Domains to be used by this node?
                     logger.Warn($"HeartBeat came from unknown node [{payload.SocketIdentity.GetAnyString()}]");
                 }
             }

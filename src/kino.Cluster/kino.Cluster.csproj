@@ -92,6 +92,7 @@
     <Compile Include="Configuration\ScaleOutConfigurationManager.cs" />
     <Compile Include="Configuration\ScaleOutSocketConfiguration.cs" />
     <Compile Include="Configuration\ServiceLocator.cs" />
+    <Compile Include="ConnectedPeerRegistry.cs" />
     <Compile Include="Health.cs" />
     <Compile Include="HeartBeatSender.cs" />
     <Compile Include="IClusterHealthMonitor.cs" />
@@ -99,6 +100,7 @@
     <Compile Include="IAutoDiscoverySender.cs" />
     <Compile Include="IClusterMonitor.cs" />
     <Compile Include="IClusterServices.cs" />
+    <Compile Include="IConnectedPeerRegistry.cs" />
     <Compile Include="IHeartBeatSender.cs" />
     <Compile Include="IRendezvousCluster.cs" />
     <Compile Include="IRouteDiscovery.cs" />

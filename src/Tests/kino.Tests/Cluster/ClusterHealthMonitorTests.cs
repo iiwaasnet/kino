@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using kino.Cluster;
 using kino.Cluster.Configuration;
@@ -20,7 +22,7 @@ namespace kino.Tests.Cluster
     [TestFixture]
     public class ClusterHealthMonitorTests
     {
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(200);
         private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private Mock<ISocketFactory> socketFactory;
@@ -34,6 +36,7 @@ namespace kino.Tests.Cluster
         private Mock<ILocalSendingSocket<IMessage>> routerLocalSocket;
         private ClusterHealthMonitorConfiguration config;
         private Mock<ILogger> logger;
+        private Mock<IConnectedPeerRegistry> connectedPeerRegistry;
 
         [SetUp]
         public void Setup()
@@ -52,12 +55,19 @@ namespace kino.Tests.Cluster
             var pingDomain = Guid.NewGuid().ToString();
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(pingDomain);
             routerLocalSocket = new Mock<ILocalSendingSocket<IMessage>>();
-            config = new ClusterHealthMonitorConfiguration {IntercomEndpoint = new Uri("tcp://127.0.0.1:8087")};
+            config = new ClusterHealthMonitorConfiguration
+                     {
+                         IntercomEndpoint = new Uri("tcp://127.0.0.1:8087"),
+                         StalePeersCheckInterval = TimeSpan.FromMinutes(1)
+                     };
             logger = new Mock<ILogger>();
+            connectedPeerRegistry = new Mock<IConnectedPeerRegistry>();
+            connectedPeerRegistry.Setup(m => m.GetPeersWithExpiredHeartBeat()).Returns(Enumerable.Empty<KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>>());
             clusterHealthMonitor = new ClusterHealthMonitor(socketFactory.Object,
                                                             localSocketFactory.Object,
                                                             securityProvider.Object,
                                                             routerLocalSocket.Object,
+                                                            connectedPeerRegistry.Object,
                                                             config,
                                                             logger.Object);
         }
@@ -168,16 +178,27 @@ namespace kino.Tests.Cluster
         public void IfStartPeerMonitoringMessadeReceived_ConnectsToPeerHealthUri()
         {
             var healthUri = new Uri("tcp://127.0.0.2:9090");
-            var message = Message.Create(new StartPeerMonitoringMessage
-                                         {
-                                             Uri = "tcp://127.0.0.1:800",
-                                             SocketIdentity = Guid.NewGuid().ToByteArray(),
-                                             Health = new global::kino.Messaging.Messages.Health
-                                                      {
-                                                          Uri = healthUri.ToSocketAddress(),
-                                                          HeartBeatInterval = TimeSpan.FromSeconds(3)
-                                                      }
-                                         });
+            var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            var payload = new StartPeerMonitoringMessage
+                          {
+                              Uri = "tcp://127.0.0.1:800",
+                              SocketIdentity = peerIdentifier.Identity,
+                              Health = new global::kino.Messaging.Messages.Health
+                                       {
+                                           Uri = healthUri.ToSocketAddress(),
+                                           HeartBeatInterval = TimeSpan.FromMinutes(1)
+                                       }
+                          };
+            var message = Message.Create(payload);
+            var meta = new ClusterMemberMeta
+                       {
+                           HealthUri = payload.Health.Uri,
+                           HeartBeatInterval = payload.Health.HeartBeatInterval,
+                           ScaleOutUri = payload.Uri,
+                           LastKnownHeartBeat = DateTime.UtcNow,
+                           ConnectionEstablished = false
+                       };
+            connectedPeerRegistry.Setup(m => m.FindOrAdd(It.Is<ReceiverIdentifier>(id => id == peerIdentifier), It.IsAny<ClusterMemberMeta>())).Returns(meta);
             var times = 0;
             subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
             //
@@ -186,24 +207,36 @@ namespace kino.Tests.Cluster
             clusterHealthMonitor.Stop();
             //
             subscriberSocket.Verify(m => m.Connect(healthUri, false), Times.Once);
+            Assert.IsTrue(meta.ConnectionEstablished);
         }
-
 
         [Test]
         public void IfStartPeerMonitoringMessadeReceived_CheckDeadPeersMessageAfterPeerHeartBeatInterval()
         {
+            config.StalePeersCheckInterval = TimeSpan.FromMinutes(1);
             var healthUri = new Uri("tcp://127.0.0.2:9090");
             var heartBeatInterval = TimeSpan.FromMilliseconds(100);
-            var message = Message.Create(new StartPeerMonitoringMessage
-                                         {
-                                             Uri = "tcp://127.0.0.1:800",
-                                             SocketIdentity = Guid.NewGuid().ToByteArray(),
-                                             Health = new global::kino.Messaging.Messages.Health
-                                                      {
-                                                          Uri = healthUri.ToSocketAddress(),
-                                                          HeartBeatInterval = heartBeatInterval
-                                                      }
-                                         });
+            var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            var payload = new StartPeerMonitoringMessage
+                          {
+                              Uri = "tcp://127.0.0.1:800",
+                              SocketIdentity = peerIdentifier.Identity,
+                              Health = new global::kino.Messaging.Messages.Health
+                                       {
+                                           Uri = healthUri.ToSocketAddress(),
+                                           HeartBeatInterval = heartBeatInterval
+                                       }
+                          };
+            var message = Message.Create(payload);
+            var meta = new ClusterMemberMeta
+                       {
+                           HealthUri = payload.Health.Uri,
+                           HeartBeatInterval = payload.Health.HeartBeatInterval,
+                           ScaleOutUri = payload.Uri,
+                           LastKnownHeartBeat = DateTime.UtcNow,
+                           ConnectionEstablished = false
+                       };
+            connectedPeerRegistry.Setup(m => m.FindOrAdd(It.Is<ReceiverIdentifier>(id => id == peerIdentifier), It.IsAny<ClusterMemberMeta>())).Returns(meta);
             var times = 0;
             subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
             //
@@ -212,6 +245,22 @@ namespace kino.Tests.Cluster
             clusterHealthMonitor.Stop();
             //
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.CheckDeadPeers))), Times.AtLeastOnce);
+        }
+
+        [Test]
+        public void WhenHeartBeatMessageArrives_PeerLastKnwonHeartBeatIsSetToUtcNow()
+        {
+            var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            var payload = new HeartBeatMessage {SocketIdentity = peerIdentifier.Identity};
+            var message = Message.Create(payload);
+            var times = 0;
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
+            var meta = new ClusterMemberMeta {LastKnownHeartBeat = DateTime.UtcNow - TimeSpan.FromMinutes(30)};
+            connectedPeerRegistry.Setup(m => m.Find(peerIdentifier)).Returns(meta);
+            //
+            clusterHealthMonitor.Start();
+            //
+            Assert.LessOrEqual(TimeSpan.FromMilliseconds(200), DateTime.UtcNow - meta.LastKnownHeartBeat);
         }
     }
 }

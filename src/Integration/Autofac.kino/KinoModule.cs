@@ -112,6 +112,10 @@ namespace Autofac.kino
 
         private static void RegisterClusterHealthMonitor(ContainerBuilder builder)
         {
+            builder.RegisterType<ConnectedPeerRegistry>()
+                   .As<IConnectedPeerRegistry>()
+                   .SingleInstance();
+
             builder.RegisterType<NullClusterHealthMonitor>()
                    .AsSelf()
                    .SingleInstance();
