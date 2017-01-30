@@ -88,6 +88,7 @@ namespace kino.Tests.Routing
         public void StartMessageRouter_StartsClusterServices()
         {
             messageRouter.Start();
+            messageRouter.Stop();
             //
             clusterServices.Verify(m => m.StartClusterServices(), Times.Once);
             scaleOutConfigurationProvider.Verify(m => m.GetScaleOutAddress(), Times.Once);
@@ -97,6 +98,7 @@ namespace kino.Tests.Routing
         public void WhenMessageRouterStarts_SocketWaitHandlesAreRetreived()
         {
             messageRouter.Start();
+            messageRouter.Stop();
             //
             localRouterSocket.Verify(m => m.CanReceive(), Times.Once);
             internalRegistrationsReceiver.Verify(m => m.CanReceive(), Times.Once);
@@ -106,6 +108,7 @@ namespace kino.Tests.Routing
         public void WhenMessageRouterStarts_ScaleOutBackendSocketIsCreated()
         {
             messageRouter.Start();
+            messageRouter.Stop();
             //
             socketFactory.Verify(m => m.CreateRouterSocket(), Times.Once);
         }
@@ -122,6 +125,7 @@ namespace kino.Tests.Routing
             //
             localRouterSocketWaitHandle.Set();
             AsyncOpCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             localRouterSocket.Verify(m => m.TryReceive(), Times.Once);
             internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Never);
@@ -138,6 +142,7 @@ namespace kino.Tests.Routing
             messageRouter.Start();
             //
             internalRegistrationsReceiverWaitHandle.Set();
+            messageRouter.Stop();
             //
             internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Once);
             localRouterSocket.Verify(m => m.TryReceive(), Times.Never);
@@ -151,6 +156,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
         }
@@ -162,6 +168,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.IsAny<MessageIdentifier>()), Times.Never);
         }
@@ -177,6 +184,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>()), Times.Never);
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
@@ -195,6 +203,7 @@ namespace kino.Tests.Routing
             //
             internalRegistrationsReceiverWaitHandle.Set();
             AsyncOpCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             internalRegistrationHandler.Verify(m => m.Handle(internalRouteRegistration), Times.Once);
         }
@@ -211,6 +220,7 @@ namespace kino.Tests.Routing
             messageRouter.Start();
             //
             internalRegistrationsReceiverWaitHandle.Set();
+            messageRouter.Stop();
             //
             internalRegistrationHandler.Verify(m => m.Handle(internalRouteRegistration), Times.Never);
         }
@@ -225,6 +235,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
@@ -243,6 +254,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             localSocket.Verify(m => m.Send(It.Is<IMessage>(msg => !ReferenceEquals(msg, message))), Times.Once);
         }
@@ -261,6 +273,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             localSocket.Verify(m => m.Send(It.Is<IMessage>(msg => ReferenceEquals(msg, message))), Times.Once);
         }
@@ -278,6 +291,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
@@ -297,6 +311,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
@@ -316,6 +331,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
@@ -334,6 +350,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
@@ -356,6 +373,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message) && req.ReceiverNodeIdentity == otherNode)), Times.Once);
@@ -382,6 +400,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message) && req.ReceiverNodeIdentity == otherNodeIdentifier)), Times.Once);
             scaleOutSocket.Verify(m => m.Connect(It.Is<Uri>(uri => uri == peerConnection.Node.Uri), true), Times.Once);
@@ -405,6 +424,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             clusterHealthMonitor.Verify(m => m.ScheduleConnectivityCheck(It.Is<ReceiverIdentifier>(id => Unsafe.ArraysEqual(id.Identity, peerConnection.Node.SocketIdentity))), Times.Once);
         }
@@ -427,6 +447,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(msg => msg.Equals(unregMessage))), Times.Once);
             serviceMessageHandler.Verify(m => m.Handle(unregMessage, scaleOutSocket.Object));
@@ -443,8 +464,9 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
-            clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<global::kino.Cluster.MessageRoute>(mr => mr.Message.Equals(message))), Times.Once);
+            clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<MessageRoute>(mr => mr.Message.Equals(message))), Times.Once);
         }
 
         [Test]
@@ -459,6 +481,7 @@ namespace kino.Tests.Routing
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
             //
             clusterMonitor.Verify(m => m.UnregisterSelf(It.Is<IEnumerable<MessageRoute>>(mr => mr.First().Message.Equals(message))), Times.Once);
         }

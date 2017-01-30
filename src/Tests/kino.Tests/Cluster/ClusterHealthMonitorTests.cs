@@ -159,6 +159,7 @@ namespace kino.Tests.Cluster
             //
             clusterHealthMonitor.Start();
             ReceiveMessageCompletionDelay.Sleep();
+            clusterHealthMonitor.Stop();
             //
             publisherSocket.Verify(m => m.SendMessage(message), Times.Once);
         }
@@ -170,6 +171,7 @@ namespace kino.Tests.Cluster
             //
             clusterHealthMonitor.Start();
             config.StalePeersCheckInterval.MultiplyBy(2).Sleep();
+            clusterHealthMonitor.Stop();
             //
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.CheckStalePeers))), Times.AtLeastOnce);
         }
@@ -260,6 +262,7 @@ namespace kino.Tests.Cluster
             //
             clusterHealthMonitor.Start();
             AsyncOp.Sleep();
+            clusterHealthMonitor.Stop();
             //
             Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, TimeSpan.FromMilliseconds(200) + AsyncOp);
         }
@@ -284,6 +287,7 @@ namespace kino.Tests.Cluster
             //
             clusterHealthMonitor.Start();
             AsyncOp.Sleep();
+            clusterHealthMonitor.Stop();
             //
             Func<ClusterMemberMeta, bool> isPeerMetadata = meta =>
                                                                payload.Health.Uri == meta.HealthUri
@@ -311,6 +315,7 @@ namespace kino.Tests.Cluster
             //
             clusterHealthMonitor.Start();
             AsyncOp.Sleep();
+            clusterHealthMonitor.Stop();
             //
             connectedPeerRegistry.Verify(m => m.Remove(peerIdentifier), Times.Once);
             subscriberSocket.Verify(m => m.Disconnect(new Uri(meta.HealthUri)), Times.Exactly(connectionEstablished ? 1 : 0));
@@ -342,6 +347,36 @@ namespace kino.Tests.Cluster
             routerSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(KinoMessages.Ping))), Times.Once);
             routerSocket.Verify(m => m.Disconnect(new Uri(meta.ScaleOutUri)), Times.Once);
             Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, TimeSpan.FromMilliseconds(200) + AsyncOp);
+        }
+
+        [Test]
+        public void WhenCheckDeadPeersMessageArrives_ForEveryPeerWithExpiredHeartBeatUnregisterUnreachableNodeMessageIsSent()
+        {
+            var message = Message.Create(new CheckDeadPeersMessage());
+            var times = 0;
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
+            var deadPeers = EnumerableExtenions.Produce(Randomizer.Int32(3, 5),
+                                                        () => new KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>
+                                                            (new ReceiverIdentifier(Guid.NewGuid().ToByteArray()), new ClusterMemberMeta()))
+                                               .ToList();
+            connectedPeerRegistry.Setup(m => m.GetPeersWithExpiredHeartBeat()).Returns(deadPeers);
+            //
+            clusterHealthMonitor.Start();
+            AsyncOp.Sleep();
+            clusterHealthMonitor.Stop();
+            //
+            Func<IMessage, bool> isUnregisterNodeMessage = msg =>
+                                                           {
+                                                               if (msg.Equals(KinoMessages.UnregisterUnreachableNode))
+                                                               {
+                                                                   var payload = msg.GetPayload<UnregisterUnreachableNodeMessage>();
+                                                                   Assert.IsTrue(deadPeers.Any(kv => kv.Key == new ReceiverIdentifier(payload.ReceiverNodeIdentity)));
+                                                                   return true;
+                                                               }
+
+                                                               return false;
+                                                           };
+            routerLocalSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isUnregisterNodeMessage(msg))), Times.Exactly(deadPeers.Count));
         }
     }
 }
