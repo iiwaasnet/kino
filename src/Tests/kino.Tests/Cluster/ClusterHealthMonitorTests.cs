@@ -167,10 +167,10 @@ namespace kino.Tests.Cluster
         [Test]
         public void WhenClusterHealthMonitorStarts_ItStartsSendingCheckStalePeersMessage()
         {
-            config.StalePeersCheckInterval = TimeSpan.FromMilliseconds(500);
+            config.StalePeersCheckInterval = TimeSpan.FromMilliseconds(700);
             //
             clusterHealthMonitor.Start();
-            config.StalePeersCheckInterval.MultiplyBy(4).Sleep();
+            config.StalePeersCheckInterval.MultiplyBy(2).Sleep();
             clusterHealthMonitor.Stop();
             //
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.CheckStalePeers))), Times.AtLeastOnce);
@@ -377,6 +377,41 @@ namespace kino.Tests.Cluster
                                                                return false;
                                                            };
             routerLocalSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isUnregisterNodeMessage(msg))), Times.Exactly(deadPeers.Count));
+        }
+
+        [Test]
+        public void WhenCheckStalePeersMessageArrives_ConnectionToPeerEstablishedAndMessageIsSentToEachStalePeer()
+        {
+            var payload = new CheckStalePeersMessage();
+            var message = Message.Create(payload);
+            var times = 0;
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
+            var stalePeers = EnumerableExtenions.Produce(Randomizer.Int32(3, 5),
+                                                         i => new KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>
+                                                             (new ReceiverIdentifier(Guid.NewGuid().ToByteArray()),
+                                                              new ClusterMemberMeta
+                                                              {
+                                                                  ScaleOutUri = $"tcp://127.0.0.1:{i + 1000}"
+                                                              }))
+                                                .ToList();
+            connectedPeerRegistry.Setup(m => m.GetPeersWithExpiredHeartBeat()).Returns(stalePeers);
+            //
+            clusterHealthMonitor.Start();
+            TimeSpan.FromSeconds(2).Sleep();
+            clusterHealthMonitor.Stop();
+            //
+            Func<Uri, bool> isStalePeerUri = uri =>
+                                             {
+                                                 Assert.IsTrue(stalePeers.Any(kv => kv.Value.ScaleOutUri == uri.ToSocketAddress()));
+                                                 return true;
+                                             };
+
+            var callTimes = Times.Exactly(stalePeers.Count);
+            socketFactory.Verify(m => m.CreateRouterSocket(), callTimes);
+            routerSocket.Verify(m => m.SetMandatoryRouting(true), callTimes);
+            routerSocket.Verify(m => m.Connect(It.Is<Uri>(uri => isStalePeerUri(uri)), true), callTimes);
+            routerSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(KinoMessages.Ping))), callTimes);
+            routerSocket.Verify(m => m.Disconnect(It.Is<Uri>(uri => isStalePeerUri(uri))), callTimes);
         }
     }
 }
