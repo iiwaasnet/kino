@@ -21,7 +21,7 @@ namespace kino.Tests.Actors
     public class ActorHostTests
     {
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
         private Mock<ILogger> logger;
         private ActorHandlerMap actorHandlersMap;
         private Mock<ISecurityProvider> securityProvider;

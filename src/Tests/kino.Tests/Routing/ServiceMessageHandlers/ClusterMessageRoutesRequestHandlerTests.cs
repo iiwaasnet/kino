@@ -44,5 +44,16 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             nodeRoutesRegistrar.Verify(m => m.RegisterOwnGlobalRoutes(message.Domain), Times.Never);
         }
+
+        [Test]
+        public void IfDomainIsAllowed_RegisterOwnGlobalRoutesIsCalled()
+        {
+            var message = Message.Create(new RequestClusterMessageRoutesMessage()).As<Message>();
+            message.SetDomain(domain);
+            //
+            handler.Handle(message, null);
+            //
+            nodeRoutesRegistrar.Verify(m => m.RegisterOwnGlobalRoutes(message.Domain), Times.Once);
+        }
     }
 }
