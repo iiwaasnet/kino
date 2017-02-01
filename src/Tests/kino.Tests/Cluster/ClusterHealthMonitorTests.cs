@@ -170,7 +170,7 @@ namespace kino.Tests.Cluster
             config.StalePeersCheckInterval = TimeSpan.FromMilliseconds(500);
             //
             clusterHealthMonitor.Start();
-            config.StalePeersCheckInterval.MultiplyBy(2).Sleep();
+            config.StalePeersCheckInterval.MultiplyBy(4).Sleep();
             clusterHealthMonitor.Stop();
             //
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.CheckStalePeers))), Times.AtLeastOnce);

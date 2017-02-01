@@ -6,7 +6,6 @@ using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
-using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
@@ -22,12 +21,12 @@ namespace kino.Tests.Client
     [TestFixture]
     public class MessagHubTests
     {
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(50);
-        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
+        private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
         private MessageHubSocketFactory messageHubSocketFactory;
         private readonly string localhost = "tcp://localhost:43";
         private Mock<ISocketFactory> socketFactory;
-        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private ILogger logger;
         private Mock<ICallbackHandlerStack> callbackHandlerStack;
         private Mock<ISecurityProvider> securityProvider;
@@ -43,7 +42,6 @@ namespace kino.Tests.Client
         public void Setup()
         {
             callbackHandlerStack = new Mock<ICallbackHandlerStack>();
-            performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             logger = new Mock<ILogger>().Object;
             messageHubSocketFactory = new MessageHubSocketFactory();
             socketFactory = new Mock<ISocketFactory>();
@@ -92,7 +90,7 @@ namespace kino.Tests.Client
                 var callback = CallbackPoint.Create<SimpleMessage>();
                 //
                 messageHub.EnqueueRequest(message, callback);
-                AsyncOp.Sleep();
+                AsyncOpCompletionDelay.Sleep();
                 //
                 callbackHandlerStack.Verify(m => m.Push(It.IsAny<IPromise>(),
                                                         It.Is<IEnumerable<MessageIdentifier>>(en => ContainsMessageAndExceptionRegistrations(en))),
@@ -114,7 +112,7 @@ namespace kino.Tests.Client
                 var callback = CallbackPoint.Create<SimpleMessage>();
                 //
                 messageHub.EnqueueRequest(message, callback);
-                AsyncOp.Sleep();
+                AsyncOpCompletionDelay.Sleep();
                 //
                 Func<IMessage, bool> routerSocketIsReceiver = msg => Unsafe.ArraysEqual(msg.As<Message>().ReceiverNodeIdentity, scaleOutAddress.Identity)
                                                                      && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
@@ -169,10 +167,10 @@ namespace kino.Tests.Client
                                                       Guid.NewGuid().ToByteArray(),
                                                       callback.MessageIdentifiers,
                                                       promise.CallbackKey.Value);
-                receivingSocket.SetupMessageReceived(callbackMessage, AsyncOpCompletionDelay);
+                receivingSocket.SetupMessageReceived(callbackMessage, ReceiveMessageDelay);
                 //
                 messageHub.Start();
-                AsyncOpCompletionDelay.Sleep();
+                ReceiveMessageCompletionDelay.Sleep();
                 //
                 Assert.IsNull(callbackHandlerStack.Pop(new CallbackHandlerKey
                                                        {
@@ -210,10 +208,10 @@ namespace kino.Tests.Client
                                                 Guid.NewGuid().ToByteArray(),
                                                 callback.MessageIdentifiers,
                                                 promise.CallbackKey.Value);
-                receivingSocket.SetupMessageReceived(exception, AsyncOpCompletionDelay);
+                receivingSocket.SetupMessageReceived(exception, ReceiveMessageDelay);
                 //
                 messageHub.Start();
-                AsyncOpCompletionDelay.Sleep();
+                ReceiveMessageCompletionDelay.Sleep();
                 //
                 Assert.Throws<AggregateException>(() =>
                                                   {
@@ -249,10 +247,10 @@ namespace kino.Tests.Client
                                                       Guid.NewGuid().ToByteArray(),
                                                       callback.MessageIdentifiers,
                                                       nonExistingCallbackKey);
-                receivingSocket.SetupMessageReceived(callbackMessage, AsyncOpCompletionDelay);
+                receivingSocket.SetupMessageReceived(callbackMessage, ReceiveMessageDelay);
                 //
                 messageHub.Start();
-                AsyncOpCompletionDelay.Sleep();
+                ReceiveMessageCompletionDelay.Sleep();
                 //
                 Assert.IsFalse(promise.GetResponse().Wait(AsyncOpCompletionDelay));
             }
