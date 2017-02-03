@@ -13,6 +13,7 @@ using kino.Security;
 using kino.Tests.Helpers;
 using Moq;
 using NUnit.Framework;
+using MessageContract = kino.Messaging.Messages.MessageContract;
 using MessageRoute = kino.Cluster.MessageRoute;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
@@ -75,7 +76,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
         {
             var payload = new DiscoverMessageRouteMessage
                           {
-                              MessageContract = new global::kino.Messaging.Messages.MessageContract
+                              MessageContract = new MessageContract
                                                 {
                                                     Identity = Guid.NewGuid().ToByteArray(),
                                                     Partition = Guid.NewGuid().ToByteArray(),
@@ -100,7 +101,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                   .First();
             var payload = new DiscoverMessageRouteMessage
                           {
-                              MessageContract = new global::kino.Messaging.Messages.MessageContract
+                              MessageContract = new MessageContract
                                                 {
                                                     Identity = localMessageRoute.Identity,
                                                     Partition = localMessageRoute.Partition,
@@ -117,7 +118,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
         }
 
         [Test]
-        public void IfDiscoveryMessageRouteIsForMessageWithGlobalyRegisteredActor_RegisterSelfIsCalled()
+        public void IfDiscoveryMessageRouteIsForMessageWithGlobalyRegisteredActors_RegisterSelfIsCalledOnceForEachActor()
         {
             var localMessageRoute = internalRoutes.Actors
                                                   .SelectMany(r => r.Actors
@@ -127,14 +128,15 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                                                      Receiver = a,
                                                                                      Message = r.Message
                                                                                  }))
+                                                  .GroupBy(a => a.Message)
                                                   .First();
             var payload = new DiscoverMessageRouteMessage
                           {
-                              MessageContract = new global::kino.Messaging.Messages.MessageContract
+                              MessageContract = new MessageContract
                                                 {
-                                                    Identity = localMessageRoute.Message.Identity,
-                                                    Partition = localMessageRoute.Message.Partition,
-                                                    Version = localMessageRoute.Message.Version
+                                                    Identity = localMessageRoute.Key.Identity,
+                                                    Partition = localMessageRoute.Key.Partition,
+                                                    Version = localMessageRoute.Key.Version
                                                 }
                           };
             var message = Message.Create(payload).As<Message>();
@@ -146,11 +148,11 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             Func<IEnumerable<MessageRoute>, bool> isRegisteredMessageRoute = rts =>
                                                                              {
                                                                                  var route = rts.First();
-                                                                                 Assert.AreEqual(localMessageRoute.Message, route.Message);
-                                                                                 Assert.AreEqual(localMessageRoute.Receiver, route.Receiver);
+                                                                                 Assert.AreEqual(localMessageRoute.Key, route.Message);
+                                                                                 Assert.IsTrue(localMessageRoute.Any( a => a.Receiver == route.Receiver));
                                                                                  return true;
                                                                              };
-            clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageRoute>>(rts => isRegisteredMessageRoute(rts)), domain), Times.Once);
+            clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageRoute>>(rts => isRegisteredMessageRoute(rts)), domain), Times.Exactly(localMessageRoute.Count()));
         }
 
         [Test]
@@ -167,7 +169,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                   .First();
             var payload = new DiscoverMessageRouteMessage
                           {
-                              MessageContract = new global::kino.Messaging.Messages.MessageContract
+                              MessageContract = new MessageContract
                                                 {
                                                     Identity = localMessageRoute.Message.Identity,
                                                     Partition = localMessageRoute.Message.Partition,
@@ -240,7 +242,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                    Actors = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
                                                         () => new MessageActorRoute
                                                               {
-                                                                  Actors = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+                                                                  Actors = EnumerableExtenions.Produce(Randomizer.Int32(5, 15),
                                                                                                        i => new ReceiverIdentifierRegistration(ReceiverIdentities.CreateForActor(), i % 2 == 0)),
                                                                   Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(), Randomizer.UInt16(), Guid.NewGuid().ToByteArray())
                                                               }),

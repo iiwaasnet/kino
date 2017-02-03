@@ -39,16 +39,18 @@ namespace kino.Routing.ServiceMessageHandlers
 
         private IEnumerable<MessageRouteDomainMap> GetActors(InternalRouteRegistration routeRegistration)
             => routeRegistration.ToEnumerable()
-                                .Where(r => !r.KeepRegistrationLocal && r.ReceiverIdentifier.IsActor())
-                                .SelectMany(a => a.MessageContracts.Select(mc => new MessageRouteDomainMap
-                                                                                 {
-                                                                                     MessageRoute = new Cluster.MessageRoute
-                                                                                                    {
-                                                                                                        Receiver = a.ReceiverIdentifier,
-                                                                                                        Message = mc.Message
-                                                                                                    },
-                                                                                     Domain = securityProvider.GetDomain(mc.Message.Identity)
-                                                                                 }));
+                                .Where(r => r.ReceiverIdentifier.IsActor())
+                                .SelectMany(a => a.MessageContracts
+                                                  .Where(mc => !mc.KeepRegistrationLocal)
+                                                  .Select(mc => new MessageRouteDomainMap
+                                                                {
+                                                                    MessageRoute = new Cluster.MessageRoute
+                                                                                   {
+                                                                                       Receiver = a.ReceiverIdentifier,
+                                                                                       Message = mc.Message
+                                                                                   },
+                                                                    Domain = securityProvider.GetDomain(mc.Message.Identity)
+                                                                }));
 
         private IEnumerable<MessageRouteDomainMap> GetMessageHubs(InternalRouteRegistration routeRegistration)
             => routeRegistration.ToEnumerable()
