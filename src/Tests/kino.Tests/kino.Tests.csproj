@@ -130,6 +130,7 @@
     <Compile Include="Messaging\MessageTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Routing\InternalRoutingTableTests.cs" />
+    <Compile Include="Routing\ServiceMessageHandlers\MessageRouteDiscoveryHandlerTests.cs" />
     <Compile Include="Routing\ServiceMessageHandlers\MessageRouteUnregistrationHandlerTests.cs" />
     <Compile Include="UriExtensionsTests.cs" />
   </ItemGroup>
