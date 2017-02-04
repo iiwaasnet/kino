@@ -133,9 +133,12 @@
     <Compile Include="Routing\ServiceMessageHandlers\InternalMessageRouteRegistrationHandlerTests.cs" />
     <Compile Include="Routing\ServiceMessageHandlers\MessageRouteDiscoveryHandlerTests.cs" />
     <Compile Include="Routing\ServiceMessageHandlers\MessageRouteUnregistrationHandlerTests.cs" />
+    <Compile Include="Routing\ServiceMessageHandlers\NodeMessageRoutesRequestHandlerTests.cs" />
     <Compile Include="Routing\ServiceMessageHandlers\NodeRoutesRegistrarTests.cs" />
     <Compile Include="Routing\ServiceMessageHandlers\NodeUnregistrationHandlerTests.cs" />
+    <Compile Include="Routing\ServiceMessageHandlers\PingHandlerTests.cs" />
     <Compile Include="Routing\ServiceMessageHandlers\ServiceMessageHandlerRegistryTests.cs" />
+    <Compile Include="Routing\ServiceMessageHandlers\UnreachableNodeUnregistrationHandlerTests.cs" />
     <Compile Include="UriExtensionsTests.cs" />
   </ItemGroup>
   <ItemGroup>
