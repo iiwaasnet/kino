@@ -55,10 +55,20 @@ namespace kino.Cluster
 
                     while (!token.IsCancellationRequested)
                     {
-                        var message = clusterMonitorSubscriptionSocket.ReceiveMessage(token);
-                        if (message != null)
+                        try
                         {
-                            ProcessIncomingMessage(message);
+                            var message = clusterMonitorSubscriptionSocket.ReceiveMessage(token);
+                            if (message != null)
+                            {
+                                ProcessIncomingMessage(message);
+                            }
+                        }
+                        catch (OperationCanceledException)
+                        {
+                        }
+                        catch (Exception err)
+                        {
+                            logger.Error(err);
                         }
                     }
                 }
@@ -81,46 +91,48 @@ namespace kino.Cluster
 
         private void RendezvousConnectionMonitor(Action restartRequestHandler, CancellationToken token)
         {
-            try
+            while (!token.IsCancellationRequested)
             {
-                while (!token.IsCancellationRequested)
+                try
                 {
-                    if (HeartBeatSilence())
+                    if (HeartBeatSilence(token))
                     {
                         restartRequestHandler();
                     }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception err)
-            {
-                logger.Error(err);
+                catch (OperationCanceledException)
+                {
+                }
+                catch (Exception err)
+                {
+                    logger.Error(err);
+                }
             }
         }
 
-        private bool HeartBeatSilence()
+        private bool HeartBeatSilence(CancellationToken token)
         {
             const int rendezvousConfigurationChanged = 1;
+            const int cancellationRequested = 2;
             var result = WaitHandle.WaitAny(new[]
                                             {
                                                 heartBeatReceived.WaitHandle,
-                                                newRendezvousConfiguration.WaitHandle
+                                                newRendezvousConfiguration.WaitHandle,
+                                                token.WaitHandle
                                             },
                                             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover);
-            if (result == WaitHandle.WaitTimeout)
+            switch (result)
             {
-                var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
-                logger.Info($"HeartBeat timeout Rendezvous {rendezvousServer.BroadcastUri.AbsoluteUri}");
-
-                rendezvousCluster.RotateRendezvousServers();
-                return true;
-            }
-            if (result == rendezvousConfigurationChanged)
-            {
-                newRendezvousConfiguration.Reset();
-                return true;
+                case WaitHandle.WaitTimeout:
+                    var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
+                    logger.Info($"HeartBeat timeout Rendezvous {rendezvousServer.BroadcastUri.AbsoluteUri}");
+                    rendezvousCluster.RotateRendezvousServers();
+                    return true;
+                case rendezvousConfigurationChanged:
+                    newRendezvousConfiguration.Reset();
+                    return true;
+                case cancellationRequested:
+                    return false;
             }
 
             heartBeatReceived.Reset();
@@ -160,7 +172,7 @@ namespace kino.Cluster
                 rendezvousCluster.Reconfigure(payload
                                                   .RendezvousNodes
                                                   .Select(rn => new RendezvousEndpoint(new Uri(rn.UnicastUri),
-                                                                                       new Uri(rn.MulticastUri))));
+                                                                                       new Uri(rn.BroadcastUri))));
                 newRendezvousConfiguration.Set();
             }
 
@@ -174,7 +186,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<RendezvousNotLeaderMessage>();
                 var newLeader = new RendezvousEndpoint(new Uri(payload.NewLeader.UnicastUri),
-                                                       new Uri(payload.NewLeader.MulticastUri));
+                                                       new Uri(payload.NewLeader.BroadcastUri));
                 var currentLeader = rendezvousCluster.GetCurrentRendezvousServer();
                 if (!currentLeader.Equals(newLeader))
                 {
@@ -200,12 +212,12 @@ namespace kino.Cluster
             return shouldHandle;
         }
 
-        private bool Pong(IMessage message)
+        private static bool Pong(IMessage message)
             => message.Equals(KinoMessages.Pong);
 
         private bool RoutingControlMessage(IMessage message)
         {
-            var shouldHandle = IsRequestAllMessageRoutingMessage(message)
+            var shouldHandle = IsRequestClusterMessageRoutesMessage(message)
                                || IsRequestNodeMessageRoutingMessage(message)
                                || IsUnregisterMessageRoutingMessage(message)
                                || IsRegisterExternalRoute(message)
@@ -232,16 +244,16 @@ namespace kino.Cluster
             return false;
         }
 
-        private bool IsHeartBeat(IMessage message)
+        private static bool IsHeartBeat(IMessage message)
             => message.Equals(KinoMessages.HeartBeat);
 
-        private bool IsRendezvousNotLeader(IMessage message)
+        private static bool IsRendezvousNotLeader(IMessage message)
             => message.Equals(KinoMessages.RendezvousNotLeader);
 
-        private bool IsRendezvousReconfiguration(IMessage message)
+        private static bool IsRendezvousReconfiguration(IMessage message)
             => message.Equals(KinoMessages.RendezvousConfigurationChanged);
 
-        private bool IsRequestAllMessageRoutingMessage(IMessage message)
+        private bool IsRequestClusterMessageRoutesMessage(IMessage message)
         {
             if (message.Equals(KinoMessages.RequestClusterMessageRoutes))
             {

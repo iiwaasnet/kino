@@ -101,8 +101,10 @@
     <Compile Include="Actors\Setup\SimpleMessage.cs" />
     <Compile Include="Client\CallbackHandlerStackTests.cs" />
     <Compile Include="Client\MessagHubTests.cs" />
+    <Compile Include="Cluster\AutoDiscoveryListenerTests.cs" />
     <Compile Include="Cluster\AutoDiscoverySenderTests.cs" />
     <Compile Include="Cluster\ClusterHealthMonitorTests.cs" />
+    <Compile Include="Helpers\SocketHelpers.cs" />
     <Compile Include="Routing\ServiceMessageHandlers\ClusterMessageRoutesRequestHandlerTests.cs" />
     <Compile Include="Cluster\ClusterMonitorTests.cs" />
     <Compile Include="Routing\ServiceMessageHandlers\ExternalMessageRouteRegistrationHandlerTests.cs" />

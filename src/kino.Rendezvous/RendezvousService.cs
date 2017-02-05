@@ -48,7 +48,7 @@ namespace kino.Rendezvous
             pongMessage = Message.Create(new PongMessage());
             leaderPayload = serializer.Serialize(new RendezvousNode
                                                  {
-                                                     MulticastUri = config.BroadcastUri.ToSocketAddress(),
+                                                     BroadcastUri = config.BroadcastUri.ToSocketAddress(),
                                                      UnicastUri = config.UnicastUri.ToSocketAddress()
                                                  });
         }

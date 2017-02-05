@@ -6,7 +6,7 @@ namespace kino.Messaging.Messages
     public class RendezvousNode
     {
         [ProtoMember(1)]
-        public string MulticastUri { get; set; }
+        public string BroadcastUri { get; set; }
 
         [ProtoMember(2)]
         public string UnicastUri { get; set; }
