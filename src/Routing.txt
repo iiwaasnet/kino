@@ -1,11 +1,11 @@
-RN              [A   MH]         MVP                          Pattern                         Meaning
-            ReceiverIdentity
-====================================================================
-                                         X                           Broadcast                      Send message to all nodes, distribute within each node to all actors
-                                         X                           Unicast                          Any Actor on any node, starting from self
-X                       X                                             -//-                             Callback, return message to specific MessageHub on specific node
-X                X                     X                           Unicast                          Specific Actor on specific node
-X                                       X                           Unicast                          Any Actor on specific node
+RN           [A   MH]         MVP           Pattern           Meaning
+         ReceiverIdentity
+=================================================================================================================================
+                               X            Broadcast         Send message to all nodes, distribute within each node to all actors
+                               X            Unicast           Any Actor on any node, starting from self
+X                    X                       -//-             Callback, return message to specific MessageHub on specific node
+X             X                X            Unicast           Specific Actor on specific node
+X                              X            Unicast           Any Actor on specific node
 
 
 ===============
@@ -13,21 +13,22 @@ SocketIdentity - identity of the ROUTER socket to which the message will be sent
 
 RN - ReceiverNodeIdentity
 [A MH] - ReceiverIdentity, Actor or MessageHub
+MVP - Message-Version-Partiotion Identifier
 
 
 ReceiverIdentity Format
 ==============
 MessageHub Identity     [0][GUID]
-Actor Identity                [1][GUID]
+Actor Identity          [1][GUID]
 
 
 
 Route lookup
 ==============
 - *   +  *   + MVP
-- RN +  *   + MVP
-- RN + A    + MVP
-- RN + MH  +  *
+- RN +  *    + MVP
+- RN + A     + MVP
+- RN + MH    +  *
 
 Remove route
 =============
@@ -39,9 +40,9 @@ Remove route
 Registrations
 ==============
 SocketIdentity (RN)
-    - RN
-    - [{MVP, [A]}]
-    - [MH]
+  - RN
+  - [{MVP, [A]}]
+  - [MH]
 
 
 Storage
