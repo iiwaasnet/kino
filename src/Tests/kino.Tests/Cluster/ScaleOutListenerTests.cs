@@ -31,6 +31,7 @@ namespace kino.Tests.Cluster
         private Mock<ISocket> frontEndSocket;
         private SocketEndpoint[] scaleOutAddresses;
         private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
+        private SocketConfiguration socketConfig;
 
         [SetUp]
         public void Setup()
@@ -38,7 +39,7 @@ namespace kino.Tests.Cluster
             frontEndSocket = new Mock<ISocket>();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(frontEndSocket.Object);
-            var socketConfig = new SocketConfiguration();
+            socketConfig = new SocketConfiguration();
             socketFactory.Setup(m => m.GetSocketDefaultConfiguration()).Returns(socketConfig);
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             var perfCounter = new Mock<IPerformanceCounter>();
@@ -163,6 +164,36 @@ namespace kino.Tests.Cluster
             frontEndSocket.Verify(m => m.Bind(scaleOutAddresses.First().Uri), Times.Once);
             frontEndSocket.Verify(m => m.Bind(scaleOutAddresses.Second().Uri), Times.Once);
             logger.Verify(m => m.Info(It.IsAny<object>()), Times.Exactly(2));
+        }
+
+        [Test]
+        [TestCase(0, 2000)]
+        [TestCase(3000, 2000)]
+        public void IfFrontEndSocketHWMEqualsZeroOrGreaterThanDefaultHWM_ThenFrontEndSocketHWMIsSetToDefaultValue(int frontEndSocketHwm, int defaultHwm)
+        {
+            socketConfig.ReceivingHighWatermark = defaultHwm;
+            scaleOutConfigurationManager.Setup(m => m.GetScaleOutReceiveMessageQueueLength()).Returns(frontEndSocketHwm);
+            //
+            scaleOutListener.Start();
+            scaleOutListener.Stop();
+            //
+            frontEndSocket.Verify(m => m.SetReceiveHighWaterMark(defaultHwm), Times.Once);
+            frontEndSocket.Verify(m => m.SetReceiveHighWaterMark(frontEndSocketHwm), Times.Never);
+        }
+
+        [Test]
+        public void IfFrontEndSocketHWMLessThanDefaultHWMAndGreaterThanZero_ThenFrontEndSocketHWMIsSet()
+        {
+            var defaultHwm = 2000;
+            var frontEndSocketHwm = defaultHwm - 100;
+            socketConfig.ReceivingHighWatermark = defaultHwm;
+            scaleOutConfigurationManager.Setup(m => m.GetScaleOutReceiveMessageQueueLength()).Returns(frontEndSocketHwm);
+            //
+            scaleOutListener.Start();
+            scaleOutListener.Stop();
+            //
+            frontEndSocket.Verify(m => m.SetReceiveHighWaterMark(frontEndSocketHwm), Times.Once);
+            frontEndSocket.Verify(m => m.SetReceiveHighWaterMark(defaultHwm), Times.Never);
         }
     }
 }
