@@ -70,7 +70,7 @@ namespace kino.Cluster
                         Message message = null;
                         try
                         {
-                            message = (Message) scaleOutFrontend.ReceiveMessage(token);
+                            message = scaleOutFrontend.ReceiveMessage(token).As<Message>();
                             if (message != null)
                             {
                                 message.VerifySignature(securityProvider);
@@ -79,13 +79,15 @@ namespace kino.Cluster
                                 ReceivedFromOtherNode(message);
                             }
                         }
-                        catch (SecurityException err)
-                        {
-                            CallbackSecurityException(err, message);
-                            logger.Error(err);
-                        }
+                        //TODO: Check why sending exception message was only in case of SecurityException
+                        //catch (SecurityException err)
+                        //{
+                        //    CallbackException(err, message);
+                        //    logger.Error(err);
+                        //}
                         catch (Exception err)
                         {
+                            CallbackException(err, message);
                             logger.Error(err);
                         }
                     }
@@ -141,7 +143,7 @@ namespace kino.Cluster
             return hwm;
         }
 
-        private void CallbackSecurityException(Exception err, Message messageIn)
+        private void CallbackException(Exception err, Message messageIn)
         {
             var messageOut = Message.Create(new ExceptionMessage
                                             {
@@ -150,13 +152,17 @@ namespace kino.Cluster
                                             })
                                     .As<Message>();
             messageOut.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
-            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
-                                             messageIn.CallbackReceiverIdentity,
-                                             messageIn.CallbackPoint,
-                                             messageIn.CallbackKey);
-            messageOut.SetCorrelationId(messageIn.CorrelationId);
-            messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
-            messageOut.TraceOptions |= messageIn.TraceOptions;
+
+            if (messageIn != null)
+            {
+                messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
+                                                 messageIn.CallbackReceiverIdentity,
+                                                 messageIn.CallbackPoint,
+                                                 messageIn.CallbackKey);
+                messageOut.SetCorrelationId(messageIn.CorrelationId);
+                messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
+                messageOut.TraceOptions |= messageIn.TraceOptions;
+            }
 
             localRouterSocket.Send(messageOut);
         }

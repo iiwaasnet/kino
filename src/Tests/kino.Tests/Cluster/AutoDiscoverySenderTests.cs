@@ -24,7 +24,6 @@ namespace kino.Tests.Cluster
         private Mock<ILogger> logger;
         private Mock<ISocketFactory> socketFactory;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
-        private Mock<IPerformanceCounter> perfCounter;
         private Mock<ISocket> socket;
         private RendezvousEndpoint rendezvousEndpoint;
 
@@ -38,7 +37,7 @@ namespace kino.Tests.Cluster
             socket = new Mock<ISocket>();
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(socket.Object);
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
-            perfCounter = new Mock<IPerformanceCounter>();
+            var perfCounter = new Mock<IPerformanceCounter>();
             performanceCounterManager.Setup(m => m.GetCounter(It.IsAny<KinoPerformanceCounters>())).Returns(perfCounter.Object);
             logger = new Mock<ILogger>();
             autoDiscoverSender = new AutoDiscoverySender(rendezvousCluster.Object,
