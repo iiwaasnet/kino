@@ -125,7 +125,7 @@ namespace kino.Consensus
             socket.Subscribe();
             foreach (var node in synodConfig.Synod)
             {
-                socket.Connect(node);
+                socket.Connect(node, true);
             }
 
             return socket;
@@ -138,7 +138,7 @@ namespace kino.Consensus
             socket.Subscribe(synodConfig.LocalNode.SocketIdentity);
             foreach (var node in synodConfig.Synod)
             {
-                socket.Connect(node);
+                socket.Connect(node, true);
             }
 
             return socket;

@@ -6,19 +6,15 @@ using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Rendezvous.Configuration;
-using kino.Tests.Helpers;
 using Moq;
 using SynodConfiguration = kino.Rendezvous.Configuration.SynodConfiguration;
 
 namespace kino.Tests.Consensus.Setup
 {
-    public class RoundBasedRegisterTestsHelper
+    public static class RoundBasedRegisterTestsHelper
     {
         internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<Uri> synod, Uri localNodeUri)
         {
-            var intercomMessageHubSocketFactory = new IntercomMessageHubSocketFactory();
-            var socketFactory = new Mock<ISocketFactory>();
-            socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(intercomMessageHubSocketFactory.CreateSubscriberSocket);
             var appConfig = new ApplicationConfiguration
                             {
                                 Synod = new SynodConfiguration
@@ -29,9 +25,9 @@ namespace kino.Tests.Consensus.Setup
                                 Lease = new LeaseConfiguration
                                         {
                                             ClockDrift = TimeSpan.FromMilliseconds(10),
-                                            MessageRoundtrip = TimeSpan.FromMilliseconds(400),
-                                            NodeResponseTimeout = TimeSpan.FromMilliseconds(200),
-                                            MaxLeaseTimeSpan = TimeSpan.FromSeconds(3)
+                                            MessageRoundtrip = TimeSpan.FromMilliseconds(8000),
+                                            NodeResponseTimeout = TimeSpan.FromMilliseconds(2000),
+                                            MaxLeaseTimeSpan = TimeSpan.FromSeconds(12)
                                         }
                             };
 
