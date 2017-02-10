@@ -7,6 +7,7 @@ using static kino.Tests.Consensus.Setup.RoundBasedRegisterTestsHelper;
 
 namespace kino.Tests.Consensus
 {
+
     [TestFixture(Category = "FLease", Description = @"Lemma R1: Read-abort: If READ(k) aborts, then some
 operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
     public class RoundBasedRegisterTests_LemmaR1
