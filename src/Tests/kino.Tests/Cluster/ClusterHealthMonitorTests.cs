@@ -166,7 +166,7 @@ namespace kino.Tests.Cluster
         [Test]
         public void WhenClusterHealthMonitorStarts_ItStartsSendingCheckStalePeersMessage()
         {
-            config.StalePeersCheckInterval = TimeSpan.FromMilliseconds(700);
+            config.StalePeersCheckInterval = TimeSpan.FromMilliseconds(200);
             //
             clusterHealthMonitor.Start();
             config.StalePeersCheckInterval.MultiplyBy(10).Sleep();

@@ -122,7 +122,7 @@ namespace kino.Tests.Cluster
                                                                                  })
                           };
             var message = Message.Create(payload);
-            subscriptionSocket.SetupMessageReceived(message);
+            subscriptionSocket.SetupMessageReceived(message, cancellatioSource.Token);
             //
             await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellatioSource.Token, gateway));
             //
@@ -154,7 +154,7 @@ namespace kino.Tests.Cluster
                                           }
                           };
             var message = Message.Create(payload);
-            subscriptionSocket.SetupMessageReceived(message);
+            subscriptionSocket.SetupMessageReceived(message, cancellatioSource.Token);
             //
             await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellatioSource.Token, gateway));
             //
@@ -170,22 +170,23 @@ namespace kino.Tests.Cluster
         }
 
         [Test]
-        public async Task RoutingControlMessages_AreForwardedToRouterSocket()
+        public void RoutingControlMessages_AreForwardedToRouterSocket()
         {
             foreach (var payload in GetRoutingControlMessages())
             {
-                await TestRoutingControlMessagesAreForwardedToRouterSocket(payload);
+                TestRoutingControlMessagesAreForwardedToRouterSocket(payload);
             }
         }
 
-        private async Task TestRoutingControlMessagesAreForwardedToRouterSocket(IPayload payload)
+        private void TestRoutingControlMessagesAreForwardedToRouterSocket(IPayload payload)
         {
             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(100);
             var cancellatioSource = new CancellationTokenSource(AsyncOp);
             var message = Message.Create(payload);
-            subscriptionSocket.SetupMessageReceived(message);
+            subscriptionSocket.SetupMessageReceived(message, cancellatioSource.Token);
             //
-            await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellatioSource.Token, gateway));
+            var task = Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellatioSource.Token, gateway));
+            task.Wait();
             //
             localRouterSocket.Verify(m => m.Send(message), Times.Once);
         }
@@ -201,7 +202,7 @@ namespace kino.Tests.Cluster
         }
 
         private static Task Start(Action @delegate)
-            => Task.Factory.StartNew(@delegate, TaskCreationOptions.LongRunning);
+            => Task.Factory.StartNew(@delegate);
 
         private RendezvousEndpoint GetCurrentRendezvous()
             => rendezvousEndpoints[currentRendezvousIndex];

@@ -69,6 +69,7 @@ namespace kino.Tests.Cluster
             frontEndSocket.SetupMessageReceived(null);
             //
             scaleOutListener.Start();
+            scaleOutListener.Stop();
             //
             frontEndSocket.Verify(m => m.ReceiveMessage(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
             localRouterSocket.Verify(m => m.Send(It.IsAny<IMessage>()), Times.Never);
@@ -82,6 +83,7 @@ namespace kino.Tests.Cluster
             //
             scaleOutListener.Start();
             AsyncOp.Sleep();
+            scaleOutListener.Stop();
             //
             localRouterSocket.Verify(m => m.Send(message), Times.Once);
         }
@@ -102,6 +104,7 @@ namespace kino.Tests.Cluster
             //
             scaleOutListener.Start();
             AsyncOp.Sleep();
+            scaleOutListener.Stop();
             //
             Func<IMessage, bool> isExceptionOrInitalMessage = msg =>
                                                               {
@@ -137,6 +140,7 @@ namespace kino.Tests.Cluster
             //
             scaleOutListener.Start();
             AsyncOp.Sleep();
+            scaleOutListener.Stop();
             //
             Func<IMessage, bool> isExceptionMessage = msg =>
                                                       {

@@ -15,6 +15,20 @@ namespace kino.Tests.Helpers
             mock.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => times++ == 0 ? message : null);
         }
 
+        internal static void SetupMessageReceived(this Mock<ISocket> mock, IMessage message, CancellationToken token)
+        {
+            var times = 0;
+            mock.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() =>
+                                                                                     {
+                                                                                         if (times++ == 0)
+                                                                                         {
+                                                                                             return message;
+                                                                                         }
+                                                                                         token.WaitHandle.WaitOne();
+                                                                                         return null;
+                                                                                     });
+        }
+
         internal static void SetupMessageReceived(this Mock<ISocket> mock, IMessage message, TimeSpan everyTimeSpan)
             => mock.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() =>
                                                                                         {
