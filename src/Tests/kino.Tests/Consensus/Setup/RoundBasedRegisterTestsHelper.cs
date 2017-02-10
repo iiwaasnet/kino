@@ -25,9 +25,9 @@ namespace kino.Tests.Consensus.Setup
                                 Lease = new LeaseConfiguration
                                         {
                                             ClockDrift = TimeSpan.FromMilliseconds(10),
-                                            MessageRoundtrip = TimeSpan.FromMilliseconds(8000),
-                                            NodeResponseTimeout = TimeSpan.FromMilliseconds(2000),
-                                            MaxLeaseTimeSpan = TimeSpan.FromSeconds(12)
+                                            MessageRoundtrip = TimeSpan.FromMilliseconds(100),
+                                            NodeResponseTimeout = TimeSpan.FromMilliseconds(1000),
+                                            MaxLeaseTimeSpan = TimeSpan.FromSeconds(3)
                                         }
                             };
 
