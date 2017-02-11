@@ -96,10 +96,10 @@ namespace kino.Tests.Cluster
         [Test]
         public async Task IfHeartBeatArrivesWithinHeartBeatSilenceBeforeRendezvousFailoverTime_ListenerDoesntRestart()
         {
-            var numberOfHeartBeats = 3;
+            var numberOfHeartBeats = 2;
             var cancellatioSource = new CancellationTokenSource(membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover.MultiplyBy(numberOfHeartBeats));
             var heartBeatFrequency = membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover.DivideBy(2);
-            subscriptionSocket.SetupMessageReceived(Message.Create(new HeartBeatMessage()), heartBeatFrequency);
+            subscriptionSocket.SetupPeriodicMessageReceived(Message.Create(new HeartBeatMessage()), heartBeatFrequency);
             //
             await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellatioSource.Token, gateway));
             //

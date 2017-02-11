@@ -32,10 +32,12 @@ namespace kino.Tests.Cluster
         private SocketEndpoint[] scaleOutAddresses;
         private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
         private SocketConfiguration socketConfig;
+        private CancellationTokenSource tokenSource;
 
         [SetUp]
         public void Setup()
         {
+            tokenSource = new CancellationTokenSource();
             frontEndSocket = new Mock<ISocket>();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(frontEndSocket.Object);
@@ -66,9 +68,10 @@ namespace kino.Tests.Cluster
         [Test]
         public void IfFrontEndSocketReturnsNull_LocalRouterSocketSendIsNotCalled()
         {
-            frontEndSocket.SetupMessageReceived(null);
+            frontEndSocket.SetupMessageReceived(null, tokenSource.Token);
             //
             scaleOutListener.Start();
+            tokenSource.Cancel();
             scaleOutListener.Stop();
             //
             frontEndSocket.Verify(m => m.ReceiveMessage(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
@@ -79,10 +82,11 @@ namespace kino.Tests.Cluster
         public void IfFrontEndSocketReturnsMessage_ItIsForwardedToLocalRouterSocket()
         {
             var message = Message.Create(new SimpleMessage());
-            frontEndSocket.SetupMessageReceived(message);
+            frontEndSocket.SetupMessageReceived(message, tokenSource.Token);
             //
             scaleOutListener.Start();
             AsyncOp.Sleep();
+            tokenSource.Cancel();
             scaleOutListener.Stop();
             //
             localRouterSocket.Verify(m => m.Send(message), Times.Once);
@@ -99,11 +103,12 @@ namespace kino.Tests.Cluster
             message.PushRouterAddress(new SocketEndpoint("tcp://127.0.0.4:7878"));
             message.PushRouterAddress(new SocketEndpoint("tcp://127.0.0.5:5464"));
             message.SetCorrelationId(Guid.NewGuid().ToByteArray());
-            frontEndSocket.SetupMessageReceived(message);
+            frontEndSocket.SetupMessageReceived(message, tokenSource.Token);
             localRouterSocket.Setup(m => m.Send(message)).Throws<Exception>();
             //
             scaleOutListener.Start();
             AsyncOp.Sleep();
+            tokenSource.Cancel();
             scaleOutListener.Stop();
             //
             Func<IMessage, bool> isExceptionOrInitalMessage = msg =>
