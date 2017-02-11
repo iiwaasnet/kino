@@ -1,5 +1,5 @@
 using kino.Core;
-
+using BclKeyValuePair = System.Collections.Generic.KeyValuePair<kino.Core.ReceiverIdentifier, kino.Cluster.ClusterMemberMeta>;
 namespace kino.Cluster
 {
     public interface IConnectedPeerRegistry
@@ -10,7 +10,9 @@ namespace kino.Cluster
 
         void Remove(ReceiverIdentifier peer);
 
-        System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>> GetPeersWithExpiredHeartBeat();
+        System.Collections.Generic.IEnumerable<BclKeyValuePair> GetPeersWithExpiredHeartBeat();
+
+        System.Collections.Generic.IEnumerable<BclKeyValuePair> GetStalePeers();
 
         int Count();
     }

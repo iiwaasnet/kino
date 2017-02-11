@@ -236,7 +236,7 @@ namespace kino.Cluster
             var shouldHandle = message.Equals(KinoMessages.CheckStalePeers);
             if (shouldHandle)
             {
-                var staleNodes = connectedPeerRegistry.GetPeersWithExpiredHeartBeat();
+                var staleNodes = connectedPeerRegistry.GetStalePeers();
                 if (staleNodes.Any())
                 {
                     logger.Debug($"Stale nodes detected: {staleNodes.Count()}. Connectivity check scheduled.");

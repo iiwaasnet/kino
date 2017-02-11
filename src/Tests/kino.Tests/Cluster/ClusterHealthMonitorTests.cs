@@ -395,7 +395,7 @@ namespace kino.Tests.Cluster
                                                                   ScaleOutUri = $"tcp://127.0.0.1:{i + 1000}"
                                                               }))
                                                 .ToList();
-            connectedPeerRegistry.Setup(m => m.GetPeersWithExpiredHeartBeat()).Returns(stalePeers);
+            connectedPeerRegistry.Setup(m => m.GetStalePeers()).Returns(stalePeers);
             //
             clusterHealthMonitor.Start();
             TimeSpan.FromSeconds(2).Sleep();
