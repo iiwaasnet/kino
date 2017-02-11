@@ -34,7 +34,6 @@ namespace kino.Cluster
         public void Start()
         {
             cancellationTokenSource = new CancellationTokenSource();
-
             heartBeating = Task.Factory.StartNew(_ => SendHeartBeat(cancellationTokenSource.Token), TaskCreationOptions.LongRunning, cancellationTokenSource.Token);
         }
 
@@ -58,19 +57,26 @@ namespace kino.Cluster
                                            };
                     while (!token.IsCancellationRequested)
                     {
-                        socket.SendMessage(Message.Create(heartBeatMessage));
-                        //logger.Debug($"HeartBeat sent at {DateTime.UtcNow} UTC");
-                        config.GetHeartBeatInterval().Sleep(token);
-                        //await Task.Delay(config.GetHeartBeatInterval(), token);
+                        try
+                        {
+                            socket.SendMessage(Message.Create(heartBeatMessage));
+                            //logger.Debug($"HeartBeat sent at {DateTime.UtcNow} UTC");
+                            config.GetHeartBeatInterval().Sleep(token);
+                            //await Task.Delay(config.GetHeartBeatInterval(), token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                        }
+                        catch (Exception err)
+                        {
+                            logger.Error(err);
+                        }
                     }
                 }
             }
-            catch (OperationCanceledException)
-            {
-            }
             catch (Exception err)
             {
-                logger.Error($"HeartBeating stopped: {err}");
+                logger.Error(err);
             }
             logger.Warn("HeartBeating stopped.");
         }
