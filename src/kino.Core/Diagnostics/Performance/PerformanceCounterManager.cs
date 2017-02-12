@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using kino.Core.Framework;
 
 namespace kino.Core.Diagnostics.Performance
 {
+    [ExcludeFromCodeCoverage]
     public class PerformanceCounterManager<TCategory> : IPerformanceCounterManager<TCategory> where TCategory : struct
     {
         private readonly Dictionary<TCategory, IPerformanceCounter> counters;

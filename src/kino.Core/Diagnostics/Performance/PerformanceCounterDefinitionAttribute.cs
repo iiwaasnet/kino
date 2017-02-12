@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace kino.Core.Diagnostics.Performance
 {
+    [ExcludeFromCodeCoverage]
     [AttributeUsage(AttributeTargets.Field)]
     public class PerformanceCounterDefinitionAttribute : Attribute
     {

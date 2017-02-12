@@ -115,6 +115,10 @@
     <Compile Include="Cluster\RendezvousClusterTests.cs" />
     <Compile Include="Cluster\RouteDiscoveryTests.cs" />
     <Compile Include="Cluster\ScaleOutListenerTests.cs" />
+    <Compile Include="Connectivity\LocalSocketFactoryTests.cs" />
+    <Compile Include="Connectivity\LocalSocketTests.cs" />
+    <Compile Include="Connectivity\SocketExtensionsTests.cs" />
+    <Compile Include="Connectivity\SocketFactoryTests.cs" />
     <Compile Include="Helpers\SocketHelpers.cs" />
     <Compile Include="Routing\ServiceMessageHandlers\ClusterMessageRoutesRequestHandlerTests.cs" />
     <Compile Include="Cluster\ClusterMonitorTests.cs" />
@@ -209,9 +213,7 @@
       <Name>kino</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Connectivity\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using kino.Core.Framework;
 
 namespace kino.Security
 {
+    [ExcludeFromCodeCoverage]
     public class NullSecurityProvider : ISecurityProvider
     {
         private static readonly string[] allowedDomains;

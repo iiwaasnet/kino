@@ -1,9 +1,11 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Management;
 using System.Reflection;
 
 namespace kino.Core.Diagnostics.Performance
 {
+    [ExcludeFromCodeCoverage]
     public class InstanceNameResolver : IInstanceNameResolver
     {
         public string GetInstanceName()

@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration.Install;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
 namespace kino.Core.Diagnostics.Performance
 {
+    [ExcludeFromCodeCoverage]
     [RunInstaller(true)]
     public sealed class PerformanceCounterInstaller : Installer
     {

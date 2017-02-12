@@ -1,5 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace kino.Cluster.Configuration
 {
+    [ExcludeFromCodeCoverage]
     public class ServiceLocator<TReal, TNull, TBase>
         where TReal : TBase
         where TNull : TBase

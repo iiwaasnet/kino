@@ -42,7 +42,7 @@ namespace kino.Connectivity
                 if (messageQueue.TryTake(out lookup))
                 {
                     lookAheadQueue.Add(lookup);
-                    dataAvailable.Set();                    
+                    dataAvailable.Set();
                 }
             }
             else
@@ -86,8 +86,6 @@ namespace kino.Connectivity
 
         public override int GetHashCode()
             => hashCode;
-
-       
 
         public WaitHandle CanReceive()
             => dataAvailable;

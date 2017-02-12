@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace kino.Core.Diagnostics.Performance
 {
+    [ExcludeFromCodeCoverage]
     internal class SafePerformanceCounter : IPerformanceCounter, IDisposable
     {
         private readonly string categoryName;
