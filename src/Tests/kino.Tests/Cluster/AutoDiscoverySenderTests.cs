@@ -49,7 +49,7 @@ namespace kino.Tests.Cluster
         [Test]
         public void StartBlockingSendMessages_SendsEnqueuedMessages()
         {
-            var messages = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+            var messages = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
                                                        () => Message.Create(new SimpleMessage()));
 
             messages.ForEach(msg => autoDiscoverSender.EnqueueMessage(msg));

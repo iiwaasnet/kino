@@ -356,7 +356,7 @@ namespace kino.Tests.Cluster
         {
             var message = Message.Create(new CheckDeadPeersMessage());
             subscriberSocket.SetupMessageReceived(message, tokenSource.Token);
-            var deadPeers = EnumerableExtenions.Produce(Randomizer.Int32(3, 5),
+            var deadPeers = EnumerableExtensions.Produce(Randomizer.Int32(3, 5),
                                                         () => new KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>
                                                             (new ReceiverIdentifier(Guid.NewGuid().ToByteArray()), new ClusterMemberMeta()))
                                                .ToList();
@@ -387,7 +387,7 @@ namespace kino.Tests.Cluster
             var payload = new CheckStalePeersMessage();
             var message = Message.Create(payload);
             subscriberSocket.SetupMessageReceived(message, tokenSource.Token);
-            var stalePeers = EnumerableExtenions.Produce(Randomizer.Int32(3, 5),
+            var stalePeers = EnumerableExtensions.Produce(Randomizer.Int32(3, 5),
                                                          i => new KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>
                                                              (new ReceiverIdentifier(Guid.NewGuid().ToByteArray()),
                                                               new ClusterMemberMeta

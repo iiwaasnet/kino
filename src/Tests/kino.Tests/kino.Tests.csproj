@@ -105,6 +105,7 @@
     <Compile Include="Cluster\AutoDiscoverySenderTests.cs" />
     <Compile Include="Cluster\ClusterHealthMonitorTests.cs" />
     <Compile Include="Cluster\ClusterServicesTests.cs" />
+    <Compile Include="Cluster\Configuration\HeartBeatSenderConfigurationManagerTests.cs" />
     <Compile Include="Cluster\Configuration\RendezvousClusterConfigurationReadonlyStorageTests.cs" />
     <Compile Include="Cluster\Configuration\RendezvousEndpointTests.cs" />
     <Compile Include="Cluster\Configuration\ScaleOutConfigurationManagerTests.cs" />
@@ -130,7 +131,7 @@
     <Compile Include="Helpers\ClusterMonitorSocketFactory.cs" />
     <Compile Include="Helpers\DomainPrivateKeyProvider.cs" />
     <Compile Include="Helpers\DomainScopeResolver.cs" />
-    <Compile Include="Helpers\EnumerableExtenions.cs" />
+    <Compile Include="Helpers\EnumerableExtensions.cs" />
     <Compile Include="Helpers\IntercomMessageHubSocketFactory.cs" />
     <Compile Include="Helpers\LocalSocketHelpers.cs" />
     <Compile Include="Helpers\MessageHubSocketFactory.cs" />

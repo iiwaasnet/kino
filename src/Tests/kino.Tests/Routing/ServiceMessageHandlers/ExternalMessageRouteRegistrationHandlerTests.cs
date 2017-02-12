@@ -142,7 +142,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                 new RouteRegistration
                                 {
                                     ReceiverIdentity = ReceiverIdentities.CreateForActor().Identity,
-                                    MessageContracts = EnumerableExtenions.Produce(Randomizer.UInt16(2, 5),
+                                    MessageContracts = EnumerableExtensions.Produce(Randomizer.UInt16(2, 5),
                                                                                    () => new MessageContract
                                                                                          {
                                                                                              Identity = Guid.NewGuid().ToByteArray(),

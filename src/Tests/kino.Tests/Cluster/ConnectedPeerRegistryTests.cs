@@ -78,7 +78,7 @@ namespace kino.Tests.Cluster
         public void GetPeersWithExpiredHeartBeat_ReturnsPeersWichAreConnectedAndLastKnownHeartBeatFromNowGreaterThanPeerHeartBeatIntervalTimesMissingHeartBeatsBeforeDeletion()
         {
             var heartBeatInterval = TimeSpan.FromSeconds(3);
-            var deadPeers = EnumerableExtenions.Produce(Randomizer.Int32(4, 8),
+            var deadPeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
                                                         () => new KVP(ReceiverIdentities.CreateForActor(),
                                                                       new ClusterMemberMeta
                                                                       {
@@ -87,7 +87,7 @@ namespace kino.Tests.Cluster
                                                                           LastKnownHeartBeat = DateTime.UtcNow
                                                                                                - heartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion + 2)
                                                                       }));
-            var activePeers = EnumerableExtenions.Produce(Randomizer.Int32(4, 8),
+            var activePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
                                                           () => new KVP(ReceiverIdentities.CreateForActor(),
                                                                         new ClusterMemberMeta
                                                                         {
@@ -96,7 +96,7 @@ namespace kino.Tests.Cluster
                                                                             LastKnownHeartBeat = DateTime.UtcNow
                                                                                                  - heartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion - 1)
                                                                         }));
-            var stalePeers = EnumerableExtenions.Produce(Randomizer.Int32(4, 8),
+            var stalePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
                                                          () => new KVP(ReceiverIdentities.CreateForActor(),
                                                                        new ClusterMemberMeta
                                                                        {
@@ -116,7 +116,7 @@ namespace kino.Tests.Cluster
         [Test]
         public void GetStalePeers_ReturnsPeersWichAreNotConnectedAndLastKnownHeartBeatFromNowGreaterThanPeerIsStaleAfterTime()
         {
-            var deadPeers = EnumerableExtenions.Produce(Randomizer.Int32(4, 8),
+            var deadPeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
                                                         () => new KVP(ReceiverIdentities.CreateForActor(),
                                                                       new ClusterMemberMeta
                                                                       {
@@ -124,7 +124,7 @@ namespace kino.Tests.Cluster
                                                                           LastKnownHeartBeat = DateTime.UtcNow
                                                                                                - config.PeerIsStaleAfter.MultiplyBy(2)
                                                                       }));
-            var stalePeers = EnumerableExtenions.Produce(Randomizer.Int32(4, 8),
+            var stalePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
                                                          () => new KVP(ReceiverIdentities.CreateForActor(),
                                                                        new ClusterMemberMeta
                                                                        {
@@ -132,7 +132,7 @@ namespace kino.Tests.Cluster
                                                                            LastKnownHeartBeat = DateTime.UtcNow
                                                                                                 - config.PeerIsStaleAfter.MultiplyBy(2)
                                                                        }));
-            var activePeers = EnumerableExtenions.Produce(Randomizer.Int32(4, 8),
+            var activePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
                                                           () => new KVP(ReceiverIdentities.CreateForActor(),
                                                                         new ClusterMemberMeta
                                                                         {

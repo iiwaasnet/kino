@@ -126,7 +126,7 @@ namespace kino.Tests.Cluster
         public void MessageHubRouteDiscovery_IsSentForAllAllowedDomains()
         {
             var receiverIdentifier = ReceiverIdentities.CreateForMessageHub();
-            var allowedDomains = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+            var allowedDomains = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
                                                              () => Guid.NewGuid().ToString());
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             //
@@ -152,7 +152,7 @@ namespace kino.Tests.Cluster
         public void IfSecurityExceptionThrownForOneMessageRoute_OthersAreStillSent()
         {
             var messageHub = ReceiverIdentities.CreateForMessageHub();
-            var allowedDomains = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+            var allowedDomains = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
                                                              () => Guid.NewGuid().ToString());
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Throws<SecurityException>();

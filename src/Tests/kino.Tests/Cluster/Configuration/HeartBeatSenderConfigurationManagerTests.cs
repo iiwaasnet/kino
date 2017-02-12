@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using kino.Cluster.Configuration;
-using kino.Core;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
 using NUnit.Framework;
@@ -10,26 +9,26 @@ using NUnit.Framework;
 namespace kino.Tests.Cluster.Configuration
 {
     [TestFixture]
-    public class ScaleOutConfigurationManagerTests
+    public class HeartBeatSenderConfigurationManagerTests
     {
-        private ScaleOutConfigurationManager configManager;
-        private ScaleOutSocketConfiguration config;
+        private HeartBeatSenderConfigurationManager configManager;
+        private HeartBeatSenderConfiguration config;
 
         [SetUp]
         public void Setup()
         {
-            config = new ScaleOutSocketConfiguration
+            config = new HeartBeatSenderConfiguration
                      {
                          AddressRange = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                                    i => new SocketEndpoint($"tcp://127.0.0.{i}:8080"))
+                                                                     i => new Uri($"tcp://127.0.0.{i}:8080"))
                      };
-            configManager = new ScaleOutConfigurationManager(config);
+            configManager = new HeartBeatSenderConfigurationManager(config);
         }
 
         [Test]
-        public void IfActiveScaleOutAddressIsNotSet_GetScaleOutAddressBlocks()
+        public void GetHeartBeatAddressBlock_IfSetActiveHeartBeatAddressIsNotSet()
         {
-            var task = Task.Factory.StartNew(() => configManager.GetScaleOutAddress());
+            var task = Task.Factory.StartNew(() => configManager.GetHeartBeatAddress());
             //
             Assert.IsFalse(task.Wait(TimeSpan.FromSeconds(3)));
         }
@@ -38,11 +37,11 @@ namespace kino.Tests.Cluster.Configuration
         public void GetScaleOutAddressUnblocks_WhenActiveScaleOutAddressIsSet()
         {
             var asyncOp = TimeSpan.FromSeconds(4);
-            var task = Task.Factory.StartNew(() => configManager.GetScaleOutAddress());
+            var task = Task.Factory.StartNew(() => configManager.GetHeartBeatAddress());
             Task.Factory.StartNew(() =>
                                   {
                                       asyncOp.DivideBy(2).Sleep();
-                                      configManager.SetActiveScaleOutAddress(config.AddressRange.First());
+                                      configManager.SetActiveHeartBeatAddress(config.AddressRange.First());
                                   });
             //
             Assert.IsTrue(task.Wait(asyncOp));
@@ -51,7 +50,7 @@ namespace kino.Tests.Cluster.Configuration
         [Test]
         public void IfSocketEndpointDoesntBelongToInitialAddressRange_SetActiveScaleOutAddressThrowsException()
         {
-            Assert.Throws<Exception>(() => configManager.SetActiveScaleOutAddress(new SocketEndpoint("inproc://test")));
+            Assert.Throws<Exception>(() => configManager.SetActiveHeartBeatAddress(new Uri("inproc://test")));
         }
     }
 }

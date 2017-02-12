@@ -114,7 +114,7 @@ namespace kino.Tests.Cluster
             var cancellatioSource = new CancellationTokenSource(AsyncOp);
             var payload = new RendezvousConfigurationChangedMessage
                           {
-                              RendezvousNodes = EnumerableExtenions.Produce(Randomizer.Int32(5, 15),
+                              RendezvousNodes = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
                                                                             i => new RendezvousNode
                                                                                  {
                                                                                      BroadcastUri = $"tpc://127.0.0.1:{1000 + i}",

@@ -21,7 +21,7 @@ namespace kino.Tests.Cluster
             configurationStorage = new Mock<IConfigurationStorage<RendezvousClusterConfiguration>>();
             cluster = new RendezvousClusterConfiguration
                       {
-                          Cluster = EnumerableExtenions.Produce(Randomizer.Int32(3, 6),
+                          Cluster = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
                                                                 i => new RendezvousEndpoint($"tcp://127.0.0.{i}:8080", $"tcp://127.0.0.{i}:9090"))
                       };
             configurationStorage.Setup(m => m.Read()).Returns(cluster);
@@ -43,7 +43,7 @@ namespace kino.Tests.Cluster
         {
             var newCluster = new RendezvousClusterConfiguration
                              {
-                                 Cluster = EnumerableExtenions.Produce(Randomizer.Int32(3, 6),
+                                 Cluster = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
                                                                        i => new RendezvousEndpoint($"tcp://127.0.2.{i}:8081", $"tcp://127.0.3.{i}:9092"))
                              };
             configurationStorage.Setup(m => m.Read()).Returns(newCluster);

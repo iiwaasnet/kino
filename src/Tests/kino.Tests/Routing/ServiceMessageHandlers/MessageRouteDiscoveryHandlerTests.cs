@@ -200,7 +200,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var message = Message.Create(payload).As<Message>();
             message.SetDomain(domain);
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
-            var allowedDomains = EnumerableExtenions.Produce(Randomizer.Int32(2, 5), () => Guid.NewGuid().ToString()).Concat(new[] {domain});
+            var allowedDomains = EnumerableExtensions.Produce(Randomizer.Int32(2, 5), () => Guid.NewGuid().ToString()).Concat(new[] {domain});
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             //
             handler.Handle(message, null);
@@ -228,7 +228,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var message = Message.Create(payload).As<Message>();
             message.SetDomain(domain);
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
-            var allowedDomains = EnumerableExtenions.Produce(Randomizer.Int32(2, 5), () => Guid.NewGuid().ToString()).Concat(new[] {domain});
+            var allowedDomains = EnumerableExtensions.Produce(Randomizer.Int32(2, 5), () => Guid.NewGuid().ToString()).Concat(new[] {domain});
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             //
             handler.Handle(message, null);
@@ -239,14 +239,14 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
         private InternalRouting GetInternalRoutes()
             => new InternalRouting
                {
-                   Actors = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+                   Actors = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
                                                         () => new MessageActorRoute
                                                               {
-                                                                  Actors = EnumerableExtenions.Produce(Randomizer.Int32(5, 15),
+                                                                  Actors = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
                                                                                                        i => new ReceiverIdentifierRegistration(ReceiverIdentities.CreateForActor(), i % 2 == 0)),
                                                                   Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(), Randomizer.UInt16(), Guid.NewGuid().ToByteArray())
                                                               }),
-                   MessageHubs = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+                   MessageHubs = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
                                                              i => new MessageHubRoute
                                                                   {
                                                                       MessageHub = ReceiverIdentities.CreateForMessageHub(),

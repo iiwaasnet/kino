@@ -91,7 +91,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
         [Test]
         public void GlobalyRegisteredMessageHub_IsRegisteredInClusterOncePerEachDomain()
         {
-            var allowedDomains = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+            var allowedDomains = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
                                                              () => Guid.NewGuid().ToString());
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             var routeRegistration = new InternalRouteRegistration
@@ -115,7 +115,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var routeRegistration = new InternalRouteRegistration
                                     {
                                         ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
-                                        MessageContracts = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+                                        MessageContracts = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
                                                                                        () => new MessageContract
                                                                                              {
                                                                                                  Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
@@ -138,7 +138,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var routeRegistration = new InternalRouteRegistration
                                     {
                                         ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
-                                        MessageContracts = EnumerableExtenions.Produce(Randomizer.Int32(5, 15),
+                                        MessageContracts = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
                                                                                        i => new MessageContract
                                                                                             {
                                                                                                 Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
@@ -169,7 +169,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var routeRegistration = new InternalRouteRegistration
                                     {
                                         ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
-                                        MessageContracts = EnumerableExtenions.Produce(Randomizer.Int32(5, 15),
+                                        MessageContracts = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
                                                                                        i => new MessageContract
                                                                                             {
                                                                                                 Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),

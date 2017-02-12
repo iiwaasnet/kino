@@ -134,7 +134,7 @@ namespace kino.Tests.Routing
         [Test]
         public void FindRoutesByMessageHubReceiverIdentity_ReturnsMessageHubSocket()
         {
-            var registrations = EnumerableExtenions.Produce(Randomizer.Int32(3, 6),
+            var registrations = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
                                                             () => new InternalRouteRegistration
                                                                   {
                                                                       ReceiverIdentifier = ReceiverIdentities.CreateForMessageHub(),
@@ -159,7 +159,7 @@ namespace kino.Tests.Routing
         public void FindRoutesByActorReceiverIdentifier_ReturnsActorHostSocket()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            var registrations = EnumerableExtenions.Produce(Randomizer.Int32(3, 6),
+            var registrations = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
                                                             () => new InternalRouteRegistration
                                                                   {
                                                                       ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
@@ -185,7 +185,7 @@ namespace kino.Tests.Routing
         public void IfSeveralActorsRegisteredToHandleTheMessage_TheAreFoundInRoundRobinManner()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            var registrations = EnumerableExtenions.Produce(Randomizer.Int32(6, 16),
+            var registrations = EnumerableExtensions.Produce(Randomizer.Int32(6, 16),
                                                             () => new InternalRouteRegistration
                                                                   {
                                                                       ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
@@ -211,7 +211,7 @@ namespace kino.Tests.Routing
         public void FindBroadcastMessage_ReturnsAllRegisteredActors()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            var registrations = EnumerableExtenions.Produce(Randomizer.Int32(6, 16),
+            var registrations = EnumerableExtensions.Produce(Randomizer.Int32(6, 16),
                                                             () => new InternalRouteRegistration
                                                                   {
                                                                       ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
@@ -233,7 +233,7 @@ namespace kino.Tests.Routing
         [Test]
         public void IfMessageRouteIsNotRegistered_NoActorsReturned()
         {
-            var registrations = EnumerableExtenions.Produce(Randomizer.Int32(6, 16),
+            var registrations = EnumerableExtensions.Produce(Randomizer.Int32(6, 16),
                                                             () => new InternalRouteRegistration
                                                                   {
                                                                       ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
@@ -258,7 +258,7 @@ namespace kino.Tests.Routing
                                {
                                    ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
                                    DestinationSocket = new LocalSocket<IMessage>(),
-                                   MessageContracts = EnumerableExtenions.Produce(Randomizer.Int32(4, 14),
+                                   MessageContracts = EnumerableExtensions.Produce(Randomizer.Int32(4, 14),
                                                                                   () => new MessageContract
                                                                                         {
                                                                                             Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),

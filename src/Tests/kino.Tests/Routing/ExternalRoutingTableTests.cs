@@ -138,7 +138,7 @@ namespace kino.Tests.Routing
         public void FindRoutesByMessageSentBroadcast_ReturnsAllRegisteredRoutes()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            var routeRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(3, 10),
+            var routeRegistrations = EnumerableExtensions.Produce(Randomizer.Int32(3, 10),
                                                                  () => CreateActorRouteRegistration(messageIdentifier));
             routeRegistrations.ForEach(r => externalRoutingTable.AddMessageRoute(r));
             //
@@ -156,7 +156,7 @@ namespace kino.Tests.Routing
         public void FindRoutesByMessageSentUnicast_ReturnsOneRoutes()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            var routeRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(3, 10),
+            var routeRegistrations = EnumerableExtensions.Produce(Randomizer.Int32(3, 10),
                                                                  () => CreateActorRouteRegistration(messageIdentifier));
             routeRegistrations.ForEach(r => externalRoutingTable.AddMessageRoute(r));
             //
@@ -172,7 +172,7 @@ namespace kino.Tests.Routing
         public void RemoveNodeRoute_RemovesAllNodeRoutes()
         {
             var nodeIdentity = Guid.NewGuid().ToByteArray();
-            var routeRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(3, 10),
+            var routeRegistrations = EnumerableExtensions.Produce(Randomizer.Int32(3, 10),
                                                                  () =>
                                                                  {
                                                                      var messageIdentifier = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
@@ -197,7 +197,7 @@ namespace kino.Tests.Routing
         public void RemoveNodeRoute_KeepsConnectionIfMoreThanOneNodeRegisteredForSameUri()
         {
             var uri = "tcp://127.0.0.1:9009";
-            var routeRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(3, 10),
+            var routeRegistrations = EnumerableExtensions.Produce(Randomizer.Int32(3, 10),
                                                                  CreateActorRouteRegistration);
             routeRegistrations.ForEach(r => r.Peer = new Node(new Uri(uri), r.Peer.SocketIdentity));
             routeRegistrations.ForEach(r => externalRoutingTable.AddMessageRoute(r));
@@ -217,7 +217,7 @@ namespace kino.Tests.Routing
                              Uri = "tcp://192.168.0.1:9090",
                              HeartBeatInterval = TimeSpan.FromSeconds(4)
                          };
-            var messageHubRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+            var messageHubRegistrations = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
                                                                       () => new ExternalRouteRegistration
                                                                             {
                                                                                 Peer = node,
@@ -253,7 +253,7 @@ namespace kino.Tests.Routing
                              Uri = "tcp://192.168.0.1:9090",
                              HeartBeatInterval = TimeSpan.FromSeconds(4)
                          };
-            var messageHubRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(2, 5),
+            var messageHubRegistrations = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
                                                                       () => new ExternalRouteRegistration
                                                                             {
                                                                                 Peer = node,
@@ -295,7 +295,7 @@ namespace kino.Tests.Routing
         {
             var nodeIdentity = Guid.NewGuid().ToByteArray();
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            var routeRegistrations = EnumerableExtenions.Produce(Randomizer.Int32(3, 10),
+            var routeRegistrations = EnumerableExtensions.Produce(Randomizer.Int32(3, 10),
                                                                  () => CreateActorRouteRegistration(messageIdentifier,
                                                                                                     ReceiverIdentities.CreateForActor(),
                                                                                                     nodeIdentity));
@@ -320,7 +320,7 @@ namespace kino.Tests.Routing
         {
             var nodeIdentity = Guid.NewGuid().ToByteArray();
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            var actors = EnumerableExtenions.Produce(Randomizer.Int32(3, 10), ReceiverIdentities.CreateForActor)
+            var actors = EnumerableExtensions.Produce(Randomizer.Int32(3, 10), ReceiverIdentities.CreateForActor)
                                             .ToList();
             var routeRegistrations = actors.Select(actor => CreateActorRouteRegistration(messageIdentifier,
                                                                                          actor,

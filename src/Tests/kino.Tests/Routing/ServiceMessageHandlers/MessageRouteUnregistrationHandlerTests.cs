@@ -184,11 +184,11 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
         {
             var payload = new UnregisterMessageRouteMessage
                           {
-                              Routes = EnumerableExtenions
+                              Routes = EnumerableExtensions
                                   .Produce(Randomizer.Int32(2, 5),
                                            () => new RouteRegistration
                                                  {
-                                                     MessageContracts = EnumerableExtenions
+                                                     MessageContracts = EnumerableExtensions
                                                          .Produce(Randomizer.Int32(2, 5),
                                                                   () => new MessageContract
                                                                         {
