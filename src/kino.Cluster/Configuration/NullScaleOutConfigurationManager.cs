@@ -1,10 +1,12 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using kino.Core;
 using kino.Core.Framework;
 
 namespace kino.Cluster.Configuration
 {
+    [ExcludeFromCodeCoverage]
     public class NullScaleOutConfigurationManager : IScaleOutConfigurationManager
     {
         private readonly SocketEndpoint localEndpoint;

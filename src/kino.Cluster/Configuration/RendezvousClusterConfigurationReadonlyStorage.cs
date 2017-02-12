@@ -22,12 +22,12 @@ namespace kino.Cluster.Configuration
         public void Update(RendezvousClusterConfiguration newConfig)
         {
             var tmp = new HashedLinkedList<RendezvousEndpoint>();
-            tmp.AddAll(SelectEndpointsDistinct(config));
+            tmp.AddAll(SelectEndpointsDistinct(newConfig.Cluster));
 
             config = tmp;
         }
 
-        private IEnumerable<RendezvousEndpoint> SelectEndpointsDistinct(IEnumerable<RendezvousEndpoint> initialConfiguration)
+        private static IEnumerable<RendezvousEndpoint> SelectEndpointsDistinct(IEnumerable<RendezvousEndpoint> initialConfiguration)
         {
             var tmp = new HashedLinkedList<RendezvousEndpoint>();
             tmp.AddAll(initialConfiguration);

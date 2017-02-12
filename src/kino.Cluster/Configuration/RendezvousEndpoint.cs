@@ -52,6 +52,19 @@ namespace kino.Cluster.Configuration
             return Equals((RendezvousEndpoint) obj);
         }
 
+        public static bool operator ==(RendezvousEndpoint left, RendezvousEndpoint right)
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
+
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(RendezvousEndpoint left, RendezvousEndpoint right)
+            => !(left == right);
+
         public override int GetHashCode()
             => hashCode;
 

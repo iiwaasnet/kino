@@ -105,8 +105,12 @@
     <Compile Include="Cluster\AutoDiscoverySenderTests.cs" />
     <Compile Include="Cluster\ClusterHealthMonitorTests.cs" />
     <Compile Include="Cluster\ClusterServicesTests.cs" />
+    <Compile Include="Cluster\Configuration\RendezvousClusterConfigurationReadonlyStorageTests.cs" />
+    <Compile Include="Cluster\Configuration\RendezvousEndpointTests.cs" />
+    <Compile Include="Cluster\Configuration\ScaleOutConfigurationManagerTests.cs" />
     <Compile Include="Cluster\ConnectedPeerRegistryTests.cs" />
     <Compile Include="Cluster\HeartBeatSenderTests.cs" />
+    <Compile Include="Cluster\MessageRouteTests.cs" />
     <Compile Include="Cluster\RendezvousClusterTests.cs" />
     <Compile Include="Cluster\RouteDiscoveryTests.cs" />
     <Compile Include="Cluster\ScaleOutListenerTests.cs" />
