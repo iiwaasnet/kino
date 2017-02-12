@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace kino.Cluster
 {
+    [ExcludeFromCodeCoverage]
     public class NullClusterMonitor : IClusterMonitor
     {
         public void Start()

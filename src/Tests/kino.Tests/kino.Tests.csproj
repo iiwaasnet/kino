@@ -104,6 +104,7 @@
     <Compile Include="Cluster\AutoDiscoveryListenerTests.cs" />
     <Compile Include="Cluster\AutoDiscoverySenderTests.cs" />
     <Compile Include="Cluster\ClusterHealthMonitorTests.cs" />
+    <Compile Include="Cluster\ClusterServicesTests.cs" />
     <Compile Include="Cluster\ConnectedPeerRegistryTests.cs" />
     <Compile Include="Cluster\HeartBeatSenderTests.cs" />
     <Compile Include="Cluster\RendezvousClusterTests.cs" />

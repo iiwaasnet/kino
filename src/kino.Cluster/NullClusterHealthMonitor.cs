@@ -1,7 +1,9 @@
-﻿using kino.Core;
+﻿using System.Diagnostics.CodeAnalysis;
+using kino.Core;
 
 namespace kino.Cluster
 {
+    [ExcludeFromCodeCoverage]
     public class NullClusterHealthMonitor : IClusterHealthMonitor
     {
         public void StartPeerMonitoring(Node peer, Health health)

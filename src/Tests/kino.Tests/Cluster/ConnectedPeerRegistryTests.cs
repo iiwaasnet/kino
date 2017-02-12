@@ -85,7 +85,7 @@ namespace kino.Tests.Cluster
                                                                           ConnectionEstablished = true,
                                                                           HeartBeatInterval = heartBeatInterval,
                                                                           LastKnownHeartBeat = DateTime.UtcNow
-                                                                                               - heartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion)
+                                                                                               - heartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion + 2)
                                                                       }));
             var activePeers = EnumerableExtenions.Produce(Randomizer.Int32(4, 8),
                                                           () => new KVP(ReceiverIdentities.CreateForActor(),
@@ -114,7 +114,7 @@ namespace kino.Tests.Cluster
         }
 
         [Test]
-        public void GetStalePeers_ReturnsPeersWichAreConnectedAndLastKnownHeartBeatFromNowGreaterThanPeerIsStaleAfterTime()
+        public void GetStalePeers_ReturnsPeersWichAreNotConnectedAndLastKnownHeartBeatFromNowGreaterThanPeerIsStaleAfterTime()
         {
             var deadPeers = EnumerableExtenions.Produce(Randomizer.Int32(4, 8),
                                                         () => new KVP(ReceiverIdentities.CreateForActor(),
@@ -122,7 +122,7 @@ namespace kino.Tests.Cluster
                                                                       {
                                                                           ConnectionEstablished = true,
                                                                           LastKnownHeartBeat = DateTime.UtcNow
-                                                                                               - config.PeerIsStaleAfter
+                                                                                               - config.PeerIsStaleAfter.MultiplyBy(2)
                                                                       }));
             var stalePeers = EnumerableExtenions.Produce(Randomizer.Int32(4, 8),
                                                          () => new KVP(ReceiverIdentities.CreateForActor(),
@@ -130,7 +130,7 @@ namespace kino.Tests.Cluster
                                                                        {
                                                                            ConnectionEstablished = false,
                                                                            LastKnownHeartBeat = DateTime.UtcNow
-                                                                                                - config.PeerIsStaleAfter
+                                                                                                - config.PeerIsStaleAfter.MultiplyBy(2)
                                                                        }));
             var activePeers = EnumerableExtenions.Produce(Randomizer.Int32(4, 8),
                                                           () => new KVP(ReceiverIdentities.CreateForActor(),
