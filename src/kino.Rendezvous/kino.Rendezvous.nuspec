@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>0.0.1.25-alpha</version>
+    <title>$title$</title>
+    <authors>Sergey Ivasenko</authors>
+    <owners>Sergey Ivasenko</owners>
+    <licenseUrl>https://github.com/iiwaasnet/kino/blob/master/LICENSE</licenseUrl>
+        <iconUrl>https://cdn.rawgit.com/iiwaasnet/kino/master/img/kino-50x50-v2.png</iconUrl>
+        <projectUrl>https://github.com/iiwaasnet/kino</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>kino is a framework for building actors networks.</description>
+    <releaseNotes>Features:
+        * Creating and hosting Actors
+        * Sync- and asynchronous sending of the messages into actors network
+        * Unicast, broadcast and direct message sending
+        * Auto-discovery with Rendezvous service</releaseNotes>
+        <copyright>Copyright © 2015 Sergey Ivasenko</copyright>
+        <tags>Actors framework</tags>
+  </metadata>
+</package>

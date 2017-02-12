@@ -1,4 +1,4 @@
-﻿namespace kino.Rendezvous
+﻿namespace kino.Rendezvous.Service
 {
     public class Program
     {

@@ -1,10 +1,9 @@
 ﻿using System;
 using WindowsServiceHost;
 using Autofac;
-using Autofac.kino;
 using kino.Core.Diagnostics.Performance;
 
-namespace kino.Rendezvous
+namespace kino.Rendezvous.Service
 {
     public class ServiceHost : WindowsService
     {
@@ -24,9 +23,7 @@ namespace kino.Rendezvous
         private void Start()
         {
             var builder = new ContainerBuilder();
-            builder.RegisterModule<KinoModule>();
-            builder.RegisterModule<ConsensusModule>();
-            builder.RegisterModule<RendezvousModule>();
+            builder.RegisterModule<MainModule>();
             var container = builder.Build();
 
             rendezvousService = container.Resolve<IRendezvousService>();

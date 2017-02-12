@@ -1,6 +1,6 @@
 ﻿using kino.Core.Diagnostics;
 
-namespace kino.Rendezvous
+namespace kino.Rendezvous.Service
 {
     public class Logger : ILogger
     {

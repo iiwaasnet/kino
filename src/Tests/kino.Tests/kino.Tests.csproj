@@ -193,7 +193,7 @@
       <Name>kino.Messaging</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\kino.Rendezvous\kino.Rendezvous.csproj">
-      <Project>{4680D77E-3310-4FF1-ADBF-D728C3E1C317}</Project>
+      <Project>{0fae3a1d-6744-463f-8bcb-0dc385bfb424}</Project>
       <Name>kino.Rendezvous</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\kino.Routing\kino.Routing.csproj">

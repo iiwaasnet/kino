@@ -3,9 +3,9 @@ using kino.Core.Diagnostics;
 using kino.Rendezvous.Configuration;
 using TypedConfigProvider;
 
-namespace kino.Rendezvous
+namespace kino.Rendezvous.Service
 {
-    public class RendezvousModule : Module
+    public class MainModule : Module
     {
         protected override void Load(ContainerBuilder builder)
         {
@@ -25,7 +25,15 @@ namespace kino.Rendezvous
                    .As<ApplicationConfiguration>()
                    .SingleInstance();
 
-            builder.RegisterType<RendezvousService>()
+            builder.Register(c => new DependencyResolver(c))
+                   .As<IDependencyResolver>()
+                   .SingleInstance();
+
+            builder.Register(c => new Rendezvous(c.Resolve<IDependencyResolver>()))
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<Rendezvous>().GetRendezvousService())
                    .As<IRendezvousService>()
                    .SingleInstance();
         }
