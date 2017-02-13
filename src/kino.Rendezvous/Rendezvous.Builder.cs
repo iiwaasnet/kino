@@ -15,8 +15,8 @@ namespace kino.Rendezvous
             var logger = resolver.Resolve<ILogger>();
             var applicationConfig = resolver.Resolve<ApplicationConfiguration>();
             var socketFactory = new SocketFactory(resolver.Resolve<SocketConfiguration>());
-            var synodConfigProvier = new SynodConfigurationProvider(applicationConfig.Synod);
-            var synodConfig = new SynodConfiguration(synodConfigProvier);
+            var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);
+            var synodConfig = new SynodConfiguration(synodConfigProvider);
             var instanceNameResolver = resolver.Resolve<IInstanceNameResolver>() ?? new InstanceNameResolver();
             var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver,
                                                                                                    logger);
@@ -36,7 +36,7 @@ namespace kino.Rendezvous
                                                   synodConfig,
                                                   logger);
 
-            var serializer = resolver.Resolve<IMessageSerializer>() ?? new ProtobufMessageSerializer();
+            var serializer = new ProtobufMessageSerializer();
             var service = new RendezvousService(leaseProvider,
                                                 synodConfig,
                                                 socketFactory,
