@@ -74,7 +74,7 @@ namespace kino.Consensus
                                     payload.Ballot.MessageNumber,
                                     payload.Ballot.Identity);
             IMessage response;
-            if (writeBallot > ballot || readBallot > ballot)
+            if (Interlocked.Exchange(ref writeBallot, writeBallot) > ballot || Interlocked.Exchange(ref readBallot, readBallot) > ballot)
             {
                 LogNackWrite(ballot);
 
@@ -88,8 +88,8 @@ namespace kino.Consensus
             {
                 LogAckWrite(ballot);
 
-                writeBallot = ballot;
-                lease = new Lease(payload.Lease.Identity, new DateTime(payload.Lease.ExpiresAt, DateTimeKind.Utc), payload.Lease.OwnerPayload);
+                Interlocked.Exchange(ref writeBallot, ballot);
+                Interlocked.Exchange(ref lease, new Lease(payload.Lease.Identity, new DateTime(payload.Lease.ExpiresAt, DateTimeKind.Utc), payload.Lease.OwnerPayload));
 
                 response = Message.Create(new LeaseAckWriteMessage
                                           {
@@ -109,7 +109,7 @@ namespace kino.Consensus
                                     payload.Ballot.Identity);
 
             IMessage response;
-            if (writeBallot >= ballot || readBallot >= ballot)
+            if (Interlocked.Exchange(ref writeBallot, writeBallot) >= ballot || Interlocked.Exchange(ref readBallot, readBallot) >= ballot)
             {
                 LogNackRead(ballot);
 
@@ -123,7 +123,7 @@ namespace kino.Consensus
             {
                 LogAckRead(ballot);
 
-                readBallot = ballot;
+                Interlocked.Exchange(ref readBallot, ballot);
 
                 response = CreateLeaseAckReadMessage(payload);
             }
@@ -261,21 +261,26 @@ namespace kino.Consensus
 
         private IMessage CreateLeaseAckReadMessage(LeaseReadMessage payload)
         {
+            Lease lastKnownLease = null;
+            Interlocked.Exchange(ref lastKnownLease, lease);
+            Ballot lastKnownWriteBallot = null;
+            Interlocked.Exchange(ref lastKnownWriteBallot, writeBallot);
+
             return Message.Create(new LeaseAckReadMessage
                                   {
                                       Ballot = payload.Ballot,
                                       KnownWriteBallot = new Messages.Ballot
                                                          {
-                                                             Identity = writeBallot.Identity,
-                                                             Timestamp = writeBallot.Timestamp.Ticks,
-                                                             MessageNumber = writeBallot.MessageNumber
+                                                             Identity = lastKnownWriteBallot.Identity,
+                                                             Timestamp = lastKnownWriteBallot.Timestamp.Ticks,
+                                                             MessageNumber = lastKnownWriteBallot.MessageNumber
                                                          },
-                                      Lease = (lease != null)
+                                      Lease = (lastKnownLease != null)
                                                   ? new Messages.Lease
                                                     {
-                                                        Identity = lease.OwnerIdentity,
-                                                        ExpiresAt = lease.ExpiresAt.Ticks,
-                                                        OwnerPayload = lease.OwnerPayload
+                                                        Identity = lastKnownLease.OwnerIdentity,
+                                                        ExpiresAt = lastKnownLease.ExpiresAt.Ticks,
+                                                        OwnerPayload = lastKnownLease.OwnerPayload
                                                     }
                                                   : null,
                                       SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
