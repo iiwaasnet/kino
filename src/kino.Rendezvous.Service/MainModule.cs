@@ -21,8 +21,8 @@ namespace kino.Rendezvous.Service
                    .As<IConfigTargetProvider>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IConfigProvider>().GetConfiguration<ApplicationConfiguration>())
-                   .As<ApplicationConfiguration>()
+            builder.Register(c => c.Resolve<IConfigProvider>().GetConfiguration<RendezvousServiceConfiguration>())
+                   .As<RendezvousServiceConfiguration>()
                    .SingleInstance();
 
             builder.Register(c => new DependencyResolver(c))

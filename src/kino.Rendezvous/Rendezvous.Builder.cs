@@ -13,7 +13,7 @@ namespace kino.Rendezvous
         private IRendezvousService Build()
         {
             var logger = resolver.Resolve<ILogger>();
-            var applicationConfig = resolver.Resolve<ApplicationConfiguration>();
+            var applicationConfig = resolver.Resolve<RendezvousServiceConfiguration>();
             var socketFactory = new SocketFactory(resolver.Resolve<SocketConfiguration>());
             var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);
             var synodConfig = new SynodConfiguration(synodConfigProvider);

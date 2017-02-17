@@ -2,7 +2,7 @@
 
 namespace kino.Rendezvous.Configuration
 {
-    public class ApplicationConfiguration
+    public class RendezvousServiceConfiguration
     {
         public RendezvousConfiguration Rendezvous { get; set; }
 

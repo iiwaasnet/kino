@@ -117,7 +117,7 @@
     <None Include="config\NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="config\Application.config.json">
+    <None Include="config\RendezvousService.config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config">

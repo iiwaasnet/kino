@@ -15,7 +15,7 @@ namespace kino.Tests.Consensus.Setup
     {
         internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<Uri> synod, Uri localNodeUri)
         {
-            var appConfig = new ApplicationConfiguration
+            var appConfig = new RendezvousServiceConfiguration
                             {
                                 Synod = new SynodConfiguration
                                         {
