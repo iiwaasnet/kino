@@ -68,6 +68,10 @@
       <Project>{45F6F46B-B864-4C27-9A4B-5022546AE424}</Project>
       <Name>kino.Connectivity</Name>
     </ProjectReference>
+    <ProjectReference Include="..\kino.Consensus\kino.Consensus.csproj">
+      <Project>{1143ea92-6006-4fa1-b844-1e7078d5cbda}</Project>
+      <Name>kino.Consensus</Name>
+    </ProjectReference>
     <ProjectReference Include="..\kino.Core\kino.Core.csproj">
       <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
       <Name>kino.Core</Name>
