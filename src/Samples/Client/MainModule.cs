@@ -18,8 +18,8 @@ namespace Client
                    .As<IConfigTargetProvider>()
                    .SingleInstance();
 
-            builder.Register(c => c.Resolve<IConfigProvider>().GetConfiguration<ApplicationConfiguration>())
-                   .As<ApplicationConfiguration>()
+            builder.Register(c => c.Resolve<IConfigProvider>().GetConfiguration<KinoConfiguration>())
+                   .As<KinoConfiguration>()
                    .SingleInstance();
 
             builder.Register(c => new Logger("default"))

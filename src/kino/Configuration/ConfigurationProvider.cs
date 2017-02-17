@@ -9,9 +9,9 @@ namespace kino.Configuration
 {
     public class ConfigurationProvider : IConfigurationProvider
     {
-        private readonly ApplicationConfiguration appConfig;
+        private readonly KinoConfiguration appConfig;
 
-        public ConfigurationProvider(ApplicationConfiguration appConfig)
+        public ConfigurationProvider(KinoConfiguration appConfig)
         {
             this.appConfig = appConfig;
         }

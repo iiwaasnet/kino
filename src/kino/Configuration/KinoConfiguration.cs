@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace kino.Configuration
 {
-    public class ApplicationConfiguration
+    public class KinoConfiguration
     {
         public string ScaleOutAddressUri { get; set; }
 

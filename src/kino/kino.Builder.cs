@@ -20,7 +20,7 @@ namespace kino
     {
         private void Build()
         {
-            var configurationProvider = new ConfigurationProvider(resolver.Resolve<ApplicationConfiguration>());
+            var configurationProvider = new ConfigurationProvider(resolver.Resolve<KinoConfiguration>());
             var scaleOutSocketConfiguration = configurationProvider.GetScaleOutConfiguration();
             var clusterMembershipConfiguration = configurationProvider.GetClusterMembershipConfiguration();
             var clusterHealthMonitorConfiguration = configurationProvider.GetClusterHealthMonitorConfiguration();
