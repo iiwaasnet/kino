@@ -7,12 +7,12 @@ foreach ($NugetSpec in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extensio
 {
 	$ProjectFile = Get-ChildItem $NugetSpec.DirectoryName | Where-Object {$_.Extension -eq ".csproj"}
 
-	$BuildArgs = @{
-		FilePath = $MsBuild
-		ArgumentList = $ProjectFile.FullName,  "/p:Configuration=Release /t:Rebuild"
-		Wait = $true
-	}
+	#$BuildArgs = @{
+	#	FilePath = $MsBuild
+	#	ArgumentList = $ProjectFile.FullName,  "/p:Configuration=Release /t:Rebuild"
+	#	Wait = $true
+	#}
 	
-	Start-Process @BuildArgs -NoNewWindow
-	nuget pack $ProjectFile.FullName -BasePath $NugetSpec.DirectoryName -Build -NonInteractive -IncludeReferencedProjects
+	#Start-Process @BuildArgs -NoNewWindow
+	nuget pack $ProjectFile.FullName -BasePath $NugetSpec.DirectoryName -Build -Prop Configuration=Release -Prop FilePath=$MsBuild -NonInteractive -IncludeReferencedProjects
 }
