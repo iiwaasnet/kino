@@ -219,7 +219,7 @@ namespace kino.Tests.Cluster
         {
             config.StalePeersCheckInterval = TimeSpan.FromMinutes(1);
             var healthUri = new Uri("tcp://127.0.0.2:9090");
-            var heartBeatInterval = TimeSpan.FromMilliseconds(100);
+            var heartBeatInterval = TimeSpan.FromMilliseconds(300);
             var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             var payload = new StartPeerMonitoringMessage
                           {
