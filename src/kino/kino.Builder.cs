@@ -18,8 +18,16 @@ namespace kino
 {
     public partial class kino
     {
-        private void Build()
+        public void Build(IDependencyResolver resolver)
         {
+            this.resolver = resolver;
+            Build();
+        }
+
+        public void Build()
+        {
+            AssertDependencyResolverSet();
+
             var configurationProvider = new ConfigurationProvider(resolver.Resolve<KinoConfiguration>());
             var scaleOutSocketConfiguration = configurationProvider.GetScaleOutConfiguration();
             var clusterMembershipConfiguration = configurationProvider.GetClusterMembershipConfiguration();
@@ -184,6 +192,8 @@ namespace kino
             internalActorHostManager = new ActorHostManager(actorHostFactory, logger);
             var internalActor = new MessageRoutesActor(externalRoutingTable);
             internalActorHostManager.AssignActor(internalActor);
+            //
+            isBuilt = true;
         }
     }
 }

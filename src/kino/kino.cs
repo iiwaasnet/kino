@@ -14,17 +14,17 @@ namespace kino
         private IMessageRouter messageRouter;
         private ActorHostManager internalActorHostManager;
         private IDependencyResolver resolver;
-        private bool isStarted;
+        private bool isBuilt;
         private readonly TimeSpan startupDelay = TimeSpan.FromMilliseconds(300);
 
         public kino()
-            :this(null)
         {
         }
 
         public kino(IDependencyResolver resolver)
         {
             this.resolver = resolver;
+            Build();
         }
 
         public void SetResolver(IDependencyResolver resolver)
@@ -32,30 +32,38 @@ namespace kino
 
         public IMessageHub GetMessageHub()
         {
-            AssertKinoStarted();
+            AssertKinoBuilt();
             return getMessageHub();
         }
 
         public IMessageHub CreateMessageHub(bool keepRegistrationLocal)
         {
-            AssertKinoStarted();
+            AssertKinoBuilt();
             return createMessageHub(keepRegistrationLocal);
         }
 
         public void AssignActor(IActor actor, ActorHostInstancePolicy actorHostInstancePolicy = ActorHostInstancePolicy.TryReuseExisting)
         {
-            AssertKinoStarted();
+            AssertKinoBuilt();
             actorHostManager.AssignActor(actor, actorHostInstancePolicy);
         }
 
         public void Start()
         {
-            AssertDependencyResolverSet();
-
-            Build();
+            AssertKinoBuilt();
             messageRouter.Start();
             startupDelay.Sleep();
-            isStarted = true;
+        }
+
+        public void Stop()
+        {
+            messageRouter.Stop();
+        }
+
+        public void Dispose()
+        {
+            actorHostManager.Dispose();
+            internalActorHostManager.Dispose();
         }
 
         private void AssertDependencyResolverSet()
@@ -66,23 +74,11 @@ namespace kino
             }
         }
 
-        public void Stop()
+        private void AssertKinoBuilt()
         {
-            messageRouter.Stop();
-            isStarted = false;
-        }
-
-        public void Dispose()
-        {
-            actorHostManager.Dispose();
-            internalActorHostManager.Dispose();
-        }
-
-        private void AssertKinoStarted()
-        {
-            if (!isStarted)
+            if (!isBuilt)
             {
-                throw new InvalidOperationException("Kino is not started yet! Call kino.Start() must happen first.");
+                throw new InvalidOperationException($"Call kino.{nameof(Build)} first to build all dependencies!");
             }
         }
     }
