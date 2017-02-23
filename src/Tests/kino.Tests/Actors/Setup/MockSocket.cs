@@ -64,7 +64,7 @@ namespace kino.Tests.Actors.Setup
             Object.Unsubscribe(topic);
         }
 
-        public void Connect(Uri address, bool waitConnectionEstablishment = false)
+        public void Connect(Uri address, bool waitUntilConnected = false)
         {
             Object.Connect(address);
             connected = true;

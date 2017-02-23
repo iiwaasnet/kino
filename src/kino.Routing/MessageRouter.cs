@@ -74,7 +74,8 @@ namespace kino.Routing
                     //TODO: Decide on how to handle start timeout
                     cancellationTokenSource = new CancellationTokenSource();
                     clusterServices.StartClusterServices();
-                    localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning);
+                    localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, barrier),
+                                                         TaskCreationOptions.LongRunning);
                     barrier.SignalAndWait();
                     isStarted = true;
                 }
@@ -222,7 +223,7 @@ namespace kino.Routing
                 {
                     if (!route.Connected)
                     {
-                        scaleOutBackend.Connect(route.Node.Uri, waitConnectionEstablishment: true);
+                        scaleOutBackend.Connect(route.Node.Uri, waitUntilConnected: true);
                         route.Connected = true;
                         clusterServices.GetClusterHealthMonitor()
                                        .StartPeerMonitoring(new Node(route.Node.Uri, route.Node.SocketIdentity), route.Health);

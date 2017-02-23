@@ -290,7 +290,7 @@ namespace kino.Cluster
                     try
                     {
                         socket.SetMandatoryRouting();
-                        socket.Connect(uri, true);
+                        socket.Connect(uri, waitUntilConnected: true);
                         var message = Message.Create(new PingMessage())
                                              .As<Message>();
                         message.SetDomain(securityProvider.GetDomain(KinoMessages.Ping.Identity));
@@ -422,7 +422,7 @@ namespace kino.Cluster
         private ISocket CreateSubscriberSocket()
         {
             var socket = socketFactory.CreateSubscriberSocket();
-            socket.Connect(config.IntercomEndpoint, true);
+            socket.Connect(config.IntercomEndpoint, waitUntilConnected: true);
             socket.Subscribe();
 
             return socket;

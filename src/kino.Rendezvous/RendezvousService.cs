@@ -211,7 +211,7 @@ namespace kino.Rendezvous
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousHeartBeatSocketSendRate);
-            socket.Connect(config.UnicastUri, true);
+            socket.Connect(config.UnicastUri, waitUntilConnected: true);
 
             return socket;
         }

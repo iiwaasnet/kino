@@ -87,10 +87,10 @@ namespace kino.Connectivity
             return null;
         }
 
-        public void Connect(Uri address, bool waitConnectionEstablishment = false)
+        public void Connect(Uri address, bool waitUntilConnected = false)
         {
             socket.Connect(address.ToSocketAddress());
-            if (waitConnectionEstablishment)
+            if (waitUntilConnected)
             {
                 config.ConnectionEstablishmentTime.Sleep();
             }
