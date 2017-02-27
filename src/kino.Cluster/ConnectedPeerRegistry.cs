@@ -21,10 +21,7 @@ namespace kino.Cluster
         }
 
         public ClusterMemberMeta Find(ReceiverIdentifier peer)
-        {
-            ClusterMemberMeta meta;
-            return peers.Find(ref peer, out meta) ? meta : null;
-        }
+            => peers.Find(ref peer, out var meta) ? meta : null;
 
         public ClusterMemberMeta FindOrAdd(ReceiverIdentifier peer, ClusterMemberMeta meta)
         {

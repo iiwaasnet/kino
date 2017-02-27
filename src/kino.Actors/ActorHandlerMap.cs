@@ -43,8 +43,7 @@ namespace kino.Actors
         {
             foreach (var identifier in incomplete)
             {
-                MessageHandler _;
-                messageHandlers.TryRemove(identifier, out _);
+                messageHandlers.TryRemove(identifier, out var _);
             }
         }
 
@@ -53,8 +52,7 @@ namespace kino.Actors
 
         public MessageHandler Get(MessageIdentifier identifier)
         {
-            MessageHandler value;
-            if (messageHandlers.TryGetValue(identifier, out value))
+            if (messageHandlers.TryGetValue(identifier, out var value))
             {
                 return value;
             }

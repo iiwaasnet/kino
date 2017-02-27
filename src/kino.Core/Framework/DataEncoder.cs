@@ -27,29 +27,23 @@ namespace kino.Core.Framework
                | ((ulong) v48 << 32) & (0xFFFFul << 32)
                | ((ulong) v64 << 48) & (0xFFFFul << 48);
 
-        public static void Split(this ulong data, out ushort v16)
-            => v16 = (ushort) (data & 0xFFFF);
+        public static ushort Split16(this ulong data)
+            => (ushort) (data & 0xFFFF);
 
-        public static void Split(this ulong data, out ushort v16, out ushort v32)
-        {
-            v16 = (ushort) (data & 0xFFFF);
-            v32 = (ushort) ((data >> 16) & 0xFFFF);
-        }
+        public static (ushort v16, ushort v32) Split32(this ulong data)
+            => (v16: (ushort) (data & 0xFFFF),
+                v32: (ushort) ((data >> 16) & 0xFFFF));
 
-        public static void Split(this ulong data, out ushort v16, out ushort v32, out ushort v48)
-        {
-            v16 = (ushort) (data & 0xFFFF);
-            v32 = (ushort) ((data >> 16) & 0xFFFF);
-            v48 = (ushort) ((data >> 32) & 0xFFFF);
-        }
+        public static (ushort v16, ushort v32, ushort v48) Split48(this ulong data)
+            => (v16: (ushort) (data & 0xFFFF),
+                v32: (ushort) ((data >> 16) & 0xFFFF),
+                v48: (ushort) ((data >> 32) & 0xFFFF));
 
-        public static void Split(this ulong data, out ushort v16, out ushort v32, out ushort v48, out ushort v64)
-        {
-            v16 = (ushort) (data & 0xFFFF);
-            v32 = (ushort) ((data >> 16) & 0xFFFF);
-            v48 = (ushort) ((data >> 32) & 0xFFFF);
-            v64 = (ushort) ((data >> 48) & 0xFFFF);
-        }
+        public static (ushort v16, ushort v32, ushort v48, ushort v64) Split64(this ulong data)
+            => (v16: (ushort) (data & 0xFFFF),
+                v32: (ushort) ((data >> 16) & 0xFFFF),
+                v48: (ushort) ((data >> 32) & 0xFFFF),
+                v64: (ushort) ((data >> 48) & 0xFFFF));
 
         public static string GetAnyString(this byte[] array)
             => array.GetString();

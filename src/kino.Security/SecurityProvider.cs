@@ -26,7 +26,8 @@ namespace kino.Security
                                                       .ToDictionary(dk => dk.Domain, dk => dk);
             messageToDomainMap = CreateMessageMapping(nameToDomainMap, domainScopeResolver);
             mac = macImplFactory();
-            unsignableDomains = domainPrivateKeyProvider.GetUnsignedDomains();
+            unsignableDomains = domainPrivateKeyProvider.GetUnsignedDomains()
+                                ?? new Dictionary<string, HashSet<EquatableIdentity>>();
         }
 
         public byte[] CreateSignature(string domain, byte[] buffer)
@@ -52,8 +53,7 @@ namespace kino.Security
 
         private DomainPrivateKey FindDomain(AnyVersionMessageIdentifier identity)
         {
-            DomainPrivateKey domain;
-            if (messageToDomainMap.TryGetValue(identity, out domain))
+            if (messageToDomainMap.TryGetValue(identity, out var domain))
             {
                 return domain;
             }
@@ -62,8 +62,7 @@ namespace kino.Security
 
         private DomainPrivateKey FindDomain(string name)
         {
-            DomainPrivateKey domain;
-            if (nameToDomainMap.TryGetValue(name, out domain))
+            if (nameToDomainMap.TryGetValue(name, out var domain))
             {
                 return domain;
             }
@@ -84,8 +83,7 @@ namespace kino.Security
                                                                             Domain = dm.Domain
                                                                         }))
             {
-                DomainPrivateKey key;
-                if (domainKeys.TryGetValue(message.Domain, out key))
+                if (domainKeys.TryGetValue(message.Domain, out var key))
                 {
                     var messageIdentifier = new AnyVersionMessageIdentifier(message.Identity.GetBytes());
                     DomainPrivateKey _;
@@ -114,8 +112,7 @@ namespace kino.Security
                 return false;
             }
 
-            HashSet<EquatableIdentity> messages = null;
-            if (unsignableDomains?.TryGetValue(domain, out messages) == true)
+            if (unsignableDomains.TryGetValue(domain, out var messages))
             {
                 if (messages == null
                     || !messages.Any()

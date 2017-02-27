@@ -32,8 +32,7 @@ namespace kino.Client
         {
             IPromise promise = null;
 
-            IDictionary<MessageIdentifier, IPromise> messageHandlers;
-            if (keyPromiseMap.TryRemove(callbackIdentifier.CallbackKey, out messageHandlers))
+            if (keyPromiseMap.TryRemove(callbackIdentifier.CallbackKey, out var messageHandlers))
             {
                 var massageHandlerId = new MessageIdentifier(callbackIdentifier.Identity, callbackIdentifier.Version, callbackIdentifier.Partition);
                 messageHandlers.TryGetValue(massageHandlerId, out promise);
@@ -43,9 +42,6 @@ namespace kino.Client
         }
 
         private void RemoveCallback(CallbackKey callbackKey)
-        {
-            IDictionary<MessageIdentifier, IPromise> _;
-            keyPromiseMap.TryRemove(callbackKey.Value, out _);
-        }
+            => keyPromiseMap.TryRemove(callbackKey.Value, out var _);
     }
 }

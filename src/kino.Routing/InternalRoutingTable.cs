@@ -52,8 +52,7 @@ namespace kino.Routing
 
         private Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> MapSocketToActor(InternalRouteRegistration routeRegistration)
         {
-            Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> actorMessages;
-            if (!socketToActorMessagesMap.TryGetValue(routeRegistration.DestinationSocket, out actorMessages))
+            if (!socketToActorMessagesMap.TryGetValue(routeRegistration.DestinationSocket, out var actorMessages))
             {
                 actorMessages = new Bcl.Dictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>>
                                 {
@@ -68,8 +67,7 @@ namespace kino.Routing
                                               Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> actorMessages,
                                               MessageContract messageContract)
         {
-            Bcl.HashSet<MessageIdentifier> messages;
-            if (!actorMessages.TryGetValue(routeRegistration.ReceiverIdentifier, out messages))
+            if (!actorMessages.TryGetValue(routeRegistration.ReceiverIdentifier, out var messages))
             {
                 messages = new Bcl.HashSet<MessageIdentifier>();
                 actorMessages[routeRegistration.ReceiverIdentifier] = messages;
@@ -79,8 +77,7 @@ namespace kino.Routing
 
         private void MapMessageToActor(InternalRouteRegistration routeRegistration, MessageContract messageContract)
         {
-            HashedLinkedList<ReceiverIdentifier> actors;
-            if (!messageToActorMap.TryGetValue(messageContract.Message, out actors))
+            if (!messageToActorMap.TryGetValue(messageContract.Message, out var actors))
             {
                 actors = new HashedLinkedList<ReceiverIdentifier>();
                 messageToActorMap[messageContract.Message] = actors;
@@ -191,8 +188,7 @@ namespace kino.Routing
 
         private Bcl.IEnumerable<MessageRoute> RemoveActors(ILocalSendingSocket<IMessage> receivingSocket)
         {
-            Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>> actorMessages;
-            if (socketToActorMessagesMap.TryGetValue(receivingSocket, out actorMessages))
+            if (socketToActorMessagesMap.TryGetValue(receivingSocket, out var actorMessages))
             {
                 socketToActorMessagesMap.Remove(receivingSocket);
                 foreach (var actor in actorMessages.Keys)
@@ -200,8 +196,7 @@ namespace kino.Routing
                     actorToSocketMap.Remove(actor);
                     foreach (var message in actorMessages[actor])
                     {
-                        HashedLinkedList<ReceiverIdentifier> messageHandlers;
-                        if (messageToActorMap.TryGetValue(message, out messageHandlers))
+                        if (messageToActorMap.TryGetValue(message, out var messageHandlers))
                         {
                             messageHandlers.Remove(actor);
                             if (!messageHandlers.Any())

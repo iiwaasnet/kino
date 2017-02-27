@@ -70,8 +70,7 @@ namespace kino.Core.Diagnostics.Performance
 
         public IPerformanceCounter GetCounter(TCategory counter)
         {
-            IPerformanceCounter performanceCounter;
-            if (counters.TryGetValue(counter, out performanceCounter))
+            if (counters.TryGetValue(counter, out var performanceCounter))
             {
                 return performanceCounter;
             }

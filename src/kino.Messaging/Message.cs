@@ -62,10 +62,8 @@ namespace kino.Messaging
 
         internal static Message FromMultipartMessage(MultipartMessage multipartMessage)
         {
-            MessageTraceOptions traceOptions;
-            DistributionPattern distributionPattern;
-            multipartMessage.GetTraceOptionsDistributionPattern(out traceOptions, out distributionPattern);
-            ushort hops;
+            var (traceOptions, distributionPattern) = multipartMessage.GetTraceOptionsDistributionPattern();
+            var (routes, hops) = multipartMessage.GetMessageRouting();
 
             return new Message(multipartMessage.GetMessageIdentity(),
                                multipartMessage.GetMessageVersion().GetUShort(),
@@ -85,7 +83,7 @@ namespace kino.Messaging
                        CallbackKey = multipartMessage.GetCallbackKey(),
                        ReceiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity(),
                        ReceiverIdentity = multipartMessage.GetReceiverIdentity(),
-                       routing = new List<SocketEndpoint>(multipartMessage.GetMessageRouting(out hops)),
+                       routing = routes,
                        Hops = hops
                    };
         }
@@ -219,14 +217,14 @@ namespace kino.Messaging
 
         public T GetPayload<T>()
             where T : IPayload, new()
-        => (T) (payload ?? (payload = Deserialize<T>(Body)));
+            => (T) (payload ?? (payload = Deserialize<T>(Body)));
 
         private byte[] Serialize(IPayload payload)
             => payload.Serialize();
 
         private T Deserialize<T>(byte[] content)
             where T : IPayload, new()
-        => new T().Deserialize<T>(content);
+            => new T().Deserialize<T>(content);
 
         public void EncryptPayload()
         {

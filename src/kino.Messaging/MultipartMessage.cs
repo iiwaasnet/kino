@@ -189,8 +189,7 @@ namespace kino.Messaging
         internal byte[] GetMessageBody()
         {
             var data = frames[frames.Count - ReversedFramesV5.BodyDescription].GetULong();
-            ushort offset;
-            data.Split(out offset);
+            var offset = data.Split16();
 
             return frames[frames.Count - offset];
         }
@@ -198,13 +197,12 @@ namespace kino.Messaging
         internal TimeSpan GetMessageTTL()
             => frames[frames.Count - ReversedFramesV5.TTL].GetTimeSpan();
 
-        internal void GetTraceOptionsDistributionPattern(out MessageTraceOptions traceOptions, out DistributionPattern distributionPattern)
+        internal (MessageTraceOptions, DistributionPattern) GetTraceOptionsDistributionPattern()
         {
             var data = frames[frames.Count - ReversedFramesV5.TraceOptionsDistributiomPattern].GetULong();
-            ushort v1, v2;
-            data.Split(out v1, out v2);
-            traceOptions = (MessageTraceOptions) v1;
-            distributionPattern = (DistributionPattern) v2;
+            (var v1, var v2) = data.Split32();
+
+            return ((MessageTraceOptions) v1, (DistributionPattern) v2);
         }
 
         public long GetCallbackKey()
@@ -240,8 +238,7 @@ namespace kino.Messaging
         {
             var data = frames[frames.Count - ReversedFramesV5.CallbackDescription].GetULong();
 
-            ushort offset, entryCount, frameDivisor;
-            data.Split(out offset, out entryCount, out frameDivisor);
+            var (offset, entryCount, frameDivisor) = data.Split48();
             var startIndex = frames.Count - offset;
             var frameCount = entryCount * frameDivisor;
 
@@ -264,12 +261,11 @@ namespace kino.Messaging
             return callbacks;
         }
 
-        internal IEnumerable<SocketEndpoint> GetMessageRouting(out ushort hops)
+        internal (List<SocketEndpoint> routing, ushort hops) GetMessageRouting()
         {
             var data = frames[frames.Count - ReversedFramesV5.RoutingDescription].GetULong();
 
-            ushort offset, entryCount, frameDivisor;
-            data.Split(out offset, out entryCount, out frameDivisor, out hops);
+            var (offset, entryCount, frameDivisor, hops) = data.Split64();
             var startIndex = frames.Count - offset;
             var frameCount = entryCount * frameDivisor;
 
@@ -288,7 +284,7 @@ namespace kino.Messaging
                 }
             }
 
-            return routing;
+            return (routing, hops);
         }
     }
 }

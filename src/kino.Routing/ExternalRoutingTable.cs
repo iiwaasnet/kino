@@ -72,9 +72,8 @@ namespace kino.Routing
 
         private void MapConnectionToNode(PeerConnection connection)
         {
-            Bcl.HashSet<ReceiverIdentifier> nodes;
             var uri = connection.Node.Uri.ToSocketAddress();
-            if (!uriToNodeMap.TryGetValue(uri, out nodes))
+            if (!uriToNodeMap.TryGetValue(uri, out var nodes))
             {
                 nodes = new Bcl.HashSet<ReceiverIdentifier>();
                 uriToNodeMap[uri] = nodes;
@@ -87,8 +86,7 @@ namespace kino.Routing
 
         private PeerConnection MapNodeToConnection(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
         {
-            var peerConnection = default(PeerConnection);
-            if (!nodeToConnectionMap.TryGetValue(nodeIdentifier, out peerConnection))
+            if (!nodeToConnectionMap.TryGetValue(nodeIdentifier, out var peerConnection))
             {
                 peerConnection = new PeerConnection
                                  {
@@ -104,8 +102,7 @@ namespace kino.Routing
         private void MapMessageHubToNode(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
         {
             var messageHub = routeRegistration.Route.Receiver;
-            Bcl.HashSet<ReceiverIdentifier> messageHubs;
-            if (!nodeMessageHubs.TryGetValue(nodeIdentifier, out messageHubs))
+            if (!nodeMessageHubs.TryGetValue(nodeIdentifier, out var messageHubs))
             {
                 messageHubs = new Bcl.HashSet<ReceiverIdentifier>();
                 nodeMessageHubs[nodeIdentifier] = messageHubs;
@@ -115,8 +112,7 @@ namespace kino.Routing
 
         private void MapActorToMessage(ExternalRouteRegistration routeRegistration)
         {
-            Bcl.HashSet<MessageIdentifier> actorMessages;
-            if (!actorToMessageMap.TryGetValue(routeRegistration.Route.Receiver, out actorMessages))
+            if (!actorToMessageMap.TryGetValue(routeRegistration.Route.Receiver, out var actorMessages))
             {
                 actorMessages = new Bcl.HashSet<MessageIdentifier>();
                 actorToMessageMap[routeRegistration.Route.Receiver] = actorMessages;
@@ -126,8 +122,7 @@ namespace kino.Routing
 
         private void MapActorToNode(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
         {
-            Bcl.HashSet<ReceiverIdentifier> actors;
-            if (!nodeActors.TryGetValue(nodeIdentifier, out actors))
+            if (!nodeActors.TryGetValue(nodeIdentifier, out var actors))
             {
                 actors = new Bcl.HashSet<ReceiverIdentifier>();
                 nodeActors[nodeIdentifier] = actors;
@@ -138,8 +133,7 @@ namespace kino.Routing
         private void MapMessageToNode(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
         {
             var messageIdentifier = routeRegistration.Route.Message;
-            HashedLinkedList<ReceiverIdentifier> nodes;
-            if (!messageToNodeMap.TryGetValue(messageIdentifier, out nodes))
+            if (!messageToNodeMap.TryGetValue(messageIdentifier, out var nodes))
             {
                 nodes = new HashedLinkedList<ReceiverIdentifier>();
                 messageToNodeMap[messageIdentifier] = nodes;
@@ -155,16 +149,14 @@ namespace kino.Routing
             var peers = new Bcl.List<PeerConnection>();
             if (lookupRequest.ReceiverNodeIdentity.IsSet())
             {
-                PeerConnection peerConnection;
-                if (nodeToConnectionMap.TryGetValue(lookupRequest.ReceiverNodeIdentity, out peerConnection))
+                if (nodeToConnectionMap.TryGetValue(lookupRequest.ReceiverNodeIdentity, out var peerConnection))
                 {
                     peers.Add(peerConnection);
                 }
             }
             else
             {
-                HashedLinkedList<ReceiverIdentifier> nodes;
-                if (messageToNodeMap.TryGetValue(lookupRequest.Message, out nodes))
+                if (messageToNodeMap.TryGetValue(lookupRequest.Message, out var nodes))
                 {
                     if (lookupRequest.Distribution == DistributionPattern.Unicast)
                     {
@@ -204,30 +196,26 @@ namespace kino.Routing
 
         public PeerRemoveResult RemoveNodeRoute(ReceiverIdentifier nodeIdentifier)
         {
-            PeerConnection connection;
             var peerConnectionAction = PeerConnectionAction.NotFound;
 
-            if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out connection))
+            if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out var connection))
             {
                 nodeToConnectionMap.Remove(nodeIdentifier);
                 peerConnectionAction = RemovePeerNode(connection);
                 nodeMessageHubs.Remove(nodeIdentifier);
-                Bcl.HashSet<ReceiverIdentifier> actors;
-                if (nodeActors.TryGetValue(nodeIdentifier, out actors))
+                if (nodeActors.TryGetValue(nodeIdentifier, out var actors))
                 {
                     nodeActors.Remove(nodeIdentifier);
 
                     foreach (var actor in actors)
                     {
-                        Bcl.HashSet<MessageIdentifier> messages;
-                        if (actorToMessageMap.TryGetValue(actor, out messages))
+                        if (actorToMessageMap.TryGetValue(actor, out var messages))
                         {
                             actorToMessageMap.Remove(actor);
 
                             foreach (var message in messages)
                             {
-                                HashedLinkedList<ReceiverIdentifier> nodes;
-                                if (messageToNodeMap.TryGetValue(message, out nodes))
+                                if (messageToNodeMap.TryGetValue(message, out var nodes))
                                 {
                                     nodes.Remove(nodeIdentifier);
                                     if (!nodes.Any())
@@ -252,9 +240,8 @@ namespace kino.Routing
 
         private PeerConnectionAction RemovePeerNode(PeerConnection connection)
         {
-            Bcl.HashSet<ReceiverIdentifier> nodes;
             var uri = connection.Node.Uri.ToSocketAddress();
-            if (uriToNodeMap.TryGetValue(uri, out nodes))
+            if (uriToNodeMap.TryGetValue(uri, out var nodes))
             {
                 if (nodes.Remove(new ReceiverIdentifier(connection.Node.SocketIdentity)))
                 {
@@ -278,11 +265,10 @@ namespace kino.Routing
 
         public PeerRemoveResult RemoveMessageRoute(ExternalRouteRemoval routeRemoval)
         {
-            PeerConnection connection = null;
             var connectionAction = PeerConnectionAction.NotFound;
 
             var nodeIdentifier = new ReceiverIdentifier(routeRemoval.NodeIdentifier);
-            if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out connection))
+            if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out var connection))
             {
                 connectionAction = PeerConnectionAction.KeepConnection;
 
@@ -320,8 +306,7 @@ namespace kino.Routing
         public Bcl.IEnumerable<NodeActors> FindAllActors(MessageIdentifier messageIdentifier)
         {
             var messageRoutes = new Bcl.List<NodeActors>();
-            HashedLinkedList<ReceiverIdentifier> nodes;
-            if (messageToNodeMap.TryGetValue(messageIdentifier, out nodes))
+            if (messageToNodeMap.TryGetValue(messageIdentifier, out var nodes))
             {
                 foreach (var node in nodes)
                 {
@@ -344,8 +329,7 @@ namespace kino.Routing
 
         private void RemoveActorsByMessage(ExternalRouteRemoval routeRemoval, ReceiverIdentifier nodeIdentifier)
         {
-            HashedLinkedList<ReceiverIdentifier> nodes;
-            if (messageToNodeMap.TryGetValue(routeRemoval.Route.Message, out nodes))
+            if (messageToNodeMap.TryGetValue(routeRemoval.Route.Message, out var nodes))
             {
                 if (nodes.Remove(nodeIdentifier))
                 {
@@ -353,14 +337,12 @@ namespace kino.Routing
                     {
                         messageToNodeMap.Remove(routeRemoval.Route.Message);
                     }
-                    Bcl.HashSet<ReceiverIdentifier> actors;
                     var emptyActors = new Bcl.List<ReceiverIdentifier>();
-                    if (nodeActors.TryGetValue(nodeIdentifier, out actors))
+                    if (nodeActors.TryGetValue(nodeIdentifier, out var actors))
                     {
                         foreach (var actor in actors)
                         {
-                            Bcl.HashSet<MessageIdentifier> messages;
-                            if (actorToMessageMap.TryGetValue(actor, out messages))
+                            if (actorToMessageMap.TryGetValue(actor, out var messages))
                             {
                                 if (messages.Remove(routeRemoval.Route.Message))
                                 {
@@ -388,8 +370,7 @@ namespace kino.Routing
         private void RemoveActorRoute(ExternalRouteRemoval routeRemoval)
         {
             var nodeIdentifier = new ReceiverIdentifier(routeRemoval.NodeIdentifier);
-            Bcl.HashSet<MessageIdentifier> messages;
-            if (actorToMessageMap.TryGetValue(routeRemoval.Route.Receiver, out messages))
+            if (actorToMessageMap.TryGetValue(routeRemoval.Route.Receiver, out var messages))
             {
                 messages.Remove(routeRemoval.Route.Message);
                 if (!messages.Any())
@@ -405,8 +386,7 @@ namespace kino.Routing
 
         private void RemoveNodeActor(ExternalRouteRemoval routeRemoval, ReceiverIdentifier nodeIdentifier)
         {
-            Bcl.HashSet<ReceiverIdentifier> actors;
-            if (nodeActors.TryGetValue(nodeIdentifier, out actors))
+            if (nodeActors.TryGetValue(nodeIdentifier, out var actors))
             {
                 if (actors.Remove(routeRemoval.Route.Receiver))
                 {
@@ -421,8 +401,7 @@ namespace kino.Routing
 
         private void RemoveMessageToNodeMap(ExternalRouteRemoval routeRemoval, ReceiverIdentifier receiverNode)
         {
-            HashedLinkedList<ReceiverIdentifier> nodes;
-            if (messageToNodeMap.TryGetValue(routeRemoval.Route.Message, out nodes))
+            if (messageToNodeMap.TryGetValue(routeRemoval.Route.Message, out var nodes))
             {
                 nodes.Remove(receiverNode);
                 if (!nodes.Any())
@@ -435,8 +414,7 @@ namespace kino.Routing
         private void RemoveMessageHubRoute(ExternalRouteRemoval routeRemoval)
         {
             var nodeIdentifier = new ReceiverIdentifier(routeRemoval.NodeIdentifier);
-            Bcl.HashSet<ReceiverIdentifier> messageHubs;
-            if (nodeMessageHubs.TryGetValue(nodeIdentifier, out messageHubs))
+            if (nodeMessageHubs.TryGetValue(nodeIdentifier, out var messageHubs))
             {
                 if (messageHubs.Remove(routeRemoval.Route.Receiver))
                 {

@@ -32,11 +32,8 @@ namespace kino.Routing.ServiceMessageHandlers
         }
 
         public IServiceMessageHandler GetMessageHandler(MessageIdentifier message)
-        {
-            IServiceMessageHandler handler;
-            return handlersMap.TryGetValue(message, out handler)
-                       ? handler
-                       : null;
-        }
+            => handlersMap.TryGetValue(message, out var handler)
+                   ? handler
+                   : null;
     }
 }

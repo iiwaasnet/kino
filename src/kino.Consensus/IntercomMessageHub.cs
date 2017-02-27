@@ -191,10 +191,7 @@ namespace kino.Consensus
         }
 
         private void Unsubscribe(Listener listener)
-        {
-            object obj;
-            subscriptions.TryRemove(listener, out obj);
-        }
+            => subscriptions.TryRemove(listener, out var _);
 
         private void SafeExecute(Action wrappedMethod)
         {

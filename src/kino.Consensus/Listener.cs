@@ -60,8 +60,7 @@ namespace kino.Consensus
             {
                 if (observer != null)
                 {
-                    object val;
-                    observers.TryRemove(observer, out val);
+                    observers.TryRemove(observer, out var _);
                 }
             }
         }
