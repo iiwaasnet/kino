@@ -170,14 +170,12 @@ namespace kino.Consensus
         }
 
         private static LastWrittenLease CreateLastWrittenLease(LeaseAckReadMessage p)
-        {
-            return new LastWrittenLease(new Ballot(p.KnownWriteBallot.Timestamp, p.KnownWriteBallot.MessageNumber, p.KnownWriteBallot.Identity),
-                                        (p.Lease != null)
-                                            ? new Lease(p.Lease.Identity,
-                                                        p.Lease.ExpiresAt,
-                                                        p.Lease.OwnerPayload)
-                                            : null);
-        }
+            => new LastWrittenLease(new Ballot(p.KnownWriteBallot.Timestamp, p.KnownWriteBallot.MessageNumber, p.KnownWriteBallot.Identity),
+                                    (p.Lease != null)
+                                        ? new Lease(p.Lease.Identity,
+                                                    p.Lease.ExpiresAt,
+                                                    p.Lease.OwnerPayload)
+                                        : null);
 
         public LeaseTxResult Write(Ballot ballot, Lease lease)
         {
@@ -212,14 +210,10 @@ namespace kino.Consensus
         }
 
         private static bool ReadNotAcknowledged(int index)
-        {
-            return index == 1 || index == WaitHandle.WaitTimeout;
-        }
+            => index == 1 || index == WaitHandle.WaitTimeout;
 
         private int GetQuorum()
-        {
-            return synodConfig.Synod.Count() / 2 + 1;
-        }
+            => synodConfig.Synod.Count() / 2 + 1;
 
         public void Dispose()
         {
