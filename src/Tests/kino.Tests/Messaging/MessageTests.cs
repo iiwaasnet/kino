@@ -98,9 +98,9 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        [TestCase(MessageTraceOptions.Routing, true)]
-        [TestCase(MessageTraceOptions.None, false)]
-        public void RouterAddressAddedToMessageHops_OnlyIfRouteTracingIsEnabled(MessageTraceOptions traceOptions, bool hopsAdded)
+        [TestCase(MessageTraceOptions.Routing)]
+        [TestCase(MessageTraceOptions.None)]
+        public void RouterAddress_AlwaysAddedToMessageHops(MessageTraceOptions traceOptions)
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = traceOptions;
@@ -113,14 +113,7 @@ namespace kino.Tests.Messaging
             {
                 message.PushRouterAddress(socketEndpoint);
             }
-            if (hopsAdded)
-            {
-                CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
-            }
-            else
-            {
-                CollectionAssert.AreEqual(Enumerable.Empty<SocketEndpoint>(), message.GetMessageRouting());
-            }
+            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
         }
 
         [Test]
