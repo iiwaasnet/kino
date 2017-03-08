@@ -139,12 +139,7 @@ namespace kino.Messaging
         }
 
         internal void PushRouterAddress(SocketEndpoint scaleOutAddress)
-        {
-            if (TraceOptions.HasFlag(MessageTraceOptions.Routing))
-            {
-                routing.Add(scaleOutAddress);
-            }
-        }
+            => routing.Add(scaleOutAddress);
 
         internal void SignMessage(ISignatureProvider signatureProvider)
         {
