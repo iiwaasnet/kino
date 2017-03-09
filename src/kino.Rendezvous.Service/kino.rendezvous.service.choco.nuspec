@@ -5,11 +5,11 @@
     <!-- Read this before publishing packages to chocolatey.org: https://github.com/chocolatey/chocolatey/wiki/CreatePackages -->
     <id>kino-rendezvous-service</id>
     <title>kino.Rendezvous.Service</title>
-    <version>0.0.1.26</version>
+    <version>0.0.1.27</version>
     <authors>Sergey Ivasenko</authors>
     <owners>Sergey Ivasenko</owners>
     <summary>Rendezvous service for kino networks</summary>
-    <description>Rendezvous service for kino networks</description>
+    <description>Rendezvous is an auto-discovery service for kino networks</description>
     <projectUrl>https://github.com/iiwaasnet/kino</projectUrl>
     <projectSourceUrl>https://github.com/iiwaasnet/kino</projectSourceUrl>
     <packageSourceUrl>https://github.com/iiwaasnet/kino</packageSourceUrl>
@@ -42,6 +42,7 @@
         <file src="bin\release\System.Reactive.Core.dll" target="System.Reactive.Core.dll" />
         <file src="bin\release\System.Reactive.Interfaces.dll" target="System.Reactive.Interfaces.dll" />
         <file src="bin\release\System.Reactive.Linq.dll" target="System.Reactive.Linq.dll" />
+        <file src="bin\release\System.ValueTuple.dll" target="System.ValueTuple.dll" />
         <file src="bin\release\TypedConfigProvider.dll" target="TypedConfigProvider.dll" />
         <file src="bin\release\WindowsServiceHost.dll" target="WindowsServiceHost.dll" />
   </files>

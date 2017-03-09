@@ -1,4 +1,4 @@
-$MsBuild = "C:\Program Files (x86)\MSBuild\14.0\Bin\msbuild.exe"
+$MsBuild = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\msbuild.exe"
 
 $SolutionFile = Get-ChildItem ..\src -Recurse | Where-Object {$_.Extension -eq ".sln"}
 nuget restore $SolutionFile.FullName
