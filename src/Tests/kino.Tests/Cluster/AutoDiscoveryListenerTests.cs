@@ -43,8 +43,8 @@ namespace kino.Tests.Cluster
             rendezvousCluster = new Mock<IRendezvousCluster>();
             rendezvousEndpoints = new[]
                                   {
-                                      new RendezvousEndpoint("tcp://127.0.0.1:8080", "tcp://127.0.0.1:9090"),
-                                      new RendezvousEndpoint("tcp://127.0.0.2:8080", "tcp://127.0.0.2:9090")
+                                      new RendezvousEndpoint("tcp://*:8080", "tcp://*:9090"),
+                                      new RendezvousEndpoint("tcp://*:8081", "tcp://*:9091")
                                   };
             currentRendezvousIndex = 0;
             rendezvousCluster.Setup(m => m.GetCurrentRendezvousServer()).Returns(GetCurrentRendezvous());
@@ -55,7 +55,7 @@ namespace kino.Tests.Cluster
             subscriptionSocket = new Mock<ISocket>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(subscriptionSocket.Object);
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
-            scaleOutAddress = new SocketEndpoint("tcp://127.0.0.1:7878", Guid.NewGuid().ToByteArray());
+            scaleOutAddress = new SocketEndpoint("tcp://*:7878", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
             membershipConfiguration = new ClusterMembershipConfiguration
                                       {
@@ -117,8 +117,8 @@ namespace kino.Tests.Cluster
                               RendezvousNodes = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
                                                                             i => new RendezvousNode
                                                                                  {
-                                                                                     BroadcastUri = $"tpc://127.0.0.1:{1000 + i}",
-                                                                                     UnicastUri = $"tpc://127.0.0.3:{1000 + i}"
+                                                                                     BroadcastUri = $"tcp://*:{2000 + i}".ParseAddress().ToSocketAddress(),
+                                                                                     UnicastUri = $"tcp://*:{1000 + i}".ParseAddress().ToSocketAddress()
                                                                                  })
                           };
             var message = Message.Create(payload);

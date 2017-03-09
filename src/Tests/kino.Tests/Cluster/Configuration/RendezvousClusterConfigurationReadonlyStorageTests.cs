@@ -15,7 +15,7 @@ namespace kino.Tests.Cluster.Configuration
         public void Setup()
         {
             initialConfiguration = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                               i => new RendezvousEndpoint($"tcp://127.0.0.{i}:8080", $"tcp://127.0.0.{i}:9090"));
+                                                               i => new RendezvousEndpoint($"tcp://*:808{i}", $"tcp://*:909{i}"));
             configStorage = new RendezvousClusterConfigurationReadonlyStorage(initialConfiguration);
         }
 
@@ -25,7 +25,7 @@ namespace kino.Tests.Cluster.Configuration
             var config = new RendezvousClusterConfiguration
                          {
                              Cluster = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                                   i => new RendezvousEndpoint($"tcp://192.0.0.{i}:8080", $"tcp://192.0.0.{i}:9090"))
+                                                                   i => new RendezvousEndpoint($"tcp://*:8{i}80", $"tcp://*:9{i}90"))
                          };
             CollectionAssert.AreEquivalent(initialConfiguration, configStorage.Read().Cluster);
             //

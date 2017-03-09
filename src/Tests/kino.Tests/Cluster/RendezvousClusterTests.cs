@@ -22,7 +22,7 @@ namespace kino.Tests.Cluster
             cluster = new RendezvousClusterConfiguration
                       {
                           Cluster = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                                i => new RendezvousEndpoint($"tcp://127.0.0.{i}:8080", $"tcp://127.0.0.{i}:9090"))
+                                                                 i => new RendezvousEndpoint($"tcp://*:808{i}", $"tcp://*:909{i}"))
                       };
             configurationStorage.Setup(m => m.Read()).Returns(cluster);
             rendezvousCluster = new RendezvousCluster(configurationStorage.Object);
@@ -44,7 +44,8 @@ namespace kino.Tests.Cluster
             var newCluster = new RendezvousClusterConfiguration
                              {
                                  Cluster = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                                       i => new RendezvousEndpoint($"tcp://127.0.2.{i}:8081", $"tcp://127.0.3.{i}:9092"))
+                                                                        i => new RendezvousEndpoint($"tcp://*:8{i}8".ParseAddress().ToSocketAddress(),
+                                                                                                    $"tcp://*:9{i}9".ParseAddress().ToSocketAddress()))
                              };
             configurationStorage.Setup(m => m.Read()).Returns(newCluster);
             //
@@ -76,7 +77,7 @@ namespace kino.Tests.Cluster
         [Test]
         public void IfNewRendezvousServerDoesntBelongToCluster_ItIsNotSetAsCurrentRendezvousServer()
         {
-            var otherEndpoint = new RendezvousEndpoint("tcp://192.168.0.1:5555", "tcp://192.168.0.12:4444");
+            var otherEndpoint = new RendezvousEndpoint("tcp://*:5555", "tcp://*:4444");
             CollectionAssert.DoesNotContain(cluster.Cluster, otherEndpoint);
             //
             rendezvousCluster.SetCurrentRendezvousServer(otherEndpoint);

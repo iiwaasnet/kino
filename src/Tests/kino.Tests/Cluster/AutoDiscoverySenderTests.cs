@@ -31,7 +31,7 @@ namespace kino.Tests.Cluster
         public void Setup()
         {
             rendezvousCluster = new Mock<IRendezvousCluster>();
-            rendezvousEndpoint = new RendezvousEndpoint("tcp:/127.0.0.1:8080", "tcp://127.0.0.2:9009");
+            rendezvousEndpoint = new RendezvousEndpoint("tcp://*:8080", "tcp://*:9009");
             rendezvousCluster.Setup(m => m.GetCurrentRendezvousServer()).Returns(rendezvousEndpoint);
             socketFactory = new Mock<ISocketFactory>();
             socket = new Mock<ISocket>();

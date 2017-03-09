@@ -9,8 +9,8 @@ namespace kino.Tests.Cluster.Configuration
         [Test]
         public void TwoRendezvousEndpointsAreEqual_IfTheirBroadsastUriAndUnicastUriPropertiesAreEqual()
         {
-            const string unicastUri = "tcp://127.0.0.1:8080";
-            const string broadcastUri = "tcp://127.0.0.2:9090";
+            const string unicastUri = "tcp://*:8080";
+            const string broadcastUri = "tcp://*:9090";
             var first = new RendezvousEndpoint(unicastUri, broadcastUri);
             var second = new RendezvousEndpoint(unicastUri, broadcastUri);
             //
@@ -24,9 +24,9 @@ namespace kino.Tests.Cluster.Configuration
         [Test]
         public void TwoRendezvousEndpointsAreNotEqual_IfTheirBroadsastUriPropertiesAreNotEqual()
         {
-            const string unicastUri = "tcp://127.0.0.1:8080";
-            var first = new RendezvousEndpoint(unicastUri, "tcp://127.0.0.3:9090");
-            var second = new RendezvousEndpoint(unicastUri, "tcp://127.0.0.2:9090");
+            const string unicastUri = "tcp://*:8080";
+            var first = new RendezvousEndpoint(unicastUri, "tcp://*:9090");
+            var second = new RendezvousEndpoint(unicastUri, "tcp://*:9091");
             //
             Assert.AreNotEqual(first, second);
             Assert.IsFalse(first.Equals(second));
@@ -38,9 +38,9 @@ namespace kino.Tests.Cluster.Configuration
         [Test]
         public void TwoRendezvousEndpointsAreNotEqual_IfTheirUnicastUriPropertiesAreNotEqual()
         {
-            const string broadcastUri = "tcp://127.0.0.2:9090";
-            var first = new RendezvousEndpoint("tcp://127.0.0.1:8080", broadcastUri);
-            var second = new RendezvousEndpoint("tcp://127.0.0.4:8080", broadcastUri);
+            const string broadcastUri = "tcp://*:9090";
+            var first = new RendezvousEndpoint("tcp://*:8081", broadcastUri);
+            var second = new RendezvousEndpoint("tcp://*:8082", broadcastUri);
             //
             Assert.AreNotEqual(first, second);
             Assert.IsFalse(first.Equals(second));

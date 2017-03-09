@@ -13,7 +13,7 @@ namespace kino.Tests.Consensus.Setup
 {
     public static class RoundBasedRegisterTestsHelper
     {
-        internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<Uri> synod, Uri localNodeUri)
+        internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<string> synod, string localNodeUri)
         {
             var appConfig = new RendezvousServiceConfiguration
                             {
@@ -54,14 +54,11 @@ namespace kino.Tests.Consensus.Setup
             return new RoundBasedRegisterTestSetup(ballotGenerator, synodConfig.LocalNode, roundBasedRegister, appConfig.Lease.MaxLeaseTimeSpan);
         }
 
-        internal static Uri[] GetSynodMembers()
+        internal static IEnumerable<string> GetSynodMembers()
         {
-            return new[]
-                   {
-                       new Uri("tcp://127.0.0.1:3001"),
-                       new Uri("tcp://127.0.0.2:3002"),
-                       new Uri("tcp://127.0.0.3:3003")
-                   };
+            yield return "tcp://127.0.0.1:3001";
+            yield return "tcp://127.0.0.1:3002";
+            yield return "tcp://127.0.0.1:3003";
         }
     }
 }

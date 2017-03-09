@@ -33,14 +33,33 @@ namespace kino.Core.Framework
 
         public static Uri ParseAddress(this string uri)
         {
-            var match = WildcardTcpAddress.Match(uri);
-            if (match.Success)
+            var tmp  = WildcardTcpAddress.Match(uri).Success
+                ? ExpandWildcardUri(uri, WildcardTcpAddress.Match(uri))
+                : BuildIpAddressUri(uri);
+
+            if (tmp.IsLoopback)
             {
-                var ipAddress = GetMachineIPAddress();
-                uri = (string.IsNullOrWhiteSpace(ipAddress))
-                          ? uri
-                          : uri.Replace(match.Value, $"tcp://{ipAddress}:");
+                throw new Exception($"Uri [{uri}] should not resolve to loopback [{tmp.AbsoluteUri}]! " +
+                                    $"Check that host file has no entry mapping name to a loopback address.");
             }
+
+            return tmp;
+        }
+
+        private static Uri BuildIpAddressUri(this string uri)
+        {
+            var tmp = new Uri(uri);
+            var ipAddress = GetHostIpAddress(tmp.IsLoopback ? Environment.MachineName : tmp.Host);
+
+            return new Uri($"{tmp.Scheme}://{ipAddress}:{tmp.Port}");
+        }
+
+        private static Uri ExpandWildcardUri(string uri, Capture match)
+        {
+            var ipAddress = GetHostIpAddress(Environment.MachineName);
+            uri = (string.IsNullOrWhiteSpace(ipAddress))
+                      ? uri
+                      : uri.Replace(match.Value, $"tcp://{ipAddress}:");
 
             return new Uri(uri);
         }
@@ -55,10 +74,10 @@ namespace kino.Core.Framework
             return Enumerable.Range(firstPort, Math.Abs(lastPort - firstPort) + 1);
         }
 
-        private static string GetMachineIPAddress()
-            => Dns.GetHostEntry(Environment.MachineName)
+        private static string GetHostIpAddress(string host)
+            => Dns.GetHostEntry(host)
                   .AddressList
                   .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)
-                 ?.ToString();
+                  ?.ToString();
     }
 }
