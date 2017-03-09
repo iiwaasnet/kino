@@ -33,9 +33,9 @@ namespace kino.Core.Framework
 
         public static Uri ParseAddress(this string uri)
         {
-            var tmp  = WildcardTcpAddress.Match(uri).Success
-                ? ExpandWildcardUri(uri, WildcardTcpAddress.Match(uri))
-                : BuildIpAddressUri(uri);
+            var tmp = WildcardTcpAddress.Match(uri).Success
+                          ? ExpandWildcardUri(uri, WildcardTcpAddress.Match(uri))
+                          : BuildIpAddressUri(uri);
 
             if (tmp.IsLoopback)
             {
@@ -49,9 +49,16 @@ namespace kino.Core.Framework
         private static Uri BuildIpAddressUri(this string uri)
         {
             var tmp = new Uri(uri);
-            var ipAddress = GetHostIpAddress(tmp.IsLoopback ? Environment.MachineName : tmp.Host);
+            if (NotIpAddressOrLoopback())
+            {
+                var ipAddress = GetHostIpAddress(tmp.IsLoopback ? Environment.MachineName : tmp.Host);
+                return new Uri($"{tmp.Scheme}://{ipAddress}:{tmp.Port}");
+            }
 
-            return new Uri($"{tmp.Scheme}://{ipAddress}:{tmp.Port}");
+            return tmp;
+
+            bool NotIpAddressOrLoopback()
+                => !IPAddress.TryParse(tmp.Host, out var _) || tmp.IsLoopback;
         }
 
         private static Uri ExpandWildcardUri(string uri, Capture match)
