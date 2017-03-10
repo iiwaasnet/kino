@@ -1,16 +1,16 @@
 ﻿{
     "dev": {
         "rendezvous": {
-            "broadcastUri": "tcp://127.0.0.8:8001",
-            "unicastUri": "tcp://127.0.0.8:8011",
+            "broadcastUri": "tcp://*:8001",
+            "unicastUri": "tcp://*:8011",
             "heartBeatInterval": "00:00:05"
         },
         "synod": {
-            "localNode": "tcp://*:7000",
+            "localNode": "tcp://*:7001",
             "members": [
-                "tcp://lps1.dev:7001",
-                "tcp://127.0.0.72:7002",
-                "tcp://127.0.0.73:7003"
+                "tcp://192.168.0.18:7001",
+                "tcp://192.168.0.18:7002",
+                "tcp://192.168.0.18:7003"
             ]
 
         },

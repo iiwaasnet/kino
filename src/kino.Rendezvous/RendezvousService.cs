@@ -22,7 +22,7 @@ namespace kino.Rendezvous
         private readonly Node localNode;
         private Task messageProcessing;
         private Task heartBeating;
-        private readonly RendezvousConfiguration config;
+        private readonly IRendezvousConfigurationProvider configProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly IMessageSerializer serializer;
         private readonly ILogger logger;
@@ -33,7 +33,7 @@ namespace kino.Rendezvous
                                  ISynodConfiguration synodConfig,
                                  ISocketFactory socketFactory,
                                  IMessageSerializer serializer,
-                                 RendezvousConfiguration config,
+                                 IRendezvousConfigurationProvider configProvider,
                                  IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                  ILogger logger)
         {
@@ -42,14 +42,14 @@ namespace kino.Rendezvous
             this.serializer = serializer;
             localNode = synodConfig.LocalNode;
             this.leaseProvider = leaseProvider;
-            this.config = config;
+            this.configProvider = configProvider;
             this.performanceCounterManager = performanceCounterManager;
             cancellationTokenSource = new CancellationTokenSource();
             pongMessage = Message.Create(new PongMessage());
             leaderPayload = serializer.Serialize(new RendezvousNode
                                                  {
-                                                     BroadcastUri = config.BroadcastUri.ToSocketAddress(),
-                                                     UnicastUri = config.UnicastUri.ToSocketAddress()
+                                                     BroadcastUri = configProvider.BroadcastUri.ToSocketAddress(),
+                                                     UnicastUri = configProvider.UnicastUri.ToSocketAddress()
                                                  });
         }
 
@@ -98,7 +98,7 @@ namespace kino.Rendezvous
                                 {
                                     heartBeatSocket.SendMessage(message);
                                 }
-                                wait.Wait(config.HeartBeatInterval, token);
+                                wait.Wait(configProvider.HeartBeatInterval, token);
                             }
                             catch (OperationCanceledException)
                             {
@@ -173,7 +173,7 @@ namespace kino.Rendezvous
                    : message;
 
         private IMessage CreateHeartBeat()
-            => Message.Create(new HeartBeatMessage {HeartBeatInterval = config.HeartBeatInterval});
+            => Message.Create(new HeartBeatMessage {HeartBeatInterval = configProvider.HeartBeatInterval});
 
         private IMessage CreateNotLeaderMessage()
         {
@@ -193,7 +193,7 @@ namespace kino.Rendezvous
         {
             var socket = socketFactory.CreateRouterSocket();
             socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousSocketReceiveRate);
-            socket.Bind(config.UnicastUri);
+            socket.Bind(configProvider.UnicastUri);
 
             return socket;
         }
@@ -202,7 +202,7 @@ namespace kino.Rendezvous
         {
             var socket = socketFactory.CreatePublisherSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousBroadcastSocketSendRate);
-            socket.Bind(config.BroadcastUri);
+            socket.Bind(configProvider.BroadcastUri);
 
             return socket;
         }
@@ -211,7 +211,7 @@ namespace kino.Rendezvous
         {
             var socket = socketFactory.CreateDealerSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousHeartBeatSocketSendRate);
-            socket.Connect(config.UnicastUri, waitUntilConnected: true);
+            socket.Connect(configProvider.UnicastUri, waitUntilConnected: true);
 
             return socket;
         }

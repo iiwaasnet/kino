@@ -4,9 +4,9 @@ namespace kino.Rendezvous.Configuration
 {
     public class RendezvousConfiguration
     {
-        public Uri BroadcastUri { get; set; }
+        public string BroadcastUri { get; set; }
 
-        public Uri UnicastUri { get; set; }
+        public string UnicastUri { get; set; }
 
         public TimeSpan HeartBeatInterval { get; set; }
     }

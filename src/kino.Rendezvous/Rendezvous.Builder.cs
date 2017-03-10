@@ -37,11 +37,12 @@ namespace kino.Rendezvous
                                                   logger);
 
             var serializer = new ProtobufMessageSerializer();
+            var configProvider = new RendezvousConfigurationProvider(applicationConfig.Rendezvous);
             var service = new RendezvousService(leaseProvider,
                                                 synodConfig,
                                                 socketFactory,
                                                 serializer,
-                                                applicationConfig.Rendezvous,
+                                                configProvider,
                                                 performanceCounterManager,
                                                 logger);
 

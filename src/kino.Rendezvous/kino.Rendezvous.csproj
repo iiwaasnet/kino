@@ -65,6 +65,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\IRendezvousConfigurationProvider.cs" />
+    <Compile Include="Configuration\RendezvousConfigurationProvider.cs" />
     <Compile Include="Configuration\RendezvousServiceConfiguration.cs" />
     <Compile Include="Configuration\RendezvousConfiguration.cs" />
     <Compile Include="Configuration\SynodConfiguration.cs" />
