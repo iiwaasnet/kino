@@ -269,10 +269,12 @@ namespace kino.Routing
             {
                 clusterServices.GetClusterMonitor().UnregisterSelf(messageRoute.ToEnumerable());
             }
+            var route = message.As<Message>().GetMessageRouting().FirstOrDefault();
             logger.Warn($"Route not found for Message:{lookupRequest.Message} lookup by " +
                         $"[{nameof(lookupRequest.ReceiverNodeIdentity)}:{lookupRequest.ReceiverNodeIdentity}]-" +
                         $"[{nameof(lookupRequest.ReceiverIdentity)}:{lookupRequest.ReceiverIdentity}]-" +
-                        $"[{lookupRequest.Distribution}]");
+                        $"[{lookupRequest.Distribution}] " +
+                        $"Sent by:[{route?.Identity.GetAnyString()}@{route?.Uri}]");
 
             return true;
         }
