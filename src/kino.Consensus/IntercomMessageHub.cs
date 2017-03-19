@@ -6,6 +6,7 @@ using kino.Connectivity;
 using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
+using kino.Core.Framework;
 using kino.Messaging;
 
 namespace kino.Consensus
@@ -126,6 +127,8 @@ namespace kino.Consensus
             foreach (var node in synodConfig.Synod)
             {
                 socket.Connect(node, waitUntilConnected: true);
+
+                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.ToSocketAddress()} (Multicast)");
             }
 
             return socket;
@@ -139,6 +142,8 @@ namespace kino.Consensus
             foreach (var node in synodConfig.Synod)
             {
                 socket.Connect(node, waitUntilConnected: true);
+
+                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.ToSocketAddress()} (Unicast)");
             }
 
             return socket;
@@ -149,6 +154,8 @@ namespace kino.Consensus
             var socket = socketFactory.CreatePublisherSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomSocketSendRate);
             socket.Bind(synodConfig.LocalNode.Uri);
+
+            logger.Info($"{nameof(IntercomMessageHub)} bound to: {synodConfig.LocalNode.Uri.ToSocketAddress()}");
 
             return socket;
         }
