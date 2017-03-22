@@ -18,8 +18,8 @@ namespace kino.Cluster
         private readonly IRendezvousCluster rendezvousCluster;
         private readonly ISocketFactory socketFactory;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
-        private readonly ManualResetEventSlim heartBeatReceived;
-        private readonly ManualResetEventSlim newRendezvousConfiguration;
+        private readonly ManualResetEvent heartBeatReceived;
+        private readonly ManualResetEvent newRendezvousConfiguration;
         private readonly ClusterMembershipConfiguration membershipConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ILocalSocket<IMessage> localRouterSocket;
@@ -39,8 +39,8 @@ namespace kino.Cluster
             this.rendezvousCluster = rendezvousCluster;
             this.socketFactory = socketFactory;
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
-            heartBeatReceived = new ManualResetEventSlim(false);
-            newRendezvousConfiguration = new ManualResetEventSlim(false);
+            heartBeatReceived = new ManualResetEvent(false);
+            newRendezvousConfiguration = new ManualResetEvent(false);
         }
 
         public void StartBlockingListenMessages(Action restartRequestHandler, CancellationToken token, Barrier gateway)
@@ -116,8 +116,8 @@ namespace kino.Cluster
             const int cancellationRequested = 2;
             var result = WaitHandle.WaitAny(new[]
                                             {
-                                                heartBeatReceived.WaitHandle,
-                                                newRendezvousConfiguration.WaitHandle,
+                                                heartBeatReceived,
+                                                newRendezvousConfiguration,
                                                 token.WaitHandle
                                             },
                                             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover);

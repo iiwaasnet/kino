@@ -12,7 +12,7 @@ namespace kino.Consensus
         private readonly Func<IMessage, ILeaseMessage> payload;
         private readonly int maxCount;
         private int currentCount;
-        private readonly ManualResetEventSlim awaitable;
+        private readonly ManualResetEvent awaitable;
         private readonly IDictionary<string, IMessage> messages;
         private readonly object locker = new object();
 
@@ -23,7 +23,7 @@ namespace kino.Consensus
             this.payload = payload;
             currentCount = 0;
             messages = new Dictionary<string, IMessage>();
-            awaitable = new ManualResetEventSlim(false);
+            awaitable = new ManualResetEvent(false);
         }
 
         public void OnNext(IMessage value)
@@ -33,7 +33,7 @@ namespace kino.Consensus
                 var messagePayload = payload(value);
                 lock (locker)
                 {
-                    if (!awaitable.IsSet)
+                    if (!awaitable.WaitOne(TimeSpan.Zero))
                     {
                         if (!messages.ContainsKey(messagePayload.SenderUri))
                         {
@@ -41,7 +41,7 @@ namespace kino.Consensus
                             currentCount++;
                         }
                     }
-                    if (currentCount == maxCount && !awaitable.IsSet)
+                    if (currentCount == maxCount && !awaitable.WaitOne(TimeSpan.Zero))
                     {
                         awaitable.Set();
                     }
@@ -62,13 +62,13 @@ namespace kino.Consensus
             awaitable.Dispose();
         }
 
-        public WaitHandle Filtered => awaitable.WaitHandle;
+        public WaitHandle Filtered => awaitable;
 
         public IEnumerable<IMessage> MessageStream
         {
             get
             {
-                awaitable.Wait();
+                awaitable.WaitOne();
 
                 return messages.Values;
             }
