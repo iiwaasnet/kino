@@ -7,5 +7,7 @@ namespace kino.Rendezvous
         bool Start(TimeSpan startTimeout);
 
         void Stop();
+
+        bool IsConsensusReached();
     }
 }

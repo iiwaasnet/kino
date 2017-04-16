@@ -77,6 +77,9 @@ namespace kino.Rendezvous
             leaseProvider.Dispose();
         }
 
+        public bool IsConsensusReached()
+            => leaseProvider.GetLease(leaderPayload) != null;
+
         private void SendHeartBeat(CancellationToken token, Barrier gateway)
         {
             try
