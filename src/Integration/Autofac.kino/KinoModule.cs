@@ -40,7 +40,7 @@ namespace Autofac.kino
                    .As<IMessageRouter>()
                    .SingleInstance();
 
-            builder.Register(c => new SocketFactory(c.ResolveOptional<SocketConfiguration>()))
+            builder.RegisterType<SocketFactory>()
                    .As<ISocketFactory>()
                    .SingleInstance();
 

@@ -7,15 +7,8 @@ namespace kino.Connectivity
     {
         private readonly SocketConfiguration config;
 
-        public SocketFactory()
-            : this(null)
-        {
-        }
-
         public SocketFactory(SocketConfiguration config)
-        {
-            this.config = config ?? CreateDefaultConfiguration();
-        }
+            => this.config = config ?? CreateDefaultConfiguration();
 
         public ISocket CreateDealerSocket()
             => new Socket(new DealerSocket(), config);
@@ -29,7 +22,7 @@ namespace kino.Connectivity
         public ISocket CreatePublisherSocket()
             => new Socket(new PublisherSocket(), config);
 
-        private SocketConfiguration CreateDefaultConfiguration()
+        private static SocketConfiguration CreateDefaultConfiguration()
             => new SocketConfiguration
                {
                    ReceivingHighWatermark = 10000,
