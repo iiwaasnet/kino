@@ -63,7 +63,7 @@ namespace kino.Cluster
 
         public void AddPeer(Node peer, Health health)
         {
-            logger.Debug($"AddPeer {peer.SocketIdentity.GetAnyString()}@{peer.Uri.AbsolutePath}");
+            logger.Debug($"AddPeer {peer.SocketIdentity.GetAnyString()}@{peer.Uri.ToSocketAddress()}");
 
             multiplexingSocket.Send(Message.Create(new AddPeerMessage
                                                    {
@@ -360,16 +360,19 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<StartPeerMonitoringMessage>();
 
-                logger.Debug($"Received {typeof(StartPeerMonitoringMessage).Name} for node {payload.SocketIdentity.GetAnyString()}");
+                logger.Debug($"Received {typeof(StartPeerMonitoringMessage).Name} for node {payload.SocketIdentity.GetAnyString()}@{payload.Uri}. "
+                             + $"HealthUri: {payload.Health.Uri}");
 
                 var meta = new ClusterMemberMeta
                            {
                                HealthUri = payload.Health.Uri,
                                HeartBeatInterval = payload.Health.HeartBeatInterval,
-                               ScaleOutUri = payload.Uri,
-                               LastKnownHeartBeat = DateTime.UtcNow
+                               ScaleOutUri = payload.Uri
                            };
                 meta = connectedPeerRegistry.FindOrAdd(new ReceiverIdentifier(payload.SocketIdentity), meta);
+                // NOTE: Starting peer monitoring may happen after quite some time after it was first added.
+                // To avoid immediate node disconnection, as being dead, update LastKnownHeartBeat before setting ConnectionEstablished to TRUE.
+                meta.LastKnownHeartBeat = DateTime.UtcNow;
                 meta.ConnectionEstablished = true;
                 StartDeadPeersCheck(meta.HeartBeatInterval);
                 socket.Connect(new Uri(meta.HealthUri));
