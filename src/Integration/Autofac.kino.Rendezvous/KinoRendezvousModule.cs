@@ -12,7 +12,7 @@ namespace Autofac.kino.Rendezvous
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<SocketFactory>()
+            builder.Register(c => new SocketFactory(c.ResolveOptional<SocketConfiguration>()))
                    .As<ISocketFactory>()
                    .SingleInstance();
 
