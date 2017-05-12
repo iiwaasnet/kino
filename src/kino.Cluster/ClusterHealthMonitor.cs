@@ -63,7 +63,8 @@ namespace kino.Cluster
 
         public void AddPeer(Node peer, Health health)
         {
-            //logger.Debug($"AddPeer {peer.ReceiverNodeIdentity.GetAnyString()}");
+            logger.Debug($"AddPeer {peer.SocketIdentity.GetAnyString()}@{peer.Uri.AbsolutePath}");
+
             multiplexingSocket.Send(Message.Create(new AddPeerMessage
                                                    {
                                                        SocketIdentity = peer.SocketIdentity,
@@ -391,10 +392,28 @@ namespace kino.Cluster
         }
 
         private void CheckDeadPeers()
-            => multiplexingSocket.Send(Message.Create(new CheckDeadPeersMessage()));
+        {
+            try
+            {
+                multiplexingSocket.Send(Message.Create(new CheckDeadPeersMessage()));
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
+        }
 
         private void CheckStalePeers()
-            => multiplexingSocket.Send(Message.Create(new CheckStalePeersMessage()));
+        {
+            try
+            {
+                multiplexingSocket.Send(Message.Create(new CheckStalePeersMessage()));
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
+        }
 
         private bool ProcessHeartBeatMessage(IMessage message)
         {
