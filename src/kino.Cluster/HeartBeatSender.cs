@@ -53,7 +53,8 @@ namespace kino.Cluster
                     var heartBeatMessage = new HeartBeatMessage
                                            {
                                                SocketIdentity = scaleOutConfigurationProvider.GetScaleOutAddress().Identity,
-                                               HeartBeatInterval = config.GetHeartBeatInterval()
+                                               HeartBeatInterval = config.GetHeartBeatInterval(),
+                                               HealthUri = config.GetHeartBeatAddress().ToSocketAddress()
                                            };
                     while (!token.IsCancellationRequested)
                     {

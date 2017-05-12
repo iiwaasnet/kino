@@ -42,6 +42,7 @@ namespace kino.Tests.Cluster
             config.Setup(m => m.GetHeartBeatInterval()).Returns(heartBeatInterval);
             heartBeatAddresses = new[] {new Uri("tcp://127.0.0.1:9090"), new Uri("tcp://127.0.0.2:9090")};
             config.Setup(m => m.GetHeartBeatAddressRange()).Returns(heartBeatAddresses);
+            config.Setup(m => m.GetHeartBeatAddress()).Returns(heartBeatAddresses.First());
             logger = new Mock<ILogger>();
             heartBeatSender = new HeartBeatSender(socketFactory.Object,
                                                   config.Object,

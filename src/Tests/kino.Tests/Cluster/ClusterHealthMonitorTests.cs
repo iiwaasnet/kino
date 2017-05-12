@@ -269,6 +269,29 @@ namespace kino.Tests.Cluster
             Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, TimeSpan.FromMilliseconds(200) + AsyncOp);
         }
 
+
+        [Test]
+        public void WhenHeartBeatMessageArrivesFromUnknownPeer_ItsHealthUriIsDisconnected()
+        {
+            var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            var healthUri = new Uri("tcp://127.0.0.1:80");
+            var payload = new HeartBeatMessage
+                          {
+                              SocketIdentity = peerIdentifier.Identity,
+                              HealthUri = healthUri.ToSocketAddress()
+                          };
+            var message = Message.Create(payload);
+            subscriberSocket.SetupMessageReceived(message, tokenSource.Token);
+            connectedPeerRegistry.Setup(m => m.Find(peerIdentifier)).Returns((ClusterMemberMeta)null);
+            //
+            clusterHealthMonitor.Start();
+            AsyncOp.Sleep();
+            tokenSource.Cancel();
+            clusterHealthMonitor.Stop();
+            //
+            subscriberSocket.Verify(m => m.Disconnect(healthUri), Times.Once);
+        }
+
         [Test]
         public void WhenAddPeerMessageArrives_PeerIsAddedToConnectedPeerRegistry()
         {

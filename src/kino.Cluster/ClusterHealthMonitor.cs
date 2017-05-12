@@ -195,7 +195,7 @@ namespace kino.Cluster
 
         private void ProcessMessage(IMessage message, ISocket socket)
         {
-            var _ = ProcessHeartBeatMessage(message)
+            var _ = ProcessHeartBeatMessage(message, socket)
                     || ProcessStartPeerMonitoringMessage(message, socket)
                     || ProcessAddPeerMessage(message, socket)
                     || ProcessCheckDeadPeersMessage(message)
@@ -418,7 +418,7 @@ namespace kino.Cluster
             }
         }
 
-        private bool ProcessHeartBeatMessage(IMessage message)
+        private bool ProcessHeartBeatMessage(IMessage message, ISocket socket)
         {
             var shouldHandle = message.Equals(KinoMessages.HeartBeat);
             if (shouldHandle)
@@ -434,7 +434,15 @@ namespace kino.Cluster
                 else
                 {
                     //TODO: Send DiscoveryMessage? What if peer is not supporting message Domains to be used by this node?
-                    logger.Warn($"HeartBeat came from unknown node [{payload.SocketIdentity.GetAnyString()}]");
+                    logger.Warn($"HeartBeat came from unknown node {payload.SocketIdentity.GetAnyString()}. Will disconnect from HealthUri: {payload.HealthUri}");
+                    try
+                    {
+                        socket.Disconnect(new Uri(payload.HealthUri));
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
+                    }
                 }
             }
 
