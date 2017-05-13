@@ -71,6 +71,7 @@ namespace kino.Tests.Cluster
             frontEndSocket.SetupMessageReceived(null, tokenSource.Token);
             //
             scaleOutListener.Start();
+            AsyncOp.Sleep();
             tokenSource.Cancel();
             scaleOutListener.Stop();
             //

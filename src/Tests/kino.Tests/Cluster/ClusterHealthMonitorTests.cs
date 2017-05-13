@@ -22,7 +22,7 @@ namespace kino.Tests.Cluster
     [TestFixture]
     public class ClusterHealthMonitorTests
     {
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(200);
+        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
         private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private Mock<ISocketFactory> socketFactory;
@@ -258,7 +258,7 @@ namespace kino.Tests.Cluster
             var payload = new HeartBeatMessage {SocketIdentity = peerIdentifier.Identity};
             var message = Message.Create(payload);
             subscriberSocket.SetupMessageReceived(message, tokenSource.Token);
-            var meta = new ClusterMemberMeta {LastKnownHeartBeat = DateTime.UtcNow - TimeSpan.FromMinutes(30)};
+            var meta = new ClusterMemberMeta {LastKnownHeartBeat = DateTime.UtcNow - TimeSpan.FromHours(20)};
             connectedPeerRegistry.Setup(m => m.Find(peerIdentifier)).Returns(meta);
             //
             clusterHealthMonitor.Start();
@@ -266,7 +266,7 @@ namespace kino.Tests.Cluster
             tokenSource.Cancel();
             clusterHealthMonitor.Stop();
             //
-            Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, TimeSpan.FromMilliseconds(200) + AsyncOp);
+            Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, AsyncOp.MultiplyBy(3));
         }
 
 
@@ -371,7 +371,7 @@ namespace kino.Tests.Cluster
             routerSocket.Verify(m => m.Connect(new Uri(meta.ScaleOutUri), true), Times.Once);
             routerSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(KinoMessages.Ping))), Times.Once);
             routerSocket.Verify(m => m.Disconnect(new Uri(meta.ScaleOutUri)), Times.Once);
-            Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, TimeSpan.FromMilliseconds(200) + AsyncOp);
+            Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, AsyncOp.MultiplyBy(3));
         }
 
         [Test]
