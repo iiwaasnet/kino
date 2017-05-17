@@ -40,25 +40,42 @@ namespace kino.Core.Diagnostics.Performance
             }
         }
 
-        public void Increment(uint value = 1)
-            => Invoke(value);
+        public long Increment(long value = 1L)
+            => Invoke(c => c.IncrementBy(value));
 
-        public void Decrement(uint value = 1)
-            => Invoke(-value);
+        public long Decrement(long value = 1L)
+            => Increment(-value);
 
-        private void Invoke(long value)
+        public void SetValue(long value)
+            => Invoke(c => c.RawValue = value);
+
+        public long GetRawValue()
+            => Invoke(c => c.RawValue);
+
+        public float NextValue()
+            => Invoke(c => c.NextValue());
+
+        public CounterSample NextSample()
+            => Invoke(c => c.NextSample());
+
+        private TResult Invoke<TResult>(Func<PerformanceCounter, TResult> func)
         {
-            try
+            if (perfCounter != null)
             {
-                perfCounter?.IncrementBy(value);
-            }
-            catch (Exception err)
-            {
-                logger.Error(err);
-                logger.Warn($"Performance counter {categoryName}.{name} will be unavailable!");
+                try
+                {
+                    return func(perfCounter);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex);
+                    logger.Warn($"Performance counter {categoryName}.{name} will be unavailable!");
 
-                perfCounter = null;
+                    perfCounter = null;
+                }
             }
+
+            return default(TResult);
         }
 
         void IDisposable.Dispose()
@@ -66,5 +83,7 @@ namespace kino.Core.Diagnostics.Performance
             perfCounter?.RemoveInstance();
             perfCounter?.Dispose();
         }
+
+        public bool IsEnabled() => perfCounter != null;
     }
 }
