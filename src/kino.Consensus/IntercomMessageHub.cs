@@ -85,7 +85,7 @@ namespace kino.Consensus
 
                 foreach (var intercomMessage in outMessageQueue.GetConsumingEnumerable(token))
                 {
-                    var message = (Message) intercomMessage.Message;
+                    var message = intercomMessage.Message.As<Message>();
                     message.SetSocketIdentity(intercomMessage.Receiver);
                     socket.SendMessage(message);
                 }
