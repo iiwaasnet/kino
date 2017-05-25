@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.4
+VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6967D139-FAAB-470A-B108-859E29B28DFC}"
 	ProjectSection(SolutionItems) = preProject
 		messages.txt = messages.txt
+		Routing.txt = Routing.txt
+		TODOs.txt = TODOs.txt
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Client", "kino.Client\kino.Client.csproj", "{2C69BA32-DADC-4E4E-8D91-055FB9D35BFF}"
