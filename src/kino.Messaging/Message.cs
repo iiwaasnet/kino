@@ -39,18 +39,20 @@ namespace kino.Messaging
         {
         }
 
-        public static IMessage CreateFlowStartMessage(IPayload payload)
+        public static IMessage CreateFlowStartMessage(IPayload payload, byte[] correlationId = null)
             => new Message(payload)
                {
                    Distribution = DistributionPattern.Unicast,
-                   CorrelationId = GenerateCorrelationId()
+                   CorrelationId = correlationId ?? GenerateCorrelationId()
                };
 
-        public static IMessage Create(IPayload payload, DistributionPattern distributionPattern = DistributionPattern.Unicast)
+        public static IMessage Create(IPayload payload,
+                                      DistributionPattern distributionPattern = DistributionPattern.Unicast,
+                                      byte[] correlationId = null)
             => new Message(payload)
                {
                    Distribution = distributionPattern,
-                   CorrelationId = EmptyCorrelationId
+                   CorrelationId = correlationId ?? EmptyCorrelationId
                };
 
         internal void SetDomain(string domain)
