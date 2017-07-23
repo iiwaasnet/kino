@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Connectivity;
 using kino.Consensus.Configuration;
+using kino.Consensus.Messages;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
@@ -18,6 +21,7 @@ namespace kino.Consensus
         private Task unicastReceiving;
         private Task sending;
         private Task notifyListeners;
+        private Timer heartBeating;
         private readonly ISynodConfiguration synodConfig;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly BlockingCollection<IMessage> inMessageQueue;
@@ -27,6 +31,7 @@ namespace kino.Consensus
         private static readonly byte[] All = new byte[0];
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
+        private readonly IDictionary<string, NodeHealthInfo> nodeHealthInfoMap;
 
         public IntercomMessageHub(ISocketFactory socketFactory,
                                   ISynodConfiguration synodConfig,
@@ -41,6 +46,8 @@ namespace kino.Consensus
             inMessageQueue = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             outMessageQueue = new BlockingCollection<IntercomMessage>(new ConcurrentQueue<IntercomMessage>());
             subscriptions = new ConcurrentDictionary<Listener, object>();
+            nodeHealthInfoMap = synodConfig.Synod
+                                           .ToDictionary(n => n.ToSocketAddress(), _ => new NodeHealthInfo {LastKnownHeartBeat = DateTime.UtcNow});
         }
 
         public bool Start(TimeSpan startTimeout)
@@ -60,20 +67,42 @@ namespace kino.Consensus
                 notifyListeners = Task.Factory.StartNew(_ => SafeExecute(() => ForwardIncomingMessages(cancellationTokenSource.Token, gateway)),
                                                         cancellationTokenSource.Token,
                                                         TaskCreationOptions.LongRunning);
+                heartBeating = StartHeartBeating();
 
                 return gateway.SignalAndWait(startTimeout, cancellationTokenSource.Token);
             }
         }
 
+        private Timer StartHeartBeating()
+        {
+            var timer = new Timer(_ => SendHeartBeats(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
+            var nodesInCluster = synodConfig.Synod.Count();
+            if (nodesInCluster > 1)
+            {
+                timer.Change(synodConfig.HeartBeatInterval, synodConfig.HeartBeatInterval);
+
+                logger.Info($"Consensus HeartBeating started. Number of nodes in cluster: {nodesInCluster}");
+            }
+            else
+            {
+                logger.Warn($"Consensus HeartBeating disabled. Number of nodes in cluster: {nodesInCluster}");
+            }
+
+            return timer;
+        }
+
         public void Stop()
         {
             cancellationTokenSource.Cancel();
+            heartBeating?.Dispose();
             inMessageQueue.CompleteAdding();
+            outMessageQueue.CompleteAdding();
             multicastReceiving?.Wait(TerminationWaitTimeout);
             unicastReceiving?.Wait(TerminationWaitTimeout);
             sending?.Wait(TerminationWaitTimeout);
             notifyListeners?.Wait(TerminationWaitTimeout);
             inMessageQueue.Dispose();
+            outMessageQueue.Dispose();
             cancellationTokenSource.Dispose();
         }
 
@@ -116,6 +145,18 @@ namespace kino.Consensus
                         logger.Error(err);
                     }
                 }
+            }
+        }
+
+        private void SendHeartBeats()
+        {
+            try
+            {
+                Broadcast(Message.Create(new HeartBeatMessage {NodeUri = synodConfig.LocalNode.Uri.ToSocketAddress()}));
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
             }
         }
 
@@ -169,14 +210,10 @@ namespace kino.Consensus
         }
 
         public void Broadcast(IMessage message)
-        {
-            outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = All});
-        }
+            => outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = All});
 
         public void Send(IMessage message, byte[] receiver)
-        {
-            outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = receiver});
-        }
+            => outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = receiver});
 
         private void ForwardIncomingMessages(CancellationToken token, Barrier gateway)
         {
@@ -214,5 +251,9 @@ namespace kino.Consensus
                 logger.Error(err);
             }
         }
+
+        //private bool HeartBeatExpired(DateTime now)
+        //    => peer.Value.ConnectionEstablished
+        //       && now - peer.Value.LastKnownHeartBeat > peer.Value.HeartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion);
     }
 }

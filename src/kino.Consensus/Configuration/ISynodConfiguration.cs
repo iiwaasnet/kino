@@ -10,6 +10,10 @@ namespace kino.Consensus.Configuration
 
         IEnumerable<Uri> Synod { get; }
 
+        TimeSpan HeartBeatInterval { get; set; }
+
+        int MissingHeartBeatsBeforeReconnect { get; set; }
+
         bool BelongsToSynod(Uri node);
     }
 }
