@@ -4,6 +4,25 @@ namespace kino.Consensus
 {
     internal class NodeHealthInfo
     {
-        internal DateTime LastKnownHeartBeat { get; set; }
+        private readonly object @lock = new object();
+        private DateTime lastKnownHeartBeat;
+
+        internal DateTime LastKnownHeartBeat
+        {
+            get
+            {
+                lock (@lock)
+                {
+                    return lastKnownHeartBeat;
+                }
+            }
+            set
+            {
+                lock (@lock)
+                {
+                    lastKnownHeartBeat = value;
+                }
+            }
+        }
     }
 }

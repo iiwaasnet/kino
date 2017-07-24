@@ -32,6 +32,7 @@ namespace kino.Consensus
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private readonly IDictionary<string, NodeHealthInfo> nodeHealthInfoMap;
+        private readonly ISocket intercomSocket;
 
         public IntercomMessageHub(ISocketFactory socketFactory,
                                   ISynodConfiguration synodConfig,
@@ -46,7 +47,9 @@ namespace kino.Consensus
             inMessageQueue = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             outMessageQueue = new BlockingCollection<IntercomMessage>(new ConcurrentQueue<IntercomMessage>());
             subscriptions = new ConcurrentDictionary<Listener, object>();
+            intercomSocket = CreateIntercomPublisherSocket();
             nodeHealthInfoMap = synodConfig.Synod
+                                           .Except(synodConfig.LocalNode.Uri.ToEnumerable())
                                            .ToDictionary(n => n.ToSocketAddress(), _ => new NodeHealthInfo {LastKnownHeartBeat = DateTime.UtcNow});
         }
 
@@ -75,18 +78,15 @@ namespace kino.Consensus
 
         private Timer StartHeartBeating()
         {
-            var timer = new Timer(_ => SendHeartBeats(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
+            var timer = new Timer(_ => SendAndCheckHeartBeats(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             var nodesInCluster = synodConfig.Synod.Count();
-            if (nodesInCluster > 1)
+            if (nodeHealthInfoMap.Any())
             {
                 timer.Change(synodConfig.HeartBeatInterval, synodConfig.HeartBeatInterval);
+            }
 
-                logger.Info($"Consensus HeartBeating started. Number of nodes in cluster: {nodesInCluster}");
-            }
-            else
-            {
-                logger.Warn($"Consensus HeartBeating disabled. Number of nodes in cluster: {nodesInCluster}");
-            }
+            logger.Info($"Consensus HeartBeating {(nodeHealthInfoMap.Any() ? "started" : "disabled")}. "
+                        + $"Number of nodes in cluster: {nodesInCluster}");
 
             return timer;
         }
@@ -134,6 +134,9 @@ namespace kino.Consensus
                         var message = socket.ReceiveMessage(token);
                         if (message != null)
                         {
+                            // TODO: Check message type and if
+                            // QUORUM-RECONNECT: reconnect to specific cluster node
+                            // QUORUM-HEARTBEAT: update LastKnownHeartBeat
                             inMessageQueue.Add(message, token);
                         }
                     }
@@ -148,17 +151,36 @@ namespace kino.Consensus
             }
         }
 
-        private void SendHeartBeats()
+        private void SendAndCheckHeartBeats()
         {
             try
             {
-                Broadcast(Message.Create(new HeartBeatMessage {NodeUri = synodConfig.LocalNode.Uri.ToSocketAddress()}));
+                SendHeartBeat();
+                CheckDeadNodesAndScheduleReconnect();
             }
             catch (Exception err)
             {
                 logger.Error(err);
             }
         }
+
+        private void CheckDeadNodesAndScheduleReconnect()
+        {
+            var now = DateTime.UtcNow;
+
+            foreach (var unreachable in nodeHealthInfoMap.Where(node => HeartBeatExpired(now, node.Value)))
+            {
+                var message = Message.Create(new ReconnectClusterMemberMessage {NodeUri = unreachable.Key}).As<Message>();
+                message.SetSocketIdentity(synodConfig.LocalNode.SocketIdentity);
+                intercomSocket.SendMessage(message);
+                message = message.Clone();
+                message.SetSocketIdentity(All);
+                intercomSocket.SendMessage(message);
+            }
+        }
+
+        private void SendHeartBeat()
+            => Broadcast(Message.Create(new HeartBeatMessage {NodeUri = synodConfig.LocalNode.Uri.ToSocketAddress()}));
 
         private ISocket CreateMulticastListeningSocket()
         {
@@ -167,10 +189,11 @@ namespace kino.Consensus
             socket.Subscribe();
             foreach (var node in synodConfig.Synod)
             {
-                socket.Connect(node, waitUntilConnected: true);
+                socket.Connect(node, true);
 
                 logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.ToSocketAddress()} (Multicast)");
             }
+            socket.Connect(synodConfig.IntercomEndpoint, true);
 
             return socket;
         }
@@ -182,10 +205,11 @@ namespace kino.Consensus
             socket.Subscribe(synodConfig.LocalNode.SocketIdentity);
             foreach (var node in synodConfig.Synod)
             {
-                socket.Connect(node, waitUntilConnected: true);
+                socket.Connect(node, true);
 
                 logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.ToSocketAddress()} (Unicast)");
             }
+            socket.Connect(synodConfig.IntercomEndpoint, true);
 
             return socket;
         }
@@ -197,6 +221,14 @@ namespace kino.Consensus
             socket.Bind(synodConfig.LocalNode.Uri);
 
             logger.Info($"{nameof(IntercomMessageHub)} bound to: {synodConfig.LocalNode.Uri.ToSocketAddress()}");
+
+            return socket;
+        }
+
+        private ISocket CreateIntercomPublisherSocket()
+        {
+            var socket = socketFactory.CreatePublisherSocket();
+            socket.Bind(synodConfig.IntercomEndpoint);
 
             return socket;
         }
@@ -252,8 +284,7 @@ namespace kino.Consensus
             }
         }
 
-        //private bool HeartBeatExpired(DateTime now)
-        //    => peer.Value.ConnectionEstablished
-        //       && now - peer.Value.LastKnownHeartBeat > peer.Value.HeartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion);
+        private bool HeartBeatExpired(DateTime now, NodeHealthInfo healthInfo)
+            => now - healthInfo.LastKnownHeartBeat > synodConfig.HeartBeatInterval.MultiplyBy(synodConfig.MissingHeartBeatsBeforeReconnect);
     }
 }

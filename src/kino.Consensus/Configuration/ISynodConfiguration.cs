@@ -14,6 +14,8 @@ namespace kino.Consensus.Configuration
 
         int MissingHeartBeatsBeforeReconnect { get; set; }
 
+        Uri IntercomEndpoint { get; set; }
+
         bool BelongsToSynod(Uri node);
     }
 }

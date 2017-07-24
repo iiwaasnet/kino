@@ -90,6 +90,7 @@
     <Compile Include="Messages\LeaseReadMessage.cs" />
     <Compile Include="Messages\LeaseWriteMessage.cs" />
     <Compile Include="Messages\ConsensusMessages.cs" />
+    <Compile Include="Messages\ReconnectClusterMemberMessage.cs" />
     <Compile Include="NodeHealthInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RoundBasedRegister.cs" />

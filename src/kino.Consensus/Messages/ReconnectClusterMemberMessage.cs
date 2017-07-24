@@ -4,9 +4,9 @@ using ProtoBuf;
 namespace kino.Consensus.Messages
 {
     [ProtoContract]
-    public class HeartBeatMessage : Payload
+    public class ReconnectClusterMemberMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = BuildFullIdentity("QUORUM-HEARTBEAT");
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("QUORUM-RECONNECT");
         private static readonly ushort MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
