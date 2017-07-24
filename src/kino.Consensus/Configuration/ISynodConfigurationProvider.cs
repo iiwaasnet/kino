@@ -8,5 +8,11 @@ namespace kino.Consensus.Configuration
         Uri LocalNode { get; }
 
         IEnumerable<Uri> Synod { get; }
+
+        TimeSpan HeartBeatInterval { get; }
+
+        int MissingHeartBeatsBeforeReconnect { get; }
+
+        Uri IntercomEndpoint { get; }
     }
 }

@@ -12,13 +12,22 @@ namespace kino.Consensus.Configuration
         {
             LocalNode = new Node(configProvider.LocalNode, ReceiverIdentifier.CreateIdentity());
             synod = new HashSet<Uri>(configProvider.Synod);
+            HeartBeatInterval = configProvider.HeartBeatInterval;
+            MissingHeartBeatsBeforeReconnect = configProvider.MissingHeartBeatsBeforeReconnect;
+            IntercomEndpoint = configProvider.IntercomEndpoint;
         }
+
+        public bool BelongsToSynod(Uri node)
+            => synod.Contains(node);
 
         public Node LocalNode { get; }
 
         public IEnumerable<Uri> Synod => synod;
 
-        public bool BelongsToSynod(Uri node)
-            => synod.Contains(node);
+        public TimeSpan HeartBeatInterval { get; }
+
+        public int MissingHeartBeatsBeforeReconnect { get; }
+
+        public Uri IntercomEndpoint { get; }
     }
 }

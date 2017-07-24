@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace kino.Rendezvous.Configuration
 {
@@ -7,5 +8,11 @@ namespace kino.Rendezvous.Configuration
         public string LocalNode { get; set; }
 
         public IEnumerable<string> Members { get; set; }
+
+        public TimeSpan HeartBeatInterval { get; set; }
+
+        public int MissingHeartBeatsBeforeReconnect { get; set; }
+
+        public string IntercomEndpoint { get; set; }
     }
 }

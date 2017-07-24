@@ -10,5 +10,7 @@ namespace kino.Consensus.Messages
         internal static readonly MessageIdentifier LeaseNackWrite = MessageIdentifier.Create<LeaseNackWriteMessage>();
         internal static readonly MessageIdentifier LeaseRead = MessageIdentifier.Create<LeaseReadMessage>();
         internal static readonly MessageIdentifier LeaseWrite = MessageIdentifier.Create<LeaseWriteMessage>();
+        internal static readonly MessageIdentifier HeartBeat = MessageIdentifier.Create<HeartBeatMessage>();
+        internal static readonly MessageIdentifier ReconnectClusterMember = MessageIdentifier.Create<ReconnectClusterMemberMessage>();
     }
 }

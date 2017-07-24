@@ -1,26 +1,45 @@
 ﻿using System;
+using kino.Core.Framework;
 
 namespace kino.Consensus
 {
-    internal class NodeHealthInfo
+    internal class NodeHealthInfo : INodeHealthInfo
     {
+        private readonly TimeSpan heartBeatInterval;
+        private readonly int missingHeartBeatsBeforeReconnect;
         private readonly object @lock = new object();
         private DateTime lastKnownHeartBeat;
 
-        internal DateTime LastKnownHeartBeat
+        public NodeHealthInfo(TimeSpan heartBeatInterval,
+                              int missingHeartBeatsBeforeReconnect,
+                              Uri nodeUri)
+        {
+            this.heartBeatInterval = heartBeatInterval;
+            this.missingHeartBeatsBeforeReconnect = missingHeartBeatsBeforeReconnect;
+            NodeUri = nodeUri;
+            UpdateHeartBeat();
+        }
+
+        internal void UpdateHeartBeat()
+        {
+            lock (@lock)
+            {
+                lastKnownHeartBeat = DateTime.UtcNow;
+            }
+        }
+
+        public bool IsHealthy()
+            => DateTime.UtcNow - lastKnownHeartBeat < heartBeatInterval.MultiplyBy(missingHeartBeatsBeforeReconnect);
+
+        public Uri NodeUri { get; }
+
+        public DateTime LastKnownHeartBeat
         {
             get
             {
                 lock (@lock)
                 {
                     return lastKnownHeartBeat;
-                }
-            }
-            set
-            {
-                lock (@lock)
-                {
-                    lastKnownHeartBeat = value;
                 }
             }
         }

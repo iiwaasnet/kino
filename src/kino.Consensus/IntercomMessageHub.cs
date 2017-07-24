@@ -48,10 +48,16 @@ namespace kino.Consensus
             outMessageQueue = new BlockingCollection<IntercomMessage>(new ConcurrentQueue<IntercomMessage>());
             subscriptions = new ConcurrentDictionary<Listener, object>();
             intercomSocket = CreateIntercomPublisherSocket();
-            nodeHealthInfoMap = synodConfig.Synod
-                                           .Except(synodConfig.LocalNode.Uri.ToEnumerable())
-                                           .ToDictionary(n => n.ToSocketAddress(), _ => new NodeHealthInfo {LastKnownHeartBeat = DateTime.UtcNow});
+            nodeHealthInfoMap = CreateNodeHealthInfoMap(synodConfig);
         }
+
+        private static Dictionary<string, NodeHealthInfo> CreateNodeHealthInfoMap(ISynodConfiguration synodConfig)
+            => synodConfig.Synod
+                          .Except(synodConfig.LocalNode.Uri.ToEnumerable())
+                          .ToDictionary(node => node.ToSocketAddress(),
+                                        node => new NodeHealthInfo(synodConfig.HeartBeatInterval,
+                                                                   synodConfig.MissingHeartBeatsBeforeReconnect,
+                                                                   node));
 
         public bool Start(TimeSpan startTimeout)
         {
@@ -76,21 +82,6 @@ namespace kino.Consensus
             }
         }
 
-        private Timer StartHeartBeating()
-        {
-            var timer = new Timer(_ => SendAndCheckHeartBeats(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
-            var nodesInCluster = synodConfig.Synod.Count();
-            if (nodeHealthInfoMap.Any())
-            {
-                timer.Change(synodConfig.HeartBeatInterval, synodConfig.HeartBeatInterval);
-            }
-
-            logger.Info($"Consensus HeartBeating {(nodeHealthInfoMap.Any() ? "started" : "disabled")}. "
-                        + $"Number of nodes in cluster: {nodesInCluster}");
-
-            return timer;
-        }
-
         public void Stop()
         {
             cancellationTokenSource.Cancel();
@@ -104,6 +95,37 @@ namespace kino.Consensus
             inMessageQueue.Dispose();
             outMessageQueue.Dispose();
             cancellationTokenSource.Dispose();
+        }
+
+        public void Broadcast(IMessage message)
+            => outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = All});
+
+        public void Send(IMessage message, byte[] receiver)
+            => outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = receiver});
+
+        public IEnumerable<INodeHealthInfo> GetClusterHealthInfo()
+            => nodeHealthInfoMap.Values;
+
+        public Listener Subscribe()
+        {
+            var listener = new Listener(Unsubscribe, logger);
+            subscriptions.TryAdd(listener, null);
+
+            return listener;
+        }
+
+        private Timer StartHeartBeating()
+        {
+            var timer = new Timer(_ => SendAndCheckHeartBeats(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
+            if (nodeHealthInfoMap.Any())
+            {
+                timer.Change(synodConfig.HeartBeatInterval, synodConfig.HeartBeatInterval);
+            }
+
+            logger.Info($"Consensus HeartBeating {(nodeHealthInfoMap.Any() ? "started" : "disabled")}. "
+                        + $"Number of nodes in cluster: {synodConfig.Synod.Count()}");
+
+            return timer;
         }
 
         private void SendMessages(CancellationToken token, Barrier gateway)
@@ -134,10 +156,10 @@ namespace kino.Consensus
                         var message = socket.ReceiveMessage(token);
                         if (message != null)
                         {
-                            // TODO: Check message type and if
-                            // QUORUM-RECONNECT: reconnect to specific cluster node
-                            // QUORUM-HEARTBEAT: update LastKnownHeartBeat
-                            inMessageQueue.Add(message, token);
+                            if (!ProcessServiceMessage(message, socket))
+                            {
+                                inMessageQueue.Add(message, token);
+                            }
                         }
                     }
                     catch (OperationCanceledException)
@@ -149,6 +171,52 @@ namespace kino.Consensus
                     }
                 }
             }
+        }
+
+        private bool ProcessServiceMessage(IMessage message, ISocket socket)
+            => ProcessHeartBeatMessage(message)
+               || ProcessReconnectMessage(message, socket);
+
+        private bool ProcessReconnectMessage(IMessage message, ISocket socket)
+        {
+            var shouldHandle = message.Equals(ConsensusMessages.ReconnectClusterMember);
+            if (shouldHandle)
+            {
+                var payload = message.GetPayload<ReconnectClusterMemberMessage>();
+                if (nodeHealthInfoMap.TryGetValue(payload.NodeUri, out var healthInfo))
+                {
+                    socket.Disconnect(new Uri(payload.NodeUri));
+                    socket.Connect(new Uri(payload.NodeUri));
+                    healthInfo.UpdateHeartBeat();
+
+                    logger.Info($"Reconnected to node {payload.NodeUri}");
+                }
+                else
+                {
+                    logger.Warn($"{message.Identity.GetAnyString()} came for unknown node: {payload.NodeUri}");
+                }
+            }
+
+            return shouldHandle;
+        }
+
+        private bool ProcessHeartBeatMessage(IMessage message)
+        {
+            var shouldHandle = message.Equals(ConsensusMessages.HeartBeat);
+            if (shouldHandle)
+            {
+                var payload = message.GetPayload<HeartBeatMessage>();
+                if (nodeHealthInfoMap.TryGetValue(payload.NodeUri, out var healthInfo))
+                {
+                    healthInfo.UpdateHeartBeat();
+                }
+                else
+                {
+                    logger.Warn($"{message.Identity.GetAnyString()} came from unknown node: {payload.NodeUri}");
+                }
+            }
+
+            return shouldHandle;
         }
 
         private void SendAndCheckHeartBeats()
@@ -168,15 +236,21 @@ namespace kino.Consensus
         {
             var now = DateTime.UtcNow;
 
-            foreach (var unreachable in nodeHealthInfoMap.Where(node => HeartBeatExpired(now, node.Value)))
+            foreach (var unreachable in nodeHealthInfoMap.Where(node => !node.Value.IsHealthy()))
             {
-                var message = Message.Create(new ReconnectClusterMemberMessage {NodeUri = unreachable.Key}).As<Message>();
-                message.SetSocketIdentity(synodConfig.LocalNode.SocketIdentity);
-                intercomSocket.SendMessage(message);
-                message = message.Clone();
-                message.SetSocketIdentity(All);
-                intercomSocket.SendMessage(message);
+                ScheduleReconnectSocket(unreachable.Key, All);
+                ScheduleReconnectSocket(unreachable.Key, synodConfig.LocalNode.SocketIdentity);
+
+                var lastKnownHeartBeat = unreachable.Value.LastKnownHeartBeat;
+                logger.Warn($"Reconnect to node {unreachable.Key} scheduled due to old {nameof(lastKnownHeartBeat)}: {lastKnownHeartBeat}");
             }
+        }
+
+        private void ScheduleReconnectSocket(string uri, byte[] receiver)
+        {
+            var message = Message.Create(new ReconnectClusterMemberMessage {NodeUri = uri}).As<Message>();
+            message.SetSocketIdentity(receiver);
+            intercomSocket.SendMessage(message);
         }
 
         private void SendHeartBeat()
@@ -233,20 +307,6 @@ namespace kino.Consensus
             return socket;
         }
 
-        public Listener Subscribe()
-        {
-            var listener = new Listener(Unsubscribe, logger);
-            subscriptions.TryAdd(listener, null);
-
-            return listener;
-        }
-
-        public void Broadcast(IMessage message)
-            => outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = All});
-
-        public void Send(IMessage message, byte[] receiver)
-            => outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = receiver});
-
         private void ForwardIncomingMessages(CancellationToken token, Barrier gateway)
         {
             gateway.SignalAndWait(token);
@@ -283,8 +343,5 @@ namespace kino.Consensus
                 logger.Error(err);
             }
         }
-
-        private bool HeartBeatExpired(DateTime now, NodeHealthInfo healthInfo)
-            => now - healthInfo.LastKnownHeartBeat > synodConfig.HeartBeatInterval.MultiplyBy(synodConfig.MissingHeartBeatsBeforeReconnect);
     }
 }

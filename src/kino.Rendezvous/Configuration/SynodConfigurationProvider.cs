@@ -14,10 +14,19 @@ namespace kino.Rendezvous.Configuration
             Synod = config.Members
                           .Select(m => m.ParseAddress())
                           .ToList();
+            HeartBeatInterval = config.HeartBeatInterval;
+            MissingHeartBeatsBeforeReconnect = config.MissingHeartBeatsBeforeReconnect;
+            IntercomEndpoint = new Uri(config.IntercomEndpoint);
         }
 
         public Uri LocalNode { get; }
 
         public IEnumerable<Uri> Synod { get; }
+
+        public TimeSpan HeartBeatInterval { get; }
+
+        public int MissingHeartBeatsBeforeReconnect { get; }
+
+        public Uri IntercomEndpoint { get; }
     }
 }
