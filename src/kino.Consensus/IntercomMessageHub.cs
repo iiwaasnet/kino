@@ -234,8 +234,6 @@ namespace kino.Consensus
 
         private void CheckDeadNodesAndScheduleReconnect()
         {
-            var now = DateTime.UtcNow;
-
             foreach (var unreachable in nodeHealthInfoMap.Where(node => !node.Value.IsHealthy()))
             {
                 ScheduleReconnectSocket(unreachable.Key, All);
