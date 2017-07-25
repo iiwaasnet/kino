@@ -29,7 +29,12 @@ namespace kino.Consensus
         }
 
         public bool IsHealthy()
-            => DateTime.UtcNow - lastKnownHeartBeat < heartBeatInterval.MultiplyBy(missingHeartBeatsBeforeReconnect);
+        {
+            lock (@lock)
+            {
+                return DateTime.UtcNow - lastKnownHeartBeat < heartBeatInterval.MultiplyBy(missingHeartBeatsBeforeReconnect);
+            }
+        }
 
         public Uri NodeUri { get; }
 
