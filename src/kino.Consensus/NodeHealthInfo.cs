@@ -9,6 +9,7 @@ namespace kino.Consensus
         private readonly int missingHeartBeatsBeforeReconnect;
         private readonly object @lock = new object();
         private DateTime lastKnownHeartBeat;
+        private DateTime lastReconnectAttempt;
 
         public NodeHealthInfo(TimeSpan heartBeatInterval,
                               int missingHeartBeatsBeforeReconnect,
@@ -17,7 +18,7 @@ namespace kino.Consensus
             this.heartBeatInterval = heartBeatInterval;
             this.missingHeartBeatsBeforeReconnect = missingHeartBeatsBeforeReconnect;
             NodeUri = nodeUri;
-            UpdateHeartBeat();
+            UpdateLastReconnectTime();
         }
 
         internal void UpdateHeartBeat()
@@ -28,11 +29,27 @@ namespace kino.Consensus
             }
         }
 
+        internal void UpdateLastReconnectTime()
+        {
+            lock (@lock)
+            {
+                lastReconnectAttempt = DateTime.UtcNow;
+            }
+        }
+
         public bool IsHealthy()
         {
             lock (@lock)
             {
                 return DateTime.UtcNow - lastKnownHeartBeat < heartBeatInterval.MultiplyBy(missingHeartBeatsBeforeReconnect);
+            }
+        }
+
+        internal bool ShouldReconnect()
+        {
+            lock (@lock)
+            {
+                return DateTime.UtcNow - lastReconnectAttempt >= heartBeatInterval.MultiplyBy(missingHeartBeatsBeforeReconnect);
             }
         }
 
@@ -45,6 +62,17 @@ namespace kino.Consensus
                 lock (@lock)
                 {
                     return lastKnownHeartBeat;
+                }
+            }
+        }
+
+        public DateTime LastReconnectAttempt
+        {
+            get
+            {
+                lock (@lock)
+                {
+                    return lastReconnectAttempt;
                 }
             }
         }

@@ -105,8 +105,13 @@ namespace kino.Tests.Consensus
             var deadNode = messageHub.GetClusterHealthInfo().First();
             var message = Message.Create(new ReconnectClusterMemberMessage {NodeUri = deadNode.NodeUri.ToSocketAddress()});
             subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => messageCount-- > 0 ? message : null);
+            synodConfig.Object
+                       .HeartBeatInterval
+                       .MultiplyBy(synodConfig.Object.MissingHeartBeatsBeforeReconnect + 1)
+                       .Sleep();
             //
-            var timeout = TimeSpan.FromSeconds(3);
+            Assert.IsFalse(deadNode.IsHealthy());
+            var timeout = TimeSpan.FromSeconds(2);
             var now = DateTime.UtcNow;
             messageHub.Start(timeout);
             timeout.Sleep();
@@ -114,7 +119,8 @@ namespace kino.Tests.Consensus
             //
             subscriberSocket.Verify(m => m.Disconnect(deadNode.NodeUri), Times.Once);
             subscriberSocket.Verify(m => m.Connect(deadNode.NodeUri, false), Times.Once);
-            Assert.LessOrEqual(now, deadNode.LastKnownHeartBeat);
+            Assert.LessOrEqual(now, deadNode.LastReconnectAttempt);
+            Assert.IsFalse(deadNode.IsHealthy());
         }
 
         [Test]

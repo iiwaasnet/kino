@@ -32,7 +32,7 @@ namespace kino.Consensus
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private readonly IDictionary<string, NodeHealthInfo> nodeHealthInfoMap;
-        private readonly ISocket intercomSocket;
+        private ISocket intercomSocket;
 
         public IntercomMessageHub(ISocketFactory socketFactory,
                                   ISynodConfiguration synodConfig,
@@ -46,8 +46,7 @@ namespace kino.Consensus
             this.performanceCounterManager = performanceCounterManager;
             inMessageQueue = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             outMessageQueue = new BlockingCollection<IntercomMessage>(new ConcurrentQueue<IntercomMessage>());
-            subscriptions = new ConcurrentDictionary<Listener, object>();
-            intercomSocket = CreateIntercomPublisherSocket();
+            subscriptions = new ConcurrentDictionary<Listener, object>();            
             nodeHealthInfoMap = CreateNodeHealthInfoMap(synodConfig);
         }
 
@@ -95,6 +94,7 @@ namespace kino.Consensus
             inMessageQueue.Dispose();
             outMessageQueue.Dispose();
             cancellationTokenSource.Dispose();
+            intercomSocket?.Dispose();
         }
 
         public void Broadcast(IMessage message)
@@ -118,7 +118,9 @@ namespace kino.Consensus
         {
             var timer = new Timer(_ => SendAndCheckHeartBeats(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             if (nodeHealthInfoMap.Any())
-            {
+            {                
+                intercomSocket = CreateIntercomPublisherSocket();
+
                 timer.Change(synodConfig.HeartBeatInterval, synodConfig.HeartBeatInterval);
             }
 
@@ -185,9 +187,10 @@ namespace kino.Consensus
                 var payload = message.GetPayload<ReconnectClusterMemberMessage>();
                 if (nodeHealthInfoMap.TryGetValue(payload.NodeUri, out var healthInfo))
                 {
+                    healthInfo.UpdateLastReconnectTime();
+
                     socket.Disconnect(new Uri(payload.NodeUri));
                     socket.Connect(new Uri(payload.NodeUri));
-                    healthInfo.UpdateHeartBeat();
 
                     logger.Info($"Reconnected to node {payload.NodeUri}");
                 }
@@ -234,7 +237,7 @@ namespace kino.Consensus
 
         private void CheckDeadNodesAndScheduleReconnect()
         {
-            foreach (var unreachable in nodeHealthInfoMap.Where(node => !node.Value.IsHealthy()))
+            foreach (var unreachable in nodeHealthInfoMap.Where(node => node.Value.ShouldReconnect()))
             {
                 ScheduleReconnectSocket(unreachable.Key, All);
                 ScheduleReconnectSocket(unreachable.Key, synodConfig.LocalNode.SocketIdentity);

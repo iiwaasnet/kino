@@ -8,6 +8,8 @@ namespace kino.Consensus
 
         DateTime LastKnownHeartBeat { get; }
 
+        DateTime LastReconnectAttempt { get; }
+
         Uri NodeUri { get; }
     }
 }
