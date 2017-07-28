@@ -62,6 +62,7 @@ namespace kino.Tests.Consensus
         {
             messageHub.Start(TimeSpan.FromSeconds(3));
             synodConfig.Object.HeartBeatInterval.MultiplyBy(2).Sleep();
+            messageHub.Stop();
             //
             Assert.Less(1, synodConfig.Object.Synod.Count());
             publisherSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(MessageIdentifier.Create<HeartBeatMessage>()))), Times.AtLeast(1));
@@ -81,6 +82,7 @@ namespace kino.Tests.Consensus
             //
             messageHub.Start(TimeSpan.FromSeconds(3));
             synodConfig.Object.HeartBeatInterval.MultiplyBy(2).Sleep();
+            messageHub.Stop();
             //
             Assert.AreEqual(1, synodConfig.Object.Synod.Count());
             publisherSocket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Never);
@@ -91,6 +93,7 @@ namespace kino.Tests.Consensus
         {
             messageHub.Start(TimeSpan.FromSeconds(3));
             synodConfig.Object.HeartBeatInterval.MultiplyBy(synodConfig.Object.MissingHeartBeatsBeforeReconnect + 1).Sleep();
+            messageHub.Stop();
             //
             var clusterHealthInfo = messageHub.GetClusterHealthInfo();
             Assert.IsTrue(clusterHealthInfo.All(hi => !hi.IsHealthy()));

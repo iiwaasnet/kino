@@ -13,8 +13,6 @@ namespace kino.Tests.Consensus.Setup
 {
     public static class RoundBasedRegisterTestsHelper
     {
-        private static int callCount = 0;
-
         internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<string> synod, string localNodeUri)
         {
             var appConfig = new RendezvousServiceConfiguration
@@ -24,7 +22,7 @@ namespace kino.Tests.Consensus.Setup
                                             Members = synod,
                                             LocalNode = localNodeUri,
                                             HeartBeatInterval = TimeSpan.FromSeconds(5),
-                                            IntercomEndpoint = $"inproc://health-{callCount++}",
+                                            IntercomEndpoint = $"inproc://{Guid.NewGuid()}",
                                             MissingHeartBeatsBeforeReconnect = 4
                                         },
                                 Lease = new LeaseConfiguration
