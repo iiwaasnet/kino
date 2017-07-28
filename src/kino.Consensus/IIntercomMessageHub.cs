@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using kino.Messaging;
 
 namespace kino.Consensus
@@ -14,5 +15,7 @@ namespace kino.Consensus
         bool Start(TimeSpan startTimeout);
 
         void Stop();
+
+        IEnumerable<INodeHealthInfo> GetClusterHealthInfo();
     }
 }

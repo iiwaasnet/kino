@@ -66,6 +66,7 @@
     <Compile Include="ILeaseProvider.cs" />
     <Compile Include="ILeaseReader.cs" />
     <Compile Include="ILeaseWriter.cs" />
+    <Compile Include="INodeHealthInfo.cs" />
     <Compile Include="IntercomMessage.cs" />
     <Compile Include="IntercomMessageHub.cs" />
     <Compile Include="IRoundBasedRegister.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="LeaseTxResult.cs" />
     <Compile Include="Listener.cs" />
     <Compile Include="Messages\Ballot.cs" />
+    <Compile Include="Messages\HeartBeatMessage.cs" />
     <Compile Include="Messages\ILeaseMessage.cs" />
     <Compile Include="Messages\Lease.cs" />
     <Compile Include="Messages\LeaseAckReadMessage.cs" />
@@ -89,6 +91,8 @@
     <Compile Include="Messages\LeaseReadMessage.cs" />
     <Compile Include="Messages\LeaseWriteMessage.cs" />
     <Compile Include="Messages\ConsensusMessages.cs" />
+    <Compile Include="Messages\ReconnectClusterMemberMessage.cs" />
+    <Compile Include="NodeHealthInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RoundBasedRegister.cs" />
     <Compile Include="RoundBasedRegister.Logging.cs" />

@@ -6,10 +6,16 @@ namespace kino.Consensus.Configuration
 {
     public interface ISynodConfiguration
     {
+        bool BelongsToSynod(Uri node);
+
         Node LocalNode { get; }
 
         IEnumerable<Uri> Synod { get; }
 
-        bool BelongsToSynod(Uri node);
+        TimeSpan HeartBeatInterval { get; }
+
+        int MissingHeartBeatsBeforeReconnect { get; }
+
+        Uri IntercomEndpoint { get; }
     }
 }

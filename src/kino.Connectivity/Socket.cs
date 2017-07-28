@@ -15,10 +15,8 @@ namespace kino.Connectivity
         private readonly SocketConfiguration config;
         private static readonly TimeSpan ReceiveWaitTimeout;
 
-        static Socket()
-        {
-            ReceiveWaitTimeout = TimeSpan.FromSeconds(3);
-        }
+        static Socket() 
+            => ReceiveWaitTimeout = TimeSpan.FromSeconds(3);
 
         internal Socket(NetMQSocket socket, SocketConfiguration config)
         {
