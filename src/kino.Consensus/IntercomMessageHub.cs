@@ -46,7 +46,7 @@ namespace kino.Consensus
             this.performanceCounterManager = performanceCounterManager;
             inMessageQueue = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             outMessageQueue = new BlockingCollection<IntercomMessage>(new ConcurrentQueue<IntercomMessage>());
-            subscriptions = new ConcurrentDictionary<Listener, object>();            
+            subscriptions = new ConcurrentDictionary<Listener, object>();
             nodeHealthInfoMap = CreateNodeHealthInfoMap(synodConfig);
         }
 
@@ -63,6 +63,8 @@ namespace kino.Consensus
             const int participantsCount = 5;
             using (var gateway = new Barrier(participantsCount))
             {
+                heartBeating = StartHeartBeating(gateway, cancellationTokenSource.Token);
+
                 multicastReceiving = Task.Factory.StartNew(_ => SafeExecute(() => ReceiveMessages(cancellationTokenSource.Token, gateway, CreateMulticastListeningSocket)),
                                                            cancellationTokenSource.Token,
                                                            TaskCreationOptions.LongRunning);
@@ -75,8 +77,6 @@ namespace kino.Consensus
                 notifyListeners = Task.Factory.StartNew(_ => SafeExecute(() => ForwardIncomingMessages(cancellationTokenSource.Token, gateway)),
                                                         cancellationTokenSource.Token,
                                                         TaskCreationOptions.LongRunning);
-                heartBeating = StartHeartBeating();
-
                 return gateway.SignalAndWait(startTimeout, cancellationTokenSource.Token);
             }
         }
@@ -114,11 +114,11 @@ namespace kino.Consensus
             return listener;
         }
 
-        private Timer StartHeartBeating()
+        private Timer StartHeartBeating(Barrier gateway, CancellationToken token)
         {
             var timer = new Timer(_ => SendAndCheckHeartBeats(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
-            if (nodeHealthInfoMap.Any())
-            {                
+            if (ShouldDoHeartBeating())
+            {
                 intercomSocket = CreateIntercomPublisherSocket();
 
                 timer.Change(synodConfig.HeartBeatInterval, synodConfig.HeartBeatInterval);
@@ -268,7 +268,10 @@ namespace kino.Consensus
 
                 logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.ToSocketAddress()} (Multicast)");
             }
-            socket.Connect(synodConfig.IntercomEndpoint, true);
+            if (ShouldDoHeartBeating())
+            {
+                socket.Connect(synodConfig.IntercomEndpoint, true);
+            }
 
             return socket;
         }
@@ -284,7 +287,10 @@ namespace kino.Consensus
 
                 logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.ToSocketAddress()} (Unicast)");
             }
-            socket.Connect(synodConfig.IntercomEndpoint, true);
+            if (ShouldDoHeartBeating())
+            {
+                socket.Connect(synodConfig.IntercomEndpoint, true);
+            }
 
             return socket;
         }
@@ -329,6 +335,9 @@ namespace kino.Consensus
 
         private void Unsubscribe(Listener listener)
             => subscriptions.TryRemove(listener, out var _);
+
+        private bool ShouldDoHeartBeating()
+            => synodConfig.Synod.Count() > 1;
 
         private void SafeExecute(Action wrappedMethod)
         {

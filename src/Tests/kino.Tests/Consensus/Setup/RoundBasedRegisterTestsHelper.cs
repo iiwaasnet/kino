@@ -56,7 +56,20 @@ namespace kino.Tests.Consensus.Setup
                                                             appConfig.Lease,
                                                             logger.Object);
 
-            return new RoundBasedRegisterTestSetup(ballotGenerator, synodConfig.LocalNode, roundBasedRegister, appConfig.Lease.MaxLeaseTimeSpan);
+            return new RoundBasedRegisterTestSetup(ballotGenerator,
+                                                   synodConfig.LocalNode,
+                                                   roundBasedRegister);
+        }
+
+        internal static LeaseTxResult RepeatUntil(Func<LeaseTxResult> func, TxOutcome expected)
+        {
+            var repeat = 3;
+
+            LeaseTxResult result;
+            while ((result = func()).TxOutcome != expected && repeat-- > 0)
+                ;
+
+            return result;
         }
 
         internal static IEnumerable<string> GetSynodMembers()

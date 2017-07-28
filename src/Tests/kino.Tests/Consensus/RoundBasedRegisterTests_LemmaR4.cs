@@ -28,15 +28,13 @@ and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
                 {
                     using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
                     {
-                        testSetup.WaitUntilStarted();
-
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
                         var roundBasedRegister = testSetup.RoundBasedRegister;
 
                         var ballot0 = ballotGenerator.New(localNode.SocketIdentity);
                         var lease = new Lease(localNode.SocketIdentity, DateTime.UtcNow, ownerPayload);
-                        var txResult = roundBasedRegister.Write(ballot0, lease);
+                        var txResult = RepeatUntil(() => roundBasedRegister.Write(ballot0, lease), TxOutcome.Commit);
                         Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
 
                         var ballot1 = ballotGenerator.New(localNode.SocketIdentity);
