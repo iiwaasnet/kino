@@ -215,12 +215,18 @@ namespace kino.Consensus
                 }
                 else
                 {
-                    logger.Warn($"{message.Identity.GetAnyString()} came from unknown node: {payload.NodeUri}");
+                    if (!IsLocalNode(payload.NodeUri))
+                    {
+                        logger.Warn($"{message.Identity.GetAnyString()} came from unknown node: {payload.NodeUri}");
+                    }
                 }
             }
 
             return shouldHandle;
         }
+
+        private bool IsLocalNode(string nodeUri) 
+            => new Uri(nodeUri) == synodConfig.LocalNode.Uri;
 
         private void SendAndCheckHeartBeats()
         {
