@@ -10,14 +10,14 @@ namespace kino.Consensus
     {
         private readonly Ballot ballot;
         private readonly Func<IMessage, ILeaseMessage> payload;
-        private readonly ISynodConfiguration synodConfig;
+        private readonly ISynodConfigurationProvider synodConfigProvider;
 
         public LeaderElectionMessageFilter(Ballot ballot,
                                            Func<IMessage, ILeaseMessage> payload,
-                                           ISynodConfiguration synodConfig)
+                                           ISynodConfigurationProvider synodConfigProvider)
         {
             this.ballot = ballot;
-            this.synodConfig = synodConfig;
+            this.synodConfigProvider = synodConfigProvider;
             this.payload = payload;
         }
 
@@ -25,7 +25,7 @@ namespace kino.Consensus
         {
             var messagePayload = payload(message);
 
-            return synodConfig.BelongsToSynod(new Uri(messagePayload.SenderUri))
+            return synodConfigProvider.BelongsToSynod(new Uri(messagePayload.SenderUri))
                    && Unsafe.ArraysEqual(messagePayload.Ballot.Identity, ballot.Identity)
                    && messagePayload.Ballot.Timestamp == ballot.Timestamp.Ticks
                    && messagePayload.Ballot.MessageNumber == ballot.MessageNumber;

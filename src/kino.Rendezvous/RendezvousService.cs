@@ -30,7 +30,7 @@ namespace kino.Rendezvous
         private readonly IMessage pongMessage;
 
         public RendezvousService(ILeaseProvider leaseProvider,
-                                 ISynodConfiguration synodConfig,
+                                 ISynodConfigurationProvider synodConfigProvider,
                                  ISocketFactory socketFactory,
                                  IMessageSerializer serializer,
                                  IRendezvousConfigurationProvider configProvider,
@@ -40,7 +40,7 @@ namespace kino.Rendezvous
             this.socketFactory = socketFactory;
             this.logger = logger;
             this.serializer = serializer;
-            localNode = synodConfig.LocalNode;
+            localNode = synodConfigProvider.LocalNode;
             this.leaseProvider = leaseProvider;
             this.configProvider = configProvider;
             this.performanceCounterManager = performanceCounterManager;

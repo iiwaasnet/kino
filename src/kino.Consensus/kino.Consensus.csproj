@@ -60,6 +60,7 @@
     <Compile Include="Ballot.cs" />
     <Compile Include="BallotGenerator.cs" />
     <Compile Include="BallotTimestamp.cs" />
+    <Compile Include="Configuration\SynodConfigurationProvider.cs" />
     <Compile Include="IBallotGenerator.cs" />
     <Compile Include="IIntercomMessageHub.cs" />
     <Compile Include="ILeaseProvider.cs" />
@@ -69,7 +70,6 @@
     <Compile Include="IntercomMessage.cs" />
     <Compile Include="IntercomMessageHub.cs" />
     <Compile Include="IRoundBasedRegister.cs" />
-    <Compile Include="Configuration\ISynodConfiguration.cs" />
     <Compile Include="Configuration\ISynodConfigurationProvider.cs" />
     <Compile Include="LastWrittenLease.cs" />
     <Compile Include="LeaderElectionMessageFilter.cs" />

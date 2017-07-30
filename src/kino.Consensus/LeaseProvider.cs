@@ -23,12 +23,12 @@ namespace kino.Consensus
         public LeaseProvider(IRoundBasedRegister register,
                              IBallotGenerator ballotGenerator,
                              LeaseConfiguration config,
-                             ISynodConfiguration synodConfig,
+                             ISynodConfigurationProvider synodConfigProvider,
                              ILogger logger)
         {
             ValidateConfiguration(config);
 
-            localNode = synodConfig.LocalNode;
+            localNode = synodConfigProvider.LocalNode;
             this.logger = logger;
             this.config = config;
             this.ballotGenerator = ballotGenerator;

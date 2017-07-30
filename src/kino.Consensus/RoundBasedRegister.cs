@@ -18,11 +18,14 @@ namespace kino.Consensus
         private Ballot writeBallot;
         private Lease lease;
         private readonly Listener listener;
-        private readonly ISynodConfiguration synodConfig;
+        private readonly ISynodConfigurationProvider synodConfigProvider;
         private readonly LeaseConfiguration leaseConfig;
+
         private readonly ILogger logger;
+
         //TODO: Move to config file later
         private static readonly TimeSpan StartTimeout = TimeSpan.FromSeconds(10);
+
         private readonly IObservable<IMessage> ackReadStream;
         private readonly IObservable<IMessage> nackReadStream;
         private readonly IObservable<IMessage> ackWriteStream;
@@ -30,12 +33,12 @@ namespace kino.Consensus
 
         public RoundBasedRegister(IIntercomMessageHub intercomMessageHub,
                                   IBallotGenerator ballotGenerator,
-                                  ISynodConfiguration synodConfig,
+                                  ISynodConfigurationProvider synodConfigProvider,
                                   LeaseConfiguration leaseConfig,
                                   ILogger logger)
         {
             this.logger = logger;
-            this.synodConfig = synodConfig;
+            this.synodConfigProvider = synodConfigProvider;
             this.leaseConfig = leaseConfig;
             this.intercomMessageHub = intercomMessageHub;
             readBallot = ballotGenerator.Null();
@@ -81,7 +84,7 @@ namespace kino.Consensus
                 response = Message.Create(new LeaseNackWriteMessage
                                           {
                                               Ballot = payload.Ballot,
-                                              SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
+                                              SenderUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
                                           });
             }
             else
@@ -94,7 +97,7 @@ namespace kino.Consensus
                 response = Message.Create(new LeaseAckWriteMessage
                                           {
                                               Ballot = payload.Ballot,
-                                              SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
+                                              SenderUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
                                           });
             }
             intercomMessageHub.Send(response, payload.SenderIdentity);
@@ -116,7 +119,7 @@ namespace kino.Consensus
                 response = Message.Create(new LeaseNackReadMessage
                                           {
                                               Ballot = payload.Ballot,
-                                              SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
+                                              SenderUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
                                           });
             }
             else
@@ -133,8 +136,8 @@ namespace kino.Consensus
 
         public LeaseTxResult Read(Ballot ballot)
         {
-            var ackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseAckReadMessage>(), synodConfig);
-            var nackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseNackReadMessage>(), synodConfig);
+            var ackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseAckReadMessage>(), synodConfigProvider);
+            var nackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseNackReadMessage>(), synodConfigProvider);
 
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, m => m.GetPayload<LeaseAckReadMessage>(), GetQuorum());
             var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, m => m.GetPayload<LeaseNackReadMessage>(), GetQuorum());
@@ -179,8 +182,8 @@ namespace kino.Consensus
 
         public LeaseTxResult Write(Ballot ballot, Lease lease)
         {
-            var ackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseAckWriteMessage>(), synodConfig);
-            var nackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseNackWriteMessage>(), synodConfig);
+            var ackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseAckWriteMessage>(), synodConfigProvider);
+            var nackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseNackWriteMessage>(), synodConfigProvider);
 
             var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, m => m.GetPayload<LeaseAckWriteMessage>(), GetQuorum());
             var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, m => m.GetPayload<LeaseNackWriteMessage>(), GetQuorum());
@@ -213,7 +216,7 @@ namespace kino.Consensus
             => index == 1 || index == WaitHandle.WaitTimeout;
 
         private int GetQuorum()
-            => synodConfig.Synod.Count() / 2 + 1;
+            => synodConfigProvider.Synod.Count() / 2 + 1;
 
         public void Dispose()
         {
@@ -221,37 +224,31 @@ namespace kino.Consensus
             listener.Dispose();
         }
 
-        private IMessage CreateWriteMessage(Ballot ballot, Lease lease)
-        {
-            return Message.Create(new LeaseWriteMessage
-                                  {
-                                      Ballot = new Messages.Ballot
-                                               {
-                                                   Identity = ballot.Identity,
-                                                   Timestamp = ballot.Timestamp.Ticks,
-                                                   MessageNumber = ballot.MessageNumber
-                                               },
-                                      Lease = new Messages.Lease
-                                              {
-                                                  Identity = lease.OwnerIdentity,
-                                                  ExpiresAt = lease.ExpiresAt.Ticks,
-                                                  OwnerPayload = lease.OwnerPayload
-                                              }
-                                  });
-        }
+        private IMessage CreateWriteMessage(Ballot ballot, Lease lease) => Message.Create(new LeaseWriteMessage
+                                                                                          {
+                                                                                              Ballot = new Messages.Ballot
+                                                                                                       {
+                                                                                                           Identity = ballot.Identity,
+                                                                                                           Timestamp = ballot.Timestamp.Ticks,
+                                                                                                           MessageNumber = ballot.MessageNumber
+                                                                                                       },
+                                                                                              Lease = new Messages.Lease
+                                                                                                      {
+                                                                                                          Identity = lease.OwnerIdentity,
+                                                                                                          ExpiresAt = lease.ExpiresAt.Ticks,
+                                                                                                          OwnerPayload = lease.OwnerPayload
+                                                                                                      }
+                                                                                          });
 
-        private IMessage CreateReadMessage(Ballot ballot)
-        {
-            return Message.Create(new LeaseReadMessage
-                                  {
-                                      Ballot = new Messages.Ballot
-                                               {
-                                                   Identity = ballot.Identity,
-                                                   Timestamp = ballot.Timestamp.Ticks,
-                                                   MessageNumber = ballot.MessageNumber
-                                               }
-                                  });
-        }
+        private IMessage CreateReadMessage(Ballot ballot) => Message.Create(new LeaseReadMessage
+                                                                            {
+                                                                                Ballot = new Messages.Ballot
+                                                                                         {
+                                                                                             Identity = ballot.Identity,
+                                                                                             Timestamp = ballot.Timestamp.Ticks,
+                                                                                             MessageNumber = ballot.MessageNumber
+                                                                                         }
+                                                                            });
 
         private IMessage CreateLeaseAckReadMessage(LeaseReadMessage payload)
         {
@@ -277,7 +274,7 @@ namespace kino.Consensus
                                                         OwnerPayload = lastKnownLease.OwnerPayload
                                                     }
                                                   : null,
-                                      SenderUri = synodConfig.LocalNode.Uri.ToSocketAddress()
+                                      SenderUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
                                   });
         }
     }

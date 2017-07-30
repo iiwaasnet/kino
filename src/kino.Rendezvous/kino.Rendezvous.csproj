@@ -68,9 +68,7 @@
     <Compile Include="Configuration\IRendezvousConfigurationProvider.cs" />
     <Compile Include="Configuration\RendezvousServiceConfiguration.cs" />
     <Compile Include="Configuration\RendezvousConfiguration.cs" />
-    <Compile Include="Configuration\SynodConfiguration.cs" />
     <Compile Include="Configuration\RendezvousConfigurationProvider.cs" />
-    <Compile Include="Configuration\SynodConfigurationProvider.cs" />
     <Compile Include="IDependencyResolver.cs" />
     <Compile Include="IRendezvousService.cs" />
     <Compile Include="Rendezvous.Builder.cs" />

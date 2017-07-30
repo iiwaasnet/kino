@@ -7,7 +7,6 @@ using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Rendezvous.Configuration;
 using Moq;
-using SynodConfiguration = kino.Rendezvous.Configuration.SynodConfiguration;
 
 namespace kino.Tests.Consensus.Setup
 {
@@ -40,22 +39,22 @@ namespace kino.Tests.Consensus.Setup
                                    SendingHighWatermark = 1000,
                                    Linger = TimeSpan.Zero
                                };
-            var synodConfig = new global::kino.Consensus.Configuration.SynodConfiguration(new SynodConfigurationProvider(appConfig.Synod));
             var logger = new Mock<ILogger>();
             var performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
+            var synodConfigProvider = new SynodConfigurationProvider(appConfig.Synod);
             var intercomMessageHub = new IntercomMessageHub(new SocketFactory(socketConfig),
-                                                            synodConfig,
+                                                            synodConfigProvider,
                                                             performanceCounterManager.Object,
                                                             logger.Object);
             var ballotGenerator = new BallotGenerator(appConfig.Lease);
             var roundBasedRegister = new RoundBasedRegister(intercomMessageHub,
                                                             ballotGenerator,
-                                                            synodConfig,
+                                                            synodConfigProvider,
                                                             appConfig.Lease,
                                                             logger.Object);
 
             return new RoundBasedRegisterTestSetup(ballotGenerator,
-                                                   synodConfig.LocalNode,
+                                                   synodConfigProvider.LocalNode,
                                                    roundBasedRegister);
         }
 

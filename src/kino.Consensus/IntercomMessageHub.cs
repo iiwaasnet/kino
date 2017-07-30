@@ -22,7 +22,7 @@ namespace kino.Consensus
         private Task sending;
         private Task notifyListeners;
         private Timer heartBeating;
-        private readonly ISynodConfiguration synodConfig;
+        private readonly ISynodConfigurationProvider synodConfigProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly BlockingCollection<IMessage> inMessageQueue;
         private readonly BlockingCollection<IntercomMessage> outMessageQueue;
@@ -35,22 +35,22 @@ namespace kino.Consensus
         private ISocket intercomSocket;
 
         public IntercomMessageHub(ISocketFactory socketFactory,
-                                  ISynodConfiguration synodConfig,
+                                  ISynodConfigurationProvider synodConfigProvider,
                                   IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                   ILogger logger)
         {
             this.socketFactory = socketFactory;
             this.logger = logger;
             cancellationTokenSource = new CancellationTokenSource();
-            this.synodConfig = synodConfig;
+            this.synodConfigProvider = synodConfigProvider;
             this.performanceCounterManager = performanceCounterManager;
             inMessageQueue = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             outMessageQueue = new BlockingCollection<IntercomMessage>(new ConcurrentQueue<IntercomMessage>());
             subscriptions = new ConcurrentDictionary<Listener, object>();
-            nodeHealthInfoMap = CreateNodeHealthInfoMap(synodConfig);
+            nodeHealthInfoMap = CreateNodeHealthInfoMap(synodConfigProvider);
         }
 
-        private static Dictionary<string, NodeHealthInfo> CreateNodeHealthInfoMap(ISynodConfiguration synodConfig)
+        private static Dictionary<string, NodeHealthInfo> CreateNodeHealthInfoMap(ISynodConfigurationProvider synodConfig)
             => synodConfig.Synod
                           .Except(synodConfig.LocalNode.Uri.ToEnumerable())
                           .ToDictionary(node => node.ToSocketAddress(),
@@ -63,7 +63,7 @@ namespace kino.Consensus
             const int participantsCount = 5;
             using (var gateway = new Barrier(participantsCount))
             {
-                heartBeating = StartHeartBeating(gateway, cancellationTokenSource.Token);
+                heartBeating = StartHeartBeating();
 
                 multicastReceiving = Task.Factory.StartNew(_ => SafeExecute(() => ReceiveMessages(cancellationTokenSource.Token, gateway, CreateMulticastListeningSocket)),
                                                            cancellationTokenSource.Token,
@@ -114,18 +114,18 @@ namespace kino.Consensus
             return listener;
         }
 
-        private Timer StartHeartBeating(Barrier gateway, CancellationToken token)
+        private Timer StartHeartBeating()
         {
             var timer = new Timer(_ => SendAndCheckHeartBeats(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             if (ShouldDoHeartBeating())
             {
                 intercomSocket = CreateIntercomPublisherSocket();
 
-                timer.Change(synodConfig.HeartBeatInterval, synodConfig.HeartBeatInterval);
+                timer.Change(synodConfigProvider.HeartBeatInterval, synodConfigProvider.HeartBeatInterval);
             }
 
             logger.Info($"Consensus HeartBeating {(nodeHealthInfoMap.Any() ? "started" : "disabled")}. "
-                        + $"Number of nodes in cluster: {synodConfig.Synod.Count()}");
+                        + $"Number of nodes in cluster: {synodConfigProvider.Synod.Count()}");
 
             return timer;
         }
@@ -225,8 +225,8 @@ namespace kino.Consensus
             return shouldHandle;
         }
 
-        private bool IsLocalNode(string nodeUri) 
-            => new Uri(nodeUri) == synodConfig.LocalNode.Uri;
+        private bool IsLocalNode(string nodeUri)
+            => new Uri(nodeUri) == synodConfigProvider.LocalNode.Uri;
 
         private void SendAndCheckHeartBeats()
         {
@@ -245,8 +245,10 @@ namespace kino.Consensus
         {
             foreach (var unreachable in nodeHealthInfoMap.Where(node => node.Value.ShouldReconnect()))
             {
+                synodConfigProvider.ForceNodeIpAddressResolution(unreachable.Value.NodeUri);
+
                 ScheduleReconnectSocket(unreachable.Key, All);
-                ScheduleReconnectSocket(unreachable.Key, synodConfig.LocalNode.SocketIdentity);
+                ScheduleReconnectSocket(unreachable.Key, synodConfigProvider.LocalNode.SocketIdentity);
 
                 var lastKnownHeartBeat = unreachable.Value.LastKnownHeartBeat;
                 logger.Warn($"Reconnect to node {unreachable.Key} scheduled due to old {nameof(lastKnownHeartBeat)}: {lastKnownHeartBeat}");
@@ -261,14 +263,14 @@ namespace kino.Consensus
         }
 
         private void SendHeartBeat()
-            => Broadcast(Message.Create(new HeartBeatMessage {NodeUri = synodConfig.LocalNode.Uri.ToSocketAddress()}));
+            => Broadcast(Message.Create(new HeartBeatMessage {NodeUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()}));
 
         private ISocket CreateMulticastListeningSocket()
         {
             var socket = socketFactory.CreateSubscriberSocket();
             socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomMulticastSocketReceiveRate);
             socket.Subscribe();
-            foreach (var node in synodConfig.Synod)
+            foreach (var node in synodConfigProvider.Synod)
             {
                 socket.Connect(node, true);
 
@@ -276,7 +278,7 @@ namespace kino.Consensus
             }
             if (ShouldDoHeartBeating())
             {
-                socket.Connect(synodConfig.IntercomEndpoint, true);
+                socket.Connect(synodConfigProvider.IntercomEndpoint, true);
             }
 
             return socket;
@@ -286,8 +288,8 @@ namespace kino.Consensus
         {
             var socket = socketFactory.CreateSubscriberSocket();
             socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomUnicastSocketReceiveRate);
-            socket.Subscribe(synodConfig.LocalNode.SocketIdentity);
-            foreach (var node in synodConfig.Synod)
+            socket.Subscribe(synodConfigProvider.LocalNode.SocketIdentity);
+            foreach (var node in synodConfigProvider.Synod)
             {
                 socket.Connect(node, true);
 
@@ -295,7 +297,7 @@ namespace kino.Consensus
             }
             if (ShouldDoHeartBeating())
             {
-                socket.Connect(synodConfig.IntercomEndpoint, true);
+                socket.Connect(synodConfigProvider.IntercomEndpoint, true);
             }
 
             return socket;
@@ -305,9 +307,9 @@ namespace kino.Consensus
         {
             var socket = socketFactory.CreatePublisherSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomSocketSendRate);
-            socket.Bind(synodConfig.LocalNode.Uri);
+            socket.Bind(synodConfigProvider.LocalNode.Uri);
 
-            logger.Info($"{nameof(IntercomMessageHub)} bound to: {synodConfig.LocalNode.Uri.ToSocketAddress()}");
+            logger.Info($"{nameof(IntercomMessageHub)} bound to: {synodConfigProvider.LocalNode.Uri.ToSocketAddress()}");
 
             return socket;
         }
@@ -315,7 +317,7 @@ namespace kino.Consensus
         private ISocket CreateIntercomPublisherSocket()
         {
             var socket = socketFactory.CreatePublisherSocket();
-            socket.Bind(synodConfig.IntercomEndpoint);
+            socket.Bind(synodConfigProvider.IntercomEndpoint);
 
             return socket;
         }
@@ -343,7 +345,7 @@ namespace kino.Consensus
             => subscriptions.TryRemove(listener, out var _);
 
         private bool ShouldDoHeartBeating()
-            => synodConfig.Synod.Count() > 1;
+            => synodConfigProvider.Synod.Count() > 1;
 
         private void SafeExecute(Action wrappedMethod)
         {
