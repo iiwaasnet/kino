@@ -77,7 +77,8 @@ namespace kino.Consensus
                                     payload.Ballot.MessageNumber,
                                     payload.Ballot.Identity);
             IMessage response;
-            if (Interlocked.Exchange(ref writeBallot, writeBallot) > ballot || Interlocked.Exchange(ref readBallot, readBallot) > ballot)
+            if (Interlocked.Exchange(ref writeBallot, writeBallot) > ballot
+                || Interlocked.Exchange(ref readBallot, readBallot) > ballot)
             {
                 LogNackWrite(ballot);
 
@@ -112,7 +113,8 @@ namespace kino.Consensus
                                     payload.Ballot.Identity);
 
             IMessage response;
-            if (Interlocked.Exchange(ref writeBallot, writeBallot) >= ballot || Interlocked.Exchange(ref readBallot, readBallot) >= ballot)
+            if (Interlocked.Exchange(ref writeBallot, writeBallot) >= ballot
+                || Interlocked.Exchange(ref readBallot, readBallot) >= ballot)
             {
                 LogNackRead(ballot);
 
@@ -136,11 +138,19 @@ namespace kino.Consensus
 
         public LeaseTxResult Read(Ballot ballot)
         {
-            var ackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseAckReadMessage>(), synodConfigProvider);
-            var nackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseNackReadMessage>(), synodConfigProvider);
+            var ackFilter = new LeaderElectionMessageFilter(ballot,
+                                                            m => m.GetPayload<LeaseAckReadMessage>(),
+                                                            synodConfigProvider);
+            var nackFilter = new LeaderElectionMessageFilter(ballot,
+                                                             m => m.GetPayload<LeaseNackReadMessage>(),
+                                                             synodConfigProvider);
 
-            var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, m => m.GetPayload<LeaseAckReadMessage>(), GetQuorum());
-            var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, m => m.GetPayload<LeaseNackReadMessage>(), GetQuorum());
+            var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match,
+                                                                      m => m.GetPayload<LeaseAckReadMessage>(),
+                                                                      GetQuorum());
+            var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match,
+                                                                       m => m.GetPayload<LeaseNackReadMessage>(),
+                                                                       GetQuorum());
 
             using (ackReadStream.Subscribe(awaitableAckFilter))
             {
@@ -182,11 +192,19 @@ namespace kino.Consensus
 
         public LeaseTxResult Write(Ballot ballot, Lease lease)
         {
-            var ackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseAckWriteMessage>(), synodConfigProvider);
-            var nackFilter = new LeaderElectionMessageFilter(ballot, m => m.GetPayload<LeaseNackWriteMessage>(), synodConfigProvider);
+            var ackFilter = new LeaderElectionMessageFilter(ballot,
+                                                            m => m.GetPayload<LeaseAckWriteMessage>(),
+                                                            synodConfigProvider);
+            var nackFilter = new LeaderElectionMessageFilter(ballot,
+                                                             m => m.GetPayload<LeaseNackWriteMessage>(),
+                                                             synodConfigProvider);
 
-            var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match, m => m.GetPayload<LeaseAckWriteMessage>(), GetQuorum());
-            var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match, m => m.GetPayload<LeaseNackWriteMessage>(), GetQuorum());
+            var awaitableAckFilter = new AwaitableMessageStreamFilter(ackFilter.Match,
+                                                                      m => m.GetPayload<LeaseAckWriteMessage>(),
+                                                                      GetQuorum());
+            var awaitableNackFilter = new AwaitableMessageStreamFilter(nackFilter.Match,
+                                                                       m => m.GetPayload<LeaseNackWriteMessage>(),
+                                                                       GetQuorum());
 
             using (ackWriteStream.Subscribe(awaitableAckFilter))
             {
@@ -224,31 +242,33 @@ namespace kino.Consensus
             listener.Dispose();
         }
 
-        private IMessage CreateWriteMessage(Ballot ballot, Lease lease) => Message.Create(new LeaseWriteMessage
-                                                                                          {
-                                                                                              Ballot = new Messages.Ballot
-                                                                                                       {
-                                                                                                           Identity = ballot.Identity,
-                                                                                                           Timestamp = ballot.Timestamp.Ticks,
-                                                                                                           MessageNumber = ballot.MessageNumber
-                                                                                                       },
-                                                                                              Lease = new Messages.Lease
-                                                                                                      {
-                                                                                                          Identity = lease.OwnerIdentity,
-                                                                                                          ExpiresAt = lease.ExpiresAt.Ticks,
-                                                                                                          OwnerPayload = lease.OwnerPayload
-                                                                                                      }
-                                                                                          });
+        private IMessage CreateWriteMessage(Ballot ballot, Lease lease)
+            => Message.Create(new LeaseWriteMessage
+                              {
+                                  Ballot = new Messages.Ballot
+                                           {
+                                               Identity = ballot.Identity,
+                                               Timestamp = ballot.Timestamp.Ticks,
+                                               MessageNumber = ballot.MessageNumber
+                                           },
+                                  Lease = new Messages.Lease
+                                          {
+                                              Identity = lease.OwnerIdentity,
+                                              ExpiresAt = lease.ExpiresAt.Ticks,
+                                              OwnerPayload = lease.OwnerPayload
+                                          }
+                              });
 
-        private IMessage CreateReadMessage(Ballot ballot) => Message.Create(new LeaseReadMessage
-                                                                            {
-                                                                                Ballot = new Messages.Ballot
-                                                                                         {
-                                                                                             Identity = ballot.Identity,
-                                                                                             Timestamp = ballot.Timestamp.Ticks,
-                                                                                             MessageNumber = ballot.MessageNumber
-                                                                                         }
-                                                                            });
+        private IMessage CreateReadMessage(Ballot ballot)
+            => Message.Create(new LeaseReadMessage
+                              {
+                                  Ballot = new Messages.Ballot
+                                           {
+                                               Identity = ballot.Identity,
+                                               Timestamp = ballot.Timestamp.Ticks,
+                                               MessageNumber = ballot.MessageNumber
+                                           }
+                              });
 
         private IMessage CreateLeaseAckReadMessage(LeaseReadMessage payload)
         {
