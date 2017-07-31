@@ -99,6 +99,7 @@
     <Compile Include="Framework\DataEncoder.cs" />
     <Compile Include="MessageIdentifier.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Location.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
