@@ -11,10 +11,8 @@ namespace kino.Rendezvous
         {
         }
 
-        public Rendezvous(IDependencyResolver resolver)
-        {
-            this.resolver = resolver;
-        }
+        public Rendezvous(IDependencyResolver resolver) 
+            => this.resolver = resolver;
 
         public void SetResolver(IDependencyResolver resolver)
             => this.resolver = resolver;
@@ -33,6 +31,5 @@ namespace kino.Rendezvous
 
             return Build();
         }
-
     }
 }

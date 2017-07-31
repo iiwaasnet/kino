@@ -5,19 +5,13 @@ namespace kino.Cluster.Configuration
 {
     public class RendezvousEndpoint : IEquatable<RendezvousEndpoint>
     {
-        private readonly int hashCode;
+        private readonly string unicastUri;
+        private readonly string broadcastUri;
 
         public RendezvousEndpoint(string unicastUri, string broadcastUri)
-            : this(unicastUri.ParseAddress(), broadcastUri.ParseAddress())
         {
-        }
-
-        public RendezvousEndpoint(Uri unicastUri, Uri broadcastUri)
-        {
-            BroadcastUri = broadcastUri;
-            UnicastUri = unicastUri;
-
-            hashCode = CalculateHashCode();
+            this.unicastUri = unicastUri;
+            this.broadcastUri = broadcastUri;
         }
 
         public bool Equals(RendezvousEndpoint other)
@@ -66,7 +60,7 @@ namespace kino.Cluster.Configuration
             => !(left == right);
 
         public override int GetHashCode()
-            => hashCode;
+            => CalculateHashCode();
 
         private int CalculateHashCode()
         {
@@ -76,8 +70,8 @@ namespace kino.Cluster.Configuration
             }
         }
 
-        public Uri BroadcastUri { get; }
+        public Uri BroadcastUri => broadcastUri.ParseAddress();
 
-        public Uri UnicastUri { get; }
+        public Uri UnicastUri => unicastUri.ParseAddress();
     }
 }

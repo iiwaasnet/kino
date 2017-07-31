@@ -61,14 +61,12 @@ namespace kino.Cluster
             var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
             var socket = socketFactory.CreateDealerSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.AutoDiscoverySenderSocketSendRate);
-            socket.Connect(rendezvousServer.UnicastUri, waitUntilConnected: true);
+            socket.Connect(rendezvousServer.UnicastUri, true);
 
             return socket;
         }
 
         public void EnqueueMessage(IMessage message)
-        {
-            outgoingMessages.Add(message);
-        }
+            => outgoingMessages.Add(message);
     }
 }

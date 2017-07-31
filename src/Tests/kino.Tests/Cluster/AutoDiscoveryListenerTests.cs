@@ -130,7 +130,7 @@ namespace kino.Tests.Cluster
             Func<IEnumerable<RendezvousEndpoint>, bool> areNewNodes = nodes =>
                                                                       {
                                                                           CollectionAssert.AreEquivalent(payload.RendezvousNodes
-                                                                                                                .Select(rn => new RendezvousEndpoint(new Uri(rn.UnicastUri), new Uri(rn.BroadcastUri))),
+                                                                                                                .Select(rn => new RendezvousEndpoint(rn.UnicastUri, rn.BroadcastUri)),
                                                                                                          nodes);
                                                                           return true;
                                                                       };

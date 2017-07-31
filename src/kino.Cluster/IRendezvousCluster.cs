@@ -6,8 +6,13 @@ namespace kino.Cluster
     public interface IRendezvousCluster
     {
         RendezvousEndpoint GetCurrentRendezvousServer();
-        void SetCurrentRendezvousServer(RendezvousEndpoint currentRendezvousServer);
+
+        bool SetCurrentRendezvousServer(RendezvousEndpoint currentRendezvousServer);
+
         void RotateRendezvousServers();
+
         void Reconfigure(IEnumerable<RendezvousEndpoint> newConfiguration);
+
+        IEnumerable<RendezvousEndpoint> Nodes { get; }
     }
 }
