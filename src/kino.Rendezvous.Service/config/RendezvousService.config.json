@@ -7,10 +7,13 @@
         },
         "synod": {
             "localNode": "tcp://*:7001",
+            "heartBeatInterval": "00:00:05",
+            "missingHeartBeatsBeforeReconnect": "3",
+            "intercomEndpoint": "inproc://health",
             "members": [
-                "tcp://192.168.0.18:7001",
-                "tcp://192.168.0.18:7002",
-                "tcp://192.168.0.18:7003"
+                "tcp://rendezvous1.bwin.dev:7001",
+                "tcp://rendezvous2.bwin.dev:7002",
+                "tcp://rendezvous3.bwin.dev:7003"
             ]
 
         },

@@ -50,13 +50,13 @@ namespace kino.Consensus
             nodeHealthInfoMap = CreateNodeHealthInfoMap(synodConfigProvider);
         }
 
-        private static Dictionary<string, NodeHealthInfo> CreateNodeHealthInfoMap(ISynodConfigurationProvider synodConfig)
-            => synodConfig.Synod
-                          .Except(synodConfig.LocalNode.Uri.ToEnumerable())
-                          .ToDictionary(node => node.ToSocketAddress(),
-                                        node => new NodeHealthInfo(synodConfig.HeartBeatInterval,
-                                                                   synodConfig.MissingHeartBeatsBeforeReconnect,
-                                                                   node));
+        private static Dictionary<string, NodeHealthInfo> CreateNodeHealthInfoMap(ISynodConfigurationProvider synodConfigProvider)
+            => synodConfigProvider.Synod
+                                  .Except(synodConfigProvider.LocalNode.Uri.ToEnumerable())
+                                  .ToDictionary(node => node.ToSocketAddress(),
+                                                node => new NodeHealthInfo(synodConfigProvider.HeartBeatInterval,
+                                                                           synodConfigProvider.MissingHeartBeatsBeforeReconnect,
+                                                                           node));
 
         public bool Start(TimeSpan startTimeout)
         {
