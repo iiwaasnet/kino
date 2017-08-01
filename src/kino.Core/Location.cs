@@ -20,20 +20,6 @@ namespace kino.Core
             hashCode = CalcHashCode();
         }
 
-        //public bool Equals(Uri other)
-        //{
-        //    if (ReferenceEquals(null, other))
-        //    {
-        //        return false;
-        //    }
-        //    if (ReferenceEquals(Uri, other))
-        //    {
-        //        return true;
-        //    }
-
-        //    return Equals(Uri, other);
-        //}
-
         public bool Equals(Location other)
         {
             if (ReferenceEquals(null, other))
@@ -78,19 +64,6 @@ namespace kino.Core
 
         public static bool operator !=(Location left, Location right)
             => !(left == right);
-
-        //public static bool operator ==(Location left, Uri right)
-        //{
-        //    if (ReferenceEquals(left, null))
-        //    {
-        //        return ReferenceEquals(right, null);
-        //    }
-
-        //    return left.Equals(right);
-        //}
-
-        //public static bool operator !=(Location left, Uri right)
-        //    => !(left == right);
 
         public override int GetHashCode()
             => hashCode;

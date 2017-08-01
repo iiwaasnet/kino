@@ -191,7 +191,7 @@ namespace kino.Cluster
                     if (!rendezvousCluster.SetCurrentRendezvousServer(newLeader))
                     {
                         logger.Error($"New Rendezvous leader {newLeader.BroadcastUri.AbsoluteUri} "
-                                     + $"was not found within configured Rendezvous cluster: [{string.Join(",", rendezvousCluster.Nodes.Select(n => n.BroadcastUri.AbsolutePath))}]");
+                                     + $"was not found within configured Rendezvous cluster: [{string.Join(",", rendezvousCluster.Nodes.Select(n => n.BroadcastUri.AbsoluteUri))}]");
                     }
 
                     newRendezvousConfiguration.Set();

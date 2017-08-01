@@ -1,17 +1,23 @@
 ﻿using System;
-using kino.Core.Framework;
+using kino.Core;
 
 namespace kino.Cluster.Configuration
 {
     public class RendezvousEndpoint : IEquatable<RendezvousEndpoint>
     {
-        private readonly string unicastUri;
-        private readonly string broadcastUri;
+        private readonly Location unicast;
+        private readonly Location broadcast;
 
         public RendezvousEndpoint(string unicastUri, string broadcastUri)
         {
-            this.unicastUri = unicastUri;
-            this.broadcastUri = broadcastUri;
+            unicast = new Location(unicastUri);
+            broadcast = new Location(broadcastUri);
+        }
+
+        public void RefreshLocations()
+        {
+            broadcast.RefreshLocation();
+            unicast.RefreshLocation();
         }
 
         public bool Equals(RendezvousEndpoint other)
@@ -25,7 +31,7 @@ namespace kino.Cluster.Configuration
                 return true;
             }
 
-            return Equals(BroadcastUri, other.BroadcastUri) && Equals(UnicastUri, other.UnicastUri);
+            return Equals(broadcast, other.broadcast) && Equals(unicast, other.unicast);
         }
 
         public override bool Equals(object obj)
@@ -66,12 +72,12 @@ namespace kino.Cluster.Configuration
         {
             unchecked
             {
-                return ((BroadcastUri?.GetHashCode() ?? 0) * 397) ^ (UnicastUri?.GetHashCode() ?? 0);
+                return ((broadcast?.GetHashCode() ?? 0) * 397) ^ (unicast?.GetHashCode() ?? 0);
             }
         }
 
-        public Uri BroadcastUri => broadcastUri.ParseAddress();
+        public Uri BroadcastUri { get; }
 
-        public Uri UnicastUri => unicastUri.ParseAddress();
+        public Uri UnicastUri { get; }
     }
 }

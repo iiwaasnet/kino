@@ -7,7 +7,7 @@ namespace kino.Cluster
     {
         RendezvousEndpoint GetCurrentRendezvousServer();
 
-        bool SetCurrentRendezvousServer(RendezvousEndpoint currentRendezvousServer);
+        bool SetCurrentRendezvousServer(RendezvousEndpoint newRendezvousServer);
 
         void RotateRendezvousServers();
 

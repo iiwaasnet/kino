@@ -45,14 +45,16 @@ namespace kino.Cluster
             }
         }
 
-        public bool SetCurrentRendezvousServer(RendezvousEndpoint currentRendezvousServer)
+        public bool SetCurrentRendezvousServer(RendezvousEndpoint newRendezvousServer)
         {
             lock (@lock)
             {
                 for (var i = 0; i < config.Count; i++)
                 {
                     var server = config[i];
-                    if (server.Equals(currentRendezvousServer))
+                    server.RefreshLocations();
+
+                    if (server.Equals(newRendezvousServer))
                     {
                         config.Remove(server);
                         config.InsertFirst(server);
