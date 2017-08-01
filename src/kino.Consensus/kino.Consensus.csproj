@@ -70,7 +70,6 @@
     <Compile Include="ILeaseReader.cs" />
     <Compile Include="ILeaseWriter.cs" />
     <Compile Include="INodeHealthInfo.cs" />
-    <Compile Include="IntercomMessage.cs" />
     <Compile Include="IntercomMessageHub.cs" />
     <Compile Include="IRoundBasedRegister.cs" />
     <Compile Include="Configuration\ISynodConfigurationProvider.cs" />

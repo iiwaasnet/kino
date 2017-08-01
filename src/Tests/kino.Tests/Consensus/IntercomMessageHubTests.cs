@@ -98,7 +98,7 @@ namespace kino.Tests.Consensus
             var clusterHealthInfo = messageHub.GetClusterHealthInfo();
             Assert.IsTrue(clusterHealthInfo.All(hi => !hi.IsHealthy()));
             publisherSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(MessageIdentifier.Create<ReconnectClusterMemberMessage>()))),
-                                   Times.AtLeast(2 * clusterHealthInfo.Count()));
+                                   Times.AtLeast(clusterHealthInfo.Count()));
         }
 
         [Test]
@@ -177,30 +177,17 @@ namespace kino.Tests.Consensus
         }
 
         [Test]
-        public void Broadcast_SendsMessageToAllSubscribers()
+        public void Send_SendsMessageToSocket()
         {
             var message = Message.Create(new SimpleMessage()).As<Message>();
             var timeout = TimeSpan.FromSeconds(1);
             messageHub.Start(timeout);
-            messageHub.Broadcast(message);
+            messageHub.Send(message);
             timeout.Sleep();
             messageHub.Stop();
             //
-            Assert.IsTrue(Unsafe.ArraysEqual(new byte[0], message.SocketIdentity));
+            publisherSocket.Verify(m => m.SendMessage(message), Times.Once);
         }
-
-        [Test]
-        public void Send_SendsMessageToOneSubscribers()
-        {
-            var message = Message.Create(new SimpleMessage()).As<Message>();
-            var receiver = ReceiverIdentifier.CreateIdentity();
-            var timeout = TimeSpan.FromSeconds(1);
-            messageHub.Start(timeout);
-            messageHub.Send(message, receiver);
-            timeout.Sleep();
-            messageHub.Stop();
-            //
-            Assert.IsTrue(Unsafe.ArraysEqual(receiver, message.SocketIdentity));
-        }
+        
     }
 }

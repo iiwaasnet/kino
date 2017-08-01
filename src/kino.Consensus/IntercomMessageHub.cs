@@ -18,18 +18,16 @@ namespace kino.Consensus
     public class IntercomMessageHub : IIntercomMessageHub
     {
         private readonly CancellationTokenSource cancellationTokenSource;
-        private Task multicastReceiving;
-        private Task unicastReceiving;
+        private Task receiving;
         private Task sending;
         private Task notifyListeners;
         private Timer heartBeating;
         private readonly ISynodConfigurationProvider synodConfigProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly BlockingCollection<IMessage> inMessageQueue;
-        private readonly BlockingCollection<IntercomMessage> outMessageQueue;
+        private readonly BlockingCollection<IMessage> outMessageQueue;
         private readonly ISocketFactory socketFactory;
         private readonly ILogger logger;
-        private static readonly byte[] All = new byte[0];
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
         private readonly IEnumerable<NodeHealthInfo> nodeHealthInfo;
@@ -46,7 +44,7 @@ namespace kino.Consensus
             this.synodConfigProvider = synodConfigProvider;
             this.performanceCounterManager = performanceCounterManager;
             inMessageQueue = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
-            outMessageQueue = new BlockingCollection<IntercomMessage>(new ConcurrentQueue<IntercomMessage>());
+            outMessageQueue = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             subscriptions = new ConcurrentDictionary<Listener, object>();
             nodeHealthInfo = CreateNodeHealthInfoMap(synodConfigProvider);
         }
@@ -61,17 +59,15 @@ namespace kino.Consensus
 
         public bool Start(TimeSpan startTimeout)
         {
-            const int participantsCount = 5;
+            const int participantsCount = 4;
             using (var gateway = new Barrier(participantsCount))
             {
                 heartBeating = StartHeartBeating();
 
-                multicastReceiving = Task.Factory.StartNew(_ => SafeExecute(() => ReceiveMessages(cancellationTokenSource.Token, gateway, CreateMulticastListeningSocket)),
-                                                           cancellationTokenSource.Token,
-                                                           TaskCreationOptions.LongRunning);
-                unicastReceiving = Task.Factory.StartNew(_ => SafeExecute(() => ReceiveMessages(cancellationTokenSource.Token, gateway, CreateUnicastListeningSocket)),
-                                                         cancellationTokenSource.Token,
-                                                         TaskCreationOptions.LongRunning);
+                receiving = Task.Factory.StartNew(_ => SafeExecute(() => ReceiveMessages(cancellationTokenSource.Token, gateway)),
+                                                  cancellationTokenSource.Token,
+                                                  TaskCreationOptions.LongRunning);
+
                 sending = Task.Factory.StartNew(_ => SafeExecute(() => SendMessages(cancellationTokenSource.Token, gateway)),
                                                 cancellationTokenSource.Token,
                                                 TaskCreationOptions.LongRunning);
@@ -88,8 +84,7 @@ namespace kino.Consensus
             heartBeating?.Dispose();
             inMessageQueue.CompleteAdding();
             outMessageQueue.CompleteAdding();
-            multicastReceiving?.Wait(TerminationWaitTimeout);
-            unicastReceiving?.Wait(TerminationWaitTimeout);
+            receiving?.Wait(TerminationWaitTimeout);
             sending?.Wait(TerminationWaitTimeout);
             notifyListeners?.Wait(TerminationWaitTimeout);
             inMessageQueue.Dispose();
@@ -98,11 +93,8 @@ namespace kino.Consensus
             intercomSocket?.Dispose();
         }
 
-        public void Broadcast(IMessage message)
-            => outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = All});
-
-        public void Send(IMessage message, byte[] receiver)
-            => outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = receiver});
+        public void Send(IMessage message)
+            => outMessageQueue.Add(message);
 
         public IEnumerable<INodeHealthInfo> GetClusterHealthInfo()
             => nodeHealthInfo;
@@ -137,18 +129,16 @@ namespace kino.Consensus
             {
                 gateway.SignalAndWait(token);
 
-                foreach (var intercomMessage in outMessageQueue.GetConsumingEnumerable(token))
+                foreach (var message in outMessageQueue.GetConsumingEnumerable(token))
                 {
-                    var message = intercomMessage.Message.As<Message>();
-                    message.SetSocketIdentity(intercomMessage.Receiver);
                     socket.SendMessage(message);
                 }
             }
         }
 
-        private void ReceiveMessages(CancellationToken token, Barrier gateway, Func<ISocket> socketBuilder)
+        private void ReceiveMessages(CancellationToken token, Barrier gateway)
         {
-            using (var socket = socketBuilder())
+            using (var socket = CreateListeningSocket())
             {
                 gateway.SignalAndWait(token);
 
@@ -273,14 +263,16 @@ namespace kino.Consensus
                                              OldUri = oldUri.ToSocketAddress(),
                                              NewUri = newUri.ToSocketAddress()
                                          }).As<Message>();
-            message.SetSocketIdentity(synodConfigProvider.LocalNode.SocketIdentity);
             intercomSocket.SendMessage(message);
         }
 
         private void SendHeartBeat()
-            => Broadcast(Message.Create(new HeartBeatMessage {NodeUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()}));
+            => outMessageQueue.Add(Message.Create(new HeartBeatMessage
+                                                  {
+                                                      NodeUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
+                                                  }));
 
-        private ISocket CreateMulticastListeningSocket()
+        private ISocket CreateListeningSocket()
         {
             var socket = socketFactory.CreateSubscriberSocket();
             socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomMulticastSocketReceiveRate);
@@ -289,26 +281,7 @@ namespace kino.Consensus
             {
                 socket.Connect(node.Uri, true);
 
-                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.Uri.ToSocketAddress()} (Multicast)");
-            }
-            if (ShouldDoHeartBeating())
-            {
-                socket.Connect(synodConfigProvider.IntercomEndpoint, true);
-            }
-
-            return socket;
-        }
-
-        private ISocket CreateUnicastListeningSocket()
-        {
-            var socket = socketFactory.CreateSubscriberSocket();
-            socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomUnicastSocketReceiveRate);
-            socket.Subscribe(synodConfigProvider.LocalNode.SocketIdentity);
-            foreach (var node in synodConfigProvider.Synod)
-            {
-                socket.Connect(node.Uri, true);
-
-                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.Uri.ToSocketAddress()} (Unicast)");
+                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.Uri.ToSocketAddress()}");
             }
             if (ShouldDoHeartBeating())
             {

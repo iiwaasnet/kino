@@ -101,7 +101,7 @@ namespace kino.Consensus
                                               SenderUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
                                           });
             }
-            intercomMessageHub.Send(response, payload.SenderIdentity);
+            intercomMessageHub.Send(response);
         }
 
         private void OnReadReceived(IMessage message)
@@ -133,7 +133,7 @@ namespace kino.Consensus
                 response = CreateLeaseAckReadMessage(payload);
             }
 
-            intercomMessageHub.Send(response, payload.SenderIdentity);
+            intercomMessageHub.Send(response);
         }
 
         public LeaseTxResult Read(Ballot ballot)
@@ -157,7 +157,7 @@ namespace kino.Consensus
                 using (nackReadStream.Subscribe(awaitableNackFilter))
                 {
                     var message = CreateReadMessage(ballot);
-                    intercomMessageHub.Broadcast(message);
+                    intercomMessageHub.Send(message);
 
                     var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered},
                                                    leaseConfig.NodeResponseTimeout);
@@ -210,7 +210,7 @@ namespace kino.Consensus
             {
                 using (nackWriteStream.Subscribe(awaitableNackFilter))
                 {
-                    intercomMessageHub.Broadcast(CreateWriteMessage(ballot, lease));
+                    intercomMessageHub.Send(CreateWriteMessage(ballot, lease));
 
                     var index = WaitHandle.WaitAny(new[] {awaitableAckFilter.Filtered, awaitableNackFilter.Filtered},
                                                    leaseConfig.NodeResponseTimeout);

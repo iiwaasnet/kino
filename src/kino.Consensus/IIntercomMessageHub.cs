@@ -8,9 +8,7 @@ namespace kino.Consensus
     {
         Listener Subscribe();
 
-        void Broadcast(IMessage message);
-
-        void Send(IMessage message, byte[] receiver);
+        void Send(IMessage message);
 
         bool Start(TimeSpan startTimeout);
 
