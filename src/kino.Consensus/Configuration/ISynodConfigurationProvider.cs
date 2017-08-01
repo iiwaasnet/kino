@@ -8,11 +8,9 @@ namespace kino.Consensus.Configuration
     {
         bool BelongsToSynod(Uri node);
 
-        void ForceNodeIpAddressResolution(Uri nodeUri);
-
         Node LocalNode { get; }
 
-        IEnumerable<Uri> Synod { get; }
+        IEnumerable<Location> Synod { get; }
 
         TimeSpan HeartBeatInterval { get; }
 

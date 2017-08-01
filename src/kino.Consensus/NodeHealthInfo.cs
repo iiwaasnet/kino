@@ -1,4 +1,5 @@
 ﻿using System;
+using kino.Core;
 using kino.Core.Framework;
 
 namespace kino.Consensus
@@ -7,17 +8,18 @@ namespace kino.Consensus
     {
         private readonly TimeSpan heartBeatInterval;
         private readonly int missingHeartBeatsBeforeReconnect;
+        private readonly Location location;
         private readonly object @lock = new object();
         private DateTime lastKnownHeartBeat;
         private DateTime lastReconnectAttempt;
 
         public NodeHealthInfo(TimeSpan heartBeatInterval,
                               int missingHeartBeatsBeforeReconnect,
-                              Uri nodeUri)
+                              Location location)
         {
             this.heartBeatInterval = heartBeatInterval;
             this.missingHeartBeatsBeforeReconnect = missingHeartBeatsBeforeReconnect;
-            NodeUri = nodeUri;
+            this.location = location;
             UpdateLastReconnectTime();
         }
 
@@ -53,7 +55,7 @@ namespace kino.Consensus
             }
         }
 
-        public Uri NodeUri { get; }
+        public Uri NodeUri => location.Uri;
 
         public DateTime LastKnownHeartBeat
         {

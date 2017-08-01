@@ -8,48 +8,48 @@ namespace kino.Consensus.Configuration
 {
     public class SynodConfigurationProvider : ISynodConfigurationProvider
     {
-        private volatile IDictionary<Uri, string> synod;
+        private volatile IEnumerable<Location> synod;
 
         public SynodConfigurationProvider(SynodConfiguration config)
         {
             LocalNode = new Node(config.LocalNode.ParseAddress(), ReceiverIdentifier.CreateIdentity());
-            synod = config.Members.ToDictionary(m => m.ParseAddress(), m => m);
+            synod = config.Members
+                          .Select(uri => new Location(uri))
+                          .ToList();
             HeartBeatInterval = config.HeartBeatInterval;
             MissingHeartBeatsBeforeReconnect = config.MissingHeartBeatsBeforeReconnect;
             IntercomEndpoint = new Uri(config.IntercomEndpoint);
         }
 
-        public void ForceNodeIpAddressResolution(Uri nodeUri)
-        {
-            AssertNodeIsNotLocal();
+        //public void ForceNodeIpAddressResolution(Uri nodeUri)
+        //{
+        //    AssertNodeIsNotLocal();
 
-            if (synod.TryGetValue(nodeUri, out var nodeConfiguredUri))
-            {
-                var tmp = synod.Where(kvp => kvp.Key != nodeUri)
-                               .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-                tmp[nodeConfiguredUri.ParseAddress()] = nodeConfiguredUri;
-                synod = tmp;
-            }
-            else
-            {
-                throw new Exception($"Node {nodeUri} doesn't belong to synod!");
-            }
+        //    var node = synod.FirstOrDefault(n => n.Uri == nodeUri);
+        //    if (node != null)
+        //    {
+        //        node.RefreshLocation();
+        //    }
+        //    else
+        //    {
+        //        throw new Exception($"Node {nodeUri} doesn't belong to synod!");
+        //    }
 
-            void AssertNodeIsNotLocal()
-            {
-                if (LocalNode.Uri == nodeUri)
-                {
-                    throw new Exception($"Can't force {nameof(LocalNode)} IP address {LocalNode.Uri} resolution!");
-                }
-            }
-        }
+        //    void AssertNodeIsNotLocal()
+        //    {
+        //        if (LocalNode.Uri == nodeUri)
+        //        {
+        //            throw new Exception($"Can't force {nameof(LocalNode)} IP address {LocalNode.Uri} resolution!");
+        //        }
+        //    }
+        //}
 
         public bool BelongsToSynod(Uri node)
-            => synod.ContainsKey(node);
+            => synod.Any(n => n.Uri == node);
 
         public Node LocalNode { get; }
 
-        public IEnumerable<Uri> Synod => synod.Keys;
+        public IEnumerable<Location> Synod => synod;
 
         public TimeSpan HeartBeatInterval { get; }
 

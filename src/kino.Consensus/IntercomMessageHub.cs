@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using kino.Connectivity;
 using kino.Consensus.Configuration;
 using kino.Consensus.Messages;
+using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
@@ -31,7 +32,7 @@ namespace kino.Consensus
         private static readonly byte[] All = new byte[0];
         private readonly ConcurrentDictionary<Listener, object> subscriptions;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
-        private readonly IDictionary<string, NodeHealthInfo> nodeHealthInfoMap;
+        private readonly IEnumerable<NodeHealthInfo> nodeHealthInfo;
         private ISocket intercomSocket;
 
         public IntercomMessageHub(ISocketFactory socketFactory,
@@ -47,16 +48,16 @@ namespace kino.Consensus
             inMessageQueue = new BlockingCollection<IMessage>(new ConcurrentQueue<IMessage>());
             outMessageQueue = new BlockingCollection<IntercomMessage>(new ConcurrentQueue<IntercomMessage>());
             subscriptions = new ConcurrentDictionary<Listener, object>();
-            nodeHealthInfoMap = CreateNodeHealthInfoMap(synodConfigProvider);
+            nodeHealthInfo = CreateNodeHealthInfoMap(synodConfigProvider);
         }
 
-        private static Dictionary<string, NodeHealthInfo> CreateNodeHealthInfoMap(ISynodConfigurationProvider synodConfigProvider)
+        private static IEnumerable<NodeHealthInfo> CreateNodeHealthInfoMap(ISynodConfigurationProvider synodConfigProvider)
             => synodConfigProvider.Synod
-                                  .Except(synodConfigProvider.LocalNode.Uri.ToEnumerable())
-                                  .ToDictionary(node => node.ToSocketAddress(),
-                                                node => new NodeHealthInfo(synodConfigProvider.HeartBeatInterval,
-                                                                           synodConfigProvider.MissingHeartBeatsBeforeReconnect,
-                                                                           node));
+                                  .Where(node => node.Uri != synodConfigProvider.LocalNode.Uri)
+                                  .Select(node => new NodeHealthInfo(synodConfigProvider.HeartBeatInterval,
+                                                                     synodConfigProvider.MissingHeartBeatsBeforeReconnect,
+                                                                     node))
+                                  .ToList();
 
         public bool Start(TimeSpan startTimeout)
         {
@@ -104,7 +105,7 @@ namespace kino.Consensus
             => outMessageQueue.Add(new IntercomMessage {Message = message, Receiver = receiver});
 
         public IEnumerable<INodeHealthInfo> GetClusterHealthInfo()
-            => nodeHealthInfoMap.Values;
+            => nodeHealthInfo;
 
         public Listener Subscribe()
         {
@@ -124,7 +125,7 @@ namespace kino.Consensus
                 timer.Change(synodConfigProvider.HeartBeatInterval, synodConfigProvider.HeartBeatInterval);
             }
 
-            logger.Info($"Consensus HeartBeating {(nodeHealthInfoMap.Any() ? "started" : "disabled")}. "
+            logger.Info($"Consensus HeartBeating {(nodeHealthInfo.Any() ? "started" : "disabled")}. "
                         + $"Number of nodes in cluster: {synodConfigProvider.Synod.Count()}");
 
             return timer;
@@ -185,18 +186,19 @@ namespace kino.Consensus
             if (shouldHandle)
             {
                 var payload = message.GetPayload<ReconnectClusterMemberMessage>();
-                if (nodeHealthInfoMap.TryGetValue(payload.NodeUri, out var healthInfo))
+                var healthInfo = nodeHealthInfo.FirstOrDefault(hi => hi.NodeUri == new Uri(payload.NewUri));
+                if (healthInfo != null)
                 {
                     healthInfo.UpdateLastReconnectTime();
 
-                    socket.Disconnect(new Uri(payload.NodeUri));
-                    socket.Connect(new Uri(payload.NodeUri));
+                    socket.Disconnect(new Uri(payload.OldUri));
+                    socket.Connect(new Uri(payload.NewUri));
 
-                    logger.Info($"Reconnected to node {payload.NodeUri}");
+                    logger.Info($"Reconnected to node from {payload.OldUri} to {payload.NewUri}");
                 }
                 else
                 {
-                    logger.Warn($"{message.Identity.GetAnyString()} came for unknown node: {payload.NodeUri}");
+                    logger.Warn($"{message.Identity.GetAnyString()} came for unknown node: {payload.NewUri}");
                 }
             }
 
@@ -209,7 +211,8 @@ namespace kino.Consensus
             if (shouldHandle)
             {
                 var payload = message.GetPayload<HeartBeatMessage>();
-                if (nodeHealthInfoMap.TryGetValue(payload.NodeUri, out var healthInfo))
+                var healthInfo = nodeHealthInfo.FirstOrDefault(hi => hi.NodeUri == new Uri(payload.NodeUri));
+                if (healthInfo != null)
                 {
                     healthInfo.UpdateHeartBeat();
                 }
@@ -223,10 +226,10 @@ namespace kino.Consensus
             }
 
             return shouldHandle;
-        }
 
-        private bool IsLocalNode(string nodeUri)
-            => new Uri(nodeUri) == synodConfigProvider.LocalNode.Uri;
+            bool IsLocalNode(string nodeUri)
+                => new Uri(nodeUri) == synodConfigProvider.LocalNode.Uri;
+        }
 
         private void SendAndCheckHeartBeats()
         {
@@ -243,21 +246,34 @@ namespace kino.Consensus
 
         private void CheckDeadNodesAndScheduleReconnect()
         {
-            foreach (var unreachable in nodeHealthInfoMap.Where(node => node.Value.ShouldReconnect()))
+            foreach (var unreachable in GetUnreachableNodes())
             {
-                synodConfigProvider.ForceNodeIpAddressResolution(unreachable.Value.NodeUri);
+                var oldUri = unreachable.Location.Uri;
+                unreachable.Location.RefreshLocation();
+                var newUri = unreachable.Location.Uri;
 
-                ScheduleReconnectSocket(unreachable.Key, All);
-                ScheduleReconnectSocket(unreachable.Key, synodConfigProvider.LocalNode.SocketIdentity);
+                ScheduleReconnectSocket(oldUri, newUri, All);
+                ScheduleReconnectSocket(oldUri, newUri, synodConfigProvider.LocalNode.SocketIdentity);
 
-                var lastKnownHeartBeat = unreachable.Value.LastKnownHeartBeat;
-                logger.Warn($"Reconnect to node {unreachable.Key} scheduled due to old {nameof(lastKnownHeartBeat)}: {lastKnownHeartBeat}");
+                var lastKnownHeartBeat = unreachable.HealthInfo.LastKnownHeartBeat;
+                logger.Warn($"Reconnect to node {oldUri} scheduled due to old {nameof(lastKnownHeartBeat)}: {lastKnownHeartBeat}");
             }
+
+            IEnumerable<(NodeHealthInfo HealthInfo, Location Location)> GetUnreachableNodes()
+                => nodeHealthInfo.Where(hi => hi.ShouldReconnect())
+                                 .Join(synodConfigProvider.Synod,
+                                       hi => hi.NodeUri,
+                                       s => s.Uri,
+                                       (hi, location) => (HealthInfo: hi, Location: location));
         }
 
-        private void ScheduleReconnectSocket(string uri, byte[] receiver)
+        private void ScheduleReconnectSocket(Uri oldUri, Uri newUri, byte[] receiver)
         {
-            var message = Message.Create(new ReconnectClusterMemberMessage {NodeUri = uri}).As<Message>();
+            var message = Message.Create(new ReconnectClusterMemberMessage
+                                         {
+                                             OldUri = oldUri.ToSocketAddress(),
+                                             NewUri = newUri.ToSocketAddress()
+                                         }).As<Message>();
             message.SetSocketIdentity(receiver);
             intercomSocket.SendMessage(message);
         }
@@ -272,9 +288,9 @@ namespace kino.Consensus
             socket.Subscribe();
             foreach (var node in synodConfigProvider.Synod)
             {
-                socket.Connect(node, true);
+                socket.Connect(node.Uri, true);
 
-                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.ToSocketAddress()} (Multicast)");
+                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.Uri.ToSocketAddress()} (Multicast)");
             }
             if (ShouldDoHeartBeating())
             {
@@ -291,9 +307,9 @@ namespace kino.Consensus
             socket.Subscribe(synodConfigProvider.LocalNode.SocketIdentity);
             foreach (var node in synodConfigProvider.Synod)
             {
-                socket.Connect(node, true);
+                socket.Connect(node.Uri, true);
 
-                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.ToSocketAddress()} (Unicast)");
+                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.Uri.ToSocketAddress()} (Unicast)");
             }
             if (ShouldDoHeartBeating())
             {

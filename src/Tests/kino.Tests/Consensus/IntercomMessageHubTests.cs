@@ -39,11 +39,11 @@ namespace kino.Tests.Consensus
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(subscriberSocket.Object);
 
             synodConfigProvider = new Mock<ISynodConfigurationProvider>();
-            var synod = 3.Produce(i => new Uri($"tcp://127.0.0.1:800{i}"));
+            var synod = 3.Produce(i => new Location($"tcp://127.0.0.1:800{i}"));
             synodConfigProvider.Setup(m => m.Synod).Returns(synod);
             synodConfigProvider.Setup(m => m.HeartBeatInterval).Returns(TimeSpan.FromSeconds(2));
             synodConfigProvider.Setup(m => m.MissingHeartBeatsBeforeReconnect).Returns(2);
-            synodConfigProvider.Setup(m => m.LocalNode).Returns(new Node(synod.First(), ReceiverIdentifier.CreateIdentity()));
+            synodConfigProvider.Setup(m => m.LocalNode).Returns(new Node(synod.First().Uri, ReceiverIdentifier.CreateIdentity()));
             synodConfigProvider.Setup(m => m.IntercomEndpoint).Returns(new Uri("inproc://health"));
 
             perfCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
@@ -72,7 +72,7 @@ namespace kino.Tests.Consensus
         public void IfSynodConsistsOfOneNode_NoHeartBeatingStarted()
         {
             var localNode = new Node("tcp://127.0.0.1:800", ReceiverIdentifier.CreateIdentity());
-            synodConfigProvider.Setup(m => m.Synod).Returns(1.Produce(i => localNode.Uri));
+            synodConfigProvider.Setup(m => m.Synod).Returns(1.Produce(i => new Location(localNode.Uri.AbsoluteUri)));
             synodConfigProvider.Setup(m => m.LocalNode).Returns(localNode);
 
             messageHub = new IntercomMessageHub(socketFactory.Object,
@@ -106,7 +106,7 @@ namespace kino.Tests.Consensus
         {
             var messageCount = 1;
             var deadNode = messageHub.GetClusterHealthInfo().First();
-            var message = Message.Create(new ReconnectClusterMemberMessage {NodeUri = deadNode.NodeUri.ToSocketAddress()});
+            var message = Message.Create(new ReconnectClusterMemberMessage {OldUri = deadNode.NodeUri.ToSocketAddress()});
             subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => messageCount-- > 0 ? message : null);
             synodConfigProvider.Object
                                .HeartBeatInterval
