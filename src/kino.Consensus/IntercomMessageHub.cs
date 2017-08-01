@@ -191,7 +191,7 @@ namespace kino.Consensus
                 {
                     healthInfo.UpdateLastReconnectTime();
 
-                    socket.Disconnect(new Uri(payload.OldUri));
+                    socket.SafeDisconnect(new Uri(payload.OldUri));
                     socket.Connect(new Uri(payload.NewUri));
 
                     logger.Info($"Reconnected to node from {payload.OldUri} to {payload.NewUri}");
@@ -252,29 +252,28 @@ namespace kino.Consensus
                 unreachable.Location.RefreshLocation();
                 var newUri = unreachable.Location.Uri;
 
-                ScheduleReconnectSocket(oldUri, newUri, All);
-                ScheduleReconnectSocket(oldUri, newUri, synodConfigProvider.LocalNode.SocketIdentity);
+                ScheduleReconnectSocket(oldUri, newUri);
 
                 var lastKnownHeartBeat = unreachable.HealthInfo.LastKnownHeartBeat;
                 logger.Warn($"Reconnect to node {oldUri} scheduled due to old {nameof(lastKnownHeartBeat)}: {lastKnownHeartBeat}");
             }
 
             IEnumerable<(NodeHealthInfo HealthInfo, Location Location)> GetUnreachableNodes()
-                => nodeHealthInfo.Where(hi => hi.ShouldReconnect())
+                => nodeHealthInfo.Where(hi => !hi.IsHealthy() && hi.ShouldReconnect())
                                  .Join(synodConfigProvider.Synod,
                                        hi => hi.NodeUri,
                                        s => s.Uri,
                                        (hi, location) => (HealthInfo: hi, Location: location));
         }
 
-        private void ScheduleReconnectSocket(Uri oldUri, Uri newUri, byte[] receiver)
+        private void ScheduleReconnectSocket(Uri oldUri, Uri newUri)
         {
             var message = Message.Create(new ReconnectClusterMemberMessage
                                          {
                                              OldUri = oldUri.ToSocketAddress(),
                                              NewUri = newUri.ToSocketAddress()
                                          }).As<Message>();
-            message.SetSocketIdentity(receiver);
+            message.SetSocketIdentity(synodConfigProvider.LocalNode.SocketIdentity);
             intercomSocket.SendMessage(message);
         }
 

@@ -106,7 +106,11 @@ namespace kino.Tests.Consensus
         {
             var messageCount = 1;
             var deadNode = messageHub.GetClusterHealthInfo().First();
-            var message = Message.Create(new ReconnectClusterMemberMessage {OldUri = deadNode.NodeUri.ToSocketAddress()});
+            var message = Message.Create(new ReconnectClusterMemberMessage
+                                         {
+                                             OldUri = deadNode.NodeUri.ToSocketAddress(),
+                                             NewUri = deadNode.NodeUri.ToSocketAddress()
+                                         });
             subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => messageCount-- > 0 ? message : null);
             synodConfigProvider.Object
                                .HeartBeatInterval
