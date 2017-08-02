@@ -3,24 +3,24 @@ using kino.Core.Framework;
 
 namespace kino.Core
 {
-    public class Location : IEquatable<Location>
+    public class DynamicUri : IEquatable<DynamicUri>
     {
         private readonly string originalUri;
         private int hashCode;
 
-        public Location(string uri)
+        public DynamicUri(string uri)
         {
             originalUri = uri;
-            RefreshLocation();
+            Refresh();
         }
 
-        public void RefreshLocation()
+        public void Refresh()
         {
             Uri = originalUri.ParseAddress();
             hashCode = CalcHashCode();
         }
 
-        public bool Equals(Location other)
+        public bool Equals(DynamicUri other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -49,10 +49,10 @@ namespace kino.Core
                 return false;
             }
 
-            return Equals((Location) obj);
+            return Equals((DynamicUri) obj);
         }
 
-        public static bool operator ==(Location left, Location right)
+        public static bool operator ==(DynamicUri left, DynamicUri right)
         {
             if (ReferenceEquals(left, null))
             {
@@ -62,7 +62,7 @@ namespace kino.Core
             return left.Equals(right);
         }
 
-        public static bool operator !=(Location left, Location right)
+        public static bool operator !=(DynamicUri left, DynamicUri right)
             => !(left == right);
 
         public override int GetHashCode()

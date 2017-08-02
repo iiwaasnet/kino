@@ -10,7 +10,7 @@ namespace kino.Consensus.Configuration
 
         Node LocalNode { get; }
 
-        IEnumerable<Location> Synod { get; }
+        IEnumerable<DynamicUri> Synod { get; }
 
         TimeSpan HeartBeatInterval { get; }
 

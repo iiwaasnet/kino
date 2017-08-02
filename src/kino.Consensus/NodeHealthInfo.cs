@@ -8,18 +8,18 @@ namespace kino.Consensus
     {
         private readonly TimeSpan heartBeatInterval;
         private readonly int missingHeartBeatsBeforeReconnect;
-        private readonly Location location;
+        private readonly DynamicUri dynamicUri;
         private readonly object @lock = new object();
         private DateTime lastKnownHeartBeat;
         private DateTime lastReconnectAttempt;
 
         public NodeHealthInfo(TimeSpan heartBeatInterval,
                               int missingHeartBeatsBeforeReconnect,
-                              Location location)
+                              DynamicUri dynamicUri)
         {
             this.heartBeatInterval = heartBeatInterval;
             this.missingHeartBeatsBeforeReconnect = missingHeartBeatsBeforeReconnect;
-            this.location = location;
+            this.dynamicUri = dynamicUri;
             UpdateLastReconnectTime();
         }
 
@@ -55,7 +55,7 @@ namespace kino.Consensus
             }
         }
 
-        public Uri NodeUri => location.Uri;
+        public Uri NodeUri => dynamicUri.Uri;
 
         public DateTime LastKnownHeartBeat
         {

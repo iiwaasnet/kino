@@ -42,7 +42,7 @@ namespace kino.Cluster
             lock (@lock)
             {
                 var oldCurrent = config.RemoveFirst();
-                oldCurrent.RefreshLocations();
+                oldCurrent.RefreshUri();
                 config.InsertLast(oldCurrent);
             }
         }
@@ -54,7 +54,7 @@ namespace kino.Cluster
                 for (var i = 0; i < config.Count; i++)
                 {
                     var server = config[i];
-                    server.RefreshLocations();
+                    server.RefreshUri();
 
                     if (server.Equals(newRendezvousServer))
                     {

@@ -238,9 +238,9 @@ namespace kino.Consensus
         {
             foreach (var unreachable in GetUnreachableNodes())
             {
-                var oldUri = unreachable.Location.Uri;
-                unreachable.Location.RefreshLocation();
-                var newUri = unreachable.Location.Uri;
+                var oldUri = unreachable.DynamicUri.Uri;
+                unreachable.DynamicUri.Refresh();
+                var newUri = unreachable.DynamicUri.Uri;
 
                 ScheduleReconnectSocket(oldUri, newUri);
 
@@ -248,7 +248,7 @@ namespace kino.Consensus
                 logger.Warn($"Reconnect to node {oldUri} scheduled due to old {nameof(lastKnownHeartBeat)}: {lastKnownHeartBeat}");
             }
 
-            IEnumerable<(NodeHealthInfo HealthInfo, Location Location)> GetUnreachableNodes()
+            IEnumerable<(NodeHealthInfo HealthInfo, DynamicUri DynamicUri)> GetUnreachableNodes()
                 => nodeHealthInfo.Where(hi => !hi.IsHealthy() && hi.ShouldReconnect())
                                  .Join(synodConfigProvider.Synod,
                                        hi => hi.NodeUri,

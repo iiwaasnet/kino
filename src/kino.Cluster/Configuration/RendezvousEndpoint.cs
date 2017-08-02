@@ -5,19 +5,19 @@ namespace kino.Cluster.Configuration
 {
     public class RendezvousEndpoint : IEquatable<RendezvousEndpoint>
     {
-        private readonly Location unicast;
-        private readonly Location broadcast;
+        private readonly DynamicUri unicast;
+        private readonly DynamicUri broadcast;
 
         public RendezvousEndpoint(string unicastUri, string broadcastUri)
         {
-            unicast = new Location(unicastUri);
-            broadcast = new Location(broadcastUri);
+            unicast = new DynamicUri(unicastUri);
+            broadcast = new DynamicUri(broadcastUri);
         }
 
-        public void RefreshLocations()
+        public void RefreshUri()
         {
-            broadcast.RefreshLocation();
-            unicast.RefreshLocation();
+            broadcast.Refresh();
+            unicast.Refresh();
         }
 
         public bool Equals(RendezvousEndpoint other)
