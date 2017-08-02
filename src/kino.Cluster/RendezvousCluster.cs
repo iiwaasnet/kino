@@ -41,7 +41,9 @@ namespace kino.Cluster
         {
             lock (@lock)
             {
-                config.InsertLast(config.RemoveFirst());
+                var oldCurrent = config.RemoveFirst();
+                oldCurrent.RefreshLocations();
+                config.InsertLast(oldCurrent);
             }
         }
 
