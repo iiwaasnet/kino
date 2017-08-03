@@ -12,9 +12,7 @@ namespace kino.Configuration
         private readonly KinoConfiguration appConfig;
 
         public ConfigurationProvider(KinoConfiguration appConfig)
-        {
-            this.appConfig = appConfig;
-        }
+            => this.appConfig = appConfig;
 
         public IEnumerable<RendezvousEndpoint> GetRendezvousEndpointsConfiguration()
             => appConfig.RendezvousServers.Select(s => new RendezvousEndpoint(s.UnicastUri, s.BroadcastUri));

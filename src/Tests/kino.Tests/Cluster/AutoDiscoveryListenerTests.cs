@@ -78,7 +78,7 @@ namespace kino.Tests.Cluster
         }
 
         [Test]
-        public async Task IfHeartBeatDoesntArriveAfterWithinHeartBeatSilenceBeforeRendezvousFailoverTime_ListenerRestartsConnectingToNextRendezvous()
+        public async Task IfHeartBeatDoesntArriveWithinHeartBeatSilenceBeforeRendezvousFailoverTime_ListenerRestartsConnectingToNextRendezvous()
         {
             var numberOfTimeouts = 3;
             var cancellatioSource = new CancellationTokenSource(membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover.MultiplyBy(numberOfTimeouts));
@@ -114,12 +114,13 @@ namespace kino.Tests.Cluster
             var cancellatioSource = new CancellationTokenSource(AsyncOp);
             var payload = new RendezvousConfigurationChangedMessage
                           {
-                              RendezvousNodes = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
-                                                                            i => new RendezvousNode
-                                                                                 {
-                                                                                     BroadcastUri = $"tcp://*:{2000 + i}".ParseAddress().ToSocketAddress(),
-                                                                                     UnicastUri = $"tcp://*:{1000 + i}".ParseAddress().ToSocketAddress()
-                                                                                 })
+                              RendezvousNodes = Randomizer.Int32(5, 15)
+                                                          .Produce(i => new RendezvousNode
+                                                                        {
+                                                                            BroadcastUri = $"tcp://*:{2000 + i}".ParseAddress().ToSocketAddress(),
+                                                                            UnicastUri = $"tcp://*:{1000 + i}".ParseAddress().ToSocketAddress()
+                                                                        })
+                                                          .ToList()
                           };
             var message = Message.Create(payload);
             subscriptionSocket.SetupMessageReceived(message, cancellatioSource.Token);
@@ -130,7 +131,7 @@ namespace kino.Tests.Cluster
             Func<IEnumerable<RendezvousEndpoint>, bool> areNewNodes = nodes =>
                                                                       {
                                                                           CollectionAssert.AreEquivalent(payload.RendezvousNodes
-                                                                                                                .Select(rn => new RendezvousEndpoint(new Uri(rn.UnicastUri), new Uri(rn.BroadcastUri))),
+                                                                                                                .Select(rn => new RendezvousEndpoint(rn.UnicastUri, rn.BroadcastUri)),
                                                                                                          nodes);
                                                                           return true;
                                                                       };

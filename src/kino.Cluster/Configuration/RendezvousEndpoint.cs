@@ -1,23 +1,23 @@
 ﻿using System;
-using kino.Core.Framework;
+using kino.Core;
 
 namespace kino.Cluster.Configuration
 {
     public class RendezvousEndpoint : IEquatable<RendezvousEndpoint>
     {
-        private readonly int hashCode;
+        private readonly DynamicUri unicast;
+        private readonly DynamicUri broadcast;
 
         public RendezvousEndpoint(string unicastUri, string broadcastUri)
-            : this(unicastUri.ParseAddress(), broadcastUri.ParseAddress())
         {
+            unicast = new DynamicUri(unicastUri);
+            broadcast = new DynamicUri(broadcastUri);
         }
 
-        public RendezvousEndpoint(Uri unicastUri, Uri broadcastUri)
+        public void RefreshUri()
         {
-            BroadcastUri = broadcastUri;
-            UnicastUri = unicastUri;
-
-            hashCode = CalculateHashCode();
+            broadcast.Refresh();
+            unicast.Refresh();
         }
 
         public bool Equals(RendezvousEndpoint other)
@@ -31,7 +31,7 @@ namespace kino.Cluster.Configuration
                 return true;
             }
 
-            return Equals(BroadcastUri, other.BroadcastUri) && Equals(UnicastUri, other.UnicastUri);
+            return Equals(broadcast, other.broadcast) && Equals(unicast, other.unicast);
         }
 
         public override bool Equals(object obj)
@@ -66,18 +66,18 @@ namespace kino.Cluster.Configuration
             => !(left == right);
 
         public override int GetHashCode()
-            => hashCode;
+            => CalculateHashCode();
 
         private int CalculateHashCode()
         {
             unchecked
             {
-                return ((BroadcastUri?.GetHashCode() ?? 0) * 397) ^ (UnicastUri?.GetHashCode() ?? 0);
+                return ((broadcast?.GetHashCode() ?? 0) * 397) ^ (unicast?.GetHashCode() ?? 0);
             }
         }
 
-        public Uri BroadcastUri { get; }
+        public Uri BroadcastUri => broadcast.Uri;
 
-        public Uri UnicastUri { get; }
+        public Uri UnicastUri => unicast.Uri;
     }
 }

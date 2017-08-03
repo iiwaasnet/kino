@@ -24,10 +24,6 @@ namespace Autofac.kino.Rendezvous
                    .As<ISynodConfigurationProvider>()
                    .SingleInstance();
 
-            builder.RegisterType<global::kino.Consensus.Configuration.SynodConfiguration>()
-                   .As<ISynodConfiguration>()
-                   .SingleInstance();
-
             builder.Register(c => c.Resolve<RendezvousServiceConfiguration>().Lease)
                    .AsSelf()
                    .SingleInstance();

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using C5;
 using kino.Cluster.Configuration;
 
@@ -20,7 +21,7 @@ namespace kino.Cluster
 
         public void Reconfigure(IEnumerable<RendezvousEndpoint> newConfiguration)
         {
-            configurationStorage.Update(new RendezvousClusterConfiguration { Cluster = newConfiguration });
+            configurationStorage.Update(new RendezvousClusterConfiguration {Cluster = newConfiguration});
             lock (@lock)
             {
                 config.Clear();
@@ -40,22 +41,41 @@ namespace kino.Cluster
         {
             lock (@lock)
             {
-                config.InsertLast(config.RemoveFirst());
+                var oldCurrent = config.RemoveFirst();
+                oldCurrent.RefreshUri();
+                config.InsertLast(oldCurrent);
             }
         }
 
-        public void SetCurrentRendezvousServer(RendezvousEndpoint currentRendezvousServer)
+        public bool SetCurrentRendezvousServer(RendezvousEndpoint newRendezvousServer)
         {
             lock (@lock)
             {
                 for (var i = 0; i < config.Count; i++)
                 {
                     var server = config[i];
-                    if (server.Equals(currentRendezvousServer))
+                    server.RefreshUri();
+
+                    if (server.Equals(newRendezvousServer))
                     {
                         config.Remove(server);
                         config.InsertFirst(server);
+
+                        return true;
                     }
+                }
+
+                return false;
+            }
+        }
+
+        public IEnumerable<RendezvousEndpoint> Nodes
+        {
+            get
+            {
+                lock (@lock)
+                {
+                    return config.ToList();
                 }
             }
         }

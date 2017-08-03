@@ -22,7 +22,7 @@ namespace kino.Tests.Consensus
     {
         private IntercomMessageHub messageHub;
         private Mock<ISocketFactory> socketFactory;
-        private Mock<ISynodConfiguration> synodConfig;
+        private Mock<ISynodConfigurationProvider> synodConfigProvider;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> perfCounterManager;
         private Mock<IPerformanceCounter> perfCounter;
         private Mock<ILogger> logger;
@@ -38,13 +38,13 @@ namespace kino.Tests.Consensus
             subscriberSocket = new Mock<ISocket>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(subscriberSocket.Object);
 
-            synodConfig = new Mock<ISynodConfiguration>();
-            var synod = 3.Produce(i => new Uri($"tcp://127.0.0.1:800{i}"));
-            synodConfig.Setup(m => m.Synod).Returns(synod);
-            synodConfig.Setup(m => m.HeartBeatInterval).Returns(TimeSpan.FromSeconds(2));
-            synodConfig.Setup(m => m.MissingHeartBeatsBeforeReconnect).Returns(2);
-            synodConfig.Setup(m => m.LocalNode).Returns(new Node(synod.First(), ReceiverIdentifier.CreateIdentity()));
-            synodConfig.Setup(m => m.IntercomEndpoint).Returns(new Uri("inproc://health"));
+            synodConfigProvider = new Mock<ISynodConfigurationProvider>();
+            var synod = 3.Produce(i => new DynamicUri($"tcp://127.0.0.1:800{i}"));
+            synodConfigProvider.Setup(m => m.Synod).Returns(synod);
+            synodConfigProvider.Setup(m => m.HeartBeatInterval).Returns(TimeSpan.FromSeconds(2));
+            synodConfigProvider.Setup(m => m.MissingHeartBeatsBeforeReconnect).Returns(2);
+            synodConfigProvider.Setup(m => m.LocalNode).Returns(new Node(synod.First().Uri, ReceiverIdentifier.CreateIdentity()));
+            synodConfigProvider.Setup(m => m.IntercomEndpoint).Returns(new Uri("inproc://health"));
 
             perfCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             perfCounter = new Mock<IPerformanceCounter>();
@@ -52,7 +52,7 @@ namespace kino.Tests.Consensus
             logger = new Mock<ILogger>();
 
             messageHub = new IntercomMessageHub(socketFactory.Object,
-                                                synodConfig.Object,
+                                                synodConfigProvider.Object,
                                                 perfCounterManager.Object,
                                                 logger.Object);
         }
@@ -61,10 +61,10 @@ namespace kino.Tests.Consensus
         public void IfSynodConsistsOfMoreThanOneNode_HeartBeatingIsStarted()
         {
             messageHub.Start(TimeSpan.FromSeconds(3));
-            synodConfig.Object.HeartBeatInterval.MultiplyBy(2).Sleep();
+            synodConfigProvider.Object.HeartBeatInterval.MultiplyBy(2).Sleep();
             messageHub.Stop();
             //
-            Assert.Less(1, synodConfig.Object.Synod.Count());
+            Assert.Less(1, synodConfigProvider.Object.Synod.Count());
             publisherSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(MessageIdentifier.Create<HeartBeatMessage>()))), Times.AtLeast(1));
         }
 
@@ -72,19 +72,19 @@ namespace kino.Tests.Consensus
         public void IfSynodConsistsOfOneNode_NoHeartBeatingStarted()
         {
             var localNode = new Node("tcp://127.0.0.1:800", ReceiverIdentifier.CreateIdentity());
-            synodConfig.Setup(m => m.Synod).Returns(1.Produce(i => localNode.Uri));
-            synodConfig.Setup(m => m.LocalNode).Returns(localNode);
+            synodConfigProvider.Setup(m => m.Synod).Returns(1.Produce(i => new DynamicUri(localNode.Uri.AbsoluteUri)));
+            synodConfigProvider.Setup(m => m.LocalNode).Returns(localNode);
 
             messageHub = new IntercomMessageHub(socketFactory.Object,
-                                                synodConfig.Object,
+                                                synodConfigProvider.Object,
                                                 perfCounterManager.Object,
                                                 logger.Object);
             //
             messageHub.Start(TimeSpan.FromSeconds(3));
-            synodConfig.Object.HeartBeatInterval.MultiplyBy(2).Sleep();
+            synodConfigProvider.Object.HeartBeatInterval.MultiplyBy(2).Sleep();
             messageHub.Stop();
             //
-            Assert.AreEqual(1, synodConfig.Object.Synod.Count());
+            Assert.AreEqual(1, synodConfigProvider.Object.Synod.Count());
             publisherSocket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Never);
         }
 
@@ -92,13 +92,13 @@ namespace kino.Tests.Consensus
         public void IfSomeClusterNodeIsNotHealthy_ConnectionMessageIsSent()
         {
             messageHub.Start(TimeSpan.FromSeconds(3));
-            synodConfig.Object.HeartBeatInterval.MultiplyBy(synodConfig.Object.MissingHeartBeatsBeforeReconnect + 1).Sleep();
+            synodConfigProvider.Object.HeartBeatInterval.MultiplyBy(synodConfigProvider.Object.MissingHeartBeatsBeforeReconnect + 1).Sleep();
             messageHub.Stop();
             //
             var clusterHealthInfo = messageHub.GetClusterHealthInfo();
             Assert.IsTrue(clusterHealthInfo.All(hi => !hi.IsHealthy()));
             publisherSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(MessageIdentifier.Create<ReconnectClusterMemberMessage>()))),
-                                   Times.AtLeast(2 * clusterHealthInfo.Count()));
+                                   Times.AtLeast(clusterHealthInfo.Count()));
         }
 
         [Test]
@@ -106,12 +106,16 @@ namespace kino.Tests.Consensus
         {
             var messageCount = 1;
             var deadNode = messageHub.GetClusterHealthInfo().First();
-            var message = Message.Create(new ReconnectClusterMemberMessage {NodeUri = deadNode.NodeUri.ToSocketAddress()});
+            var message = Message.Create(new ReconnectClusterMemberMessage
+                                         {
+                                             OldUri = deadNode.NodeUri.ToSocketAddress(),
+                                             NewUri = deadNode.NodeUri.ToSocketAddress()
+                                         });
             subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => messageCount-- > 0 ? message : null);
-            synodConfig.Object
-                       .HeartBeatInterval
-                       .MultiplyBy(synodConfig.Object.MissingHeartBeatsBeforeReconnect + 1)
-                       .Sleep();
+            synodConfigProvider.Object
+                               .HeartBeatInterval
+                               .MultiplyBy(synodConfigProvider.Object.MissingHeartBeatsBeforeReconnect + 1)
+                               .Sleep();
             //
             Assert.IsFalse(deadNode.IsHealthy());
             var timeout = TimeSpan.FromSeconds(2);
@@ -129,9 +133,9 @@ namespace kino.Tests.Consensus
         [Test]
         public void WhenHeartBeatMessageArrives_LastKnownHeartBeatIsUpdated()
         {
-            synodConfig.Setup(m => m.MissingHeartBeatsBeforeReconnect).Returns(1);
+            synodConfigProvider.Setup(m => m.MissingHeartBeatsBeforeReconnect).Returns(1);
             messageHub = new IntercomMessageHub(socketFactory.Object,
-                                                synodConfig.Object,
+                                                synodConfigProvider.Object,
                                                 perfCounterManager.Object,
                                                 logger.Object);
             var messageCount = 1;
@@ -139,13 +143,13 @@ namespace kino.Tests.Consensus
             var message = Message.Create(new HeartBeatMessage {NodeUri = deadNode.NodeUri.ToSocketAddress()});
             subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => messageCount-- > 0 ? message : null);
 
-            synodConfig.Object
-                       .HeartBeatInterval
-                       .MultiplyBy(synodConfig.Object.MissingHeartBeatsBeforeReconnect + 1)
-                       .Sleep();
-            var timeout = synodConfig.Object
-                                     .HeartBeatInterval
-                                     .DivideBy(2);
+            synodConfigProvider.Object
+                               .HeartBeatInterval
+                               .MultiplyBy(synodConfigProvider.Object.MissingHeartBeatsBeforeReconnect + 1)
+                               .Sleep();
+            var timeout = synodConfigProvider.Object
+                                             .HeartBeatInterval
+                                             .DivideBy(2);
             //
             Assert.IsFalse(deadNode.IsHealthy());
             messageHub.Start(timeout);
@@ -173,30 +177,17 @@ namespace kino.Tests.Consensus
         }
 
         [Test]
-        public void Broadcast_SendsMessageToAllSubscribers()
+        public void Send_SendsMessageToSocket()
         {
             var message = Message.Create(new SimpleMessage()).As<Message>();
             var timeout = TimeSpan.FromSeconds(1);
             messageHub.Start(timeout);
-            messageHub.Broadcast(message);
+            messageHub.Send(message);
             timeout.Sleep();
             messageHub.Stop();
             //
-            Assert.IsTrue(Unsafe.ArraysEqual(new byte[0], message.SocketIdentity));
+            publisherSocket.Verify(m => m.SendMessage(message), Times.Once);
         }
-
-        [Test]
-        public void Send_SendsMessageToOneSubscribers()
-        {
-            var message = Message.Create(new SimpleMessage()).As<Message>();
-            var receiver = ReceiverIdentifier.CreateIdentity();
-            var timeout = TimeSpan.FromSeconds(1);
-            messageHub.Start(timeout);
-            messageHub.Send(message, receiver);
-            timeout.Sleep();
-            messageHub.Stop();
-            //
-            Assert.IsTrue(Unsafe.ArraysEqual(receiver, message.SocketIdentity));
-        }
+        
     }
 }

@@ -10,7 +10,10 @@ namespace kino.Consensus.Messages
         private static readonly ushort MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
-        public string NodeUri { get; set; }
+        public string OldUri { get; set; }
+
+        [ProtoMember(2)]
+        public string NewUri { get; set; }
 
         public override ushort Version => MessageVersion;
 

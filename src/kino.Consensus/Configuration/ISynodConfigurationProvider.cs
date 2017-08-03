@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using kino.Core;
 
 namespace kino.Consensus.Configuration
 {
     public interface ISynodConfigurationProvider
     {
-        Uri LocalNode { get; }
+        bool BelongsToSynod(Uri node);
 
-        IEnumerable<Uri> Synod { get; }
+        Node LocalNode { get; }
+
+        IEnumerable<DynamicUri> Synod { get; }
 
         TimeSpan HeartBeatInterval { get; }
 

@@ -117,6 +117,8 @@
     <Compile Include="Cluster\RouteDiscoveryTests.cs" />
     <Compile Include="Cluster\ScaleOutListenerTests.cs" />
     <Compile Include="Consensus\IntercomMessageHubTests.cs" />
+    <Compile Include="Consensus\SynodConfigurationProviderTests.cs" />
+    <Compile Include="Core\DynamicUriTests.cs" />
     <Compile Include="Helpers\SocketHelpers.cs" />
     <Compile Include="Routing\ServiceMessageHandlers\ClusterMessageRoutesRequestHandlerTests.cs" />
     <Compile Include="Cluster\ClusterMonitorTests.cs" />

@@ -1,27 +1,32 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using kino.Consensus.Configuration;
+using kino.Core;
 using kino.Core.Framework;
 
-namespace kino.Rendezvous.Configuration
+namespace kino.Consensus.Configuration
 {
     public class SynodConfigurationProvider : ISynodConfigurationProvider
     {
+        private volatile IEnumerable<DynamicUri> synod;
+
         public SynodConfigurationProvider(SynodConfiguration config)
         {
-            LocalNode = config.LocalNode.ParseAddress();
-            Synod = config.Members
-                          .Select(m => m.ParseAddress())
+            LocalNode = new Node(config.LocalNode.ParseAddress(), ReceiverIdentifier.CreateIdentity());
+            synod = config.Members
+                          .Select(uri => new DynamicUri(uri))
                           .ToList();
             HeartBeatInterval = config.HeartBeatInterval;
             MissingHeartBeatsBeforeReconnect = config.MissingHeartBeatsBeforeReconnect;
             IntercomEndpoint = new Uri(config.IntercomEndpoint);
         }
 
-        public Uri LocalNode { get; }
+        public bool BelongsToSynod(Uri node)
+            => synod.Any(n => n.Uri == node);
 
-        public IEnumerable<Uri> Synod { get; }
+        public Node LocalNode { get; }
+
+        public IEnumerable<DynamicUri> Synod => synod;
 
         public TimeSpan HeartBeatInterval { get; }
 

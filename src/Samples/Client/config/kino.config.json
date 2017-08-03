@@ -14,16 +14,16 @@
 
         "rendezvousServers": [
             {
-                "broadcastUri": "tcp://127.0.0.8:8001",
-                "unicastUri": "tcp://127.0.0.8:8011"
+                "broadcastUri": "tcp://rendezvous1.bwin.dev:8001",
+                "unicastUri": "tcp://rendezvous1.bwin.dev:8011"
             },
             {
-                "broadcastUri": "tcp://127.0.0.8:8002",
-                "unicastUri": "tcp://127.0.0.8:8012"
+                "broadcastUri": "tcp://rendezvous2.bwin.dev:8002",
+                "unicastUri": "tcp://rendezvous2.bwin.dev:8012"
             },
             {
-                "broadcastUri": "tcp://127.0.0.8:8003",
-                "unicastUri": "tcp://127.0.0.8:8013"
+                "broadcastUri": "tcp://rendezvous3.bwin.dev:8003",
+                "unicastUri": "tcp://rendezvous3.bwin.dev:8013"
             }
         ]
     }

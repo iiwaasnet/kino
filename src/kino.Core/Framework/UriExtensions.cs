@@ -12,9 +12,7 @@ namespace kino.Core.Framework
         private static readonly Regex WildcardTcpAddress;
 
         static UriExtensions()
-        {
-            WildcardTcpAddress = new Regex(@"tcp:\/\/\*:", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        }
+            => WildcardTcpAddress = new Regex(@"tcp:\/\/\*:", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static IEnumerable<Uri> GetAddressRange(this string uri)
         {
@@ -47,18 +45,20 @@ namespace kino.Core.Framework
         }
 
         private static Uri BuildIpAddressUri(this string uri)
+            => new Uri(uri).BuildIpAddressUri();
+
+        public static Uri BuildIpAddressUri(this Uri uri)
         {
-            var tmp = new Uri(uri);
             if (NotIpAddressOrLoopback())
             {
-                var ipAddress = GetHostIpAddress(tmp.IsLoopback ? Environment.MachineName : tmp.Host);
-                return new Uri($"{tmp.Scheme}://{ipAddress}:{tmp.Port}");
+                var ipAddress = GetHostIpAddress(uri.IsLoopback ? Environment.MachineName : uri.Host);
+                return new Uri($"{uri.Scheme}://{ipAddress}:{uri.Port}");
             }
 
-            return tmp;
+            return uri;
 
             bool NotIpAddressOrLoopback()
-                => !IPAddress.TryParse(tmp.Host, out var _) || tmp.IsLoopback;
+                => !IPAddress.TryParse(uri.Host, out var _) || uri.IsLoopback;
         }
 
         private static Uri ExpandWildcardUri(string uri, Capture match)
