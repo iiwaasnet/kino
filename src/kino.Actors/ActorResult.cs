@@ -6,16 +6,13 @@ namespace kino.Actors
     public class ActorResult : IActorResult
     {
         public static readonly ActorResult Empty;
+        public static readonly ActorResult NoWait = null;
 
-        static ActorResult()
-        {
-            Empty = new ActorResult();
-        }
+        static ActorResult() 
+            => Empty = new ActorResult();
 
-        public ActorResult(params IMessage[] messages)
-        {
-            Messages = messages;
-        }
+        public ActorResult(params IMessage[] messages) 
+            => Messages = messages;
 
         public ActorResult(IMessage result)
             : this(new[] {result})
