@@ -44,7 +44,7 @@ namespace kino.Tests.Helpers
                     messageIdentities.Add(KinoMessages.RequestNodeMessageRoutes.Identity.GetString());
                     messageIdentities.Add(KinoMessages.UnregisterMessageRoute.Identity.GetString());
                     messageIdentities.Add(KinoMessages.UnregisterNode.Identity.GetString());
-                    messageIdentities.Add(KinoMessages.RequestKnownMessageRoutes.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.RequestExternalRoutes.Identity.GetString());
                 }
 
                 domainMessageMappings.Add(domainMessages);

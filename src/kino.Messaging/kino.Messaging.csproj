@@ -63,11 +63,14 @@
     <Compile Include="Messages\DiscoverMessageRouteMessage.cs" />
     <Compile Include="Messages\ExceptionMessage.cs" />
     <Compile Include="Messages\ExternalRoute.cs" />
+    <Compile Include="Messages\ExternalRoutesMessage.cs" />
     <Compile Include="Messages\Health.cs" />
     <Compile Include="Messages\HeartBeatMessage.cs" />
     <Compile Include="Messages\KinoMessages.cs" />
     <Compile Include="Messages\MessageContract.cs" />
     <Compile Include="Messages\MessageExternalRoutesMessage.cs" />
+    <Compile Include="Messages\MessageRegistration.cs" />
+    <Compile Include="Messages\NodeExternalRegistration.cs" />
     <Compile Include="Messages\PingMessage.cs" />
     <Compile Include="Messages\PongMessage.cs" />
     <Compile Include="Messages\RegisterExternalMessageRouteMessage.cs" />
@@ -75,7 +78,7 @@
     <Compile Include="Messages\RendezvousNode.cs" />
     <Compile Include="Messages\RendezvousNotLeaderMessage.cs" />
     <Compile Include="Messages\RequestClusterMessageRoutesMessage.cs" />
-    <Compile Include="Messages\RequestKnownMessageRoutesMessage.cs" />
+    <Compile Include="Messages\RequestExternalRoutesMessage.cs" />
     <Compile Include="Messages\RequestMessageExternalRoutesMessage.cs" />
     <Compile Include="Messages\RequestNodeMessageRoutesMessage.cs" />
     <Compile Include="Messages\AddPeerMessage.cs" />

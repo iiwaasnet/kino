@@ -446,6 +446,7 @@ namespace kino.Routing
                                                   MessageHub = mh,
                                                   LocalRegistration = false
                                               })
+                                .ToList()
                    : Enumerable.Empty<MessageHubRoute>();
 
         private Bcl.IEnumerable<MessageActorRoute> GetNodeActors(ReceiverIdentifier node)
