@@ -428,5 +428,61 @@ namespace kino.Routing
                 }
             }
         }
+
+        public Bcl.IEnumerable<ExternalRoute> GetAllRoutes()
+            => uriToNodeMap.SelectMany(uriNodes => uriNodes.Value.Select(node => (Identitifier: node, Uri: uriNodes.Key)))
+                           .Select(node => new ExternalRoute
+                                           {
+                                               Node = new Node(node.Uri, node.Identitifier.Identity),
+                                               Actors = GetNodeActors(node.Identitifier),
+                                               MessageHubs = GetMessageNodeHubs(node.Identitifier)
+                                           })
+                           .ToList();
+
+        private Bcl.IEnumerable<MessageHubRoute> GetMessageNodeHubs(ReceiverIdentifier node)
+            => nodeMessageHubs.TryGetValue(node, out var messageHubs)
+                   ? messageHubs.Select(mh => new MessageHubRoute
+                                              {
+                                                  MessageHub = mh,
+                                                  LocalRegistration = false
+                                              })
+                   : Enumerable.Empty<MessageHubRoute>();
+
+        private Bcl.IEnumerable<MessageActorRoute> GetNodeActors(ReceiverIdentifier node)
+        {
+            return GetNodeMessageToActorsMap().Select(ma => new MessageActorRoute
+                                                            {
+                                                                Message = ma.Key,
+                                                                Actors = ma.Value
+                                                                           .Select(a => new ReceiverIdentifierRegistration(a, false))
+                                                                           .ToList()
+                                                            })
+                                              .ToList();
+
+            Bcl.IDictionary<MessageIdentifier, Bcl.HashSet<ReceiverIdentifier>> GetNodeMessageToActorsMap()
+            {
+                var messageActors = new Bcl.Dictionary<MessageIdentifier, Bcl.HashSet<ReceiverIdentifier>>();
+                if (nodeActors.TryGetValue(node, out var actors))
+                {
+                    foreach (var actor in actors)
+                    {
+                        if (actorToMessageMap.TryGetValue(actor, out var actorMessages))
+                        {
+                            foreach (var message in actorMessages)
+                            {
+                                if (!messageActors.TryGetValue(message, out var tmpActors))
+                                {
+                                    tmpActors = new Bcl.HashSet<ReceiverIdentifier>();
+                                    messageActors[message] = tmpActors;
+                                }
+                                tmpActors.Add(actor);
+                            }
+                        }
+                    }
+                }
+
+                return messageActors;
+            }
+        }
     }
 }
