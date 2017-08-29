@@ -380,7 +380,7 @@ namespace kino.Tests.Routing
                             new Node("tcp://192.168.0.1:9191", ReceiverIdentifier.CreateIdentity())
                         };
 
-            var registrations = nodes.SelectMany(n => messageHubs().Select(mh => (Node: n, MessageHub: mh)))
+            var registrations = nodes.SelectMany(n => MessageHubs().Select(mh => (Node: n, MessageHub: mh)))
                                      .Select(reg => new ExternalRouteRegistration
                                                     {
                                                         Health = health,
@@ -397,14 +397,74 @@ namespace kino.Tests.Routing
             CollectionAssert.AreEquivalent(nodes.Select(n => n.Uri), routes.Select(r => r.Node.Uri));
             CollectionAssert.AreEquivalent(nodes.Select(n => n.SocketIdentity), routes.Select(r => r.Node.SocketIdentity));
 
-            CollectionAssert.AreEquivalent(registrations.Where(r => r.Peer.Equals(nodes.First())).Select(r => r.Route.Receiver),
-                                           routes.Where(r => r.Node.Equals(nodes.First())).SelectMany(r => r.MessageHubs).Select(mh => mh.MessageHub));
+            AssertNodesMessageHubsAreSame(nodes.First());
+            AssertNodesMessageHubsAreSame(nodes.Second());
 
-            CollectionAssert.AreEquivalent(registrations.Where(r => r.Peer.Equals(nodes.Second())).Select(r => r.Route.Receiver),
-                                           routes.Where(r => r.Node.Equals(nodes.Second())).SelectMany(r => r.MessageHubs).Select(mh => mh.MessageHub));
-
-            IEnumerable<ReceiverIdentifier> messageHubs()
+            IEnumerable<ReceiverIdentifier> MessageHubs()
                 => Randomizer.Int32(2, 8).Produce(ReceiverIdentities.CreateForMessageHub);
+
+            void AssertNodesMessageHubsAreSame(Node node)
+                => CollectionAssert.AreEquivalent(registrations.Where(r => r.Peer.Equals(node)).Select(r => r.Route.Receiver),
+                                                  routes.Where(r => r.Node.Equals(node)).SelectMany(r => r.MessageHubs).Select(mh => mh.MessageHub));
+        }
+
+        [Test]
+        public void GetAllRoutes_ReturnsAllRegisteredMessageRoutes()
+        {
+            var health = new Health();
+            var nodes = new[]
+                        {
+                            new Node("tcp://127.0.0.1:8080", ReceiverIdentifier.CreateIdentity()),
+                            new Node("tcp://192.168.0.1:9191", ReceiverIdentifier.CreateIdentity())
+                        };
+
+            var messages = new[]
+                           {
+                               MessageIdentifier.Create<SimpleMessage>(),
+                               MessageIdentifier.Create<SimpleMessage>(ReceiverIdentifier.CreateIdentity()),
+                               MessageIdentifier.Create<AsyncExceptionMessage>(),
+                               MessageIdentifier.Create<AsyncMessage>(ReceiverIdentifier.CreateIdentity())
+                           };
+
+            var registrations = nodes.SelectMany(n => messages.Select(m => (Node: n, Message: m)))
+                                     .SelectMany(nm => Actors().Select(a => (Node: nm.Node, Message: nm.Message, Actor: a)))
+                                     .Select(reg => new ExternalRouteRegistration
+                                                    {
+                                                        Health = health,
+                                                        Peer = reg.Node,
+                                                        Route = new MessageRoute {Receiver = reg.Actor, Message = reg.Message}
+                                                    })
+                                     .ToList();
+
+            registrations.ForEach(reg => externalRoutingTable.AddMessageRoute(reg));
+            //
+            var routes = externalRoutingTable.GetAllRoutes();
+            //
+            Assert.AreEqual(nodes.Count(), routes.Count());
+            CollectionAssert.AreEquivalent(nodes.Select(n => n.Uri), routes.Select(r => r.Node.Uri));
+            CollectionAssert.AreEquivalent(nodes.Select(n => n.SocketIdentity), routes.Select(r => r.Node.SocketIdentity));
+
+            AssertMessageRoutesAreSame(nodes.First());
+            AssertMessageRoutesAreSame(nodes.Second());
+
+            void AssertMessageRoutesAreSame(Node node)
+            {
+                var messageRoutes = registrations.Where(r => r.Peer.Equals(node))
+                                                 .GroupBy(r => r.Route.Message, r => r.Route.Receiver);
+                CollectionAssert.AreEquivalent(messageRoutes.Select(mr => mr.Key),
+                                               routes.Where(r => r.Node.Equals(node)).SelectMany(r => r.MessageRoutes).Select(mr => mr.Message));
+                foreach (var messageIdentifier in messageRoutes.Select(mr => mr.Key))
+                {
+                    CollectionAssert.AreEquivalent(messageRoutes.Where(mr => mr.Key == messageIdentifier).SelectMany(mr => mr),
+                                                   routes.Where(r => r.Node.Equals(node))
+                                                         .SelectMany(r => r.MessageRoutes)
+                                                         .Where(mr => mr.Message == messageIdentifier)
+                                                         .SelectMany(mr => mr.Actors));
+                }
+            }
+
+            IEnumerable<ReceiverIdentifier> Actors()
+                => Randomizer.Int32(1, 8).Produce(ReceiverIdentities.CreateForActor);
         }
 
         private void IfNodeIdentifierIsNotProvidedOrNotFound_PeerRemovalResultIsNotFound(byte[] removeNodeIdentity)

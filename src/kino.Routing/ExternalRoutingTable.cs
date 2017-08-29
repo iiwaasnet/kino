@@ -434,7 +434,7 @@ namespace kino.Routing
                            .Select(node => new ExternalRoute
                                            {
                                                Node = new Node(node.Uri, node.Identitifier.Identity),
-                                               Actors = GetNodeActors(node.Identitifier),
+                                               MessageRoutes = GetNodeActors(node.Identitifier),
                                                MessageHubs = GetMessageNodeHubs(node.Identitifier)
                                            })
                            .ToList();

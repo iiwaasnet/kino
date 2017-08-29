@@ -54,7 +54,7 @@ namespace kino.Actors.Internal
                                                                MessageHubs = r.MessageHubs
                                                                               .Select(mh => mh.MessageHub.Identity)
                                                                               .ToList(),
-                                                               MessageRoutes = r.Actors
+                                                               MessageRoutes = r.MessageRoutes
                                                                                 .Select(ar => new MessageRegistration
                                                                                               {
                                                                                                   Message = new MessageContract

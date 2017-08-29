@@ -9,6 +9,6 @@ namespace kino.Routing
 
         public IEnumerable<MessageHubRoute> MessageHubs { get; set; }
 
-        public IEnumerable<MessageActorRoute> Actors { get; set; }
+        public IEnumerable<MessageActorRoute> MessageRoutes { get; set; }
     }
 }
