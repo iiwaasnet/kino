@@ -12,10 +12,15 @@ namespace kino.Actors.Internal
 {
     internal class MessageRoutesActor : Actor
     {
+        private readonly IInternalRoutingTable internalRoutingTable;
         private readonly IExternalRoutingTable externalRoutingTable;
 
-        internal MessageRoutesActor(IExternalRoutingTable externalRoutingTable)
-            => this.externalRoutingTable = externalRoutingTable;
+        internal MessageRoutesActor(IExternalRoutingTable externalRoutingTable,
+                                    IInternalRoutingTable internalRoutingTable)
+        {
+            this.externalRoutingTable = externalRoutingTable;
+            this.internalRoutingTable = internalRoutingTable;
+        }
 
         [MessageHandlerDefinition(typeof(RequestMessageExternalRoutesMessage), true)]
         internal async Task<IActorResult> GetMessageExternalRoutes(IMessage message)
@@ -70,6 +75,39 @@ namespace kino.Actors.Internal
                                                                                 .ToList()
                                                            })
                                               .ToList()
+                           };
+
+            return new ActorResult(Message.Create(response));
+        }
+
+        [MessageHandlerDefinition(typeof(RequestInternalRoutesMessage), true)]
+        internal async Task<IActorResult> GetInternalRoutes(IMessage _)
+        {
+            var routes = internalRoutingTable.GetAllRoutes();
+
+            var response = new InternalRoutesMessage
+                           {
+                               MessageHubs = routes.MessageHubs
+                                                   .Select(mh => new ReceiverRegistration
+                                                                 {
+                                                                     Identity = mh.MessageHub.Identity,
+                                                                     LocalRegistration = mh.LocalRegistration
+                                                                 })
+                                                   .ToList(),
+                               MessageRoutes = routes.Actors
+                                                     .Select(mr => new MessageRegistration
+                                                                   {
+                                                                       Message = new MessageContract
+                                                                                 {
+                                                                                     Identity = mr.Message.Identity,
+                                                                                     Partition = mr.Message.Partition,
+                                                                                     Version = mr.Message.Version
+                                                                                 },
+                                                                       Actors = mr.Actors
+                                                                                  .Select(a => a.Identity)
+                                                                                  .ToList()
+                                                                   })
+                                                     .ToList()
                            };
 
             return new ActorResult(Message.Create(response));

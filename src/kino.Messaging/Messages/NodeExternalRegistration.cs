@@ -17,5 +17,5 @@ namespace kino.Messaging.Messages
 
         [ProtoMember(4)]
         public IEnumerable<MessageRegistration> MessageRoutes { get; set; }
-    }
+    }    
 }
