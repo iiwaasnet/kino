@@ -24,12 +24,14 @@ namespace kino.Cluster
         private readonly IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider;
         private readonly IRouteDiscovery routeDiscovery;
         private readonly ISecurityProvider securityProvider;
+        private readonly RouteDiscoveryConfiguration routeDiscoveryConfig;
         private readonly ILogger logger;
+        private readonly Timer clusterRoutesRequestTimer;
         private DateTime startTime;
         //TODO: Move to config
         private readonly TimeSpan unregisterMessageSendTimeout = TimeSpan.FromMilliseconds(500);
         //TODO: Move to config
-        private readonly TimeSpan requestClusterRoutesOnStartWindow = TimeSpan.FromSeconds(30);
+        private readonly TimeSpan RendezvousLeaderSearchPeriod = TimeSpan.FromSeconds(30);
 
         public ClusterMonitor(IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                               IAutoDiscoverySender autoDiscoverySender,
@@ -37,6 +39,7 @@ namespace kino.Cluster
                               IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider,
                               IRouteDiscovery routeDiscovery,
                               ISecurityProvider securityProvider,
+                              RouteDiscoveryConfiguration routeDiscoveryConfig,
                               ILogger logger)
         {
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
@@ -45,7 +48,9 @@ namespace kino.Cluster
             this.heartBeatConfigurationProvider = heartBeatConfigurationProvider;
             this.routeDiscovery = routeDiscovery;
             this.securityProvider = securityProvider;
+            this.routeDiscoveryConfig = routeDiscoveryConfig;
             this.logger = logger;
+            clusterRoutesRequestTimer = new Timer(_ => RequestClusterRoutes(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
         }
 
         public void Start()
@@ -53,10 +58,12 @@ namespace kino.Cluster
             startTime = DateTime.UtcNow;
             StartProcessingClusterMessages();
             RequestClusterRoutes();
+            clusterRoutesRequestTimer.Change(TimeSpan.FromMilliseconds(0), routeDiscoveryConfig.ClusterAutoDiscoveryPeriod);
         }
 
         public void Stop()
         {
+            clusterRoutesRequestTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             UnregisterSelf();
             StopProcessingClusterMessages();
         }
@@ -69,7 +76,7 @@ namespace kino.Cluster
             {
                 // 1. Start listening for messages
                 listeningMessages = Task.Factory.StartNew(_ => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
-                                                           TaskCreationOptions.LongRunning);
+                                                          TaskCreationOptions.LongRunning);
                 // 2. Start sending
                 sendingMessages = Task.Factory.StartNew(_ => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
                                                         TaskCreationOptions.LongRunning);
@@ -80,7 +87,7 @@ namespace kino.Cluster
         }
 
         private void StopProcessingClusterMessages()
-        {
+        {            
             routeDiscovery.Stop();
             messageProcessingToken?.Cancel();
             sendingMessages?.Wait();
@@ -92,38 +99,41 @@ namespace kino.Cluster
         {
             StopProcessingClusterMessages();
             StartProcessingClusterMessages();
-            RequestClusterRoutes();
+            if (WithinInitialRendezvousLeaderConnectionPhase())
+            {
+                RequestClusterRoutes();
+            }
         }
 
         private void RequestClusterRoutes()
         {
-            if (startTime - DateTime.UtcNow < requestClusterRoutesOnStartWindow)
+            try
             {
-                try
+                var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
+                foreach (var domain in securityProvider.GetAllowedDomains())
                 {
-                    var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
-                    foreach (var domain in securityProvider.GetAllowedDomains())
-                    {
-                        var message = Message.Create(new RequestClusterMessageRoutesMessage
-                                                     {
-                                                         RequestorNodeIdentity = scaleOutAddress.Identity,
-                                                         RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
-                                                     })
-                                             .As<Message>();
-                        message.SetDomain(domain);
-                        message.As<Message>().SignMessage(securityProvider);
+                    var message = Message.Create(new RequestClusterMessageRoutesMessage
+                                                 {
+                                                     RequestorNodeIdentity = scaleOutAddress.Identity,
+                                                     RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
+                                                 })
+                                         .As<Message>();
+                    message.SetDomain(domain);
+                    message.As<Message>().SignMessage(securityProvider);
 
-                        autoDiscoverySender.EnqueueMessage(message);
+                    autoDiscoverySender.EnqueueMessage(message);
 
-                        logger.Info($"Request to discover cluster routes for Domain [{domain}] sent.");
-                    }
-                }
-                catch (Exception err)
-                {
-                    logger.Error(err);
+                    logger.Info($"Request to discover cluster routes for Domain [{domain}] sent.");
                 }
             }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
         }
+
+        private bool WithinInitialRendezvousLeaderConnectionPhase()
+            => startTime - DateTime.UtcNow < RendezvousLeaderSearchPeriod;
 
         private void UnregisterSelf()
         {
@@ -247,11 +257,11 @@ namespace kino.Cluster
             => messageRoutes.Where(mr => mr.Receiver.IsMessageHub())
                             .SelectMany(mr => securityProvider.GetAllowedDomains()
                                                               .Select(dom =>
-                                                                      new MessageRouteDomainMap
-                                                                      {
-                                                                          MessageRoute = mr,
-                                                                          Domain = dom
-                                                                      }));
+                                                                          new MessageRouteDomainMap
+                                                                          {
+                                                                              MessageRoute = mr,
+                                                                              Domain = dom
+                                                                          }));
 
         public void DiscoverMessageRoute(MessageRoute messageRoute)
             => routeDiscovery.RequestRouteDiscovery(messageRoute);
