@@ -8,7 +8,9 @@ namespace kino.Cluster.Configuration
 
         public int RequestsPerSend { get; set; }
 
-        public int MaxRequestsQueueLength { get; set; }
+        public int MaxRouteDiscoveryRequestQueueLength { get; set; }
+
+        public int MaxAutoDiscoverySenderQueueLength { get; set; }
 
         public TimeSpan ClusterAutoDiscoveryPeriod { get; set; }
     }

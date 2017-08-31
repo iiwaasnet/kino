@@ -31,11 +31,7 @@ namespace kino.Configuration
         }
 
         public ClusterMembershipConfiguration GetClusterMembershipConfiguration()
-            => new ClusterMembershipConfiguration
-               {
-                   HeartBeatSilenceBeforeRendezvousFailover = appConfig.HeartBeatSilenceBeforeRendezvousFailover,
-                   RunAsStandalone = appConfig.RunAsStandalone
-               };
+            => appConfig.Cluster;
 
         public ClusterHealthMonitorConfiguration GetClusterHealthMonitorConfiguration()
             => new ClusterHealthMonitorConfiguration

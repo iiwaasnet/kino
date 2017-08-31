@@ -39,7 +39,7 @@ namespace kino.Cluster
                               IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider,
                               IRouteDiscovery routeDiscovery,
                               ISecurityProvider securityProvider,
-                              RouteDiscoveryConfiguration routeDiscoveryConfig,
+                              ClusterMembershipConfiguration clusterMembershipConfiguration,
                               ILogger logger)
         {
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
@@ -48,7 +48,7 @@ namespace kino.Cluster
             this.heartBeatConfigurationProvider = heartBeatConfigurationProvider;
             this.routeDiscovery = routeDiscovery;
             this.securityProvider = securityProvider;
-            this.routeDiscoveryConfig = routeDiscoveryConfig;
+            this.routeDiscoveryConfig = clusterMembershipConfiguration.RouteDiscovery;
             this.logger = logger;
             clusterRoutesRequestTimer = new Timer(_ => RequestClusterRoutes(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
         }

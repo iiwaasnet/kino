@@ -31,11 +31,11 @@ namespace kino.Cluster
                               ILogger logger)
         {
             this.securityProvider = securityProvider;
-            discoveryConfiguration = clusterMembershipConfiguration.RouteDiscovery ?? DefaultConfiguration();
+            discoveryConfiguration = clusterMembershipConfiguration.RouteDiscovery;
             this.autoDiscoverySender = autoDiscoverySender;
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.logger = logger;
-            requests = new HashedQueue<MessageRoute>(discoveryConfiguration.MaxRequestsQueueLength);
+            requests = new HashedQueue<MessageRoute>(discoveryConfiguration.MaxRouteDiscoveryRequestQueueLength);
         }
 
         public void Start()
@@ -120,12 +120,16 @@ namespace kino.Cluster
         public void RequestRouteDiscovery(MessageRoute messageRoute)
             => requests.TryEnqueue(messageRoute);
 
-        private RouteDiscoveryConfiguration DefaultConfiguration()
+
+        //TODO: Move defaults to config and delete
+        private static RouteDiscoveryConfiguration DefaultConfiguration()
             => new RouteDiscoveryConfiguration
                {
                    SendingPeriod = TimeSpan.FromSeconds(2),
-                   MaxRequestsQueueLength = 1000,
-                   RequestsPerSend = 10
+                   MaxRouteDiscoveryRequestQueueLength = 100,
+                   RequestsPerSend = 10,
+                   ClusterAutoDiscoveryPeriod = TimeSpan.FromMinutes(2),
+                   MaxAutoDiscoverySenderQueueLength = 100
                };
     }
 }

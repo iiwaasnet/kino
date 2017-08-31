@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using kino.Cluster.Configuration;
 
 namespace kino.Configuration
 {
@@ -11,10 +11,8 @@ namespace kino.Configuration
 
         public IEnumerable<RendezvousNode> RendezvousServers { get; set; }
 
-        public TimeSpan HeartBeatSilenceBeforeRendezvousFailover { get; set; }
-
-        public bool RunAsStandalone { get; set; }
-
         public HealthConfiguration Health { get; set; }
+
+        public ClusterMembershipConfiguration Cluster { get; set; }
     }
 }
