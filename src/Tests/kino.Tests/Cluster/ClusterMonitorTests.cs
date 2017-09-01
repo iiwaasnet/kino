@@ -31,6 +31,7 @@ namespace kino.Tests.Cluster
         private Mock<IHeartBeatSenderConfigurationProvider> heartBeatSenderConfigProvider;
         private Uri heartBeatUri;
         private TimeSpan heartBeatInterval;
+        private ClusterMembershipConfiguration config;
 
         [SetUp]
         public void Setup()
@@ -51,12 +52,22 @@ namespace kino.Tests.Cluster
             heartBeatSenderConfigProvider.Setup(m => m.GetHeartBeatAddress()).Returns(heartBeatUri);
             heartBeatInterval = TimeSpan.FromSeconds(5);
             heartBeatSenderConfigProvider.Setup(m => m.GetHeartBeatInterval()).Returns(heartBeatInterval);
+            config = new ClusterMembershipConfiguration
+                     {
+                         RouteDiscovery = new RouteDiscoveryConfiguration
+                                          {
+                                              ClusterAutoDiscoveryStartDelay = TimeSpan.FromSeconds(1),
+                                              ClusterAutoDiscoveryStartDelayMaxMultiplier = 2,
+                                              MaxAutoDiscoverySenderQueueLength = 100
+                                          }
+                     };
             clusterMonitor = new ClusterMonitor(scaleOutConfigurationProvider.Object,
                                                 autoDiscoverySender.Object,
                                                 autoDiscoveryListener.Object,
                                                 heartBeatSenderConfigProvider.Object,
                                                 routeDiscovery.Object,
                                                 securityProvider.Object,
+                                                config,
                                                 logger.Object);
         }
 
@@ -247,6 +258,10 @@ namespace kino.Tests.Cluster
                                                                        It.Is<Barrier>(b => setBarrier(b))));
             //
             clusterMonitor.Start();
+            config.RouteDiscovery
+                  .ClusterAutoDiscoveryStartDelay
+                  .MultiplyBy(config.RouteDiscovery.ClusterAutoDiscoveryStartDelayMaxMultiplier)
+                  .Sleep();
             //
             Func<Message, bool> isRequestClusterRoutesMessage = (msg) =>
                                                                 {
@@ -280,6 +295,10 @@ namespace kino.Tests.Cluster
             clusterMonitor.Start();
             AsyncOp.Sleep();
             clusterMonitor.Stop();
+            config.RouteDiscovery
+                  .ClusterAutoDiscoveryStartDelay
+                  .MultiplyBy(config.RouteDiscovery.ClusterAutoDiscoveryStartDelayMaxMultiplier)
+                  .Sleep();
             //
             Func<IMessage, bool> isUnregistrationMessage = msg =>
                                                            {

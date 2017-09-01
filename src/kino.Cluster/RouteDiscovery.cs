@@ -35,7 +35,7 @@ namespace kino.Cluster
             this.autoDiscoverySender = autoDiscoverySender;
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.logger = logger;
-            requests = new HashedQueue<MessageRoute>(discoveryConfiguration.MaxRouteDiscoveryRequestQueueLength);
+            requests = new HashedQueue<MessageRoute>(discoveryConfiguration.MaxMissingRouteDiscoveryRequestQueueLength);
         }
 
         public void Start()
@@ -57,7 +57,7 @@ namespace kino.Cluster
                 try
                 {
                     IList<MessageRoute> missingRoutes;
-                    if (requests.TryPeek(out missingRoutes, discoveryConfiguration.RequestsPerSend))
+                    if (requests.TryPeek(out missingRoutes, discoveryConfiguration.MissingRoutesDiscoveryRequestsPerSend))
                     {
                         foreach (var messageRoute in missingRoutes)
                         {
@@ -65,7 +65,7 @@ namespace kino.Cluster
                         }
                     }
 
-                    await Task.Delay(discoveryConfiguration.SendingPeriod, token);
+                    await Task.Delay(discoveryConfiguration.MissingRoutesDiscoverySendingPeriod, token);
 
                     requests.TryDelete(missingRoutes);
                 }
@@ -119,17 +119,5 @@ namespace kino.Cluster
 
         public void RequestRouteDiscovery(MessageRoute messageRoute)
             => requests.TryEnqueue(messageRoute);
-
-
-        //TODO: Move defaults to config and delete
-        private static RouteDiscoveryConfiguration DefaultConfiguration()
-            => new RouteDiscoveryConfiguration
-               {
-                   SendingPeriod = TimeSpan.FromSeconds(2),
-                   MaxRouteDiscoveryRequestQueueLength = 100,
-                   RequestsPerSend = 10,
-                   ClusterAutoDiscoveryPeriod = TimeSpan.FromMinutes(2),
-                   MaxAutoDiscoverySenderQueueLength = 100
-               };
     }
 }

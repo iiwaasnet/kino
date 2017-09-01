@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using C5;
 using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -27,11 +28,7 @@ namespace kino.Cluster
         private readonly RouteDiscoveryConfiguration routeDiscoveryConfig;
         private readonly ILogger logger;
         private readonly Timer clusterRoutesRequestTimer;
-        private DateTime startTime;
-        //TODO: Move to config
-        private readonly TimeSpan unregisterMessageSendTimeout = TimeSpan.FromMilliseconds(500);
-        //TODO: Move to config
-        private readonly TimeSpan RendezvousLeaderSearchPeriod = TimeSpan.FromSeconds(30);
+        private readonly C5Random randomizer;
 
         public ClusterMonitor(IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                               IAutoDiscoverySender autoDiscoverySender,
@@ -48,22 +45,19 @@ namespace kino.Cluster
             this.heartBeatConfigurationProvider = heartBeatConfigurationProvider;
             this.routeDiscovery = routeDiscovery;
             this.securityProvider = securityProvider;
-            this.routeDiscoveryConfig = clusterMembershipConfiguration.RouteDiscovery;
+            routeDiscoveryConfig = clusterMembershipConfiguration.RouteDiscovery;
             this.logger = logger;
+            randomizer = new C5Random();
             clusterRoutesRequestTimer = new Timer(_ => RequestClusterRoutes(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
         }
 
         public void Start()
         {
-            startTime = DateTime.UtcNow;
             StartProcessingClusterMessages();
-            RequestClusterRoutes();
-            clusterRoutesRequestTimer.Change(TimeSpan.FromMilliseconds(0), routeDiscoveryConfig.ClusterAutoDiscoveryPeriod);
         }
 
         public void Stop()
         {
-            clusterRoutesRequestTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             UnregisterSelf();
             StopProcessingClusterMessages();
         }
@@ -84,10 +78,13 @@ namespace kino.Cluster
 
                 routeDiscovery.Start();
             }
+
+            clusterRoutesRequestTimer.Change(RandomizeClusterAutoDiscoveryStartDelay(), routeDiscoveryConfig.ClusterAutoDiscoveryPeriod);
         }
 
         private void StopProcessingClusterMessages()
-        {            
+        {
+            clusterRoutesRequestTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             routeDiscovery.Stop();
             messageProcessingToken?.Cancel();
             sendingMessages?.Wait();
@@ -99,10 +96,6 @@ namespace kino.Cluster
         {
             StopProcessingClusterMessages();
             StartProcessingClusterMessages();
-            if (WithinInitialRendezvousLeaderConnectionPhase())
-            {
-                RequestClusterRoutes();
-            }
         }
 
         private void RequestClusterRoutes()
@@ -132,9 +125,6 @@ namespace kino.Cluster
             }
         }
 
-        private bool WithinInitialRendezvousLeaderConnectionPhase()
-            => startTime - DateTime.UtcNow < RendezvousLeaderSearchPeriod;
-
         private void UnregisterSelf()
         {
             var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
@@ -154,7 +144,7 @@ namespace kino.Cluster
                 logger.Debug($"Unregistering self {scaleOutAddress.Identity.GetAnyString()} from Domain {domain}");
             }
 
-            unregisterMessageSendTimeout.Sleep();
+            routeDiscoveryConfig.UnregisterMessageSendTimeout.Sleep();
         }
 
         public void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain)
@@ -265,5 +255,9 @@ namespace kino.Cluster
 
         public void DiscoverMessageRoute(MessageRoute messageRoute)
             => routeDiscovery.RequestRouteDiscovery(messageRoute);
+
+        private TimeSpan RandomizeClusterAutoDiscoveryStartDelay()
+            => routeDiscoveryConfig.ClusterAutoDiscoveryStartDelay
+                                   .MultiplyBy(randomizer.Next(1, routeDiscoveryConfig.ClusterAutoDiscoveryStartDelayMaxMultiplier));
     }
 }

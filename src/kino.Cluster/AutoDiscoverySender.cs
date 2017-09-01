@@ -72,14 +72,14 @@ namespace kino.Cluster
 
         public bool EnqueueMessage(IMessage message)
         {
-            if (outgoingMessages.Count > config.MaxAutoDiscoverySenderQueueLength)
+            return outgoingMessages.Count < config.MaxAutoDiscoverySenderQueueLength
+                   && EnqueueMessage();
+
+            bool EnqueueMessage()
             {
-                return false;
+                outgoingMessages.Add(message);
+                return true;
             }
-
-            outgoingMessages.Add(message);
-
-            return true;
         }
     }
 }
