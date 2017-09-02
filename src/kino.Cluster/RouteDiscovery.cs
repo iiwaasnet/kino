@@ -50,7 +50,7 @@ namespace kino.Cluster
             sendingMessages?.Wait();
         }
 
-        private async void ThrottleRouteDiscoveryRequests(CancellationToken token)
+        private void ThrottleRouteDiscoveryRequests(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
@@ -65,7 +65,7 @@ namespace kino.Cluster
                         }
                     }
 
-                    await Task.Delay(discoveryConfiguration.MissingRoutesDiscoverySendingPeriod, token);
+                    discoveryConfiguration.MissingRoutesDiscoverySendingPeriod.Sleep(token);
 
                     requests.TryDelete(missingRoutes);
                 }
