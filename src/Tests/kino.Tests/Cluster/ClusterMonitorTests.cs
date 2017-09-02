@@ -57,6 +57,7 @@ namespace kino.Tests.Cluster
                          RouteDiscovery = new RouteDiscoveryConfiguration
                                           {
                                               ClusterAutoDiscoveryStartDelay = TimeSpan.FromSeconds(1),
+                                              ClusterAutoDiscoveryPeriod = TimeSpan.FromSeconds(2),
                                               ClusterAutoDiscoveryStartDelayMaxMultiplier = 2,
                                               MaxAutoDiscoverySenderQueueLength = 100
                                           }
@@ -262,6 +263,7 @@ namespace kino.Tests.Cluster
                   .ClusterAutoDiscoveryStartDelay
                   .MultiplyBy(config.RouteDiscovery.ClusterAutoDiscoveryStartDelayMaxMultiplier)
                   .Sleep();
+            clusterMonitor.Stop();
             //
             Func<Message, bool> isRequestClusterRoutesMessage = (msg) =>
                                                                 {
@@ -313,6 +315,43 @@ namespace kino.Tests.Cluster
                                                                return false;
                                                            };
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isUnregistrationMessage(msg))), Times.Once);
+        }
+
+        [Test]
+        public void ClusterMonitor_PeriodicallySendsClusterRoutesRequests()
+        {
+            Func<Barrier, bool> setBarrier = (b) =>
+                                             {
+                                                 b.SignalAndWait();
+                                                 return true;
+                                             };
+            autoDiscoveryListener.Setup(m => m.StartBlockingListenMessages(It.IsAny<Action>(),
+                                                                           It.IsAny<CancellationToken>(),
+                                                                           It.Is<Barrier>(b => setBarrier(b))));
+            autoDiscoverySender.Setup(m => m.StartBlockingSendMessages(It.IsAny<CancellationToken>(),
+                                                                       It.Is<Barrier>(b => setBarrier(b))));
+            var numberOfPeriods = 3;
+            //
+            clusterMonitor.Start();
+            config.RouteDiscovery
+                  .ClusterAutoDiscoveryPeriod
+                  .MultiplyBy(numberOfPeriods)
+                  .Sleep();
+            clusterMonitor.Start();
+            //
+            Func<Message, bool> isRequestClusterRoutesMessage = (msg) =>
+                                                                {
+                                                                    if (msg.Equals(MessageIdentifier.Create<RequestClusterMessageRoutesMessage>()))
+                                                                    {
+                                                                        var payload = msg.GetPayload<RequestClusterMessageRoutesMessage>();
+                                                                        Assert.IsTrue(Unsafe.ArraysEqual(scaleOutAddress.Identity, payload.RequestorNodeIdentity));
+                                                                        Assert.AreEqual(scaleOutAddress.Uri.ToSocketAddress(), payload.RequestorUri);
+                                                                        return true;
+                                                                    }
+
+                                                                    return false;
+                                                                };
+            autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isRequestClusterRoutesMessage(msg.As<Message>()))), Times.AtLeast(numberOfPeriods));
         }
     }
 }
