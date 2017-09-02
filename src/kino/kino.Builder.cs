@@ -190,7 +190,7 @@ namespace kino
             actorHostManager = new ActorHostManager(actorHostFactory, logger);
 
             internalActorHostManager = new ActorHostManager(actorHostFactory, logger);
-            var internalActor = new MessageRoutesActor(externalRoutingTable);
+            var internalActor = new MessageRoutesActor(externalRoutingTable, internalRoutingTable);
             internalActorHostManager.AssignActor(internalActor);
             //
             isBuilt = true;
