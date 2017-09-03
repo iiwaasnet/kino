@@ -7,6 +7,6 @@ namespace kino.Cluster
     {
         void StartBlockingSendMessages(CancellationToken token, Barrier gateway);
 
-        void EnqueueMessage(IMessage message);
+        bool EnqueueMessage(IMessage message);
     }
 }

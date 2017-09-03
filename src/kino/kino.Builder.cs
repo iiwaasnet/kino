@@ -97,6 +97,7 @@ namespace kino
                 .GetService();
             var autoDiscoverSender = new AutoDiscoverySender(rendezvousCluster,
                                                              socketFactory,
+                                                             clusterMembershipConfiguration,
                                                              performanceCounterManager,
                                                              logger);
             var autoDiscoveryListener = new AutoDiscoveryListener(rendezvousCluster,
@@ -120,6 +121,7 @@ namespace kino
                                                         heartBeatSenderConfigurationManager,
                                                         routeDiscovery,
                                                         securityProvider,
+                                                        clusterMembershipConfiguration,
                                                         logger),
                                      new NullClusterMonitor())
                 .GetService();

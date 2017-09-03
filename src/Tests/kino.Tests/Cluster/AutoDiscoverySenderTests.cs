@@ -26,6 +26,7 @@ namespace kino.Tests.Cluster
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private Mock<ISocket> socket;
         private RendezvousEndpoint rendezvousEndpoint;
+        private ClusterMembershipConfiguration config;
 
         [SetUp]
         public void Setup()
@@ -40,8 +41,13 @@ namespace kino.Tests.Cluster
             var perfCounter = new Mock<IPerformanceCounter>();
             performanceCounterManager.Setup(m => m.GetCounter(It.IsAny<KinoPerformanceCounters>())).Returns(perfCounter.Object);
             logger = new Mock<ILogger>();
+            config = new ClusterMembershipConfiguration {RouteDiscovery = new RouteDiscoveryConfiguration
+                                                                              {
+                                                                                  MaxAutoDiscoverySenderQueueLength = 100
+                                                                              }};
             autoDiscoverSender = new AutoDiscoverySender(rendezvousCluster.Object,
                                                          socketFactory.Object,
+                                                         config,
                                                          performanceCounterManager.Object,
                                                          logger.Object);
         }
@@ -49,9 +55,7 @@ namespace kino.Tests.Cluster
         [Test]
         public void StartBlockingSendMessages_SendsEnqueuedMessages()
         {
-            var messages = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
-                                                       () => Message.Create(new SimpleMessage()));
-
+            var messages = Randomizer.Int32(2, 5).Produce(() => Message.Create(new SimpleMessage()));
             messages.ForEach(msg => autoDiscoverSender.EnqueueMessage(msg));
             var tokenSource = new CancellationTokenSource(AsyncOp);
             var barrier = new Barrier(1);
@@ -59,6 +63,20 @@ namespace kino.Tests.Cluster
             autoDiscoverSender.StartBlockingSendMessages(tokenSource.Token, barrier);
             //
             socket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Exactly(messages.Count()));
+        }
+
+        [Test]
+        public void MessageIsNotEnqueued_IfQueueLengthIsGreaterThanMaxAutoDiscoverySenderQueueLength()
+        {
+            config.RouteDiscovery.MaxAutoDiscoverySenderQueueLength = Randomizer.Int32(10, 20);
+            var messages = (config.RouteDiscovery.MaxAutoDiscoverySenderQueueLength + 1).Produce(() => Message.Create(new SimpleMessage()));
+            messages.ForEach(msg => autoDiscoverSender.EnqueueMessage(msg));
+            var tokenSource = new CancellationTokenSource(AsyncOp);
+            var barrier = new Barrier(1);
+            //
+            autoDiscoverSender.StartBlockingSendMessages(tokenSource.Token, barrier);
+            //
+            socket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Exactly(config.RouteDiscovery.MaxAutoDiscoverySenderQueueLength));
         }
     }
 }

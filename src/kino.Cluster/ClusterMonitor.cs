@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using C5;
 using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -24,12 +25,10 @@ namespace kino.Cluster
         private readonly IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider;
         private readonly IRouteDiscovery routeDiscovery;
         private readonly ISecurityProvider securityProvider;
+        private readonly RouteDiscoveryConfiguration routeDiscoveryConfig;
         private readonly ILogger logger;
-        private DateTime startTime;
-        //TODO: Move to config
-        private readonly TimeSpan unregisterMessageSendTimeout = TimeSpan.FromMilliseconds(500);
-        //TODO: Move to config
-        private readonly TimeSpan requestClusterRoutesOnStartWindow = TimeSpan.FromSeconds(30);
+        private readonly Timer clusterRoutesRequestTimer;
+        private readonly C5Random randomizer;
 
         public ClusterMonitor(IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                               IAutoDiscoverySender autoDiscoverySender,
@@ -37,6 +36,7 @@ namespace kino.Cluster
                               IHeartBeatSenderConfigurationProvider heartBeatConfigurationProvider,
                               IRouteDiscovery routeDiscovery,
                               ISecurityProvider securityProvider,
+                              ClusterMembershipConfiguration clusterMembershipConfiguration,
                               ILogger logger)
         {
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
@@ -45,14 +45,15 @@ namespace kino.Cluster
             this.heartBeatConfigurationProvider = heartBeatConfigurationProvider;
             this.routeDiscovery = routeDiscovery;
             this.securityProvider = securityProvider;
+            routeDiscoveryConfig = clusterMembershipConfiguration.RouteDiscovery;
             this.logger = logger;
+            randomizer = new C5Random();
+            clusterRoutesRequestTimer = new Timer(_ => RequestClusterRoutes(), null, TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
         }
 
         public void Start()
         {
-            startTime = DateTime.UtcNow;
             StartProcessingClusterMessages();
-            RequestClusterRoutes();
         }
 
         public void Stop()
@@ -69,7 +70,7 @@ namespace kino.Cluster
             {
                 // 1. Start listening for messages
                 listeningMessages = Task.Factory.StartNew(_ => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
-                                                           TaskCreationOptions.LongRunning);
+                                                          TaskCreationOptions.LongRunning);
                 // 2. Start sending
                 sendingMessages = Task.Factory.StartNew(_ => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
                                                         TaskCreationOptions.LongRunning);
@@ -77,10 +78,13 @@ namespace kino.Cluster
 
                 routeDiscovery.Start();
             }
+
+            clusterRoutesRequestTimer.Change(RandomizeClusterAutoDiscoveryStartDelay(), routeDiscoveryConfig.ClusterAutoDiscoveryPeriod);
         }
 
         private void StopProcessingClusterMessages()
         {
+            clusterRoutesRequestTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             routeDiscovery.Stop();
             messageProcessingToken?.Cancel();
             sendingMessages?.Wait();
@@ -92,36 +96,32 @@ namespace kino.Cluster
         {
             StopProcessingClusterMessages();
             StartProcessingClusterMessages();
-            RequestClusterRoutes();
         }
 
         private void RequestClusterRoutes()
         {
-            if (startTime - DateTime.UtcNow < requestClusterRoutesOnStartWindow)
+            try
             {
-                try
+                var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
+                foreach (var domain in securityProvider.GetAllowedDomains())
                 {
-                    var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
-                    foreach (var domain in securityProvider.GetAllowedDomains())
-                    {
-                        var message = Message.Create(new RequestClusterMessageRoutesMessage
-                                                     {
-                                                         RequestorNodeIdentity = scaleOutAddress.Identity,
-                                                         RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
-                                                     })
-                                             .As<Message>();
-                        message.SetDomain(domain);
-                        message.As<Message>().SignMessage(securityProvider);
+                    var message = Message.Create(new RequestClusterMessageRoutesMessage
+                                                 {
+                                                     RequestorNodeIdentity = scaleOutAddress.Identity,
+                                                     RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
+                                                 })
+                                         .As<Message>();
+                    message.SetDomain(domain);
+                    message.As<Message>().SignMessage(securityProvider);
 
-                        autoDiscoverySender.EnqueueMessage(message);
+                    autoDiscoverySender.EnqueueMessage(message);
 
-                        logger.Info($"Request to discover cluster routes for Domain [{domain}] sent.");
-                    }
+                    logger.Info($"Request to discover cluster routes for Domain [{domain}] sent.");
                 }
-                catch (Exception err)
-                {
-                    logger.Error(err);
-                }
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
             }
         }
 
@@ -144,7 +144,7 @@ namespace kino.Cluster
                 logger.Debug($"Unregistering self {scaleOutAddress.Identity.GetAnyString()} from Domain {domain}");
             }
 
-            unregisterMessageSendTimeout.Sleep();
+            routeDiscoveryConfig.UnregisterMessageSendTimeout.Sleep();
         }
 
         public void RegisterSelf(IEnumerable<MessageRoute> registrations, string domain)
@@ -247,13 +247,17 @@ namespace kino.Cluster
             => messageRoutes.Where(mr => mr.Receiver.IsMessageHub())
                             .SelectMany(mr => securityProvider.GetAllowedDomains()
                                                               .Select(dom =>
-                                                                      new MessageRouteDomainMap
-                                                                      {
-                                                                          MessageRoute = mr,
-                                                                          Domain = dom
-                                                                      }));
+                                                                          new MessageRouteDomainMap
+                                                                          {
+                                                                              MessageRoute = mr,
+                                                                              Domain = dom
+                                                                          }));
 
         public void DiscoverMessageRoute(MessageRoute messageRoute)
             => routeDiscovery.RequestRouteDiscovery(messageRoute);
+
+        private TimeSpan RandomizeClusterAutoDiscoveryStartDelay()
+            => routeDiscoveryConfig.ClusterAutoDiscoveryStartDelay
+                                   .MultiplyBy(randomizer.Next(1, routeDiscoveryConfig.ClusterAutoDiscoveryStartDelayMaxMultiplier));
     }
 }

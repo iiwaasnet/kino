@@ -36,7 +36,18 @@ namespace kino.Tests.Cluster
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
             scaleOutAddress = new SocketEndpoint("tcp://127.0.0.1:9090");
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
-            config = new ClusterMembershipConfiguration();
+            config = new ClusterMembershipConfiguration
+                     {
+                         RouteDiscovery = new RouteDiscoveryConfiguration
+                                          {
+                                              ClusterAutoDiscoveryStartDelay = TimeSpan.FromSeconds(1),
+                                              ClusterAutoDiscoveryStartDelayMaxMultiplier = 2,
+                                              MaxAutoDiscoverySenderQueueLength = 100,
+                                              MissingRoutesDiscoverySendingPeriod = TimeSpan.FromSeconds(5),
+                                              MaxMissingRouteDiscoveryRequestQueueLength = 100,
+                                              MissingRoutesDiscoveryRequestsPerSend = 10
+                                          }
+                     };
             securityProvider = new Mock<ISecurityProvider>();
             domain = Guid.NewGuid().ToString();
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
@@ -83,7 +94,7 @@ namespace kino.Tests.Cluster
         [Test]
         public void IfSameMessageRouteRequestedAfterOthersAreSentButBeforeSendingPeriodEnds_TheyAreDeletedAndNotSentAgain()
         {
-            config.RouteDiscovery = new RouteDiscoveryConfiguration {SendingPeriod = TimeSpan.FromSeconds(1)};
+            config.RouteDiscovery = new RouteDiscoveryConfiguration {MissingRoutesDiscoverySendingPeriod = TimeSpan.FromSeconds(1)};
             var receiverIdentifier = ReceiverIdentities.CreateForActor();
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
             //
@@ -96,7 +107,7 @@ namespace kino.Tests.Cluster
                                                      });
             }
             routeDiscovery.Start();
-            config.RouteDiscovery.SendingPeriod.DivideBy(2).Sleep();
+            config.RouteDiscovery.MissingRoutesDiscoverySendingPeriod.DivideBy(2).Sleep();
             for (var i = 0; i < Randomizer.Int32(5, 15); i++)
             {
                 routeDiscovery.RequestRouteDiscovery(new MessageRoute
@@ -105,7 +116,7 @@ namespace kino.Tests.Cluster
                                                          Receiver = receiverIdentifier
                                                      });
             }
-            config.RouteDiscovery.SendingPeriod.Sleep();
+            config.RouteDiscovery.MissingRoutesDiscoverySendingPeriod.Sleep();
             routeDiscovery.Stop();
             //
             Func<IMessage, bool> isDiscoveryMessage = msg =>
@@ -126,8 +137,7 @@ namespace kino.Tests.Cluster
         public void MessageHubRouteDiscovery_IsSentForAllAllowedDomains()
         {
             var receiverIdentifier = ReceiverIdentities.CreateForMessageHub();
-            var allowedDomains = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
-                                                             () => Guid.NewGuid().ToString());
+            var allowedDomains = Randomizer.Int32(2, 5).Produce(() => Guid.NewGuid().ToString());
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             //
             routeDiscovery.RequestRouteDiscovery(new MessageRoute {Receiver = receiverIdentifier});
@@ -152,8 +162,7 @@ namespace kino.Tests.Cluster
         public void IfSecurityExceptionThrownForOneMessageRoute_OthersAreStillSent()
         {
             var messageHub = ReceiverIdentities.CreateForMessageHub();
-            var allowedDomains = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
-                                                             () => Guid.NewGuid().ToString());
+            var allowedDomains = Randomizer.Int32(2, 5).Produce(() => Guid.NewGuid().ToString());
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Throws<SecurityException>();
             //

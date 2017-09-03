@@ -1,8 +1,6 @@
 ﻿{
     "dev": {
         "scaleOutAddressUri": "tcp://*:5101-5130",
-        "heartBeatSilenceBeforeRendezvousFailover": "00:00:15",
-        "runAsStandalone": false,
         "health": {
             "heartBeatUri": "tcp://*:5101-5130",
             "heartBeatInterval": "00:00:05",
@@ -10,6 +8,20 @@
             "missingHeartBeatsBeforeDeletion": 2,
             "peerIsStaleAfter": "00:01:00",
             "stalePeersCheckInterval": "00:01:00"
+        },
+        "cluster": {
+            "heartBeatSilenceBeforeRendezvousFailover": "00:00:15",
+            "runAsStandalone": false,
+            "routeDiscovery": {
+                "missingRoutesDiscoverySendingPeriod": "00:00:02",
+                "missingRoutesDiscoveryRequestsPerSend": 10,
+                "maxMissingRouteDiscoveryRequestQueueLength": 100,
+                "maxAutoDiscoverySenderQueueLength": 100,
+                "unregisterMessageSendTimeout": "00:00:00.500",
+                "clusterAutoDiscoveryPeriod": "00:02:00",
+                "clusterAutoDiscoveryStartDelay": "00:00:02",
+                "clusterAutoDiscoveryStartDelayMaxMultiplier": 5
+            }
         },
 
         "rendezvousServers": [
