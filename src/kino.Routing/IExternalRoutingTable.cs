@@ -14,5 +14,7 @@ namespace kino.Routing
         PeerRemoveResult RemoveMessageRoute(ExternalRouteRemoval routeRemoval);
 
         IEnumerable<NodeActors> FindAllActors(MessageIdentifier messageIdentifier);
+
+        IEnumerable<ExternalRoute> GetAllRoutes();
     }
 }

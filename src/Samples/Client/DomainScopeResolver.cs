@@ -42,7 +42,7 @@ namespace Client
                     messageIdentities.Add(KinoMessages.RequestNodeMessageRoutes.Identity.GetString());
                     messageIdentities.Add(KinoMessages.UnregisterMessageRoute.Identity.GetString());
                     messageIdentities.Add(KinoMessages.UnregisterNode.Identity.GetString());
-                    messageIdentities.Add(KinoMessages.RequestKnownMessageRoutes.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.RequestExternalRoutes.Identity.GetString());
                     messageIdentities.Add(KinoMessages.RequestMessageExternalRoutes.Identity.GetString());
                     messageIdentities.Add(KinoMessages.MessageExternalRoutes.Identity.GetString());
                 }

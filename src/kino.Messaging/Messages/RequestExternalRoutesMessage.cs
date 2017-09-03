@@ -3,9 +3,9 @@
 namespace kino.Messaging.Messages
 {
     [ProtoContract]
-    public class RequestKnownMessageRoutesMessage : Payload
+    public class RequestExternalRoutesMessage : Payload
     {
-        private static readonly byte[] MessageIdentity = BuildFullIdentity("REQKNOWNMSGROUTES");
+        private static readonly byte[] MessageIdentity = BuildFullIdentity("REQEXTROUTES");
         private static readonly ushort MessageVersion = Message.CurrentVersion;
 
         public override ushort Version => MessageVersion;
