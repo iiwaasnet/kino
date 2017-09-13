@@ -10,7 +10,7 @@ using MessageContract = kino.Messaging.Messages.MessageContract;
 
 namespace kino.Actors.Internal
 {
-    internal class MessageRoutesActor : Actor
+    public class MessageRoutesActor : Actor
     {
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly IExternalRoutingTable externalRoutingTable;
@@ -23,7 +23,7 @@ namespace kino.Actors.Internal
         }
 
         [MessageHandlerDefinition(typeof(RequestMessageExternalRoutesMessage), true)]
-        internal async Task<IActorResult> GetMessageExternalRoutes(IMessage message)
+        public async Task<IActorResult> GetMessageExternalRoutes(IMessage message)
         {
             var messageContract = message.GetPayload<RequestMessageExternalRoutesMessage>().MessageContract;
 
@@ -46,7 +46,7 @@ namespace kino.Actors.Internal
         }
 
         [MessageHandlerDefinition(typeof(RequestExternalRoutesMessage), true)]
-        internal async Task<IActorResult> GetExternalRoutes(IMessage _)
+        public async Task<IActorResult> GetExternalRoutes(IMessage _)
         {
             var routes = externalRoutingTable.GetAllRoutes();
 
@@ -81,7 +81,7 @@ namespace kino.Actors.Internal
         }
 
         [MessageHandlerDefinition(typeof(RequestInternalRoutesMessage), true)]
-        internal async Task<IActorResult> GetInternalRoutes(IMessage _)
+        public async Task<IActorResult> GetInternalRoutes(IMessage _)
         {
             var routes = internalRoutingTable.GetAllRoutes();
 

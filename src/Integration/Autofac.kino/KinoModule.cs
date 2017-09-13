@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using kino.Actors;
 using kino.Actors.Diagnostics;
+using kino.Actors.Internal;
 using kino.Client;
 using kino.Cluster;
 using kino.Cluster.Configuration;
@@ -263,6 +264,10 @@ namespace Autofac.kino
         private void RegisterFrameworkActors(ContainerBuilder builder)
         {
             builder.RegisterType<ExceptionHandlerActor>()
+                   .As<IActor>()
+                   .SingleInstance();
+
+            builder.RegisterType<MessageRoutesActor>()
                    .As<IActor>()
                    .SingleInstance();
         }
