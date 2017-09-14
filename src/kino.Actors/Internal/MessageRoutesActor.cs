@@ -16,7 +16,7 @@ namespace kino.Actors.Internal
         private readonly IExternalRoutingTable externalRoutingTable;
 
         public MessageRoutesActor(IExternalRoutingTable externalRoutingTable,
-                                    IInternalRoutingTable internalRoutingTable)
+                                  IInternalRoutingTable internalRoutingTable)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.internalRoutingTable = internalRoutingTable;
