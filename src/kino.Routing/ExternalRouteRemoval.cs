@@ -1,6 +1,4 @@
-﻿using kino.Core;
-
-namespace kino.Routing
+﻿namespace kino.Routing
 {
     public class ExternalRouteRemoval
     {

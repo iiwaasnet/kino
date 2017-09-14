@@ -191,9 +191,9 @@ namespace kino.Routing
                 catch (HostUnreachableException err)
                 {
                     //TODO: HostUnreachableException will never happen here, hence NetMQ sockets are not used
-                    //TODO: ILocalSocketShould throw similar exception, if no one is reading messages from the socket,
-                    //TODO: which should be a trigger for deletion of the ActorHost
-                    //TODO: When change is done, cover with unitests
+                    // ILocalSocketShould throw similar exception, if no one is reading messages from the socket,
+                    // which should be a trigger for deletion of the ActorHost
+                    // When change is done, cover with unitests
                     var removedRoutes = internalRoutingTable.RemoveReceiverRoute(destination)
                                                             .Select(rr => new Cluster.MessageRoute
                                                                           {

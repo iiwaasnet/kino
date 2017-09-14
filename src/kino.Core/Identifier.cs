@@ -8,9 +8,7 @@ namespace kino.Core
         public abstract bool Equals(IIdentifier other);
 
         public override int GetHashCode()
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
 
         public override bool Equals(object obj)
         {

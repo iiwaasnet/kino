@@ -10,9 +10,7 @@ namespace kino.Actors.Diagnostics
         private readonly ILogger logger;
 
         public ExceptionHandlerActor(ILogger logger)
-        {
-            this.logger = logger;
-        }
+            => this.logger = logger;
 
         [MessageHandlerDefinition(typeof(ExceptionMessage), keepRegistrationLocal: true)]
         public Task<IActorResult> HandleException(IMessage message)

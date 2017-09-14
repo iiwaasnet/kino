@@ -224,14 +224,10 @@ namespace kino.Messaging
             => new T().Deserialize<T>(content);
 
         public void EncryptPayload()
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
 
         public void DecryptPayload()
-        {
-            throw new NotImplementedException();
-        }
+            => throw new NotImplementedException();
 
         //TODO: Think of deep cloning byte arrays
         internal Message Clone()
