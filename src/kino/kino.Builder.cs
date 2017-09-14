@@ -33,8 +33,9 @@ namespace kino
             var clusterMembershipConfiguration = configurationProvider.GetClusterMembershipConfiguration();
             var clusterHealthMonitorConfiguration = configurationProvider.GetClusterHealthMonitorConfiguration();
             var heartBeatSenderConfiguration = configurationProvider.GetHeartBeatSenderConfiguration();
+            var socketConfiguration = configurationProvider.GetSocketConfiguration();
             var rendezvousEndpoints = configurationProvider.GetRendezvousEndpointsConfiguration();
-            var socketFactory = new SocketFactory(resolver.Resolve<SocketConfiguration>());
+            var socketFactory = new SocketFactory(socketConfiguration);
             var internalRoutingTable = new InternalRoutingTable();
             var logger = resolver.Resolve<ILogger>();
             var externalRoutingTable = new ExternalRoutingTable(logger);

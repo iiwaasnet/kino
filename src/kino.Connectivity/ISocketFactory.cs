@@ -10,6 +10,6 @@
 
         ISocket CreatePublisherSocket();
 
-        SocketConfiguration GetSocketDefaultConfiguration();
+        SocketConfiguration GetSocketConfiguration();
     }
 }

@@ -130,7 +130,7 @@ namespace kino.Cluster
         private int GetScaleOutReceiveMessageQueueLength()
         {
             var hwm = scaleOutConfigurationManager.GetScaleOutReceiveMessageQueueLength();
-            var internalSocketsHWM = socketFactory.GetSocketDefaultConfiguration().ReceivingHighWatermark;
+            var internalSocketsHWM = socketFactory.GetSocketConfiguration().ReceivingHighWatermark;
 
             if (hwm == 0 || hwm > internalSocketsHWM)
             {

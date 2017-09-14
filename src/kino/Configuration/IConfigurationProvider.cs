@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using kino.Cluster.Configuration;
+using kino.Connectivity;
 
 namespace kino.Configuration
 {
@@ -14,5 +15,7 @@ namespace kino.Configuration
         ClusterHealthMonitorConfiguration GetClusterHealthMonitorConfiguration();
 
         HeartBeatSenderConfiguration GetHeartBeatSenderConfiguration();
+
+        SocketConfiguration GetSocketConfiguration();
     }
 }

@@ -1,5 +1,4 @@
-﻿using System;
-using NetMQ.Sockets;
+﻿using NetMQ.Sockets;
 
 namespace kino.Connectivity
 {
@@ -7,13 +6,8 @@ namespace kino.Connectivity
     {
         private readonly SocketConfiguration config;
 
-        public SocketFactory()
-            : this(null)
-        {
-        }
-
         public SocketFactory(SocketConfiguration config)
-            => this.config = config ?? CreateDefaultConfiguration();
+            => this.config = config;
 
         public ISocket CreateDealerSocket()
             => new Socket(new DealerSocket(), config);
@@ -27,17 +21,7 @@ namespace kino.Connectivity
         public ISocket CreatePublisherSocket()
             => new Socket(new PublisherSocket(), config);
 
-        private static SocketConfiguration CreateDefaultConfiguration()
-            => new SocketConfiguration
-               {
-                   ReceivingHighWatermark = 10000,
-                   SendingHighWatermark = 10000,
-                   SendTimeout = TimeSpan.FromMilliseconds(200),
-                   Linger = TimeSpan.Zero,
-                   ConnectionEstablishmentTime = TimeSpan.FromMilliseconds(100)
-               };
-
-        public SocketConfiguration GetSocketDefaultConfiguration()
+        public SocketConfiguration GetSocketConfiguration()
             => config;
     }
 }

@@ -13,10 +13,6 @@ namespace kino.Connectivity
     {
         private readonly NetMQSocket socket;
         private readonly SocketConfiguration config;
-        private static readonly TimeSpan ReceiveWaitTimeout;
-
-        static Socket() 
-            => ReceiveWaitTimeout = TimeSpan.FromSeconds(3);
 
         internal Socket(NetMQSocket socket, SocketConfiguration config)
         {
@@ -64,7 +60,7 @@ namespace kino.Connectivity
                 {
                     do
                     {
-                        if (socket.TryReceive(ref msg, ReceiveWaitTimeout))
+                        if (socket.TryReceive(ref msg, config.ReceiveWaitTimeout))
                         {
                             frames.Add(msg.Data);
                         }

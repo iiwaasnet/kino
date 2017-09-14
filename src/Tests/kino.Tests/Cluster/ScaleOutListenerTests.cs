@@ -42,7 +42,7 @@ namespace kino.Tests.Cluster
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(frontEndSocket.Object);
             socketConfig = new SocketConfiguration();
-            socketFactory.Setup(m => m.GetSocketDefaultConfiguration()).Returns(socketConfig);
+            socketFactory.Setup(m => m.GetSocketConfiguration()).Returns(socketConfig);
             performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             var perfCounter = new Mock<IPerformanceCounter>();
             performanceCounterManager.Setup(m => m.GetCounter(It.IsAny<KinoPerformanceCounters>())).Returns(perfCounter.Object);

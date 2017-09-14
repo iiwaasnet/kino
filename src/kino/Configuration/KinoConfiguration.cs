@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using kino.Cluster.Configuration;
+using kino.Connectivity;
 
 namespace kino.Configuration
 {
@@ -14,5 +15,7 @@ namespace kino.Configuration
         public HealthConfiguration Health { get; set; }
 
         public ClusterMembershipConfiguration Cluster { get; set; }
+
+        public SocketConfiguration Socket { get; set; }
     }
 }

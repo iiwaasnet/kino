@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using kino.Actors;
+﻿using kino.Actors;
 using kino.Actors.Diagnostics;
 using kino.Actors.Internal;
 using kino.Client;
@@ -126,10 +125,10 @@ namespace Autofac.kino
                    .SingleInstance();
 
             builder.Register(c => new ServiceLocator<ClusterHealthMonitor,
-                                      NullClusterHealthMonitor,
-                                      IClusterHealthMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
-                                                             c.Resolve<ClusterHealthMonitor>(),
-                                                             c.Resolve<NullClusterHealthMonitor>())
+                                     NullClusterHealthMonitor,
+                                     IClusterHealthMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                            c.Resolve<ClusterHealthMonitor>(),
+                                                            c.Resolve<NullClusterHealthMonitor>())
                                  .GetService())
                    .As<IClusterHealthMonitor>()
                    .SingleInstance();
@@ -146,10 +145,10 @@ namespace Autofac.kino
                    .SingleInstance();
 
             builder.Register(c => new ServiceLocator<HeartBeatSender,
-                                      NullHeartBeatSender,
-                                      IHeartBeatSender>(c.Resolve<ClusterMembershipConfiguration>(),
-                                                        c.Resolve<HeartBeatSender>(),
-                                                        c.Resolve<NullHeartBeatSender>())
+                                     NullHeartBeatSender,
+                                     IHeartBeatSender>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                       c.Resolve<HeartBeatSender>(),
+                                                       c.Resolve<NullHeartBeatSender>())
                                  .GetService())
                    .As<IHeartBeatSender>()
                    .SingleInstance();
@@ -166,10 +165,10 @@ namespace Autofac.kino
                    .SingleInstance();
 
             builder.Register(c => new ServiceLocator<ScaleOutListener,
-                                      NullScaleOutListener,
-                                      IScaleOutListener>(c.Resolve<ClusterMembershipConfiguration>(),
-                                                         c.Resolve<ScaleOutListener>(),
-                                                         c.Resolve<NullScaleOutListener>())
+                                     NullScaleOutListener,
+                                     IScaleOutListener>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                        c.Resolve<ScaleOutListener>(),
+                                                        c.Resolve<NullScaleOutListener>())
                                  .GetService())
                    .As<IScaleOutListener>()
                    .SingleInstance();
@@ -186,10 +185,10 @@ namespace Autofac.kino
                    .SingleInstance();
 
             builder.Register(c => new ServiceLocator<ClusterMonitor,
-                                      NullClusterMonitor,
-                                      IClusterMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
-                                                       c.Resolve<ClusterMonitor>(),
-                                                       c.Resolve<NullClusterMonitor>())
+                                     NullClusterMonitor,
+                                     IClusterMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                      c.Resolve<ClusterMonitor>(),
+                                                      c.Resolve<NullClusterMonitor>())
                                  .GetService())
                    .As<IClusterMonitor>()
                    .SingleInstance();
@@ -206,10 +205,10 @@ namespace Autofac.kino
                    .SingleInstance();
 
             builder.Register(c => new ServiceLocator<ScaleOutConfigurationManager,
-                                      NullScaleOutConfigurationManager,
-                                      IScaleOutConfigurationManager>(c.Resolve<ClusterMembershipConfiguration>(),
-                                                                     c.Resolve<ScaleOutConfigurationManager>(),
-                                                                     c.Resolve<NullScaleOutConfigurationManager>())
+                                     NullScaleOutConfigurationManager,
+                                     IScaleOutConfigurationManager>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                                    c.Resolve<ScaleOutConfigurationManager>(),
+                                                                    c.Resolve<NullScaleOutConfigurationManager>())
                                  .GetService())
                    .As<IScaleOutConfigurationManager>()
                    .As<IScaleOutConfigurationProvider>()
@@ -241,23 +240,27 @@ namespace Autofac.kino
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetRendezvousEndpointsConfiguration())
-                   .As<IEnumerable<RendezvousEndpoint>>()
+                   .AsSelf()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetScaleOutConfiguration())
-                   .As<ScaleOutSocketConfiguration>()
+                   .AsSelf()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterMembershipConfiguration())
-                   .As<ClusterMembershipConfiguration>()
+                   .AsSelf()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetClusterHealthMonitorConfiguration())
-                   .As<ClusterHealthMonitorConfiguration>()
+                   .AsSelf()
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<IConfigurationProvider>().GetHeartBeatSenderConfiguration())
-                   .As<HeartBeatSenderConfiguration>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConfigurationProvider>().GetSocketConfiguration())
+                   .AsSelf()
                    .SingleInstance();
         }
 

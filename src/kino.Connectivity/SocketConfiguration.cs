@@ -12,6 +12,8 @@ namespace kino.Connectivity
 
         public TimeSpan SendTimeout { get; set; }
 
+        public TimeSpan ReceiveWaitTimeout { get; set; }
+
         public TimeSpan ConnectionEstablishmentTime { get; set; }
     }
 }
