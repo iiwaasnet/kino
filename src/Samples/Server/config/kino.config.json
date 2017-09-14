@@ -23,7 +23,14 @@
                 "clusterAutoDiscoveryStartDelayMaxMultiplier": 5
             }
         },
-
+        "socket": {
+            "receivingHighWatermark": 10000,
+            "sendingHighWatermark": 10000,
+            "sendTimeout": "00:00:00.200",
+            "receiveWaitTimeout": "00:00:03",
+            "linger": "00:00:00",
+            "connectionEstablishmentTime": "00:00:00.100"
+        },
         "rendezvousServers": [
             {
                 "broadcastUri": "tcp://rendezvous1.bwin.dev:8001",
