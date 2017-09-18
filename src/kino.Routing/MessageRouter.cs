@@ -61,6 +61,8 @@ namespace kino.Routing
             this.performanceCounterManager = performanceCounterManager;
             this.securityProvider = securityProvider;
             this.localRouterSocket = localRouterSocket;
+            this.localRouterSocket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterLocalSocketSendRate);
+            this.localRouterSocket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterLocalSocketReceiveRate);
             this.internalRegistrationsReceiver = internalRegistrationsReceiver;
             this.internalRegistrationHandler = internalRegistrationHandler;
         }

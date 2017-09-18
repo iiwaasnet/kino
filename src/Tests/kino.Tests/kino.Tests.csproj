@@ -119,6 +119,7 @@
     <Compile Include="Cluster\RendezvousClusterTests.cs" />
     <Compile Include="Cluster\RouteDiscoveryTests.cs" />
     <Compile Include="Cluster\ScaleOutListenerTests.cs" />
+    <Compile Include="Connectivity\LocalSocketTests.cs" />
     <Compile Include="Consensus\IntercomMessageHubTests.cs" />
     <Compile Include="Consensus\SynodConfigurationProviderTests.cs" />
     <Compile Include="Core\DynamicUriTests.cs" />

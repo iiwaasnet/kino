@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using kino.Core;
+using kino.Core.Diagnostics.Performance;
 
 namespace kino.Connectivity
 {
@@ -26,6 +27,7 @@ namespace kino.Connectivity
         {
             messageQueue.Add(message);
             dataAvailable.Set();
+            SendRate?.Increment();
         }
 
         public T TryReceive()
@@ -49,6 +51,8 @@ namespace kino.Connectivity
             {
                 lookAheadQueue.Add(lookup);
             }
+
+            ReceiveRate?.Increment();
 
             return message;
         }
@@ -92,5 +96,9 @@ namespace kino.Connectivity
 
         public ReceiverIdentifier GetIdentity()
             => socketIdentity;
+
+        public IPerformanceCounter ReceiveRate { get; set; }
+
+        public IPerformanceCounter SendRate { get; set; }
     }
 }

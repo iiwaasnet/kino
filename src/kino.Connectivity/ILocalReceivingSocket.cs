@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using kino.Core.Diagnostics.Performance;
 
 namespace kino.Connectivity
 {
@@ -7,5 +8,7 @@ namespace kino.Connectivity
         T TryReceive();
 
         WaitHandle CanReceive();
+
+        IPerformanceCounter ReceiveRate { get; set; }
     }
 }
