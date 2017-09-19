@@ -12,7 +12,7 @@ namespace Autofac.kino.Rendezvous
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.Register(c => new SocketFactory(c.ResolveOptional<SocketConfiguration>()))
+            builder.RegisterType<SocketFactory>()
                    .As<ISocketFactory>()
                    .SingleInstance();
 
@@ -33,6 +33,10 @@ namespace Autofac.kino.Rendezvous
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<RendezvousServiceConfiguration>().Rendezvous)
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<RendezvousServiceConfiguration>().Socket)
                    .AsSelf()
                    .SingleInstance();
 

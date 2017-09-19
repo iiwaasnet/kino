@@ -14,7 +14,7 @@ namespace kino.Rendezvous
         {
             var logger = resolver.Resolve<ILogger>();
             var applicationConfig = resolver.Resolve<RendezvousServiceConfiguration>();
-            var socketFactory = new SocketFactory(resolver.Resolve<SocketConfiguration>());
+            var socketFactory = new SocketFactory(applicationConfig.Socket);
             var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);
             var instanceNameResolver = resolver.Resolve<IInstanceNameResolver>() ?? new InstanceNameResolver();
             var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver,

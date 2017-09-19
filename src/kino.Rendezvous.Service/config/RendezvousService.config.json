@@ -11,11 +11,19 @@
             "missingHeartBeatsBeforeReconnect": "3",
             "intercomEndpoint": "inproc://health",
             "members": [
-                "tcp://rendezvous1.bwin.dev:7001",
-                "tcp://rendezvous2.bwin.dev:7002",
-                "tcp://rendezvous3.bwin.dev:7003"
+                "tcp://rendezvous.bwin.dev:7001",
+                "tcp://rendezvous.bwin.dev:7002",
+                "tcp://rendezvous.bwin.dev:7003"
             ]
 
+        },
+        "socket": {
+            "receivingHighWatermark": 10000,
+            "sendingHighWatermark": 10000,
+            "sendTimeout": "00:00:00.200",
+            "receiveWaitTimeout": "00:00:03",
+            "linger": "00:00:00",
+            "connectionEstablishmentTime": "00:00:00.100"
         },
         "lease": {
             "maxLeaseTimeSpan": "00:00:03",
