@@ -39,6 +39,6 @@ namespace kino.Core.Diagnostics.Performance
         IntercomUnicastSocketReceiveRate,
 
         [PerformanceCounterDefinition("Intercom Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
-        IntercomSocketSendRate,
+        IntercomSocketSendRate
     }
 }
