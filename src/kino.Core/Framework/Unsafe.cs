@@ -3,10 +3,8 @@
     public static class Unsafe
     {
         public static int ComputeHash(this byte[] data)
-        {
-            return data?.Length ?? 0;
-        }
-
+            => data?.Length ?? 0;
+#if NET47
         public static unsafe bool ArraysEqual(byte[] a1, byte[] a2)
         {
             if (a1 == null || a2 == null || a1.Length != a2.Length)
@@ -52,5 +50,9 @@
                 return true;
             }
         }
+#else
+        public static bool ArraysEqual(byte[] a1, byte[] a2) 
+            => false;
+#endif
     }
 }

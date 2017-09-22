@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿#if NET47
+using System.Diagnostics;
+#endif
 
 namespace kino.Core.Diagnostics.Performance
 {
@@ -13,9 +15,9 @@ namespace kino.Core.Diagnostics.Performance
         long GetRawValue();
 
         float NextValue();
-
+#if NET47
         CounterSample NextSample();
-
+#endif
         bool IsEnabled();
     }
 }

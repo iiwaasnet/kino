@@ -4,7 +4,9 @@
     {
         static void Main(string[] args)
         {
+#if NET47
             new ServiceHost().Run();
+#endif
         }
     }
 }

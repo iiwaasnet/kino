@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET47
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -199,3 +200,4 @@ namespace kino.Core.Diagnostics.Performance
         }
     }
 }
+#endif

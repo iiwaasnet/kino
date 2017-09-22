@@ -1,121 +1,26 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C50A6AC1-FA0F-42B5-B709-13832FD604D5}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Autofac.kino</RootNamespace>
-    <AssemblyName>Autofac.kino</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="AsyncIO, Version=0.1.25.0, Culture=neutral, PublicKeyToken=44a94435bd6f33f8, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\AsyncIO.0.1.26.0\lib\net40\AsyncIO.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Autofac, Version=4.6.1.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+    <PackageReference Include="Autofac" Version="4.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\kino.Actors\kino.Actors.csproj" />
+    <ProjectReference Include="..\..\kino.Client\kino.Client.csproj" />
+    <ProjectReference Include="..\..\kino.Connectivity\kino.Connectivity.csproj" />
+    <ProjectReference Include="..\..\kino.Core\kino.Core.csproj" />
+    <ProjectReference Include="..\..\kino.Routing\kino.Routing.csproj" />
+    <ProjectReference Include="..\..\kino\kino.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Autofac">
       <HintPath>..\..\packages\Autofac.4.6.1\lib\net45\Autofac.dll</HintPath>
     </Reference>
-    <Reference Include="C5, Version=2.5.0.0, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\C5.2.5.3\lib\net45\C5.dll</HintPath>
-    </Reference>
-    <Reference Include="NetMQ, Version=4.0.0.1, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NetMQ.4.0.0.1\lib\net40\NetMQ.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="protobuf-net, Version=2.3.2.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\protobuf-net.2.3.2\lib\net40\protobuf-net.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="KinoModule.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\kino.Actors\kino.Actors.csproj">
-      <Project>{3231A7B7-C50A-4062-B5ED-BA00FCE9A77B}</Project>
-      <Name>kino.Actors</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Client\kino.Client.csproj">
-      <Project>{2C69BA32-DADC-4E4E-8D91-055FB9D35BFF}</Project>
-      <Name>kino.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Cluster\kino.Cluster.csproj">
-      <Project>{041A2E08-53AD-485E-8F57-B06ADB01C26F}</Project>
-      <Name>kino.Cluster</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Connectivity\kino.Connectivity.csproj">
-      <Project>{45F6F46B-B864-4C27-9A4B-5022546AE424}</Project>
-      <Name>kino.Connectivity</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Consensus\kino.Consensus.csproj">
-      <Project>{1143ea92-6006-4fa1-b844-1e7078d5cbda}</Project>
-      <Name>kino.Consensus</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Core\kino.Core.csproj">
-      <Project>{AC984F96-6D8F-466B-B6A7-B241A7C5DEC1}</Project>
-      <Name>kino.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Messaging\kino.Messaging.csproj">
-      <Project>{6282f68e-6d06-4dab-8d8c-b8fcd4f18f9d}</Project>
-      <Name>kino.Messaging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Routing\kino.Routing.csproj">
-      <Project>{6809914A-DBDF-4801-A2CA-A03FD43F1172}</Project>
-      <Name>kino.Routing</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Security\kino.Security.csproj">
-      <Project>{33F0B37F-478E-405E-ACFB-65759C56228D}</Project>
-      <Name>kino.Security</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino\kino.csproj">
-      <Project>{DD0C07ED-15DB-4A33-B796-2AD4058E7433}</Project>
-      <Name>kino</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

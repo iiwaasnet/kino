@@ -40,9 +40,13 @@ namespace Autofac.kino.Rendezvous
                    .AsSelf()
                    .SingleInstance();
 
+#if NET47
             builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
                    .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
                    .SingleInstance();
+#else
+            //TODO: Declare implementation for .NET Standard
+#endif
 
             builder.RegisterType<IntercomMessageHub>()
                    .As<IIntercomMessageHub>()
