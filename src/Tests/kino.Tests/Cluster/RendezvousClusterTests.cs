@@ -8,14 +8,14 @@ using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
-    [TestFixture]
+    
     public class RendezvousClusterTests
     {
         private Mock<IConfigurationStorage<RendezvousClusterConfiguration>> configurationStorage;
         private RendezvousCluster rendezvousCluster;
         private RendezvousClusterConfiguration cluster;
 
-        [SetUp]
+        
         public void Setup()
         {
             configurationStorage = new Mock<IConfigurationStorage<RendezvousClusterConfiguration>>();
@@ -28,17 +28,17 @@ namespace kino.Tests.Cluster
             rendezvousCluster = new RendezvousCluster(configurationStorage.Object);
         }
 
-        [Test]
+        [Fact]
         public void RotateRendezvousServers_ReturnsRendezvousEndpointInRoundRobin()
         {
             foreach (var rendezvousEndpoint in cluster.Cluster)
             {
-                Assert.AreEqual(rendezvousEndpoint, rendezvousCluster.GetCurrentRendezvousServer());
+                Assert.Equal(rendezvousEndpoint, rendezvousCluster.GetCurrentRendezvousServer());
                 rendezvousCluster.RotateRendezvousServers();
             }
         }
 
-        [Test]
+        [Fact]
         public void IfRendezvousClusterReconfigured_OldEndpointsRemovedAndNewAdded()
         {
             var newCluster = new RendezvousClusterConfiguration
@@ -53,7 +53,7 @@ namespace kino.Tests.Cluster
             //
             foreach (var rendezvousEndpoint in newCluster.Cluster)
             {
-                Assert.AreEqual(rendezvousEndpoint, rendezvousCluster.GetCurrentRendezvousServer());
+                Assert.Equal(rendezvousEndpoint, rendezvousCluster.GetCurrentRendezvousServer());
                 rendezvousCluster.RotateRendezvousServers();
             }
             foreach (var rendezvousEndpoint in cluster.Cluster)
@@ -63,18 +63,18 @@ namespace kino.Tests.Cluster
             }
         }
 
-        [Test]
+        [Fact]
         public void SetCurrentRendezvousServer_SetsProvidedEndpointAsGetCurrentRendezvousServer()
         {
-            Assert.AreEqual(cluster.Cluster.First(), rendezvousCluster.GetCurrentRendezvousServer());
+            Assert.Equal(cluster.Cluster.First(), rendezvousCluster.GetCurrentRendezvousServer());
             //
             var newRendezvous = cluster.Cluster.Third();
             rendezvousCluster.SetCurrentRendezvousServer(newRendezvous);
             //
-            Assert.AreEqual(newRendezvous, rendezvousCluster.GetCurrentRendezvousServer());
+            Assert.Equal(newRendezvous, rendezvousCluster.GetCurrentRendezvousServer());
         }
 
-        [Test]
+        [Fact]
         public void IfNewRendezvousServerDoesntBelongToCluster_ItIsNotSetAsCurrentRendezvousServer()
         {
             var otherEndpoint = new RendezvousEndpoint("tcp://*:5555", "tcp://*:4444");

@@ -3,14 +3,13 @@ using kino.Core.Framework;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Tests.Actors.Setup;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
-    [TestFixture]
     public class ServiceMessageHandlerRegistryTests
     {
-        [Test]
+        [Fact]
         public void IfThereAreTwoMessageHandlersForTheSameMessage_DuplicatedKeyExceptionIsThrown()
         {
             var serviceMessageHandler = new Mock<IServiceMessageHandler>();
@@ -20,17 +19,17 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             Assert.Throws<DuplicatedKeyException>(() => new ServiceMessageHandlerRegistry(serviceMessageHandlers));
         }
 
-        [Test]
+        [Fact]
         public void IfMessageHandlerIsNotRegistered_GetMessageHandlerReturnsNull()
         {
             var serviceMessageHandler = new Mock<IServiceMessageHandler>();
             serviceMessageHandler.Setup(m => m.TargetMessage).Returns(MessageIdentifier.Create<SimpleMessage>());
             var serviceMessageHandlers = new[] {serviceMessageHandler.Object};
             //
-            Assert.IsNull(new ServiceMessageHandlerRegistry(serviceMessageHandlers).GetMessageHandler(MessageIdentifier.Create<AsyncMessage>()));
+            Assert.Null(new ServiceMessageHandlerRegistry(serviceMessageHandlers).GetMessageHandler(MessageIdentifier.Create<AsyncMessage>()));
         }
 
-        [Test]
+        [Fact]
         public void GetMessageHandler_ReturnsReturnsRegisteredMessageHandler()
         {
             var serviceMessageHandler = new Mock<IServiceMessageHandler>();
@@ -38,7 +37,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             serviceMessageHandler.Setup(m => m.TargetMessage).Returns(messageIdentifier);
             var serviceMessageHandlers = new[] {serviceMessageHandler.Object};
             //
-            Assert.AreEqual(serviceMessageHandler.Object, new ServiceMessageHandlerRegistry(serviceMessageHandlers).GetMessageHandler(messageIdentifier));
+            Assert.Equal(serviceMessageHandler.Object, new ServiceMessageHandlerRegistry(serviceMessageHandlers).GetMessageHandler(messageIdentifier));
         }
     }
 }

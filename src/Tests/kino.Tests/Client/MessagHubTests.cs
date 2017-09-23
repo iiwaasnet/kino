@@ -18,7 +18,7 @@ using NUnit.Framework;
 
 namespace kino.Tests.Client
 {
-    [TestFixture]
+    
     public class MessagHubTests
     {
         private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
@@ -38,7 +38,7 @@ namespace kino.Tests.Client
         private Mock<ILocalSocketFactory> localSocketFactory;
         private Mock<ILocalSocket<IMessage>> receivingSocket;
 
-        [SetUp]
+        
         public void Setup()
         {
             callbackHandlerStack = new Mock<ICallbackHandlerStack>();
@@ -59,9 +59,9 @@ namespace kino.Tests.Client
             messageHub = CreateMessageHub();
         }
 
-        [Test]
-        [TestCase(true)]
-        [TestCase(false)]
+        [Fact]
+        [InlineData(true)]
+        [InlineData(false)]
         public void WhenMessageHubStarts_RegistrationMessageIsSentAsWithProperGlobalVisibility(bool keepRegistrationLocal)
         {
             try
@@ -80,7 +80,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void EnqueueRequest_RegistersMessageAndExceptionHandlers()
         {
             try
@@ -102,7 +102,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void EnqueueRequest_SendsMessageWithCallbackSetToThisMessageHub()
         {
             try
@@ -124,7 +124,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void WhenMessageReceived_CorrespondingPromiseResultSet()
         {
             try
@@ -138,7 +138,7 @@ namespace kino.Tests.Client
                 messageHub.Start();
                 var response = promise.GetResponse().Result;
                 //
-                Assert.AreEqual(message, response);
+                Assert.Equal(message, response);
             }
             finally
             {
@@ -146,7 +146,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void WhenResultMessageIsDelivered_PromiseIsDisposedAndItsCallbackIsRemoved()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
@@ -172,7 +172,7 @@ namespace kino.Tests.Client
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
                 //
-                Assert.IsNull(callbackHandlerStack.Pop(new CallbackHandlerKey
+                Assert.Null(callbackHandlerStack.Pop(new CallbackHandlerKey
                                                        {
                                                            Version = callback.MessageIdentifiers.Single().Version,
                                                            Identity = callback.MessageIdentifiers.Single().Identity,
@@ -186,7 +186,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void WhenExceptionMessageReceived_PromiseThrowsException()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
@@ -225,7 +225,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void WhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
@@ -252,7 +252,7 @@ namespace kino.Tests.Client
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
                 //
-                Assert.IsFalse(promise.GetResponse().Wait(AsyncOpCompletionDelay));
+                Assert.False(promise.GetResponse().Wait(AsyncOpCompletionDelay));
             }
             finally
             {

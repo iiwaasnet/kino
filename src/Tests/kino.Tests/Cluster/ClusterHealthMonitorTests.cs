@@ -19,7 +19,7 @@ using Health = kino.Cluster.Health;
 
 namespace kino.Tests.Cluster
 {
-    [TestFixture]
+    
     public class ClusterHealthMonitorTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
@@ -39,7 +39,7 @@ namespace kino.Tests.Cluster
         private Mock<IConnectedPeerRegistry> connectedPeerRegistry;
         private CancellationTokenSource tokenSource;
 
-        [SetUp]
+        
         public void Setup()
         {
             tokenSource = new CancellationTokenSource();
@@ -74,7 +74,7 @@ namespace kino.Tests.Cluster
                                                             logger.Object);
         }
 
-        [Test]
+        [Fact]
         public void StartPeerMonitoring_SendsStartPeerMonitoringMessage()
         {
             var peer = new Node("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray());
@@ -91,10 +91,10 @@ namespace kino.Tests.Cluster
                                                                 if (msg.Equals(KinoMessages.StartPeerMonitoring))
                                                                 {
                                                                     var payload = msg.GetPayload<StartPeerMonitoringMessage>();
-                                                                    Assert.IsTrue(Unsafe.ArraysEqual(peer.SocketIdentity, payload.SocketIdentity));
-                                                                    Assert.AreEqual(peer.Uri.ToSocketAddress(), payload.Uri);
-                                                                    Assert.AreEqual(health.Uri, payload.Health.Uri);
-                                                                    Assert.AreEqual(health.HeartBeatInterval, payload.Health.HeartBeatInterval);
+                                                                    Assert.True(Unsafe.ArraysEqual(peer.SocketIdentity, payload.SocketIdentity));
+                                                                    Assert.Equal(peer.Uri.ToSocketAddress(), payload.Uri);
+                                                                    Assert.Equal(health.Uri, payload.Health.Uri);
+                                                                    Assert.Equal(health.HeartBeatInterval, payload.Health.HeartBeatInterval);
                                                                     return true;
                                                                 }
 
@@ -103,7 +103,7 @@ namespace kino.Tests.Cluster
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isStartMonitoringMessage(msg))), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void AddPeer_SendsAddPeerMessage()
         {
             var peer = new Node("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray());
@@ -120,10 +120,10 @@ namespace kino.Tests.Cluster
                                                         if (msg.Equals(KinoMessages.AddPeer))
                                                         {
                                                             var payload = msg.GetPayload<AddPeerMessage>();
-                                                            Assert.IsTrue(Unsafe.ArraysEqual(peer.SocketIdentity, payload.SocketIdentity));
-                                                            Assert.AreEqual(peer.Uri.ToSocketAddress(), payload.Uri);
-                                                            Assert.AreEqual(health.Uri, payload.Health.Uri);
-                                                            Assert.AreEqual(health.HeartBeatInterval, payload.Health.HeartBeatInterval);
+                                                            Assert.True(Unsafe.ArraysEqual(peer.SocketIdentity, payload.SocketIdentity));
+                                                            Assert.Equal(peer.Uri.ToSocketAddress(), payload.Uri);
+                                                            Assert.Equal(health.Uri, payload.Health.Uri);
+                                                            Assert.Equal(health.HeartBeatInterval, payload.Health.HeartBeatInterval);
                                                             return true;
                                                         }
 
@@ -132,7 +132,7 @@ namespace kino.Tests.Cluster
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isAddPeerMessage(msg))), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void DeletePeer_SendsDeletePeerMessage()
         {
             var receiverIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
@@ -144,7 +144,7 @@ namespace kino.Tests.Cluster
                                                            if (msg.Equals(KinoMessages.DeletePeer))
                                                            {
                                                                var payload = msg.GetPayload<DeletePeerMessage>();
-                                                               Assert.IsTrue(Unsafe.ArraysEqual(receiverIdentifier.Identity, payload.NodeIdentity));
+                                                               Assert.True(Unsafe.ArraysEqual(receiverIdentifier.Identity, payload.NodeIdentity));
                                                                return true;
                                                            }
 
@@ -153,7 +153,7 @@ namespace kino.Tests.Cluster
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isDeletePeerMessage(msg))), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void MessageReceiverOverMultiplexingSocket_IsSentToPublisherSocket()
         {
             var message = Message.Create(new SimpleMessage());
@@ -166,7 +166,7 @@ namespace kino.Tests.Cluster
             publisherSocket.Verify(m => m.SendMessage(message), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void WhenClusterHealthMonitorStarts_ItStartsSendingCheckStalePeersMessage()
         {
             config.StalePeersCheckInterval = TimeSpan.FromMilliseconds(200);
@@ -178,7 +178,7 @@ namespace kino.Tests.Cluster
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.CheckStalePeers))), Times.AtLeastOnce);
         }
 
-        [Test]
+        [Fact]
         public void IfStartPeerMonitoringMessadeReceived_ConnectsToPeerHealthUri()
         {
             var healthUri = new Uri("tcp://127.0.0.2:9090");
@@ -211,10 +211,10 @@ namespace kino.Tests.Cluster
             clusterHealthMonitor.Stop();
             //
             subscriberSocket.Verify(m => m.Connect(healthUri, false), Times.Once);
-            Assert.IsTrue(meta.ConnectionEstablished);
+            Assert.True(meta.ConnectionEstablished);
         }
 
-        [Test]
+        [Fact]
         public void IfStartPeerMonitoringMessadeReceived_CheckDeadPeersMessageAfterPeerHeartBeatInterval()
         {
             config.StalePeersCheckInterval = TimeSpan.FromMinutes(1);
@@ -251,7 +251,7 @@ namespace kino.Tests.Cluster
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.CheckDeadPeers))), Times.AtLeastOnce);
         }
 
-        [Test]
+        [Fact]
         public void WhenHeartBeatMessageArrives_PeerLastKnwonHeartBeatIsSetToUtcNow()
         {
             var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
@@ -270,7 +270,7 @@ namespace kino.Tests.Cluster
         }
 
 
-        [Test]
+        [Fact]
         public void WhenHeartBeatMessageArrivesFromUnknownPeer_ItsHealthUriIsDisconnected()
         {
             var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
@@ -292,7 +292,7 @@ namespace kino.Tests.Cluster
             subscriberSocket.Verify(m => m.Disconnect(healthUri), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void WhenAddPeerMessageArrives_PeerIsAddedToConnectedPeerRegistry()
         {
             var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
@@ -321,9 +321,9 @@ namespace kino.Tests.Cluster
             connectedPeerRegistry.Verify(m => m.FindOrAdd(peerIdentifier, It.Is<ClusterMemberMeta>(meta => isPeerMetadata(meta))), Times.Once);
         }
 
-        [Test]
-        [TestCase(true)]
-        [TestCase(false)]
+        [Fact]
+        [InlineData(true)]
+        [InlineData(false)]
         public void WhenDeletePeerMessageArrives_PeerIsRemovedFromRegistryAndHealthUriDisconnected(bool connectionEstablished)
         {
             var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
@@ -346,7 +346,7 @@ namespace kino.Tests.Cluster
             subscriberSocket.Verify(m => m.Disconnect(new Uri(meta.HealthUri)), Times.Exactly(connectionEstablished ? 1 : 0));
         }
 
-        [Test]
+        [Fact]
         public void WhenCheckPeerConnectionMessageArrives_ConnectionToPeerEstablishedAndMessageIsSent()
         {
             var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
@@ -374,7 +374,7 @@ namespace kino.Tests.Cluster
             Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, AsyncOp.MultiplyBy(3));
         }
 
-        [Test]
+        [Fact]
         public void WhenCheckDeadPeersMessageArrives_ForEveryPeerWithExpiredHeartBeatUnregisterUnreachableNodeMessageIsSent()
         {
             var message = Message.Create(new CheckDeadPeersMessage());
@@ -395,7 +395,7 @@ namespace kino.Tests.Cluster
                                                                if (msg.Equals(KinoMessages.UnregisterUnreachableNode))
                                                                {
                                                                    var payload = msg.GetPayload<UnregisterUnreachableNodeMessage>();
-                                                                   Assert.IsTrue(deadPeers.Any(kv => kv.Key == new ReceiverIdentifier(payload.ReceiverNodeIdentity)));
+                                                                   Assert.True(deadPeers.Any(kv => kv.Key == new ReceiverIdentifier(payload.ReceiverNodeIdentity)));
                                                                    return true;
                                                                }
 
@@ -404,7 +404,7 @@ namespace kino.Tests.Cluster
             routerLocalSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isUnregisterNodeMessage(msg))), Times.Exactly(deadPeers.Count));
         }
 
-        [Test]
+        [Fact]
         public void WhenCheckStalePeersMessageArrives_ConnectionToPeerEstablishedAndMessageIsSentToEachStalePeer()
         {
             var payload = new CheckStalePeersMessage();
@@ -427,7 +427,7 @@ namespace kino.Tests.Cluster
             //
             Func<Uri, bool> isStalePeerUri = uri =>
                                              {
-                                                 Assert.IsTrue(stalePeers.Any(kv => kv.Value.ScaleOutUri == uri.ToSocketAddress()));
+                                                 Assert.True(stalePeers.Any(kv => kv.Value.ScaleOutUri == uri.ToSocketAddress()));
                                                  return true;
                                              };
 

@@ -18,7 +18,7 @@ using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
-    [TestFixture]
+    
     public class AutoDiscoveryListenerTests
     {
         private readonly TimeSpan AsyncOp = TimeSpan.FromSeconds(1);
@@ -37,7 +37,7 @@ namespace kino.Tests.Cluster
         private int currentRendezvousIndex;
         private SocketEndpoint scaleOutAddress;
 
-        [SetUp]
+        
         public void Setup()
         {
             rendezvousCluster = new Mock<IRendezvousCluster>();
@@ -77,7 +77,7 @@ namespace kino.Tests.Cluster
                                                               logger.Object);
         }
 
-        [Test]
+        [Fact]
         public async Task IfHeartBeatDoesntArriveWithinHeartBeatSilenceBeforeRendezvousFailoverTime_ListenerRestartsConnectingToNextRendezvous()
         {
             var numberOfTimeouts = 3;
@@ -93,7 +93,7 @@ namespace kino.Tests.Cluster
             subscriptionSocket.Verify(m => m.Connect(GetCurrentRendezvous().BroadcastUri, true), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task IfHeartBeatArrivesWithinHeartBeatSilenceBeforeRendezvousFailoverTime_ListenerDoesntRestart()
         {
             var numberOfHeartBeats = 2;
@@ -107,7 +107,7 @@ namespace kino.Tests.Cluster
             rendezvousCluster.Verify(m => m.RotateRendezvousServers(), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public async Task IfRendezvousConfigurationChangedMessageArrives_RendezvousIsReconfiguredAndListenerRestartsConnectingToNewRendezvous()
         {
             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
@@ -136,11 +136,11 @@ namespace kino.Tests.Cluster
                                                                           return true;
                                                                       };
             rendezvousCluster.Verify(m => m.Reconfigure(It.Is<IEnumerable<RendezvousEndpoint>>(nodes => areNewNodes(nodes))), Times.Once);
-            Assert.AreEqual(GetCurrentRendezvous().BroadcastUri, new Uri(payload.RendezvousNodes.First().BroadcastUri));
+            Assert.Equal(GetCurrentRendezvous().BroadcastUri, new Uri(payload.RendezvousNodes.First().BroadcastUri));
             restartRequestHandler.Verify(m => m(), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task IfRendezvousNotLeaderMessageArives_ListenerRestartsConnectingToNewRendezvousLeader()
         {
             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
@@ -162,15 +162,15 @@ namespace kino.Tests.Cluster
             restartRequestHandler.Verify(m => m(), Times.Once);
             Func<RendezvousEndpoint, bool> isNewLeader = rnd =>
                                                          {
-                                                             Assert.AreEqual(payload.NewLeader.BroadcastUri, rnd.BroadcastUri.ToSocketAddress());
-                                                             Assert.AreEqual(payload.NewLeader.UnicastUri, rnd.UnicastUri.ToSocketAddress());
+                                                             Assert.Equal(payload.NewLeader.BroadcastUri, rnd.BroadcastUri.ToSocketAddress());
+                                                             Assert.Equal(payload.NewLeader.UnicastUri, rnd.UnicastUri.ToSocketAddress());
                                                              return true;
                                                          };
             rendezvousCluster.Verify(m => m.SetCurrentRendezvousServer(It.Is<RendezvousEndpoint>(rnd => isNewLeader(rnd))), Times.Once);
             restartRequestHandler.Verify(m => m(), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void RoutingControlMessages_AreForwardedToRouterSocket()
         {
             foreach (var payload in GetRoutingControlMessages())

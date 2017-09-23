@@ -8,14 +8,14 @@ using NUnit.Framework;
 
 namespace kino.Tests.Connectivity
 {
-    [TestFixture]
+    
     public class LocalSocketTests
     {
         private LocalSocket<IMessage> socket;
         private Mock<IPerformanceCounter> receivingRate;
         private Mock<IPerformanceCounter> sendingRate;
 
-        [SetUp]
+        
         public void Setup()
         {
             sendingRate = new Mock<IPerformanceCounter>();
@@ -27,7 +27,7 @@ namespace kino.Tests.Connectivity
                      };
         }
 
-        [Test]
+        [Fact]
         public void WhenSendIsCalled_SendingRatePerformanceCounterIsIncremented()
         {
             var times = Randomizer.Int32(3, 5);
@@ -40,7 +40,7 @@ namespace kino.Tests.Connectivity
             receivingRate.Verify(m => m.Increment(1), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public void WhenTryReceiveIsCalled_ReceivingRatePerformanceCounterIsIncremented()
         {
             var times = Randomizer.Int32(3, 5);

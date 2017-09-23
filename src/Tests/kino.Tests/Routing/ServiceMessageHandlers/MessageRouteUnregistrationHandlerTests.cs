@@ -12,24 +12,22 @@ using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 using MessageContract = kino.Messaging.Messages.MessageContract;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
-    [TestFixture]
     public class MessageRouteUnregistrationHandlerTests
     {
-        private Mock<IClusterHealthMonitor> clusterHealthMonitor;
-        private Mock<IExternalRoutingTable> externalRoutingTable;
-        private Mock<ISecurityProvider> securityProvider;
-        private Mock<ILogger> logger;
-        private string domain;
-        private Mock<ISocket> backEndSocket;
-        private MessageRouteUnregistrationHandler handler;
+        private readonly Mock<IClusterHealthMonitor> clusterHealthMonitor;
+        private readonly Mock<IExternalRoutingTable> externalRoutingTable;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly Mock<ILogger> logger;
+        private readonly string domain;
+        private readonly Mock<ISocket> backEndSocket;
+        private readonly MessageRouteUnregistrationHandler handler;
 
-        [SetUp]
-        public void Setup()
+        public MessageRouteUnregistrationHandlerTests()
         {
             domain = Guid.NewGuid().ToString();
             clusterHealthMonitor = new Mock<IClusterHealthMonitor>();
@@ -44,7 +42,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                             logger.Object);
         }
 
-        [Test]
+        [Fact]
         public void IfDomainIsNotAllowed_ExternalMessageRouteIsNotRemoved()
         {
             var message = Message.Create(new UnregisterMessageRouteMessage()).As<Message>();
@@ -55,7 +53,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<ExternalRouteRegistration>()), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public void EveryMessageRouteInTheReceivedMessage_IsRemoved()
         {
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
@@ -71,20 +69,20 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             Func<ExternalRouteRemoval, bool> isRouteToRemove = route =>
                                                                {
-                                                                   Assert.IsTrue(Unsafe.ArraysEqual(receiverNodeIdentity, route.NodeIdentifier));
-                                                                   Assert.IsTrue(payload.Routes
-                                                                                        .SelectMany(r => r.MessageContracts)
-                                                                                        .Select(mc => new MessageIdentifier(mc.Identity, mc.Version, mc.Partition))
-                                                                                        .Any(m => m.Equals(route.Route.Message)));
-                                                                   Assert.IsTrue(payload.Routes
-                                                                                        .Select(mc => new ReceiverIdentifier(mc.ReceiverIdentity))
-                                                                                        .Any(receiver => receiver == route.Route.Receiver));
+                                                                   Assert.True(Unsafe.ArraysEqual(receiverNodeIdentity, route.NodeIdentifier));
+                                                                   Assert.True(payload.Routes
+                                                                                      .SelectMany(r => r.MessageContracts)
+                                                                                      .Select(mc => new MessageIdentifier(mc.Identity, mc.Version, mc.Partition))
+                                                                                      .Any(m => m.Equals(route.Route.Message)));
+                                                                   Assert.True(payload.Routes
+                                                                                      .Select(mc => new ReceiverIdentifier(mc.ReceiverIdentity))
+                                                                                      .Any(receiver => receiver == route.Route.Receiver));
                                                                    return true;
                                                                };
             externalRoutingTable.Verify(m => m.RemoveMessageRoute(It.Is<ExternalRouteRemoval>(rt => isRouteToRemove(rt))), Times.Exactly(callsCount));
         }
 
-        [Test]
+        [Fact]
         public void IfRouteReceiverIsMessageHub_MessageDominIsNotChecked()
         {
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(Guid.NewGuid().ToString);
@@ -100,21 +98,21 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             Func<ExternalRouteRemoval, bool> isRouteToRemove = route =>
                                                                {
-                                                                   Assert.IsTrue(Unsafe.ArraysEqual(receiverNodeIdentity, route.NodeIdentifier));
-                                                                   Assert.IsTrue(payload.Routes
-                                                                                        .SelectMany(r => r.MessageContracts)
-                                                                                        .Select(mc => new MessageIdentifier(mc.Identity, mc.Version, mc.Partition))
-                                                                                        .Any(m => m.Equals(route.Route.Message)));
-                                                                   Assert.IsTrue(payload.Routes
-                                                                                        .Select(mc => new ReceiverIdentifier(mc.ReceiverIdentity))
-                                                                                        .Any(receiver => receiver == route.Route.Receiver));
+                                                                   Assert.True(Unsafe.ArraysEqual(receiverNodeIdentity, route.NodeIdentifier));
+                                                                   Assert.True(payload.Routes
+                                                                                      .SelectMany(r => r.MessageContracts)
+                                                                                      .Select(mc => new MessageIdentifier(mc.Identity, mc.Version, mc.Partition))
+                                                                                      .Any(m => m.Equals(route.Route.Message)));
+                                                                   Assert.True(payload.Routes
+                                                                                      .Select(mc => new ReceiverIdentifier(mc.ReceiverIdentity))
+                                                                                      .Any(receiver => receiver == route.Route.Receiver));
                                                                    return true;
                                                                };
             externalRoutingTable.Verify(m => m.RemoveMessageRoute(It.Is<ExternalRouteRemoval>(rt => isRouteToRemove(rt))), Times.Exactly(callsCount));
             securityProvider.Verify(m => m.GetDomain(It.IsAny<byte[]>()), Times.Never());
         }
 
-        [Test]
+        [Fact]
         public void IfRouteReceiverIsActorAndMessageDomainIsNotEqualToUnregisterMessageRouteDomain_ExternalMessageRouteIsNotRemoved()
         {
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(Guid.NewGuid().ToString);
@@ -132,10 +130,10 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             securityProvider.Verify(m => m.GetDomain(It.IsAny<byte[]>()), Times.Exactly(callsCount));
         }
 
-        [Test]
-        [TestCase(PeerConnectionAction.Disconnect)]
-        [TestCase(PeerConnectionAction.KeepConnection)]
-        [TestCase(PeerConnectionAction.NotFound)]
+        [Theory]
+        [InlineData(PeerConnectionAction.Disconnect)]
+        [InlineData(PeerConnectionAction.KeepConnection)]
+        [InlineData(PeerConnectionAction.NotFound)]
         public void IfPeerRemovalConnectionActionIsDisconnect_ScaleOutBackendSocketIsDisconnectedFromPeer(PeerConnectionAction peerConnectionAction)
         {
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
@@ -156,10 +154,10 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             backEndSocket.Verify(m => m.Disconnect(peerRemoveResult.Uri), Times.Exactly(peerConnectionAction == PeerConnectionAction.Disconnect ? callsCount : 0));
         }
 
-        [Test]
-        [TestCase(PeerConnectionAction.Disconnect)]
-        [TestCase(PeerConnectionAction.KeepConnection)]
-        [TestCase(PeerConnectionAction.NotFound)]
+        [Theory]
+        [InlineData(PeerConnectionAction.Disconnect)]
+        [InlineData(PeerConnectionAction.KeepConnection)]
+        [InlineData(PeerConnectionAction.NotFound)]
         public void IfPeerRemovalConnectionActionNotEqualsKeepConnection_ClusterHealthMonitorDeletesPeer(PeerConnectionAction peerConnectionAction)
         {
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
@@ -177,29 +175,29 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             handler.Handle(message, backEndSocket.Object);
             //
-            clusterHealthMonitor.Verify(m => m.DeletePeer(new ReceiverIdentifier(payload.ReceiverNodeIdentity)), Times.Exactly(peerConnectionAction != PeerConnectionAction.KeepConnection ? callsCount : 0));
+            clusterHealthMonitor.Verify(m => m.DeletePeer(new ReceiverIdentifier(payload.ReceiverNodeIdentity)),
+                                        Times.Exactly(peerConnectionAction != PeerConnectionAction.KeepConnection ? callsCount : 0));
         }
 
         private static UnregisterMessageRouteMessage CreateUnregisterMessageRoutePayload(byte[] receiverNodeIdentity, byte[] receiverIdentity = null)
         {
             var payload = new UnregisterMessageRouteMessage
                           {
-                              Routes = EnumerableExtensions
-                                  .Produce(Randomizer.Int32(2, 5),
-                                           () => new RouteRegistration
-                                                 {
-                                                     MessageContracts = EnumerableExtensions
-                                                         .Produce(Randomizer.Int32(2, 5),
-                                                                  () => new MessageContract
-                                                                        {
-                                                                            Identity = Guid.NewGuid().ToByteArray(),
-                                                                            Version = Randomizer.UInt16(),
-                                                                            Partition = Guid.NewGuid().ToByteArray()
-                                                                        })
-                                                         .ToArray(),
-                                                     ReceiverIdentity = receiverIdentity ?? Guid.NewGuid().ToByteArray()
-                                                 })
-                                  .ToArray(),
+                              Routes = Randomizer.Int32(2, 5)
+                                                 .Produce(() => new RouteRegistration
+                                                                {
+                                                                    MessageContracts = EnumerableExtensions
+                                                                        .Produce(Randomizer.Int32(2, 5),
+                                                                                 () => new MessageContract
+                                                                                       {
+                                                                                           Identity = Guid.NewGuid().ToByteArray(),
+                                                                                           Version = Randomizer.UInt16(),
+                                                                                           Partition = Guid.NewGuid().ToByteArray()
+                                                                                       })
+                                                                        .ToArray(),
+                                                                    ReceiverIdentity = receiverIdentity ?? Guid.NewGuid().ToByteArray()
+                                                                })
+                                                 .ToArray(),
                               ReceiverNodeIdentity = receiverNodeIdentity
                           };
             return payload;

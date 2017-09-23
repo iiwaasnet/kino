@@ -14,13 +14,13 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
     {
         private byte[] ownerPayload;
 
-        [SetUp]
+        
         public void Setup()
         {
             ownerPayload = Guid.NewGuid().ToByteArray();
         }
 
-        [Test]
+        [Fact]
         public void ReadIsAborted_AfterReadWithBallotEqualToCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
@@ -35,16 +35,16 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
 
                         var ballot0 = ballotGenerator.New(localNode.SocketIdentity);
                         var txResult = RepeatUntil(() => roundBasedRegister.Read(ballot0), TxOutcome.Commit);
-                        Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
+                        Assert.Equal(TxOutcome.Commit, txResult.TxOutcome);
 
                         txResult = roundBasedRegister.Read(ballot0);
-                        Assert.AreEqual(TxOutcome.Abort, txResult.TxOutcome);
+                        Assert.Equal(TxOutcome.Abort, txResult.TxOutcome);
                     }
                 }
             }
         }
 
-        [Test]
+        [Fact]
         public void ReadIsAborted_AfterReadWithBallotGreaterThanCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
@@ -59,18 +59,18 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
 
                         var ballot0 = ballotGenerator.New(localNode.SocketIdentity);
                         var txResult = RepeatUntil(() => roundBasedRegister.Read(ballot0), TxOutcome.Commit);
-                        Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
+                        Assert.Equal(TxOutcome.Commit, txResult.TxOutcome);
 
                         var ballot1 = new Ballot(ballot0.Timestamp - TimeSpan.FromSeconds(10), ballot0.MessageNumber, localNode.SocketIdentity);
-                        Assert.IsTrue(ballot0 > ballot1);
+                        Assert.True(ballot0 > ballot1);
                         txResult = roundBasedRegister.Read(ballot1);
-                        Assert.AreEqual(TxOutcome.Abort, txResult.TxOutcome);
+                        Assert.Equal(TxOutcome.Abort, txResult.TxOutcome);
                     }
                 }
             }
         }
 
-        [Test]
+        [Fact]
         public void ReadIsAborted_AfterWriteWithBallotEqualToCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
@@ -86,16 +86,16 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
                         var ballot0 = ballotGenerator.New(localNode.SocketIdentity);
                         var lease = new Lease(localNode.SocketIdentity, DateTime.UtcNow, ownerPayload);
                         var txResult = RepeatUntil(() => roundBasedRegister.Write(ballot0, lease), TxOutcome.Commit);
-                        Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
+                        Assert.Equal(TxOutcome.Commit, txResult.TxOutcome);
 
                         txResult = roundBasedRegister.Read(ballot0);
-                        Assert.AreEqual(TxOutcome.Abort, txResult.TxOutcome);
+                        Assert.Equal(TxOutcome.Abort, txResult.TxOutcome);
                     }
                 }
             }
         }
 
-        [Test]
+        [Fact]
         public void ReadIsAborted_AfterWriteWithBallotGreaterThanCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
@@ -111,12 +111,12 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
                         var ballot0 = ballotGenerator.New(localNode.SocketIdentity);
                         var lease = new Lease(localNode.SocketIdentity, DateTime.UtcNow, ownerPayload);
                         var txResult = RepeatUntil(() => roundBasedRegister.Write(ballot0, lease), TxOutcome.Commit);
-                        Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
+                        Assert.Equal(TxOutcome.Commit, txResult.TxOutcome);
 
                         var ballot1 = new Ballot(ballot0.Timestamp - TimeSpan.FromSeconds(10), ballot0.MessageNumber, localNode.SocketIdentity);
-                        Assert.IsTrue(ballot0 > ballot1);
+                        Assert.True(ballot0 > ballot1);
                         txResult = roundBasedRegister.Read(ballot1);
-                        Assert.AreEqual(TxOutcome.Abort, txResult.TxOutcome);
+                        Assert.Equal(TxOutcome.Abort, txResult.TxOutcome);
                     }
                 }
             }

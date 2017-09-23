@@ -15,7 +15,7 @@ using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
-    [TestFixture]
+    
     public class AutoDiscoverySenderTests
     {
         private readonly TimeSpan AsyncOp = TimeSpan.FromSeconds(1);
@@ -28,7 +28,7 @@ namespace kino.Tests.Cluster
         private RendezvousEndpoint rendezvousEndpoint;
         private ClusterMembershipConfiguration config;
 
-        [SetUp]
+        
         public void Setup()
         {
             rendezvousCluster = new Mock<IRendezvousCluster>();
@@ -52,7 +52,7 @@ namespace kino.Tests.Cluster
                                                          logger.Object);
         }
 
-        [Test]
+        [Fact]
         public void StartBlockingSendMessages_SendsEnqueuedMessages()
         {
             var messages = Randomizer.Int32(2, 5).Produce(() => Message.Create(new SimpleMessage()));
@@ -65,7 +65,7 @@ namespace kino.Tests.Cluster
             socket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Exactly(messages.Count()));
         }
 
-        [Test]
+        [Fact]
         public void MessageIsNotEnqueued_IfQueueLengthIsGreaterThanMaxAutoDiscoverySenderQueueLength()
         {
             config.RouteDiscovery.MaxAutoDiscoverySenderQueueLength = Randomizer.Int32(10, 20);

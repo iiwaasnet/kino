@@ -17,7 +17,7 @@ using NUnit.Framework;
 
 namespace kino.Tests.Actors
 {
-    [TestFixture]
+    
     public class ActorHostTests
     {
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
@@ -32,7 +32,7 @@ namespace kino.Tests.Actors
         private Mock<ILocalSocket<IMessage>> receivingSocket;
         private Mock<IAsyncQueue<AsyncMessageContext>> asyncQueue;
 
-        [SetUp]
+        
         public void Setup()
         {
             logger = new Mock<ILogger>();
@@ -55,7 +55,7 @@ namespace kino.Tests.Actors
                                       logger.Object);
         }
 
-        [Test]
+        [Fact]
         public void AssignActor_SendsRegisterationMessage()
         {
             var partition = Guid.NewGuid().ToByteArray();
@@ -85,7 +85,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Test]
+        [Fact]
         public void SyncActorResponse_SendImmediately()
         {
             try
@@ -106,7 +106,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Test]
+        [Fact]
         public void ExceptionThrownFromActorHandler_DeliveredAsExceptionMessage()
         {
             var errorMessage = Guid.NewGuid().ToString();
@@ -128,7 +128,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Test]
+        [Fact]
         public void AsyncActorResult_IsEnqueuedForCompletion()
         {
             try
@@ -150,7 +150,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Test]
+        [Fact]
         public void AsyncActorException_IsSentAfterCompletionAsExceptionMessage()
         {
             try
@@ -176,7 +176,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Test]
+        [Fact]
         public void AsyncActorResult_IsAddedToMessageCompletionQueue()
         {
             try
@@ -201,7 +201,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Test]
+        [Fact]
         public void CallbackReceiverIdentities_AreCopiedFromIncomingMessageProcessedSync()
         {
             try
@@ -230,7 +230,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Test]
+        [Fact]
         public void CallbackReceiverIdentities_AreCopiedFromIncomingMessageProcessedAsync()
         {
             try
@@ -267,7 +267,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Test]
+        [Fact]
         public void IfCallbackIsRegistered_SyncExceptionMessageIsDeliveredToCallbackReceiver()
         {
             try
@@ -297,7 +297,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Test]
+        [Fact]
         public void IfCallbackIsRegistered_AsyncExceptionMessageIsDeliveredToCallbackReceiver()
         {
             try
@@ -335,7 +335,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Test]
+        [Fact]
         public void ExceptionMessage_HasDomainSet()
         {
             var kinoDomain = Guid.NewGuid().ToString();

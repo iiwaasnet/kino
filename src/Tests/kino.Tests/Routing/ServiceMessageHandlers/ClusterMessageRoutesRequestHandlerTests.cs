@@ -6,20 +6,18 @@ using kino.Messaging.Messages;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
-    [TestFixture]
     public class ClusterMessageRoutesRequestHandlerTests
     {
-        private string domain;
-        private Mock<ISecurityProvider> securityProvider;
-        private ClusterMessageRoutesRequestHandler handler;
-        private Mock<INodeRoutesRegistrar> nodeRoutesRegistrar;
+        private readonly string domain;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly ClusterMessageRoutesRequestHandler handler;
+        private readonly Mock<INodeRoutesRegistrar> nodeRoutesRegistrar;
 
-        [SetUp]
-        public void Setup()
+        public ClusterMessageRoutesRequestHandlerTests()
         {
             domain = Guid.NewGuid().ToString();
             securityProvider = new Mock<ISecurityProvider>();
@@ -33,7 +31,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                              nodeRoutesRegistrar.Object);
         }
 
-        [Test]
+        [Fact]
         public void IfDomainIsNotAllowed_SelfRegistrationIsNotSent()
         {
             var domain = Guid.NewGuid().ToString();
@@ -45,7 +43,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             nodeRoutesRegistrar.Verify(m => m.RegisterOwnGlobalRoutes(message.Domain), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public void IfDomainIsAllowed_RegisterOwnGlobalRoutesIsCalled()
         {
             var message = Message.Create(new RequestClusterMessageRoutesMessage()).As<Message>();

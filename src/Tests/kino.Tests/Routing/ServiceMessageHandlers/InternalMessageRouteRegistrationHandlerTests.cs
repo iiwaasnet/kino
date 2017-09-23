@@ -10,23 +10,21 @@ using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 using MessageRoute = kino.Cluster.MessageRoute;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
-    [TestFixture]
     public class InternalMessageRouteRegistrationHandlerTests
     {
-        private InternalMessageRouteRegistrationHandler handler;
-        private Mock<IClusterMonitor> clusterMonitor;
-        private Mock<IInternalRoutingTable> internalRoutingTable;
-        private Mock<ISecurityProvider> securityProvider;
-        private Mock<ILocalSendingSocket<IMessage>> destinationSocket;
-        private string domain;
+        private readonly InternalMessageRouteRegistrationHandler handler;
+        private readonly Mock<IClusterMonitor> clusterMonitor;
+        private readonly Mock<IInternalRoutingTable> internalRoutingTable;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly Mock<ILocalSendingSocket<IMessage>> destinationSocket;
+        private readonly string domain;
 
-        [SetUp]
-        public void Setup()
+        public InternalMessageRouteRegistrationHandlerTests()
         {
             clusterMonitor = new Mock<IClusterMonitor>();
             internalRoutingTable = new Mock<IInternalRoutingTable>();
@@ -40,7 +38,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                                   securityProvider.Object);
         }
 
-        [Test]
+        [Fact]
         public void IfReceiverIdentifierIsNeitherActorNorMessageHub_MessageRouteIsNotAdded()
         {
             var routeRegistration = new InternalRouteRegistration
@@ -53,7 +51,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             internalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<InternalRouteRegistration>()), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public void LocalyRegisteredMessageHub_IsRegisteredInLocalRoutingTableButNotInCluster()
         {
             var routeRegistration = new InternalRouteRegistration
@@ -70,7 +68,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                   Times.Never);
         }
 
-        [Test]
+        [Fact]
         public void GlobalyRegisteredMessageHub_IsRegisteredInLocalRoutingTableAndCluster()
         {
             var routeRegistration = new InternalRouteRegistration
@@ -88,11 +86,11 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                   Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void GlobalyRegisteredMessageHub_IsRegisteredInClusterOncePerEachDomain()
         {
             var allowedDomains = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
-                                                             () => Guid.NewGuid().ToString());
+                                                              () => Guid.NewGuid().ToString());
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             var routeRegistration = new InternalRouteRegistration
                                     {
@@ -109,20 +107,20 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                   Times.Exactly(allowedDomains.Count()));
         }
 
-        [Test]
+        [Fact]
         public void LocalyRegisteredMessageRoutes_AreRegisteredInLocalRoutingTableButNotInCluster()
         {
             var routeRegistration = new InternalRouteRegistration
                                     {
                                         ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
                                         MessageContracts = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
-                                                                                       () => new MessageContract
-                                                                                             {
-                                                                                                 Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
-                                                                                                                                 Randomizer.UInt16(),
-                                                                                                                                 Guid.NewGuid().ToByteArray()),
-                                                                                                 KeepRegistrationLocal = true
-                                                                                             }),
+                                                                                        () => new MessageContract
+                                                                                              {
+                                                                                                  Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                                                                                  Randomizer.UInt16(),
+                                                                                                                                  Guid.NewGuid().ToByteArray()),
+                                                                                                  KeepRegistrationLocal = true
+                                                                                              }),
                                         DestinationSocket = destinationSocket.Object
                                     };
             //
@@ -132,20 +130,20 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             clusterMonitor.Verify(m => m.RegisterSelf(It.IsAny<IEnumerable<MessageRoute>>(), It.IsAny<string>()), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public void OnlyGlobalyRegisteredMessageRoutes_AreRegisteredInLocalRoutingTableButAndCluster()
         {
             var routeRegistration = new InternalRouteRegistration
                                     {
                                         ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
                                         MessageContracts = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
-                                                                                       i => new MessageContract
-                                                                                            {
-                                                                                                Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
-                                                                                                                                Randomizer.UInt16(),
-                                                                                                                                Guid.NewGuid().ToByteArray()),
-                                                                                                KeepRegistrationLocal = i % 2 == 0
-                                                                                            }),
+                                                                                        i => new MessageContract
+                                                                                             {
+                                                                                                 Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                                                                                 Randomizer.UInt16(),
+                                                                                                                                 Guid.NewGuid().ToByteArray()),
+                                                                                                 KeepRegistrationLocal = i % 2 == 0
+                                                                                             }),
                                         DestinationSocket = destinationSocket.Object
                                     };
             //
@@ -163,19 +161,19 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageRoute>>(mrs => areGlobalMessageRoutes(mrs)), domain), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void MessageRouteRegistrations_AreGroupedByDomainWhenRegisteredAtCluster()
         {
             var routeRegistration = new InternalRouteRegistration
                                     {
                                         ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
                                         MessageContracts = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
-                                                                                       i => new MessageContract
-                                                                                            {
-                                                                                                Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
-                                                                                                                                Randomizer.UInt16(),
-                                                                                                                                Guid.NewGuid().ToByteArray())
-                                                                                            }),
+                                                                                        i => new MessageContract
+                                                                                             {
+                                                                                                 Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                                                                                 Randomizer.UInt16(),
+                                                                                                                                 Guid.NewGuid().ToByteArray())
+                                                                                             }),
                                         DestinationSocket = destinationSocket.Object
                                     };
             var secondDomain = Guid.NewGuid().ToString();

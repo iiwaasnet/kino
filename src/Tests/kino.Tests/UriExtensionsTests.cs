@@ -1,15 +1,15 @@
 ﻿using kino.Core.Framework;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests
 {
-    [TestFixture]
+    
     public class UriExtensionsTests
     {
-        [Test]
+        [Fact]
         public void ToSocketAddress_ConvertsUriWithHostWildcard_ToFullUri()
         {
-            Assert.DoesNotThrow(() => "tcp://*:8000".ParseAddress());
+            "tcp://*:8000".ParseAddress();
         }
     }
 }

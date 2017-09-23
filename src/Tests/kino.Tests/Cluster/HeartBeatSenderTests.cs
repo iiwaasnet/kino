@@ -15,7 +15,7 @@ using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
-    [TestFixture]
+    
     public class HeartBeatSenderTests
     {
         private HeartBeatSender heartBeatSender;
@@ -28,7 +28,7 @@ namespace kino.Tests.Cluster
         private IEnumerable<Uri> heartBeatAddresses;
         private Mock<ISocket> socket;
 
-        [SetUp]
+        
         public void Setup()
         {
             socketFactory = new Mock<ISocketFactory>();
@@ -50,7 +50,7 @@ namespace kino.Tests.Cluster
                                                   logger.Object);
         }
 
-        [Test]
+        [Fact]
         public void HeartBeatMessageIsSent_EveryHeartBeatInterval()
         {
             var heartBeatsToSend = 2;
@@ -63,14 +63,14 @@ namespace kino.Tests.Cluster
             Func<IMessage, bool> isHeartBeatMessage = msg =>
                                                       {
                                                           var payload = msg.GetPayload<HeartBeatMessage>();
-                                                          Assert.IsTrue(Unsafe.ArraysEqual(scaleOutAddress.Identity, payload.SocketIdentity));
-                                                          Assert.AreEqual(heartBeatInterval, payload.HeartBeatInterval);
+                                                          Assert.True(Unsafe.ArraysEqual(scaleOutAddress.Identity, payload.SocketIdentity));
+                                                          Assert.Equal(heartBeatInterval, payload.HeartBeatInterval);
                                                           return true;
                                                       };
             socket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => isHeartBeatMessage(msg))), Times.AtLeast(heartBeatsToSend));
         }
 
-        [Test]
+        [Fact]
         public void IfSocketFailsBindingToOneAddress_ItRetriesWithTheNextOne()
         {
             var asyncOp = TimeSpan.FromSeconds(1);
@@ -87,7 +87,7 @@ namespace kino.Tests.Cluster
             socket.Verify(m => m.Dispose(), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void IfSocketFailsBindingToAllAddress_HeartBeatSenderDoesntSendMessages()
         {
             var asyncOp = TimeSpan.FromSeconds(1);

@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
-    [TestFixture]
+    
     public class ClusterServicesTests
     {
         private ClusterServices clusterServices;
@@ -13,7 +13,7 @@ namespace kino.Tests.Cluster
         private Mock<IHeartBeatSender> heartBeatSender;
         private Mock<IClusterHealthMonitor> clusterHealthMonitor;
 
-        [SetUp]
+        
         public void Setup()
         {
             clusterMonitor = new Mock<IClusterMonitor>();
@@ -26,7 +26,7 @@ namespace kino.Tests.Cluster
                                                   clusterHealthMonitor.Object);
         }
 
-        [Test]
+        [Fact]
         public void WhenClusterServicesStarts_ItStartsAllOtherServices()
         {
             clusterServices.StartClusterServices();
@@ -37,7 +37,7 @@ namespace kino.Tests.Cluster
             clusterHealthMonitor.Verify(m => m.Start(), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void WhenClusterServicesStops_ItStopsAllOtherServices()
         {
             clusterServices.StopClusterServices();
@@ -48,16 +48,16 @@ namespace kino.Tests.Cluster
             clusterHealthMonitor.Verify(m => m.Stop(), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void GetClusterMonitor_ReturnsClusterMonitor()
         {
-            Assert.AreEqual(clusterMonitor.Object, clusterServices.GetClusterMonitor());
+            Assert.Equal(clusterMonitor.Object, clusterServices.GetClusterMonitor());
         }
 
-        [Test]
+        [Fact]
         public void GetClusterHealthMonitor_ReturnsClusterHealthMonitor()
         {
-            Assert.AreEqual(clusterHealthMonitor.Object, clusterServices.GetClusterHealthMonitor());
+            Assert.Equal(clusterHealthMonitor.Object, clusterServices.GetClusterHealthMonitor());
         }
     }
 }

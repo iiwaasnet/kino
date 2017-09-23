@@ -13,13 +13,13 @@ and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
     {
         private byte[] ownerPayload;
 
-        [SetUp]
+        
         public void Setup()
         {
             ownerPayload = Guid.NewGuid().ToByteArray();
         }
 
-        [Test]
+        [Fact]
         public void ReadCommitsWithNonEmptyLease_IfWriteCommittedLeaseWithBallotLessThanCurrent()
         {
             using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
@@ -35,16 +35,16 @@ and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
                         var ballot0 = ballotGenerator.New(localNode.SocketIdentity);
                         var lease = new Lease(localNode.SocketIdentity, DateTime.UtcNow, ownerPayload);
                         var txResult = RepeatUntil(() => roundBasedRegister.Write(ballot0, lease), TxOutcome.Commit);
-                        Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
+                        Assert.Equal(TxOutcome.Commit, txResult.TxOutcome);
 
                         var ballot1 = ballotGenerator.New(localNode.SocketIdentity);
-                        Assert.IsTrue(ballot0 < ballot1);
+                        Assert.True(ballot0 < ballot1);
                         txResult = roundBasedRegister.Read(ballot1);
 
-                        Assert.AreEqual(TxOutcome.Commit, txResult.TxOutcome);
-                        Assert.AreEqual(lease.ExpiresAt, txResult.Lease.ExpiresAt);
-                        CollectionAssert.AreEqual(lease.OwnerPayload, txResult.Lease.OwnerPayload);
-                        Assert.IsTrue(Unsafe.ArraysEqual(lease.OwnerIdentity, txResult.Lease.OwnerIdentity));
+                        Assert.Equal(TxOutcome.Commit, txResult.TxOutcome);
+                        Assert.Equal(lease.ExpiresAt, txResult.Lease.ExpiresAt);
+                        CollectionAssert.Equal(lease.OwnerPayload, txResult.Lease.OwnerPayload);
+                        Assert.True(Unsafe.ArraysEqual(lease.OwnerIdentity, txResult.Lease.OwnerIdentity));
                     }
                 }
             }

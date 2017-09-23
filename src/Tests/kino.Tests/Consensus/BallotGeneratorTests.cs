@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace kino.Tests.Consensus
 {
-    [TestFixture]
+    
     public class BallotGeneratorTests
     {
         [Test(Description = @"Extend k = (t; r; idp) to include an additional

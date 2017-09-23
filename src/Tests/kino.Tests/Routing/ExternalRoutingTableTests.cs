@@ -15,20 +15,20 @@ using MessageRoute = kino.Routing.MessageRoute;
 
 namespace kino.Tests.Routing
 {
-    [TestFixture]
+    
     public class ExternalRoutingTableTests
     {
         private ExternalRoutingTable externalRoutingTable;
         private Mock<ILogger> logger;
 
-        [SetUp]
+        
         public void Setup()
         {
             logger = new Mock<ILogger>();
             externalRoutingTable = new ExternalRoutingTable(logger.Object);
         }
 
-        [Test]
+        [Fact]
         public void AddMessageRoute_AddsActorRoute()
         {
             var routeRegistration = CreateActorRouteRegistration();
@@ -41,13 +41,13 @@ namespace kino.Tests.Routing
                                                         })
                                             .First();
             //
-            Assert.AreEqual(routeRegistration.Peer, route.Node);
-            Assert.AreEqual(routeRegistration.Health.Uri, route.Health.Uri);
-            Assert.AreEqual(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
-            Assert.IsFalse(route.Connected);
+            Assert.Equal(routeRegistration.Peer, route.Node);
+            Assert.Equal(routeRegistration.Health.Uri, route.Health.Uri);
+            Assert.Equal(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
+            Assert.False(route.Connected);
         }
 
-        [Test]
+        [Fact]
         public void AddMessageRoute_AddsMessageHub()
         {
             var routeRegistration = new ExternalRouteRegistration
@@ -72,13 +72,13 @@ namespace kino.Tests.Routing
                                                         })
                                             .First();
             //
-            Assert.AreEqual(routeRegistration.Peer, route.Node);
-            Assert.AreEqual(routeRegistration.Health.Uri, route.Health.Uri);
-            Assert.AreEqual(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
-            Assert.IsFalse(route.Connected);
+            Assert.Equal(routeRegistration.Peer, route.Node);
+            Assert.Equal(routeRegistration.Health.Uri, route.Health.Uri);
+            Assert.Equal(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
+            Assert.False(route.Connected);
         }
 
-        [Test]
+        [Fact]
         public void FindRoutesByReceiverNode_ReturnsRouteRegardlessOfMessage()
         {
             var routeRegistration = CreateActorRouteRegistration();
@@ -91,13 +91,13 @@ namespace kino.Tests.Routing
                                                         })
                                             .First();
             //
-            Assert.AreEqual(routeRegistration.Peer, route.Node);
-            Assert.AreEqual(routeRegistration.Health.Uri, route.Health.Uri);
-            Assert.AreEqual(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
-            Assert.IsFalse(route.Connected);
+            Assert.Equal(routeRegistration.Peer, route.Node);
+            Assert.Equal(routeRegistration.Health.Uri, route.Health.Uri);
+            Assert.Equal(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
+            Assert.False(route.Connected);
         }
 
-        [Test]
+        [Fact]
         public void FindRoutesByMessage_ReturnsRouteRegardlessOfReceiverNode()
         {
             var routeRegistration = CreateActorRouteRegistration();
@@ -112,13 +112,13 @@ namespace kino.Tests.Routing
             var route = externalRoutingTable.FindRoutes(externalRouteLookupRequest)
                                             .First();
             //
-            Assert.AreEqual(routeRegistration.Peer, route.Node);
-            Assert.AreEqual(routeRegistration.Health.Uri, route.Health.Uri);
-            Assert.AreEqual(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
-            Assert.IsFalse(route.Connected);
+            Assert.Equal(routeRegistration.Peer, route.Node);
+            Assert.Equal(routeRegistration.Health.Uri, route.Health.Uri);
+            Assert.Equal(routeRegistration.Health.HeartBeatInterval, route.Health.HeartBeatInterval);
+            Assert.False(route.Connected);
         }
 
-        [Test]
+        [Fact]
         public void IfNoRoutesRegisteredForMessage_EmptyListOfPeerConnectionsReturned()
         {
             var routeRegistration = CreateActorRouteRegistration(MessageIdentifier.Create<SimpleMessage>());
@@ -135,7 +135,7 @@ namespace kino.Tests.Routing
             CollectionAssert.IsEmpty(routes);
         }
 
-        [Test]
+        [Fact]
         public void FindRoutesByMessageSentBroadcast_ReturnsAllRegisteredRoutes()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
@@ -150,10 +150,10 @@ namespace kino.Tests.Routing
                                              };
             var routes = externalRoutingTable.FindRoutes(externalRouteLookupRequest);
             //
-            Assert.AreEqual(routeRegistrations.Count(), routes.Count());
+            Assert.Equal(routeRegistrations.Count(), routes.Count());
         }
 
-        [Test]
+        [Fact]
         public void FindRoutesByMessageSentUnicast_ReturnsOneRoutes()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
@@ -169,7 +169,7 @@ namespace kino.Tests.Routing
             Assert.DoesNotThrow(() => externalRoutingTable.FindRoutes(externalRouteLookupRequest).Single());
         }
 
-        [Test]
+        [Fact]
         public void RemoveNodeRoute_RemovesAllNodeRoutes()
         {
             var nodeIdentity = Guid.NewGuid().ToByteArray();
@@ -194,7 +194,7 @@ namespace kino.Tests.Routing
             CollectionAssert.IsEmpty(externalRoutingTable.FindRoutes(externalRouteLookupRequest));
         }
 
-        [Test]
+        [Fact]
         public void RemoveNodeRoute_KeepsConnectionIfMoreThanOneNodeRegisteredForSameUri()
         {
             var uri = "tcp://127.0.0.1:9009";
@@ -206,10 +206,10 @@ namespace kino.Tests.Routing
             //
             var peerConnection = externalRoutingTable.RemoveNodeRoute(new ReceiverIdentifier(nodeIdentity));
             //
-            Assert.AreEqual(PeerConnectionAction.KeepConnection, peerConnection.ConnectionAction);
+            Assert.Equal(PeerConnectionAction.KeepConnection, peerConnection.ConnectionAction);
         }
 
-        [Test]
+        [Fact]
         public void RemoveMessageRouteForMessageHub_RemovesOneMessageHubAndKeepsPeerConnection()
         {
             var node = new Node("tcp://127.0.0.2:8080", Guid.NewGuid().ToByteArray());
@@ -237,15 +237,15 @@ namespace kino.Tests.Routing
                                                                   Route = new MessageRoute {Receiver = messageHubToRemove}
                                                               });
             //
-            Assert.AreEqual(PeerConnectionAction.KeepConnection, res.ConnectionAction);
+            Assert.Equal(PeerConnectionAction.KeepConnection, res.ConnectionAction);
             var peer = externalRoutingTable.FindRoutes(new ExternalRouteLookupRequest
                                                        {
                                                            ReceiverNodeIdentity = new ReceiverIdentifier(node.SocketIdentity)
                                                        }).First();
-            Assert.AreEqual(node, peer.Node);
+            Assert.Equal(node, peer.Node);
         }
 
-        [Test]
+        [Fact]
         public void IfLastMessageHubRouteIsRemoved_PeerWillBeDisconnected()
         {
             var node = new Node("tcp://127.0.0.2:8080", Guid.NewGuid().ToByteArray());
@@ -276,11 +276,11 @@ namespace kino.Tests.Routing
                                                                   });
                 if (LastMessageHubRemoved(i, messageHubRegistrations.Count()))
                 {
-                    Assert.AreEqual(PeerConnectionAction.Disconnect, res.ConnectionAction);
+                    Assert.Equal(PeerConnectionAction.Disconnect, res.ConnectionAction);
                 }
                 else
                 {
-                    Assert.AreEqual(PeerConnectionAction.KeepConnection, res.ConnectionAction);
+                    Assert.Equal(PeerConnectionAction.KeepConnection, res.ConnectionAction);
                 }
             }
             //
@@ -291,7 +291,7 @@ namespace kino.Tests.Routing
             CollectionAssert.IsEmpty(peers);
         }
 
-        [Test]
+        [Fact]
         public void RemoveMessageRouteForNode_RemovesAllActorRegistrationsForThisMessageForThisNode()
         {
             var nodeIdentity = Guid.NewGuid().ToByteArray();
@@ -308,7 +308,7 @@ namespace kino.Tests.Routing
                                                                   NodeIdentifier = nodeIdentity
                                                               });
             //
-            Assert.AreEqual(PeerConnectionAction.Disconnect, res.ConnectionAction);
+            Assert.Equal(PeerConnectionAction.Disconnect, res.ConnectionAction);
             var externalRouteLookupRequest = new ExternalRouteLookupRequest
                                              {
                                                  ReceiverNodeIdentity = new ReceiverIdentifier(nodeIdentity)
@@ -316,7 +316,7 @@ namespace kino.Tests.Routing
             CollectionAssert.IsEmpty(externalRoutingTable.FindRoutes(externalRouteLookupRequest));
         }
 
-        [Test]
+        [Fact]
         public void IfAllNodeMessageRoutesAreRemoved_PeerIsDisconnected()
         {
             var nodeIdentity = Guid.NewGuid().ToByteArray();
@@ -343,11 +343,11 @@ namespace kino.Tests.Routing
                 var res = externalRoutingTable.RemoveMessageRoute(externalRouteRemoval);
                 if (LastMessageRouteRemoved(i, actors.Count()))
                 {
-                    Assert.AreEqual(PeerConnectionAction.Disconnect, res.ConnectionAction);
+                    Assert.Equal(PeerConnectionAction.Disconnect, res.ConnectionAction);
                 }
                 else
                 {
-                    Assert.AreEqual(PeerConnectionAction.KeepConnection, res.ConnectionAction);
+                    Assert.Equal(PeerConnectionAction.KeepConnection, res.ConnectionAction);
                 }
             }
             //
@@ -358,19 +358,19 @@ namespace kino.Tests.Routing
             CollectionAssert.IsEmpty(externalRoutingTable.FindRoutes(externalRouteLookupRequest));
         }
 
-        [Test]
+        [Fact]
         public void IfNodeIdentifierIsNotProvided_PeerRemovalResultIsNotFound()
         {
             IfNodeIdentifierIsNotProvidedOrNotFound_PeerRemovalResultIsNotFound(null);
         }
 
-        [Test]
+        [Fact]
         public void IfNodeIdentifierIsNotFound_PeerRemovalResultIsNotFound()
         {
             IfNodeIdentifierIsNotProvidedOrNotFound_PeerRemovalResultIsNotFound(Guid.NewGuid().ToByteArray());
         }
 
-        [Test]
+        [Fact]
         public void GetAllRoutes_ReturnsAllRegisteredMessageHubs()
         {
             var health = new Health();
@@ -393,7 +393,7 @@ namespace kino.Tests.Routing
             //
             var routes = externalRoutingTable.GetAllRoutes();
             //
-            Assert.AreEqual(nodes.Count(), routes.Count());
+            Assert.Equal(nodes.Count(), routes.Count());
             CollectionAssert.AreEquivalent(nodes.Select(n => n.Uri), routes.Select(r => r.Node.Uri));
             CollectionAssert.AreEquivalent(nodes.Select(n => n.SocketIdentity), routes.Select(r => r.Node.SocketIdentity));
 
@@ -408,7 +408,7 @@ namespace kino.Tests.Routing
                                                   routes.Where(r => r.Node.Equals(node)).SelectMany(r => r.MessageHubs).Select(mh => mh.MessageHub));
         }
 
-        [Test]
+        [Fact]
         public void GetAllRoutes_ReturnsAllRegisteredMessageRoutes()
         {
             var health = new Health();
@@ -440,7 +440,7 @@ namespace kino.Tests.Routing
             //
             var routes = externalRoutingTable.GetAllRoutes();
             //
-            Assert.AreEqual(nodes.Count(), routes.Count());
+            Assert.Equal(nodes.Count(), routes.Count());
             CollectionAssert.AreEquivalent(nodes.Select(n => n.Uri), routes.Select(r => r.Node.Uri));
             CollectionAssert.AreEquivalent(nodes.Select(n => n.SocketIdentity), routes.Select(r => r.Node.SocketIdentity));
 
@@ -482,7 +482,7 @@ namespace kino.Tests.Routing
                                                                   NodeIdentifier = removeNodeIdentity
                                                               });
             //
-            Assert.AreEqual(PeerConnectionAction.NotFound, res.ConnectionAction);
+            Assert.Equal(PeerConnectionAction.NotFound, res.ConnectionAction);
             var externalRouteLookupRequest = new ExternalRouteLookupRequest
                                              {
                                                  ReceiverNodeIdentity = new ReceiverIdentifier(nodeIdentity)

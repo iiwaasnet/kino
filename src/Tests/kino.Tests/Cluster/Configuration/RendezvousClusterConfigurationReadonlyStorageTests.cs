@@ -5,13 +5,13 @@ using NUnit.Framework;
 
 namespace kino.Tests.Cluster.Configuration
 {
-    [TestFixture]
+    
     public class RendezvousClusterConfigurationReadonlyStorageTests
     {
         private RendezvousClusterConfigurationReadonlyStorage configStorage;
         private IEnumerable<RendezvousEndpoint> initialConfiguration;
 
-        [SetUp]
+        
         public void Setup()
         {
             initialConfiguration = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
@@ -19,7 +19,7 @@ namespace kino.Tests.Cluster.Configuration
             configStorage = new RendezvousClusterConfigurationReadonlyStorage(initialConfiguration);
         }
 
-        [Test]
+        [Fact]
         public void Update_RemovesAllPreviousRendezvousEndpointsAndAddsNewOnes()
         {
             var config = new RendezvousClusterConfiguration

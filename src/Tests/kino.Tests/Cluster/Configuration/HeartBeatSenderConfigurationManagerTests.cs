@@ -8,13 +8,13 @@ using NUnit.Framework;
 
 namespace kino.Tests.Cluster.Configuration
 {
-    [TestFixture]
+    
     public class HeartBeatSenderConfigurationManagerTests
     {
         private HeartBeatSenderConfigurationManager configManager;
         private HeartBeatSenderConfiguration config;
 
-        [SetUp]
+        
         public void Setup()
         {
             config = new HeartBeatSenderConfiguration
@@ -25,15 +25,15 @@ namespace kino.Tests.Cluster.Configuration
             configManager = new HeartBeatSenderConfigurationManager(config);
         }
 
-        [Test]
+        [Fact]
         public void GetHeartBeatAddressBlock_IfSetActiveHeartBeatAddressIsNotSet()
         {
             var task = Task.Factory.StartNew(() => configManager.GetHeartBeatAddress());
             //
-            Assert.IsFalse(task.Wait(TimeSpan.FromSeconds(3)));
+            Assert.False(task.Wait(TimeSpan.FromSeconds(3)));
         }
 
-        [Test]
+        [Fact]
         public void GetScaleOutAddressUnblocks_WhenActiveScaleOutAddressIsSet()
         {
             var asyncOp = TimeSpan.FromSeconds(4);
@@ -44,10 +44,10 @@ namespace kino.Tests.Cluster.Configuration
                                       configManager.SetActiveHeartBeatAddress(config.AddressRange.First());
                                   });
             //
-            Assert.IsTrue(task.Wait(asyncOp));
+            Assert.True(task.Wait(asyncOp));
         }
 
-        [Test]
+        [Fact]
         public void IfSocketEndpointDoesntBelongToInitialAddressRange_SetActiveScaleOutAddressThrowsException()
         {
             Assert.Throws<Exception>(() => configManager.SetActiveHeartBeatAddress(new Uri("inproc://test")));

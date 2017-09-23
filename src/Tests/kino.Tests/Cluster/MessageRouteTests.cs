@@ -5,10 +5,10 @@ using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
-    [TestFixture]
+    
     public class MessageRouteTests
     {
-        [Test]
+        [Fact]
         public void TwoMessageRoutesAreEqual_IfTheirMessageAndReceiverPropertiesAreEqual()
         {
             var receiver = ReceiverIdentities.CreateForActor();
@@ -23,14 +23,14 @@ namespace kino.Tests.Cluster
                              Receiver = receiver
                          };
             //
-            Assert.AreEqual(first, second);
-            Assert.IsTrue(first.Equals(second));
-            Assert.IsTrue(first.Equals((object) second));
-            Assert.IsTrue(first == second);
-            Assert.IsFalse(first != second);
+            Assert.Equal(first, second);
+            Assert.True(first.Equals(second));
+            Assert.True(first.Equals((object) second));
+            Assert.True(first == second);
+            Assert.False(first != second);
         }
 
-        [Test]
+        [Fact]
         public void TwoMessageRoutesAreNotEqual_IfTheirMessagePropertiesAreNotEqual()
         {
             var receiver = ReceiverIdentities.CreateForActor();
@@ -46,13 +46,13 @@ namespace kino.Tests.Cluster
                          };
             //
             Assert.AreNotEqual(first, second);
-            Assert.IsFalse(first.Equals(second));
-            Assert.IsFalse(first.Equals((object) second));
-            Assert.IsTrue(first != second);
-            Assert.IsFalse(first == second);
+            Assert.False(first.Equals(second));
+            Assert.False(first.Equals((object) second));
+            Assert.True(first != second);
+            Assert.False(first == second);
         }
 
-        [Test]
+        [Fact]
         public void TwoMessageRoutesAreNotEqual_IfTheirReceiverPropertiesAreNotEqual()
         {
             var first = new MessageRoute
@@ -67,10 +67,10 @@ namespace kino.Tests.Cluster
                          };
             //
             Assert.AreNotEqual(first, second);
-            Assert.IsFalse(first.Equals(second));
-            Assert.IsFalse(first.Equals((object) second));
-            Assert.IsTrue(first != second);
-            Assert.IsFalse(first == second);
+            Assert.False(first.Equals(second));
+            Assert.False(first.Equals((object) second));
+            Assert.True(first != second);
+            Assert.False(first == second);
         }
     }
 }

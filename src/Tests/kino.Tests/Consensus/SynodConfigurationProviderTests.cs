@@ -7,13 +7,13 @@ using NUnit.Framework;
 
 namespace kino.Tests.Consensus
 {
-    [TestFixture]
+    
     public class SynodConfigurationProviderTests
     {
         private SynodConfigurationProvider synodConfigProvider;
         private SynodConfiguration synodConfig;
 
-        [SetUp]
+        
         public void Setup()
         {
             synodConfig = new SynodConfiguration
@@ -26,20 +26,20 @@ namespace kino.Tests.Consensus
             synodConfigProvider = new SynodConfigurationProvider(synodConfig);
         }
 
-        [Test]
+        [Fact]
         public void NodeWithSameUriAsOneOfSynodMembers_BelongsToSynod()
         {
             var node = new Uri(synodConfig.Members.Second()).BuildIpAddressUri();
             //
-            Assert.IsTrue(synodConfigProvider.BelongsToSynod(node));
+            Assert.True(synodConfigProvider.BelongsToSynod(node));
         }
 
-        [Test]
+        [Fact]
         public void NodeWithDifferentUri_DoesntBelongToSynod()
         {
             var node = "tcp://127.0.0.2:8080".ParseAddress();
             //
-            Assert.IsFalse(synodConfigProvider.BelongsToSynod(node));
+            Assert.False(synodConfigProvider.BelongsToSynod(node));
         }
     }
 }

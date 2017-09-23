@@ -4,10 +4,11 @@ using kino.Core.Diagnostics;
 using kino.Tests.Actors.Setup;
 using Moq;
 using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Actors
 {
-    [TestFixture]
+    
     public class ActorHostManagerTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
@@ -16,7 +17,7 @@ namespace kino.Tests.Actors
         private Mock<IActorHostFactory> actorHostFactory;
         private Mock<IActorHost> actorHost;
 
-        [SetUp]
+        
         public void Setup()
         {
             logger = new Mock<ILogger>().Object;
@@ -39,7 +40,7 @@ namespace kino.Tests.Actors
             actorHostFactory.Verify(m => m.Create(), Times.Exactly(numberOfActors));
         }
 
-        [Test]
+        [Fact]
         public void IfActorHostInstancePolicyIsAlwaysCreateNew_NewActorHostIsCreatedForEachActor()
         {
             actorHostManager.AssignActor(new EchoActor(), ActorHostInstancePolicy.AlwaysCreateNew);
@@ -48,7 +49,7 @@ namespace kino.Tests.Actors
             actorHostFactory.Verify(m => m.Create(), Times.Exactly(2));
         }
 
-        [Test]
+        [Fact]
         public void IfActorHostCanHostAllActorsBeingAssigned_ThisActorHostInstanceIsUsed()
         {
             var echoActor = new EchoActor();

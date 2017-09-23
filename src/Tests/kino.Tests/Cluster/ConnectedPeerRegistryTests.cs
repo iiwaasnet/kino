@@ -10,13 +10,13 @@ using KVP = System.Collections.Generic.KeyValuePair<kino.Core.ReceiverIdentifier
 
 namespace kino.Tests.Cluster
 {
-    [TestFixture]
+    
     public class ConnectedPeerRegistryTests
     {
         private ConnectedPeerRegistry peerRegistry;
         private ClusterHealthMonitorConfiguration config;
 
-        [SetUp]
+        
         public void Setup()
         {
             config = new ClusterHealthMonitorConfiguration
@@ -27,26 +27,26 @@ namespace kino.Tests.Cluster
             peerRegistry = new ConnectedPeerRegistry(config);
         }
 
-        [Test]
+        [Fact]
         public void IfReceiverIdentifierDoesntExist_FundReturnsNull()
         {
             var onePeer = ReceiverIdentities.CreateForActor();
             var anotherPeer = ReceiverIdentities.CreateForActor();
             peerRegistry.FindOrAdd(onePeer, new ClusterMemberMeta());
             //
-            Assert.IsNull(peerRegistry.Find(anotherPeer));
+            Assert.Null(peerRegistry.Find(anotherPeer));
         }
 
-        [Test]
+        [Fact]
         public void FindOrAdd_AddsReceiverIdentityIfItDoesntExistsAndReturnsClusterMemberData()
         {
             var peer = ReceiverIdentities.CreateForActor();
             var clusterMemberMeta = new ClusterMemberMeta();
             //
-            Assert.AreEqual(clusterMemberMeta, peerRegistry.FindOrAdd(peer, clusterMemberMeta));
+            Assert.Equal(clusterMemberMeta, peerRegistry.FindOrAdd(peer, clusterMemberMeta));
         }
 
-        [Test]
+        [Fact]
         public void DuplicatedReceiverIdentities_CanNotBeAdded()
         {
             var peer = ReceiverIdentities.CreateForActor();
@@ -55,26 +55,26 @@ namespace kino.Tests.Cluster
             peerRegistry.FindOrAdd(peer, clusterMemberMeta);
             peerRegistry.FindOrAdd(peer, clusterMemberMeta);
             //
-            Assert.AreEqual(1, peerRegistry.Count());
+            Assert.Equal(1, peerRegistry.Count());
         }
 
-        [Test]
+        [Fact]
         public void Remove_DeletesOnlyCorrespondingReceiverIdentifier()
         {
             var onePeer = ReceiverIdentities.CreateForActor();
             var anotherPeer = ReceiverIdentities.CreateForActor();
             peerRegistry.FindOrAdd(onePeer, new ClusterMemberMeta());
             peerRegistry.FindOrAdd(anotherPeer, new ClusterMemberMeta());
-            Assert.AreEqual(2, peerRegistry.Count());
+            Assert.Equal(2, peerRegistry.Count());
             //
             peerRegistry.Remove(anotherPeer);
             //
-            Assert.IsNull(peerRegistry.Find(anotherPeer));
-            Assert.IsNotNull(peerRegistry.Find(onePeer));
-            Assert.AreEqual(1, peerRegistry.Count());
+            Assert.Null(peerRegistry.Find(anotherPeer));
+            Assert.NotNull(peerRegistry.Find(onePeer));
+            Assert.Equal(1, peerRegistry.Count());
         }
 
-        [Test]
+        [Fact]
         public void GetPeersWithExpiredHeartBeat_ReturnsPeersWichAreConnectedAndLastKnownHeartBeatFromNowGreaterThanPeerHeartBeatIntervalTimesMissingHeartBeatsBeforeDeletion()
         {
             var heartBeatInterval = TimeSpan.FromSeconds(3);
@@ -113,7 +113,7 @@ namespace kino.Tests.Cluster
             CollectionAssert.AreEquivalent(deadPeers.Select(p => p.Key), peerRegistry.GetPeersWithExpiredHeartBeat().Select(p => p.Key));
         }
 
-        [Test]
+        [Fact]
         public void GetStalePeers_ReturnsPeersWichAreNotConnectedAndLastKnownHeartBeatFromNowGreaterThanPeerIsStaleAfterTime()
         {
             var deadPeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
