@@ -152,10 +152,11 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             Func<IEnumerable<MessageRoute>, bool> areGlobalMessageRoutes = mrs =>
                                                                            {
-                                                                               CollectionAssert.AreEquivalent(routeRegistration.MessageContracts
-                                                                                                                               .Where(mc => !mc.KeepRegistrationLocal)
-                                                                                                                               .Select(mc => mc.Message),
-                                                                                                              mrs.Select(mr => mr.Message));
+                                                                               routeRegistration.MessageContracts
+                                                                                                .Where(mc => !mc.KeepRegistrationLocal)
+                                                                                                .Select(mc => mc.Message)
+                                                                                                .Should()
+                                                                                                .BeEquivalentTo(mrs.Select(mr => mr.Message));
                                                                                return true;
                                                                            };
             internalRoutingTable.Verify(m => m.AddMessageRoute(routeRegistration), Times.Once);

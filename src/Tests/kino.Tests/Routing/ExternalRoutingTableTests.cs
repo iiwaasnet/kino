@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
 using kino.Cluster;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -393,8 +394,8 @@ namespace kino.Tests.Routing
             var routes = externalRoutingTable.GetAllRoutes();
             //
             Assert.Equal(nodes.Count(), routes.Count());
-            CollectionAssert.AreEquivalent(nodes.Select(n => n.Uri), routes.Select(r => r.Node.Uri));
-            CollectionAssert.AreEquivalent(nodes.Select(n => n.SocketIdentity), routes.Select(r => r.Node.SocketIdentity));
+            nodes.Select(n => n.Uri).Should().BeEquivalentTo(routes.Select(r => r.Node.Uri));
+            nodes.Select(n => n.SocketIdentity).Should().BeEquivalentTo(routes.Select(r => r.Node.SocketIdentity));
 
             AssertNodesMessageHubsAreSame(nodes.First());
             AssertNodesMessageHubsAreSame(nodes.Second());
@@ -404,8 +405,9 @@ namespace kino.Tests.Routing
                              .Produce(ReceiverIdentities.CreateForMessageHub);
 
             void AssertNodesMessageHubsAreSame(Node node)
-                => CollectionAssert.AreEquivalent(registrations.Where(r => r.Peer.Equals(node)).Select(r => r.Route.Receiver),
-                                                  routes.Where(r => r.Node.Equals(node)).SelectMany(r => r.MessageHubs).Select(mh => mh.MessageHub));
+                => registrations.Where(r => r.Peer.Equals(node)).Select(r => r.Route.Receiver)
+                                .Should()
+                                .BeEquivalentTo(routes.Where(r => r.Node.Equals(node)).SelectMany(r => r.MessageHubs).Select(mh => mh.MessageHub));
         }
 
         [Fact]
@@ -441,8 +443,8 @@ namespace kino.Tests.Routing
             var routes = externalRoutingTable.GetAllRoutes();
             //
             Assert.Equal(nodes.Count(), routes.Count());
-            CollectionAssert.AreEquivalent(nodes.Select(n => n.Uri), routes.Select(r => r.Node.Uri));
-            CollectionAssert.AreEquivalent(nodes.Select(n => n.SocketIdentity), routes.Select(r => r.Node.SocketIdentity));
+            nodes.Select(n => n.Uri).Should().BeEquivalentTo(routes.Select(r => r.Node.Uri));
+            nodes.Select(n => n.SocketIdentity).Should().BeEquivalentTo(routes.Select(r => r.Node.SocketIdentity));
 
             AssertMessageRoutesAreSame(nodes.First());
             AssertMessageRoutesAreSame(nodes.Second());
@@ -451,15 +453,17 @@ namespace kino.Tests.Routing
             {
                 var messageRoutes = registrations.Where(r => r.Peer.Equals(node))
                                                  .GroupBy(r => r.Route.Message, r => r.Route.Receiver);
-                CollectionAssert.AreEquivalent(messageRoutes.Select(mr => mr.Key),
-                                               routes.Where(r => r.Node.Equals(node)).SelectMany(r => r.MessageRoutes).Select(mr => mr.Message));
+                messageRoutes.Select(mr => mr.Key)
+                             .Should()
+                             .BeEquivalentTo(routes.Where(r => r.Node.Equals(node)).SelectMany(r => r.MessageRoutes).Select(mr => mr.Message));
                 foreach (var messageIdentifier in messageRoutes.Select(mr => mr.Key))
                 {
-                    CollectionAssert.AreEquivalent(messageRoutes.Where(mr => mr.Key == messageIdentifier).SelectMany(mr => mr),
-                                                   routes.Where(r => r.Node.Equals(node))
-                                                         .SelectMany(r => r.MessageRoutes)
-                                                         .Where(mr => mr.Message == messageIdentifier)
-                                                         .SelectMany(mr => mr.Actors));
+                    messageRoutes.Where(mr => mr.Key == messageIdentifier).SelectMany(mr => mr)
+                                 .Should()
+                                 .BeEquivalentTo(routes.Where(r => r.Node.Equals(node))
+                                                       .SelectMany(r => r.MessageRoutes)
+                                                       .Where(mr => mr.Message == messageIdentifier)
+                                                       .SelectMany(mr => mr.Actors));
                 }
             }
 

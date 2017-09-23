@@ -1,44 +1,72 @@
-﻿//using System.Diagnostics;
+﻿#if NET47
+using System.Diagnostics;
+#endif
 
 namespace kino.Core.Diagnostics.Performance
 {
-    //[PerformanceCounterCategory("kino", PerformanceCounterCategoryType.MultiInstance)]
+#if NET47
+    [PerformanceCounterCategory("kino", PerformanceCounterCategoryType.MultiInstance)]
+#endif
     public enum KinoPerformanceCounters
     {
-        //[PerformanceCounterDefinition("AutoDiscoveryListener Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("AutoDiscoveryListener Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         AutoDiscoveryListenerSocketReceiveRate,
 
-        //[PerformanceCounterDefinition("AutoDiscoverySender Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("AutoDiscoverySender Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         AutoDiscoverySenderSocketSendRate,
 
-        //[PerformanceCounterDefinition("Rendezvous HeartBeat Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("Rendezvous HeartBeat Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         RendezvousHeartBeatSocketSendRate,
 
-        //[PerformanceCounterDefinition("Rendezvous Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("Rendezvous Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         RendezvousSocketReceiveRate,
 
-        //[PerformanceCounterDefinition("Rendezvous Broadcast Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("Rendezvous Broadcast Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         RendezvousBroadcastSocketSendRate,
 
-        //[PerformanceCounterDefinition("MessageRouter Scaleout Frontend Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("MessageRouter Scaleout Frontend Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         MessageRouterScaleoutFrontendSocketReceiveRate,
 
-        //[PerformanceCounterDefinition("MessageRouter Scaleout Backend Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("MessageRouter Scaleout Backend Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         MessageRouterScaleoutBackendSocketSendRate,
 
-        //[PerformanceCounterDefinition("MessageRouter Local Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("MessageRouter Local Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         MessageRouterLocalSocketReceiveRate,
 
-        //[PerformanceCounterDefinition("MessageRouter Local Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("MessageRouter Local Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         MessageRouterLocalSocketSendRate,
 
-        //[PerformanceCounterDefinition("Intercom Multicast Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("Intercom Multicast Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         IntercomMulticastSocketReceiveRate,
 
-        //[PerformanceCounterDefinition("Intercom Unicast Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("Intercom Unicast Socket Receive Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         IntercomUnicastSocketReceiveRate,
 
-        //[PerformanceCounterDefinition("Intercom Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#if NET47
+        [PerformanceCounterDefinition("Intercom Socket Send Rate(/sec)", PerformanceCounterType.RateOfCountsPerSecond64)]
+#endif
         IntercomSocketSendRate
     }
 }

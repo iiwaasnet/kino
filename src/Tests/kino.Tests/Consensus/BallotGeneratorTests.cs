@@ -8,8 +8,7 @@ namespace kino.Tests.Consensus
 {
     public class BallotGeneratorTests
     {
-        [Trait("BallotGenerator",
-            @"Extend k = (t; r; idp) to include an additional
+        [Fact(DisplayName = @"Extend k = (t; r; idp) to include an additional
 message number r that is used to distinguish the messages
 sent by a process within the same interval. r must only
 be unique within an interval.")]

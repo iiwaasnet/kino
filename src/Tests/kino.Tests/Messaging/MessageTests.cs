@@ -8,6 +8,7 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Xunit;
+using CollectionAssert = FluentAssertions.AssertionExtensions;
 
 namespace kino.Tests.Messaging
 {
@@ -15,7 +16,7 @@ namespace kino.Tests.Messaging
     {
         private readonly ISecurityProvider securityProvider;
 
-        public MessageTests() 
+        public MessageTests()
             => securityProvider = new SecurityProvider(HMACMD5.Create, new DomainScopeResolver(), new DomainPrivateKeyProvider());
 
         [Fact]
@@ -90,10 +91,10 @@ namespace kino.Tests.Messaging
                 message.PushRouterAddress(socketEndpoint);
             }
 
-            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
+            CollectionAssert.Should(socketEnpoints).BeEquivalentTo(message.GetMessageRouting());
         }
 
-        [Fact]
+        [Theory]
         [InlineData(MessageTraceOptions.Routing)]
         [InlineData(MessageTraceOptions.None)]
         public void RouterAddress_AlwaysAddedToMessageHops(MessageTraceOptions traceOptions)
@@ -109,7 +110,7 @@ namespace kino.Tests.Messaging
             {
                 message.PushRouterAddress(socketEndpoint);
             }
-            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
+            CollectionAssert.Should(socketEnpoints).BeEquivalentTo(message.GetMessageRouting());
         }
 
         [Fact]
@@ -130,7 +131,7 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
+            CollectionAssert.Should(socketEnpoints).BeEquivalentTo(message.GetMessageRouting());
         }
 
         [Fact]
@@ -222,7 +223,7 @@ namespace kino.Tests.Messaging
             Assert.Equal(callbackReceiverNodeIdentity, message.ReceiverNodeIdentity);
         }
 
-        [Fact]
+        [Theory]
         [InlineData(DistributionPattern.Broadcast)]
         [InlineData(DistributionPattern.Unicast)]
         public void MessageDistribution_IsConsistentlyTransferredViaMultipartMessage(DistributionPattern distributionPattern)
@@ -278,7 +279,7 @@ namespace kino.Tests.Messaging
             Assert.Equal(wireMessageFormat, message.WireFormatVersion);
         }
 
-        [Fact]
+        [Theory]
         [InlineData(MessageTraceOptions.None)]
         [InlineData(MessageTraceOptions.Routing)]
         public void MessageTraceOptions_IsConsistentlyTransferredViaMultipartMessage(MessageTraceOptions routeOptions)

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using FluentAssertions;
 using kino.Cluster.Configuration;
 using kino.Tests.Helpers;
 using Xunit;
@@ -25,11 +26,11 @@ namespace kino.Tests.Cluster.Configuration
                              Cluster = Randomizer.Int32(3, 6)
                                                  .Produce(i => new RendezvousEndpoint($"tcp://*:8{i}80", $"tcp://*:9{i}90"))
                          };
-            CollectionAssert.AreEquivalent(initialConfiguration, configStorage.Read().Cluster);
+            initialConfiguration.Should().BeEquivalentTo(configStorage.Read().Cluster);
             //
             configStorage.Update(config);
             //
-            CollectionAssert.AreEquivalent(config.Cluster, configStorage.Read().Cluster);
+            config.Cluster.Should().BeEquivalentTo(configStorage.Read().Cluster);
         }
     }
 }

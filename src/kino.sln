@@ -12,10 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{B3967666-2296-4B28-BFD8-0ED4326E29C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Samples\Client\Client.csproj", "{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Samples\Server\Server.csproj", "{D5C12074-CAB2-4AED-96BC-AC322DEF4173}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{6F259B2B-7164-4427-A89C-12254AE91EF3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0C6B7BAF-6F77-4352-92C7-A8F3F0337896}"
@@ -30,19 +26,19 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Connectivity", "kino.C
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Routing", "kino.Routing\kino.Routing.csproj", "{4A52CD75-EA91-4324-ABF0-2E4430E11DE7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Cluster", "kino.Cluster\kino.Cluster.csproj", "{068DE0F3-6751-4A03-B426-9AB9455535F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Cluster", "kino.Cluster\kino.Cluster.csproj", "{068DE0F3-6751-4A03-B426-9AB9455535F0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Consensus", "kino.Consensus\kino.Consensus.csproj", "{4BC6B8C9-0314-438B-8EF6-CB3E5A35DDB3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Consensus", "kino.Consensus\kino.Consensus.csproj", "{4BC6B8C9-0314-438B-8EF6-CB3E5A35DDB3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Rendezvous", "kino.Rendezvous\kino.Rendezvous.csproj", "{14B41D2C-CC5B-4466-9DE6-9B09998183C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Rendezvous", "kino.Rendezvous\kino.Rendezvous.csproj", "{14B41D2C-CC5B-4466-9DE6-9B09998183C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Client", "kino.Client\kino.Client.csproj", "{76D7435D-BCC1-4626-B164-F210B90666A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Client", "kino.Client\kino.Client.csproj", "{76D7435D-BCC1-4626-B164-F210B90666A6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Actors", "kino.Actors\kino.Actors.csproj", "{E936E3A8-F1BC-4788-B523-AC375CAEFB99}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Actors", "kino.Actors\kino.Actors.csproj", "{E936E3A8-F1BC-4788-B523-AC375CAEFB99}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino.Rendezvous.Service", "kino.Rendezvous.Service\kino.Rendezvous.Service.csproj", "{364E4A83-3327-4789-A10C-7695ABCC4FD3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Rendezvous.Service", "kino.Rendezvous.Service\kino.Rendezvous.Service.csproj", "{364E4A83-3327-4789-A10C-7695ABCC4FD3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kino", "kino\kino.csproj", "{09AF527E-95DC-4D37-8FC1-5CA943E9A4A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino", "kino\kino.csproj", "{09AF527E-95DC-4D37-8FC1-5CA943E9A4A4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autofac.kino.Rendezvous", "Integration\Autofac.kino.Rendezvous\Autofac.kino.Rendezvous.csproj", "{1300221D-0982-4027-BCAD-953BC564DAE4}"
 EndProject
@@ -50,20 +46,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autofac.kino", "Integration
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Tests", "Tests\kino.Tests\kino.Tests.csproj", "{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Samples\Client\Client.csproj", "{E43E69E8-0C92-4694-9E95-F1277D34FFAD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "Samples\Server\Server.csproj", "{E52CD781-EA8B-4D12-87E6-617F6B39711C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D5C12074-CAB2-4AED-96BC-AC322DEF4173}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D5C12074-CAB2-4AED-96BC-AC322DEF4173}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D5C12074-CAB2-4AED-96BC-AC322DEF4173}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D5C12074-CAB2-4AED-96BC-AC322DEF4173}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3EB88875-8193-41C2-AA19-34B50ED25FCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3EB88875-8193-41C2-AA19-34B50ED25FCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3EB88875-8193-41C2-AA19-34B50ED25FCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -124,16 +116,24 @@ Global
 		{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E43E69E8-0C92-4694-9E95-F1277D34FFAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E43E69E8-0C92-4694-9E95-F1277D34FFAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E43E69E8-0C92-4694-9E95-F1277D34FFAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E43E69E8-0C92-4694-9E95-F1277D34FFAD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E52CD781-EA8B-4D12-87E6-617F6B39711C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E52CD781-EA8B-4D12-87E6-617F6B39711C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E52CD781-EA8B-4D12-87E6-617F6B39711C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E52CD781-EA8B-4D12-87E6-617F6B39711C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F} = {B3967666-2296-4B28-BFD8-0ED4326E29C7}
-		{D5C12074-CAB2-4AED-96BC-AC322DEF4173} = {B3967666-2296-4B28-BFD8-0ED4326E29C7}
 		{1300221D-0982-4027-BCAD-953BC564DAE4} = {6F259B2B-7164-4427-A89C-12254AE91EF3}
 		{DACFA410-FC1E-4EFB-9574-575DCEC69306} = {6F259B2B-7164-4427-A89C-12254AE91EF3}
 		{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C} = {0C6B7BAF-6F77-4352-92C7-A8F3F0337896}
+		{E43E69E8-0C92-4694-9E95-F1277D34FFAD} = {B3967666-2296-4B28-BFD8-0ED4326E29C7}
+		{E52CD781-EA8B-4D12-87E6-617F6B39711C} = {B3967666-2296-4B28-BFD8-0ED4326E29C7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5FDFCACD-F42D-4815-B433-157C7483E51E}

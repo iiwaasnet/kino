@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
@@ -128,9 +129,9 @@ namespace kino.Tests.Cluster
             restartRequestHandler.Verify(m => m(), Times.Once);
             Func<IEnumerable<RendezvousEndpoint>, bool> areNewNodes = nodes =>
                                                                       {
-                                                                          CollectionAssert.AreEquivalent(payload.RendezvousNodes
-                                                                                                                .Select(rn => new RendezvousEndpoint(rn.UnicastUri, rn.BroadcastUri)),
-                                                                                                         nodes);
+                                                                          nodes.Should()
+                                                                               .BeEquivalentTo(payload.RendezvousNodes
+                                                                                                      .Select(rn => new RendezvousEndpoint(rn.UnicastUri, rn.BroadcastUri)));
                                                                           return true;
                                                                       };
             rendezvousCluster.Verify(m => m.Reconfigure(It.Is<IEnumerable<RendezvousEndpoint>>(nodes => areNewNodes(nodes))), Times.Once);

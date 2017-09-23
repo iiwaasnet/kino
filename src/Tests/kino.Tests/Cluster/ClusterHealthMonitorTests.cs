@@ -318,7 +318,7 @@ namespace kino.Tests.Cluster
             connectedPeerRegistry.Verify(m => m.FindOrAdd(peerIdentifier, It.Is<ClusterMemberMeta>(meta => isPeerMetadata(meta))), Times.Once);
         }
 
-        [Fact]
+        [Theory]
         [InlineData(true)]
         [InlineData(false)]
         public void WhenDeletePeerMessageArrives_PeerIsRemovedFromRegistryAndHealthUriDisconnected(bool connectionEstablished)

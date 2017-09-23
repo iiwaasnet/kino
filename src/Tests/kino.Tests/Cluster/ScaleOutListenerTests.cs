@@ -15,6 +15,7 @@ using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
 using Xunit;
+using CollectionAssert = FluentAssertions.AssertionExtensions;
 
 namespace kino.Tests.Cluster
 {
@@ -120,8 +121,8 @@ namespace kino.Tests.Cluster
                                                                   Assert.Equal(KinoMessages.Exception, exception);
                                                                   Assert.True(Unsafe.ArraysEqual(message.CallbackReceiverNodeIdentity, exception.CallbackReceiverNodeIdentity));
                                                                   Assert.True(Unsafe.ArraysEqual(message.CallbackReceiverIdentity, exception.CallbackReceiverIdentity));
-                                                                  CollectionAssert.AreEquivalent(message.CallbackPoint, exception.CallbackPoint);
-                                                                  CollectionAssert.AreEquivalent(message.GetMessageRouting(), exception.GetMessageRouting());
+                                                                  CollectionAssert.Should(message.CallbackPoint).BeEquivalentTo(exception.CallbackPoint);
+                                                                  CollectionAssert.Should(message.GetMessageRouting()).BeEquivalentTo(exception.GetMessageRouting());
                                                                   Assert.Equal(message.CallbackKey, exception.CallbackKey);
                                                                   Assert.True(Unsafe.ArraysEqual(message.CorrelationId, exception.CorrelationId));
                                                                   return true;

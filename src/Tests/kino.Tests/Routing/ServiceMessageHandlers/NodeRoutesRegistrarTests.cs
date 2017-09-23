@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
 using kino.Cluster;
 using kino.Core;
 using kino.Routing;
@@ -65,7 +66,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             Func<IEnumerable<MessageRoute>, bool> isGlobalMessageRoute = mrs =>
                                                                          {
                                                                              Assert.True(mrs.All(mr => mr.Message == messageIdentifier));
-                                                                             CollectionAssert.AreEquivalent(globalActors, mrs.Select(mr => mr.Receiver));
+                                                                             globalActors.Should().BeEquivalentTo(mrs.Select(mr => mr.Receiver));
                                                                              return true;
                                                                          };
             clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageRoute>>(mrs => isGlobalMessageRoute(mrs)), domain), Times.Once);
@@ -100,9 +101,12 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             Func<IEnumerable<MessageRoute>, bool> areAllowedMessageRoutes = mrs =>
                                                                             {
-                                                                                CollectionAssert.AreEquivalent(allowedDomainRoutes.Select(r => r.Message), mrs.Select(r => r.Message));
+                                                                                allowedDomainRoutes.Select(r => r.Message)
+                                                                                                   .Should()
+                                                                                                   .BeEquivalentTo(mrs.Select(r => r.Message));
                                                                                 var receiverIdentifiers = allowedDomainRoutes.SelectMany(r => r.Actors.Select(a => new ReceiverIdentifier(a.Identity)));
-                                                                                CollectionAssert.AreEquivalent(receiverIdentifiers, mrs.Select(r => r.Receiver));
+                                                                                receiverIdentifiers.Should()
+                                                                                                   .BeEquivalentTo(mrs.Select(r => r.Receiver));
                                                                                 return true;
                                                                             };
             clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageRoute>>(mrs => areAllowedMessageRoutes(mrs)), domain), Times.Once);
@@ -128,8 +132,9 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             Func<IEnumerable<MessageRoute>, bool> isGlobalMessageHub = mrs =>
                                                                        {
-                                                                           CollectionAssert.AreEquivalent(globalMessageHubs.Select(mh => mh.MessageHub),
-                                                                                                          mrs.Select(mr => mr.Receiver));
+                                                                           globalMessageHubs.Select(mh => mh.MessageHub)
+                                                                                            .Should()
+                                                                                            .BeEquivalentTo(mrs.Select(mr => mr.Receiver));
                                                                            return true;
                                                                        };
             clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageRoute>>(mrs => isGlobalMessageHub(mrs)), domain), Times.Once);
@@ -168,9 +173,10 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             Func<IEnumerable<MessageRoute>, bool> isGlobalMessageHub = mrs =>
                                                                        {
-                                                                           CollectionAssert.AreEquivalent(globalMessageHubs.Select(mh => mh.MessageHub)
-                                                                                                                           .Concat(globalActors),
-                                                                                                          mrs.Select(mr => mr.Receiver));
+                                                                           globalMessageHubs.Select(mh => mh.MessageHub)
+                                                                                            .Concat(globalActors)
+                                                                                            .Should()
+                                                                                            .BeEquivalentTo(mrs.Select(mr => mr.Receiver));
                                                                            return true;
                                                                        };
             clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageRoute>>(mrs => isGlobalMessageHub(mrs)), domain), Times.Once);

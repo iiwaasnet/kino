@@ -1,7 +1,6 @@
 ﻿#if NET47
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using kino.Core.Framework;
@@ -66,7 +65,7 @@ namespace kino.Core.Diagnostics.Performance
         }
 
         private static T TryGetAttribute<T>(MemberInfo type) where T : class
-        => Attribute.GetCustomAttribute(type, typeof(T), false) as T;
+            => Attribute.GetCustomAttribute(type, typeof(T), false) as T;
 
         public IPerformanceCounter GetCounter(TCategory counter)
         {

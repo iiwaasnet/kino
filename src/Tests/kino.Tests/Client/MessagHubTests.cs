@@ -57,7 +57,7 @@ namespace kino.Tests.Client
             messageHub = CreateMessageHub();
         }
 
-        [Fact]
+        [Theory]
         [InlineData(true)]
         [InlineData(false)]
         public void WhenMessageHubStarts_RegistrationMessageIsSentAsWithProperGlobalVisibility(bool keepRegistrationLocal)
@@ -212,12 +212,13 @@ namespace kino.Tests.Client
                 //
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
+                TimeSpan.FromSeconds(80).Sleep();
                 //
                 var err = Record.Exception(() =>
                                            {
                                                var _ = promise.GetResponse().Result;
                                            });
-                Assert.Equal(errorMessage, err.Message);
+                Assert.Equal(errorMessage, err.InnerException.Message);
             }
             finally
             {
