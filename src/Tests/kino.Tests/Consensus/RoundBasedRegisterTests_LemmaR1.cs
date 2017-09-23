@@ -2,23 +2,20 @@
 using System.Linq;
 using kino.Consensus;
 using kino.Core.Framework;
-using NUnit.Framework;
+using Xunit;
 using static kino.Tests.Consensus.Setup.RoundBasedRegisterTestsHelper;
 
 namespace kino.Tests.Consensus
 {
-    [TestFixture(Category = "FLease",
-        Description = @"Lemma R1: Read-abort: If READ(k) aborts, then some
+    [Trait("FLease",
+        @"Lemma R1: Read-abort: If READ(k) aborts, then some
 operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
     public class RoundBasedRegisterTests_LemmaR1
     {
-        private byte[] ownerPayload;
+        private readonly byte[] ownerPayload;
 
-        
-        public void Setup()
-        {
-            ownerPayload = Guid.NewGuid().ToByteArray();
-        }
+        public RoundBasedRegisterTests_LemmaR1() 
+            => ownerPayload = Guid.NewGuid().ToByteArray();
 
         [Fact]
         public void ReadIsAborted_AfterReadWithBallotEqualToCurrent()

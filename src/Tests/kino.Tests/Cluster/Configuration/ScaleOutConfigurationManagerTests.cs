@@ -5,23 +5,21 @@ using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster.Configuration
 {
-    
     public class ScaleOutConfigurationManagerTests
     {
-        private ScaleOutConfigurationManager configManager;
-        private ScaleOutSocketConfiguration config;
+        private readonly ScaleOutConfigurationManager configManager;
+        private readonly ScaleOutSocketConfiguration config;
 
-        
-        public void Setup()
+        public ScaleOutConfigurationManagerTests()
         {
             config = new ScaleOutSocketConfiguration
                      {
-                         AddressRange = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                                    i => new SocketEndpoint($"tcp://*:808{i}"))
+                         AddressRange = Randomizer.Int32(3, 6)
+                                                  .Produce(i => new SocketEndpoint($"tcp://*:808{i}"))
                      };
             configManager = new ScaleOutConfigurationManager(config);
         }

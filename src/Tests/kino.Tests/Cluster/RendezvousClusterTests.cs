@@ -4,25 +4,23 @@ using kino.Cluster.Configuration;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster
 {
-    
     public class RendezvousClusterTests
     {
-        private Mock<IConfigurationStorage<RendezvousClusterConfiguration>> configurationStorage;
-        private RendezvousCluster rendezvousCluster;
-        private RendezvousClusterConfiguration cluster;
+        private readonly Mock<IConfigurationStorage<RendezvousClusterConfiguration>> configurationStorage;
+        private readonly RendezvousCluster rendezvousCluster;
+        private readonly RendezvousClusterConfiguration cluster;
 
-        
-        public void Setup()
+        public RendezvousClusterTests()
         {
             configurationStorage = new Mock<IConfigurationStorage<RendezvousClusterConfiguration>>();
             cluster = new RendezvousClusterConfiguration
                       {
-                          Cluster = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                                 i => new RendezvousEndpoint($"tcp://*:808{i}", $"tcp://*:909{i}"))
+                          Cluster = Randomizer.Int32(3, 6)
+                                              .Produce(i => new RendezvousEndpoint($"tcp://*:808{i}", $"tcp://*:909{i}"))
                       };
             configurationStorage.Setup(m => m.Read()).Returns(cluster);
             rendezvousCluster = new RendezvousCluster(configurationStorage.Object);
@@ -43,9 +41,9 @@ namespace kino.Tests.Cluster
         {
             var newCluster = new RendezvousClusterConfiguration
                              {
-                                 Cluster = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                                        i => new RendezvousEndpoint($"tcp://*:8{i}8".ParseAddress().ToSocketAddress(),
-                                                                                                    $"tcp://*:9{i}9".ParseAddress().ToSocketAddress()))
+                                 Cluster = Randomizer.Int32(3, 6)
+                                                     .Produce(i => new RendezvousEndpoint($"tcp://*:8{i}8".ParseAddress().ToSocketAddress(),
+                                                                                          $"tcp://*:9{i}9".ParseAddress().ToSocketAddress()))
                              };
             configurationStorage.Setup(m => m.Read()).Returns(newCluster);
             //
@@ -58,7 +56,7 @@ namespace kino.Tests.Cluster
             }
             foreach (var rendezvousEndpoint in cluster.Cluster)
             {
-                Assert.AreNotEqual(rendezvousEndpoint, rendezvousCluster.GetCurrentRendezvousServer());
+                Assert.NotEqual(rendezvousEndpoint, rendezvousCluster.GetCurrentRendezvousServer());
                 rendezvousCluster.RotateRendezvousServers();
             }
         }
@@ -78,11 +76,11 @@ namespace kino.Tests.Cluster
         public void IfNewRendezvousServerDoesntBelongToCluster_ItIsNotSetAsCurrentRendezvousServer()
         {
             var otherEndpoint = new RendezvousEndpoint("tcp://*:5555", "tcp://*:4444");
-            CollectionAssert.DoesNotContain(cluster.Cluster, otherEndpoint);
+            Assert.DoesNotContain(otherEndpoint, cluster.Cluster);
             //
             rendezvousCluster.SetCurrentRendezvousServer(otherEndpoint);
             //
-            Assert.AreNotEqual(otherEndpoint, rendezvousCluster.GetCurrentRendezvousServer());
+            Assert.NotEqual(otherEndpoint, rendezvousCluster.GetCurrentRendezvousServer());
         }
     }
 }

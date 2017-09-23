@@ -12,25 +12,23 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster
 {
-    
     public class RouteDiscoveryTests
     {
         private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(300);
-        private Mock<IAutoDiscoverySender> autoDiscoverySender;
-        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private Mock<ISecurityProvider> securityProvider;
-        private Mock<ILogger> logger;
-        private ClusterMembershipConfiguration config;
-        private RouteDiscovery routeDiscovery;
-        private SocketEndpoint scaleOutAddress;
-        private string domain;
+        private readonly Mock<IAutoDiscoverySender> autoDiscoverySender;
+        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly Mock<ILogger> logger;
+        private readonly ClusterMembershipConfiguration config;
+        private readonly RouteDiscovery routeDiscovery;
+        private readonly SocketEndpoint scaleOutAddress;
+        private readonly string domain;
 
-        
-        public void Setup()
+        public RouteDiscoveryTests()
         {
             autoDiscoverySender = new Mock<IAutoDiscoverySender>();
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
@@ -148,7 +146,7 @@ namespace kino.Tests.Cluster
             Func<IMessage, bool> isDiscoveryMessage = msg =>
                                                       {
                                                           var payload = msg.GetPayload<DiscoverMessageRouteMessage>();
-                                                          CollectionAssert.Contains(allowedDomains, msg.Domain);
+                                                          Assert.Contains(msg.Domain, allowedDomains);
                                                           Assert.True(Unsafe.ArraysEqual(receiverIdentifier.Identity, payload.ReceiverIdentity));
                                                           Assert.Null(payload.MessageContract);
                                                           Assert.True(Unsafe.ArraysEqual(payload.RequestorNodeIdentity, scaleOutAddress.Identity));
@@ -179,7 +177,7 @@ namespace kino.Tests.Cluster
             Func<IMessage, bool> isDiscoveryMessage = msg =>
                                                       {
                                                           var payload = msg.GetPayload<DiscoverMessageRouteMessage>();
-                                                          CollectionAssert.Contains(allowedDomains, msg.Domain);
+                                                          Assert.Contains(msg.Domain, allowedDomains);
                                                           Assert.True(Unsafe.ArraysEqual(messageHub.Identity, payload.ReceiverIdentity));
                                                           Assert.Null(payload.MessageContract);
                                                           Assert.True(Unsafe.ArraysEqual(payload.RequestorNodeIdentity, scaleOutAddress.Identity));

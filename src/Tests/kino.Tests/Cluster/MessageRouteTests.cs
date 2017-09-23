@@ -1,11 +1,10 @@
 ﻿using kino.Cluster;
 using kino.Core;
 using kino.Tests.Actors.Setup;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster
 {
-    
     public class MessageRouteTests
     {
         [Fact]
@@ -45,7 +44,7 @@ namespace kino.Tests.Cluster
                              Receiver = receiver
                          };
             //
-            Assert.AreNotEqual(first, second);
+            Assert.NotEqual(first, second);
             Assert.False(first.Equals(second));
             Assert.False(first.Equals((object) second));
             Assert.True(first != second);
@@ -66,7 +65,7 @@ namespace kino.Tests.Cluster
                              Receiver = ReceiverIdentities.CreateForActor()
                          };
             //
-            Assert.AreNotEqual(first, second);
+            Assert.NotEqual(first, second);
             Assert.False(first.Equals(second));
             Assert.False(first.Equals((object) second));
             Assert.True(first != second);

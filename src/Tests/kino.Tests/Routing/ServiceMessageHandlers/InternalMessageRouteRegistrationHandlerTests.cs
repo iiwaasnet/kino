@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using FluentAssertions;
 using kino.Cluster;
 using kino.Connectivity;
 using kino.Core;
@@ -89,8 +90,8 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
         [Fact]
         public void GlobalyRegisteredMessageHub_IsRegisteredInClusterOncePerEachDomain()
         {
-            var allowedDomains = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
-                                                              () => Guid.NewGuid().ToString());
+            var allowedDomains = Randomizer.Int32(2, 5)
+                                           .Produce(() => Guid.NewGuid().ToString());
             securityProvider.Setup(m => m.GetAllowedDomains()).Returns(allowedDomains);
             var routeRegistration = new InternalRouteRegistration
                                     {
@@ -113,14 +114,14 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var routeRegistration = new InternalRouteRegistration
                                     {
                                         ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
-                                        MessageContracts = EnumerableExtensions.Produce(Randomizer.Int32(2, 5),
-                                                                                        () => new MessageContract
-                                                                                              {
-                                                                                                  Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
-                                                                                                                                  Randomizer.UInt16(),
-                                                                                                                                  Guid.NewGuid().ToByteArray()),
-                                                                                                  KeepRegistrationLocal = true
-                                                                                              }),
+                                        MessageContracts = Randomizer.Int32(2, 5)
+                                                                     .Produce(() => new MessageContract
+                                                                                    {
+                                                                                        Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                                                                        Randomizer.UInt16(),
+                                                                                                                        Guid.NewGuid().ToByteArray()),
+                                                                                        KeepRegistrationLocal = true
+                                                                                    }),
                                         DestinationSocket = destinationSocket.Object
                                     };
             //
@@ -136,14 +137,14 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var routeRegistration = new InternalRouteRegistration
                                     {
                                         ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
-                                        MessageContracts = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
-                                                                                        i => new MessageContract
-                                                                                             {
-                                                                                                 Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
-                                                                                                                                 Randomizer.UInt16(),
-                                                                                                                                 Guid.NewGuid().ToByteArray()),
-                                                                                                 KeepRegistrationLocal = i % 2 == 0
-                                                                                             }),
+                                        MessageContracts = Randomizer.Int32(5, 15)
+                                                                     .Produce(i => new MessageContract
+                                                                                   {
+                                                                                       Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                                                                       Randomizer.UInt16(),
+                                                                                                                       Guid.NewGuid().ToByteArray()),
+                                                                                       KeepRegistrationLocal = i % 2 == 0
+                                                                                   }),
                                         DestinationSocket = destinationSocket.Object
                                     };
             //
@@ -167,13 +168,13 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var routeRegistration = new InternalRouteRegistration
                                     {
                                         ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
-                                        MessageContracts = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
-                                                                                        i => new MessageContract
-                                                                                             {
-                                                                                                 Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
-                                                                                                                                 Randomizer.UInt16(),
-                                                                                                                                 Guid.NewGuid().ToByteArray())
-                                                                                             }),
+                                        MessageContracts = Randomizer.Int32(5, 15)
+                                                                     .Produce(i => new MessageContract
+                                                                                   {
+                                                                                       Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                                                                       Randomizer.UInt16(),
+                                                                                                                       Guid.NewGuid().ToByteArray())
+                                                                                   }),
                                         DestinationSocket = destinationSocket.Object
                                     };
             var secondDomain = Guid.NewGuid().ToString();
@@ -184,9 +185,10 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             Func<IEnumerable<MessageRoute>, bool> areGlobalMessageRoutes = mrs =>
                                                                            {
-                                                                               CollectionAssert.IsSupersetOf(routeRegistration.MessageContracts
-                                                                                                                              .Select(mc => mc.Message),
-                                                                                                             mrs.Select(mr => mr.Message));
+                                                                               mrs.Select(mr => mr.Message)
+                                                                                  .Should()
+                                                                                  .BeSubsetOf(routeRegistration.MessageContracts
+                                                                                                               .Select(mc => mc.Message));
                                                                                return true;
                                                                            };
             internalRoutingTable.Verify(m => m.AddMessageRoute(routeRegistration), Times.Once);

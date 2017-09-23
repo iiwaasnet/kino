@@ -1,20 +1,18 @@
 ﻿using kino.Cluster;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster
 {
-    
     public class ClusterServicesTests
     {
-        private ClusterServices clusterServices;
-        private Mock<IClusterMonitor> clusterMonitor;
-        private Mock<IScaleOutListener> scaleOutListener;
-        private Mock<IHeartBeatSender> heartBeatSender;
-        private Mock<IClusterHealthMonitor> clusterHealthMonitor;
+        private readonly ClusterServices clusterServices;
+        private readonly Mock<IClusterMonitor> clusterMonitor;
+        private readonly Mock<IScaleOutListener> scaleOutListener;
+        private readonly Mock<IHeartBeatSender> heartBeatSender;
+        private readonly Mock<IClusterHealthMonitor> clusterHealthMonitor;
 
-        
-        public void Setup()
+        public ClusterServicesTests()
         {
             clusterMonitor = new Mock<IClusterMonitor>();
             scaleOutListener = new Mock<IScaleOutListener>();

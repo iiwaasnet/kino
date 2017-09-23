@@ -2,22 +2,21 @@
 using System.Linq;
 using kino.Consensus;
 using kino.Core.Framework;
-using NUnit.Framework;
+using kino.Tests.Helpers;
+using Xunit;
 using static kino.Tests.Consensus.Setup.RoundBasedRegisterTestsHelper;
 
 namespace kino.Tests.Consensus
 {
-    [TestFixture(Category = "FLease", Description = @"Lemma R4: Read-commit: If READ(k) commits with v
+    [Trait("FLease",
+        @"Lemma R4: Read-commit: If READ(k) commits with v
 and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
     public class RoundBasedRegisterTests_LemmaR4
     {
-        private byte[] ownerPayload;
+        private readonly byte[] ownerPayload;
 
-        
-        public void Setup()
-        {
-            ownerPayload = Guid.NewGuid().ToByteArray();
-        }
+        public RoundBasedRegisterTests_LemmaR4() 
+            => ownerPayload = Guid.NewGuid().ToByteArray();
 
         [Fact]
         public void ReadCommitsWithNonEmptyLease_IfWriteCommittedLeaseWithBallotLessThanCurrent()
@@ -43,7 +42,7 @@ and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
 
                         Assert.Equal(TxOutcome.Commit, txResult.TxOutcome);
                         Assert.Equal(lease.ExpiresAt, txResult.Lease.ExpiresAt);
-                        CollectionAssert.Equal(lease.OwnerPayload, txResult.Lease.OwnerPayload);
+                        Assert.Equal(lease.OwnerPayload, txResult.Lease.OwnerPayload);
                         Assert.True(Unsafe.ArraysEqual(lease.OwnerIdentity, txResult.Lease.OwnerIdentity));
                     }
                 }

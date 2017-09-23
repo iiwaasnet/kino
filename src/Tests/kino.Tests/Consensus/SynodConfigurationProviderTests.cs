@@ -3,18 +3,16 @@ using System.Linq;
 using kino.Consensus.Configuration;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Consensus
 {
-    
     public class SynodConfigurationProviderTests
     {
-        private SynodConfigurationProvider synodConfigProvider;
-        private SynodConfiguration synodConfig;
+        private readonly SynodConfigurationProvider synodConfigProvider;
+        private readonly SynodConfiguration synodConfig;
 
-        
-        public void Setup()
+        public SynodConfigurationProviderTests()
         {
             synodConfig = new SynodConfiguration
                           {

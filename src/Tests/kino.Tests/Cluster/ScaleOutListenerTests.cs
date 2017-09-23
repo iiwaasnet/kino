@@ -14,28 +14,26 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster
 {
-    
     public class ScaleOutListenerTests
     {
-        private ScaleOutListener scaleOutListener;
-        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
-        private Mock<ILogger> logger;
-        private Mock<ISocketFactory> socketFactory;
-        private Mock<ILocalSendingSocket<IMessage>> localRouterSocket;
-        private Mock<IScaleOutConfigurationManager> scaleOutConfigurationManager;
-        private Mock<ISecurityProvider> securityProvider;
-        private Mock<ISocket> frontEndSocket;
-        private SocketEndpoint[] scaleOutAddresses;
+        private readonly ScaleOutListener scaleOutListener;
+        private readonly Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
+        private readonly Mock<ILogger> logger;
+        private readonly Mock<ISocketFactory> socketFactory;
+        private readonly Mock<ILocalSendingSocket<IMessage>> localRouterSocket;
+        private readonly Mock<IScaleOutConfigurationManager> scaleOutConfigurationManager;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly Mock<ISocket> frontEndSocket;
+        private readonly SocketEndpoint[] scaleOutAddresses;
         private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
-        private SocketConfiguration socketConfig;
-        private CancellationTokenSource tokenSource;
+        private readonly SocketConfiguration socketConfig;
+        private readonly CancellationTokenSource tokenSource;
 
-        
-        public void Setup()
+        public ScaleOutListenerTests()
         {
             tokenSource = new CancellationTokenSource();
             frontEndSocket = new Mock<ISocket>();
@@ -154,8 +152,8 @@ namespace kino.Tests.Cluster
                                                           Assert.Equal(KinoMessages.Exception, exception);
                                                           Assert.Null(exception.CallbackReceiverNodeIdentity);
                                                           Assert.Null(exception.CallbackReceiverIdentity);
-                                                          CollectionAssert.IsEmpty(exception.CallbackPoint);
-                                                          CollectionAssert.IsEmpty(exception.GetMessageRouting());
+                                                          Assert.Empty(exception.CallbackPoint);
+                                                          Assert.Empty(exception.GetMessageRouting());
                                                           Assert.Equal(0, exception.CallbackKey);
                                                           Assert.True(Unsafe.ArraysEqual(Guid.Empty.ToString().GetBytes(), exception.CorrelationId));
                                                           return true;
@@ -176,7 +174,7 @@ namespace kino.Tests.Cluster
             logger.Verify(m => m.Info(It.IsAny<object>()), Times.Exactly(2));
         }
 
-        [Fact]
+        [Theory]
         [InlineData(0, 2000)]
         [InlineData(3000, 2000)]
         public void IfFrontEndSocketHWMEqualsZeroOrGreaterThanDefaultHWM_ThenFrontEndSocketHWMIsSetToDefaultValue(int frontEndSocketHwm, int defaultHwm)

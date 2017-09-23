@@ -13,24 +13,22 @@ using kino.Messaging;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Consensus
 {
-    
     public class IntercomMessageHubTests
     {
         private IntercomMessageHub messageHub;
-        private Mock<ISocketFactory> socketFactory;
-        private Mock<ISynodConfigurationProvider> synodConfigProvider;
-        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> perfCounterManager;
-        private Mock<IPerformanceCounter> perfCounter;
-        private Mock<ILogger> logger;
-        private Mock<ISocket> publisherSocket;
-        private Mock<ISocket> subscriberSocket;
+        private readonly Mock<ISocketFactory> socketFactory;
+        private readonly Mock<ISynodConfigurationProvider> synodConfigProvider;
+        private readonly Mock<IPerformanceCounterManager<KinoPerformanceCounters>> perfCounterManager;
+        private readonly Mock<IPerformanceCounter> perfCounter;
+        private readonly Mock<ILogger> logger;
+        private readonly Mock<ISocket> publisherSocket;
+        private readonly Mock<ISocket> subscriberSocket;
 
-        
-        public void Setup()
+        public IntercomMessageHubTests()
         {
             socketFactory = new Mock<ISocketFactory>();
             publisherSocket = new Mock<ISocket>();
@@ -64,7 +62,7 @@ namespace kino.Tests.Consensus
             synodConfigProvider.Object.HeartBeatInterval.MultiplyBy(2).Sleep();
             messageHub.Stop();
             //
-            Assert.Less(1, synodConfigProvider.Object.Synod.Count());
+            Assert.InRange(synodConfigProvider.Object.Synod.Count(), 2, Int32.MaxValue);
             publisherSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(MessageIdentifier.Create<HeartBeatMessage>()))), Times.AtLeast(1));
         }
 
@@ -126,7 +124,7 @@ namespace kino.Tests.Consensus
             //
             subscriberSocket.Verify(m => m.Disconnect(deadNode.NodeUri), Times.Once);
             subscriberSocket.Verify(m => m.Connect(deadNode.NodeUri, false), Times.Once);
-            Assert.LessOrEqual(now, deadNode.LastReconnectAttempt);
+            Assert.InRange(deadNode.LastReconnectAttempt, now, DateTime.MaxValue);
             Assert.False(deadNode.IsHealthy());
         }
 
@@ -188,6 +186,5 @@ namespace kino.Tests.Consensus
             //
             publisherSocket.Verify(m => m.SendMessage(message), Times.Once);
         }
-        
     }
 }

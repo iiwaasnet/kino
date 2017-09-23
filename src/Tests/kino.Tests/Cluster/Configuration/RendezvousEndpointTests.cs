@@ -1,9 +1,8 @@
 ﻿using kino.Cluster.Configuration;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster.Configuration
 {
-    
     public class RendezvousEndpointTests
     {
         [Fact]
@@ -28,7 +27,7 @@ namespace kino.Tests.Cluster.Configuration
             var first = new RendezvousEndpoint(unicastUri, "tcp://*:9090");
             var second = new RendezvousEndpoint(unicastUri, "tcp://*:9091");
             //
-            Assert.AreNotEqual(first, second);
+            Assert.NotEqual(first, second);
             Assert.False(first.Equals(second));
             Assert.False(first.Equals((object) second));
             Assert.False(first == second);
@@ -42,7 +41,7 @@ namespace kino.Tests.Cluster.Configuration
             var first = new RendezvousEndpoint("tcp://*:8081", broadcastUri);
             var second = new RendezvousEndpoint("tcp://*:8082", broadcastUri);
             //
-            Assert.AreNotEqual(first, second);
+            Assert.NotEqual(first, second);
             Assert.False(first.Equals(second));
             Assert.False(first.Equals((object) second));
             Assert.False(first == second);

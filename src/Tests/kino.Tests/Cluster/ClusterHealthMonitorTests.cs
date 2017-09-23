@@ -14,33 +14,31 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 using Health = kino.Cluster.Health;
 
 namespace kino.Tests.Cluster
 {
-    
     public class ClusterHealthMonitorTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
         private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
-        private Mock<ISocketFactory> socketFactory;
-        private Mock<ISocket> publisherSocket;
-        private ClusterHealthMonitor clusterHealthMonitor;
-        private Mock<ISocket> subscriberSocket;
-        private Mock<ISocket> routerSocket;
-        private Mock<ILocalSocketFactory> localSocketFactory;
-        private Mock<ILocalSocket<IMessage>> multiplexingSocket;
-        private Mock<ISecurityProvider> securityProvider;
-        private Mock<ILocalSendingSocket<IMessage>> routerLocalSocket;
-        private ClusterHealthMonitorConfiguration config;
-        private Mock<ILogger> logger;
-        private Mock<IConnectedPeerRegistry> connectedPeerRegistry;
-        private CancellationTokenSource tokenSource;
+        private readonly Mock<ISocketFactory> socketFactory;
+        private readonly Mock<ISocket> publisherSocket;
+        private readonly ClusterHealthMonitor clusterHealthMonitor;
+        private readonly Mock<ISocket> subscriberSocket;
+        private readonly Mock<ISocket> routerSocket;
+        private readonly Mock<ILocalSocketFactory> localSocketFactory;
+        private readonly Mock<ILocalSocket<IMessage>> multiplexingSocket;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly Mock<ILocalSendingSocket<IMessage>> routerLocalSocket;
+        private readonly ClusterHealthMonitorConfiguration config;
+        private readonly Mock<ILogger> logger;
+        private readonly Mock<IConnectedPeerRegistry> connectedPeerRegistry;
+        private readonly CancellationTokenSource tokenSource;
 
-        
-        public void Setup()
+        public ClusterHealthMonitorTests()
         {
             tokenSource = new CancellationTokenSource();
             socketFactory = new Mock<ISocketFactory>();
@@ -187,7 +185,7 @@ namespace kino.Tests.Cluster
                           {
                               Uri = "tcp://127.0.0.1:800",
                               SocketIdentity = peerIdentifier.Identity,
-                              Health = new global::kino.Messaging.Messages.Health
+                              Health = new kino.Messaging.Messages.Health
                                        {
                                            Uri = healthUri.ToSocketAddress(),
                                            HeartBeatInterval = TimeSpan.FromMinutes(1)
@@ -225,7 +223,7 @@ namespace kino.Tests.Cluster
                           {
                               Uri = "tcp://127.0.0.1:800",
                               SocketIdentity = peerIdentifier.Identity,
-                              Health = new global::kino.Messaging.Messages.Health
+                              Health = new kino.Messaging.Messages.Health
                                        {
                                            Uri = healthUri.ToSocketAddress(),
                                            HeartBeatInterval = heartBeatInterval
@@ -266,9 +264,8 @@ namespace kino.Tests.Cluster
             tokenSource.Cancel();
             clusterHealthMonitor.Stop();
             //
-            Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, AsyncOp.MultiplyBy(3));
+            Assert.InRange(DateTime.UtcNow - meta.LastKnownHeartBeat, TimeSpan.MinValue, AsyncOp.MultiplyBy(3));
         }
-
 
         [Fact]
         public void WhenHeartBeatMessageArrivesFromUnknownPeer_ItsHealthUriIsDisconnected()
@@ -282,7 +279,7 @@ namespace kino.Tests.Cluster
                           };
             var message = Message.Create(payload);
             subscriberSocket.SetupMessageReceived(message, tokenSource.Token);
-            connectedPeerRegistry.Setup(m => m.Find(peerIdentifier)).Returns((ClusterMemberMeta)null);
+            connectedPeerRegistry.Setup(m => m.Find(peerIdentifier)).Returns((ClusterMemberMeta) null);
             //
             clusterHealthMonitor.Start();
             AsyncOp.Sleep();
@@ -300,7 +297,7 @@ namespace kino.Tests.Cluster
                           {
                               SocketIdentity = peerIdentifier.Identity,
                               Uri = "tcp://127.0.0.1:8080",
-                              Health = new global::kino.Messaging.Messages.Health
+                              Health = new kino.Messaging.Messages.Health
                                        {
                                            Uri = "tcp://127.0.0.2:9090",
                                            HeartBeatInterval = TimeSpan.FromSeconds(10)
@@ -371,7 +368,7 @@ namespace kino.Tests.Cluster
             routerSocket.Verify(m => m.Connect(new Uri(meta.ScaleOutUri), true), Times.Once);
             routerSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(KinoMessages.Ping))), Times.Once);
             routerSocket.Verify(m => m.Disconnect(new Uri(meta.ScaleOutUri)), Times.Once);
-            Assert.LessOrEqual(DateTime.UtcNow - meta.LastKnownHeartBeat, AsyncOp.MultiplyBy(3));
+            Assert.InRange(DateTime.UtcNow - meta.LastKnownHeartBeat, TimeSpan.MinValue, AsyncOp.MultiplyBy(3));
         }
 
         [Fact]
@@ -379,10 +376,9 @@ namespace kino.Tests.Cluster
         {
             var message = Message.Create(new CheckDeadPeersMessage());
             subscriberSocket.SetupMessageReceived(message, tokenSource.Token);
-            var deadPeers = EnumerableExtensions.Produce(Randomizer.Int32(3, 5),
-                                                        () => new KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>
-                                                            (new ReceiverIdentifier(Guid.NewGuid().ToByteArray()), new ClusterMemberMeta()))
-                                               .ToList();
+            var deadPeers = Randomizer.Int32(3, 5)
+                                      .Produce(() => new KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>(new ReceiverIdentifier(Guid.NewGuid().ToByteArray()), new ClusterMemberMeta()))
+                                      .ToList();
             connectedPeerRegistry.Setup(m => m.GetPeersWithExpiredHeartBeat()).Returns(deadPeers);
             //
             clusterHealthMonitor.Start();
@@ -410,14 +406,13 @@ namespace kino.Tests.Cluster
             var payload = new CheckStalePeersMessage();
             var message = Message.Create(payload);
             subscriberSocket.SetupMessageReceived(message, tokenSource.Token);
-            var stalePeers = EnumerableExtensions.Produce(Randomizer.Int32(3, 5),
-                                                         i => new KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>
-                                                             (new ReceiverIdentifier(Guid.NewGuid().ToByteArray()),
-                                                              new ClusterMemberMeta
-                                                              {
-                                                                  ScaleOutUri = $"tcp://127.0.0.1:{i + 1000}"
-                                                              }))
-                                                .ToList();
+            var stalePeers = Randomizer.Int32(3, 5)
+                                       .Produce(i => new KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>(new ReceiverIdentifier(Guid.NewGuid().ToByteArray()),
+                                                                                                             new ClusterMemberMeta
+                                                                                                             {
+                                                                                                                 ScaleOutUri = $"tcp://127.0.0.1:{i + 1000}"
+                                                                                                             }))
+                                       .ToList();
             connectedPeerRegistry.Setup(m => m.GetStalePeers()).Returns(stalePeers);
             //
             clusterHealthMonitor.Start();

@@ -11,30 +11,28 @@ using kino.Messaging.Messages;
 using kino.Security;
 using kino.Tests.Actors.Setup;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster
 {
-    
     public class ClusterMonitorTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
-        private Mock<ILogger> logger;
-        private Mock<IRouteDiscovery> routeDiscovery;
-        private Mock<ISecurityProvider> securityProvider;
-        private string domain;
-        private ClusterMonitor clusterMonitor;
-        private SocketEndpoint scaleOutAddress;
-        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private Mock<IAutoDiscoverySender> autoDiscoverySender;
-        private Mock<IAutoDiscoveryListener> autoDiscoveryListener;
-        private Mock<IHeartBeatSenderConfigurationProvider> heartBeatSenderConfigProvider;
-        private Uri heartBeatUri;
-        private TimeSpan heartBeatInterval;
-        private ClusterMembershipConfiguration config;
+        private readonly Mock<ILogger> logger;
+        private readonly Mock<IRouteDiscovery> routeDiscovery;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly string domain;
+        private readonly ClusterMonitor clusterMonitor;
+        private readonly SocketEndpoint scaleOutAddress;
+        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private readonly Mock<IAutoDiscoverySender> autoDiscoverySender;
+        private readonly Mock<IAutoDiscoveryListener> autoDiscoveryListener;
+        private readonly Mock<IHeartBeatSenderConfigurationProvider> heartBeatSenderConfigProvider;
+        private readonly Uri heartBeatUri;
+        private readonly TimeSpan heartBeatInterval;
+        private readonly ClusterMembershipConfiguration config;
 
-        
-        public void Setup()
+        public ClusterMonitorTests()
         {
             securityProvider = new Mock<ISecurityProvider>();
             domain = Guid.NewGuid().ToString();
@@ -111,8 +109,8 @@ namespace kino.Tests.Cluster
                                                                foreach (var registration in registrations.Where(r => r.Receiver == actorIdentifier))
                                                                {
                                                                    Assert.True(actorRoutes.MessageContracts.Any(mc => Unsafe.ArraysEqual(mc.Identity, registration.Message.Identity)
-                                                                                                                        && Unsafe.ArraysEqual(mc.Partition, registration.Message.Partition)
-                                                                                                                        && mc.Version == registration.Message.Version));
+                                                                                                                      && Unsafe.ArraysEqual(mc.Partition, registration.Message.Partition)
+                                                                                                                      && mc.Version == registration.Message.Version));
                                                                }
                                                                var messageHub = payload.Routes
                                                                                        .First(r => Unsafe.ArraysEqual(r.ReceiverIdentity, messageHubIdentifier.Identity));

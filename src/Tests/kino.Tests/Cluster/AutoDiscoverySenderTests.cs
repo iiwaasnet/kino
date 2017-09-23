@@ -11,25 +11,23 @@ using kino.Messaging;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster
 {
-    
     public class AutoDiscoverySenderTests
     {
         private readonly TimeSpan AsyncOp = TimeSpan.FromSeconds(1);
-        private AutoDiscoverySender autoDiscoverSender;
-        private Mock<IRendezvousCluster> rendezvousCluster;
-        private Mock<ILogger> logger;
-        private Mock<ISocketFactory> socketFactory;
-        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
-        private Mock<ISocket> socket;
-        private RendezvousEndpoint rendezvousEndpoint;
-        private ClusterMembershipConfiguration config;
+        private readonly AutoDiscoverySender autoDiscoverSender;
+        private readonly Mock<IRendezvousCluster> rendezvousCluster;
+        private readonly Mock<ILogger> logger;
+        private readonly Mock<ISocketFactory> socketFactory;
+        private readonly Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
+        private readonly Mock<ISocket> socket;
+        private readonly RendezvousEndpoint rendezvousEndpoint;
+        private readonly ClusterMembershipConfiguration config;
 
-        
-        public void Setup()
+        public AutoDiscoverySenderTests()
         {
             rendezvousCluster = new Mock<IRendezvousCluster>();
             rendezvousEndpoint = new RendezvousEndpoint("tcp://*:8080", "tcp://*:9009");
@@ -41,10 +39,13 @@ namespace kino.Tests.Cluster
             var perfCounter = new Mock<IPerformanceCounter>();
             performanceCounterManager.Setup(m => m.GetCounter(It.IsAny<KinoPerformanceCounters>())).Returns(perfCounter.Object);
             logger = new Mock<ILogger>();
-            config = new ClusterMembershipConfiguration {RouteDiscovery = new RouteDiscoveryConfiguration
-                                                                              {
-                                                                                  MaxAutoDiscoverySenderQueueLength = 100
-                                                                              }};
+            config = new ClusterMembershipConfiguration
+                     {
+                         RouteDiscovery = new RouteDiscoveryConfiguration
+                                          {
+                                              MaxAutoDiscoverySenderQueueLength = 100
+                                          }
+                     };
             autoDiscoverSender = new AutoDiscoverySender(rendezvousCluster.Object,
                                                          socketFactory.Object,
                                                          config,

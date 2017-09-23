@@ -7,20 +7,16 @@ using kino.Messaging;
 using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Messaging
 {
-    
     public class MessageTests
     {
-        private ISecurityProvider securityProvider;
+        private readonly ISecurityProvider securityProvider;
 
-        
-        public void Setup()
-        {
-            securityProvider = new SecurityProvider(HMACMD5.Create, new DomainScopeResolver(), new DomainPrivateKeyProvider());
-        }
+        public MessageTests() 
+            => securityProvider = new SecurityProvider(HMACMD5.Create, new DomainScopeResolver(), new DomainPrivateKeyProvider());
 
         [Fact]
         public void FlowStartMessage_HasCorrelationIdSet()
@@ -28,7 +24,7 @@ namespace kino.Tests.Messaging
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
             Assert.NotNull(message.CorrelationId);
-            CollectionAssert.IsNotEmpty(message.CorrelationId);
+            Assert.NotEmpty(message.CorrelationId);
         }
 
         [Fact]
@@ -54,7 +50,7 @@ namespace kino.Tests.Messaging
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
-            CollectionAssert.Contains(Enum.GetValues(typeof(DistributionPattern)), message.Distribution);
+            Assert.Contains(message.Distribution, Enum.GetValues(typeof(DistributionPattern)).OfType<DistributionPattern>());
         }
 
         [Fact]
@@ -147,7 +143,7 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            CollectionAssert.Equal(correlationId, message.CorrelationId);
+            Assert.Equal(correlationId, message.CorrelationId);
         }
 
         [Fact]
@@ -160,7 +156,7 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            CollectionAssert.Equal(receiverNode.Identity, message.ReceiverNodeIdentity);
+            Assert.Equal(receiverNode.Identity, message.ReceiverNodeIdentity);
         }
 
         [Fact]
@@ -195,10 +191,10 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifier);
-            CollectionAssert.Equal(callbackReceiverIdentity, message.CallbackReceiverIdentity);
-            CollectionAssert.Equal(callbackReceiverNodeIdentity, message.CallbackReceiverNodeIdentity);
-            CollectionAssert.IsEmpty(message.ReceiverIdentity);
+            Assert.Contains(callbackMessageIdentifier, message.CallbackPoint);
+            Assert.Equal(callbackReceiverIdentity, message.CallbackReceiverIdentity);
+            Assert.Equal(callbackReceiverNodeIdentity, message.CallbackReceiverNodeIdentity);
+            Assert.Empty(message.ReceiverIdentity);
         }
 
         [Fact]
@@ -219,11 +215,11 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifier);
-            CollectionAssert.Equal(callbackReceiverIdentity, message.CallbackReceiverIdentity);
-            CollectionAssert.Equal(callbackReceiverIdentity, message.ReceiverIdentity);
-            CollectionAssert.Equal(callbackReceiverNodeIdentity, message.CallbackReceiverNodeIdentity);
-            CollectionAssert.Equal(callbackReceiverNodeIdentity, message.ReceiverNodeIdentity);
+            Assert.Contains(callbackMessageIdentifier, message.CallbackPoint);
+            Assert.Equal(callbackReceiverIdentity, message.CallbackReceiverIdentity);
+            Assert.Equal(callbackReceiverIdentity, message.ReceiverIdentity);
+            Assert.Equal(callbackReceiverNodeIdentity, message.CallbackReceiverNodeIdentity);
+            Assert.Equal(callbackReceiverNodeIdentity, message.ReceiverNodeIdentity);
         }
 
         [Fact]
@@ -377,7 +373,7 @@ namespace kino.Tests.Messaging
                                               callbackReceiverIdentity,
                                               callbackMessageIdentifier,
                                               Randomizer.Int32());
-                CollectionAssert.Equal(callbackReceiverIdentity, message.CallbackReceiverIdentity);
+                Assert.Equal(callbackReceiverIdentity, message.CallbackReceiverIdentity);
             }
         }
     }

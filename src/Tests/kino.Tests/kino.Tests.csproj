@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="5.0.0-beta0002" />
     <PackageReference Include="Moq" Version="4.7.99" />
     <PackageReference Include="xunit" Version="2.2.0" />
   </ItemGroup>
@@ -12,6 +13,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\kino.Actors\kino.Actors.csproj" />
     <ProjectReference Include="..\..\kino.Client\kino.Client.csproj" />
+    <ProjectReference Include="..\..\kino.Consensus\kino.Consensus.csproj" />
+    <ProjectReference Include="..\..\kino.Rendezvous\kino.Rendezvous.csproj" />
   </ItemGroup>
 
 </Project>

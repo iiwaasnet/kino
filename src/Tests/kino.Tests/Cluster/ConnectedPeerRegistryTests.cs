@@ -5,19 +5,17 @@ using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
-using NUnit.Framework;
+using Xunit;
 using KVP = System.Collections.Generic.KeyValuePair<kino.Core.ReceiverIdentifier, kino.Cluster.ClusterMemberMeta>;
 
 namespace kino.Tests.Cluster
 {
-    
     public class ConnectedPeerRegistryTests
     {
-        private ConnectedPeerRegistry peerRegistry;
-        private ClusterHealthMonitorConfiguration config;
+        private readonly ConnectedPeerRegistry peerRegistry;
+        private readonly ClusterHealthMonitorConfiguration config;
 
-        
-        public void Setup()
+        public ConnectedPeerRegistryTests()
         {
             config = new ClusterHealthMonitorConfiguration
                      {
@@ -79,32 +77,32 @@ namespace kino.Tests.Cluster
         {
             var heartBeatInterval = TimeSpan.FromSeconds(3);
             var deadPeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
-                                                        () => new KVP(ReceiverIdentities.CreateForActor(),
-                                                                      new ClusterMemberMeta
-                                                                      {
-                                                                          ConnectionEstablished = true,
-                                                                          HeartBeatInterval = heartBeatInterval,
-                                                                          LastKnownHeartBeat = DateTime.UtcNow
-                                                                                               - heartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion + 2)
-                                                                      }));
-            var activePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
-                                                          () => new KVP(ReceiverIdentities.CreateForActor(),
-                                                                        new ClusterMemberMeta
-                                                                        {
-                                                                            ConnectionEstablished = true,
-                                                                            HeartBeatInterval = heartBeatInterval,
-                                                                            LastKnownHeartBeat = DateTime.UtcNow
-                                                                                                 - heartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion - 1)
-                                                                        }));
-            var stalePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
                                                          () => new KVP(ReceiverIdentities.CreateForActor(),
                                                                        new ClusterMemberMeta
                                                                        {
-                                                                           ConnectionEstablished = false,
+                                                                           ConnectionEstablished = true,
                                                                            HeartBeatInterval = heartBeatInterval,
                                                                            LastKnownHeartBeat = DateTime.UtcNow
-                                                                                                - heartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion)
+                                                                                                - heartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion + 2)
                                                                        }));
+            var activePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
+                                                           () => new KVP(ReceiverIdentities.CreateForActor(),
+                                                                         new ClusterMemberMeta
+                                                                         {
+                                                                             ConnectionEstablished = true,
+                                                                             HeartBeatInterval = heartBeatInterval,
+                                                                             LastKnownHeartBeat = DateTime.UtcNow
+                                                                                                  - heartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion - 1)
+                                                                         }));
+            var stalePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
+                                                          () => new KVP(ReceiverIdentities.CreateForActor(),
+                                                                        new ClusterMemberMeta
+                                                                        {
+                                                                            ConnectionEstablished = false,
+                                                                            HeartBeatInterval = heartBeatInterval,
+                                                                            LastKnownHeartBeat = DateTime.UtcNow
+                                                                                                 - heartBeatInterval.MultiplyBy(config.MissingHeartBeatsBeforeDeletion)
+                                                                        }));
             foreach (var peer in stalePeers.Concat(activePeers).Concat(deadPeers))
             {
                 peerRegistry.FindOrAdd(peer.Key, peer.Value);
@@ -117,28 +115,28 @@ namespace kino.Tests.Cluster
         public void GetStalePeers_ReturnsPeersWichAreNotConnectedAndLastKnownHeartBeatFromNowGreaterThanPeerIsStaleAfterTime()
         {
             var deadPeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
-                                                        () => new KVP(ReceiverIdentities.CreateForActor(),
-                                                                      new ClusterMemberMeta
-                                                                      {
-                                                                          ConnectionEstablished = true,
-                                                                          LastKnownHeartBeat = DateTime.UtcNow
-                                                                                               - config.PeerIsStaleAfter.MultiplyBy(2)
-                                                                      }));
-            var stalePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
                                                          () => new KVP(ReceiverIdentities.CreateForActor(),
                                                                        new ClusterMemberMeta
                                                                        {
-                                                                           ConnectionEstablished = false,
+                                                                           ConnectionEstablished = true,
                                                                            LastKnownHeartBeat = DateTime.UtcNow
                                                                                                 - config.PeerIsStaleAfter.MultiplyBy(2)
                                                                        }));
-            var activePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
+            var stalePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
                                                           () => new KVP(ReceiverIdentities.CreateForActor(),
                                                                         new ClusterMemberMeta
                                                                         {
                                                                             ConnectionEstablished = false,
                                                                             LastKnownHeartBeat = DateTime.UtcNow
+                                                                                                 - config.PeerIsStaleAfter.MultiplyBy(2)
                                                                         }));
+            var activePeers = EnumerableExtensions.Produce(Randomizer.Int32(4, 8),
+                                                           () => new KVP(ReceiverIdentities.CreateForActor(),
+                                                                         new ClusterMemberMeta
+                                                                         {
+                                                                             ConnectionEstablished = false,
+                                                                             LastKnownHeartBeat = DateTime.UtcNow
+                                                                         }));
             foreach (var peer in stalePeers.Concat(activePeers).Concat(deadPeers))
             {
                 peerRegistry.FindOrAdd(peer.Key, peer.Value);

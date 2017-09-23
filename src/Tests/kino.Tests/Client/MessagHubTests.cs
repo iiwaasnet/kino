@@ -14,32 +14,30 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Client
 {
-    
     public class MessagHubTests
     {
         private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
-        private MessageHubSocketFactory messageHubSocketFactory;
+        private readonly MessageHubSocketFactory messageHubSocketFactory;
         private readonly string localhost = "tcp://localhost:43";
-        private Mock<ISocketFactory> socketFactory;
-        private ILogger logger;
-        private Mock<ICallbackHandlerStack> callbackHandlerStack;
-        private Mock<ISecurityProvider> securityProvider;
+        private readonly Mock<ISocketFactory> socketFactory;
+        private readonly ILogger logger;
+        private readonly Mock<ICallbackHandlerStack> callbackHandlerStack;
+        private readonly Mock<ISecurityProvider> securityProvider;
         private MessageHub messageHub;
-        private Mock<ILocalSocket<IMessage>> routerSocket;
-        private Mock<ILocalSendingSocket<InternalRouteRegistration>> registrationSocket;
-        private SocketEndpoint scaleOutAddress;
-        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private Mock<ILocalSocketFactory> localSocketFactory;
-        private Mock<ILocalSocket<IMessage>> receivingSocket;
+        private readonly Mock<ILocalSocket<IMessage>> routerSocket;
+        private readonly Mock<ILocalSendingSocket<InternalRouteRegistration>> registrationSocket;
+        private readonly SocketEndpoint scaleOutAddress;
+        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private readonly Mock<ILocalSocketFactory> localSocketFactory;
+        private readonly Mock<ILocalSocket<IMessage>> receivingSocket;
 
-        
-        public void Setup()
+        public MessagHubTests()
         {
             callbackHandlerStack = new Mock<ICallbackHandlerStack>();
             logger = new Mock<ILogger>().Object;
@@ -114,14 +112,16 @@ namespace kino.Tests.Client
                 messageHub.EnqueueRequest(message, callback);
                 AsyncOpCompletionDelay.Sleep();
                 //
-                Func<IMessage, bool> routerSocketIsReceiver = msg => Unsafe.ArraysEqual(msg.As<Message>().ReceiverNodeIdentity, scaleOutAddress.Identity)
-                                                                     && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
-                routerSocket.WaitUntilMessageSent(routerSocketIsReceiver);
+                routerSocket.WaitUntilMessageSent(RouterSocketIsReceiver);
             }
             finally
             {
                 messageHub.Stop();
             }
+
+            bool RouterSocketIsReceiver(IMessage msg)
+                => Unsafe.ArraysEqual(msg.As<Message>().ReceiverNodeIdentity, scaleOutAddress.Identity)
+                   && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
         }
 
         [Fact]
@@ -173,12 +173,12 @@ namespace kino.Tests.Client
                 ReceiveMessageCompletionDelay.Sleep();
                 //
                 Assert.Null(callbackHandlerStack.Pop(new CallbackHandlerKey
-                                                       {
-                                                           Version = callback.MessageIdentifiers.Single().Version,
-                                                           Identity = callback.MessageIdentifiers.Single().Identity,
-                                                           Partition = callback.MessageIdentifiers.Single().Partition,
-                                                           CallbackKey = promise.CallbackKey.Value
-                                                       }));
+                                                     {
+                                                         Version = callback.MessageIdentifiers.Single().Version,
+                                                         Identity = callback.MessageIdentifiers.Single().Identity,
+                                                         Partition = callback.MessageIdentifiers.Single().Partition,
+                                                         CallbackKey = promise.CallbackKey.Value
+                                                     }));
             }
             finally
             {
@@ -213,11 +213,11 @@ namespace kino.Tests.Client
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
                 //
-                Assert.Throws<AggregateException>(() =>
-                                                  {
-                                                      var _ = promise.GetResponse().Result;
-                                                  },
-                                                  errorMessage);
+                var err = Record.Exception(() =>
+                                           {
+                                               var _ = promise.GetResponse().Result;
+                                           });
+                Assert.Equal(errorMessage, err.Message);
             }
             finally
             {

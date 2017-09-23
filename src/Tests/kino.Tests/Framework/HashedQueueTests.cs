@@ -4,11 +4,10 @@ using System.Linq;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Framework
 {
-    
     public class HashedQueueTests
     {
         [Fact]
@@ -106,7 +105,6 @@ namespace kino.Tests.Framework
         }
 
         private static MessageIdentifier CreateMessageIdentifier()
-        => new MessageIdentifier(Guid.NewGuid().ToByteArray(), Randomizer.UInt16(), Guid.NewGuid().ToByteArray());
-        
+            => new MessageIdentifier(Guid.NewGuid().ToByteArray(), Randomizer.UInt16(), Guid.NewGuid().ToByteArray());
     }
 }

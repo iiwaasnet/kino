@@ -4,23 +4,21 @@ using System.Threading.Tasks;
 using kino.Cluster.Configuration;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster.Configuration
 {
-    
     public class HeartBeatSenderConfigurationManagerTests
     {
-        private HeartBeatSenderConfigurationManager configManager;
-        private HeartBeatSenderConfiguration config;
+        private readonly HeartBeatSenderConfigurationManager configManager;
+        private readonly HeartBeatSenderConfiguration config;
 
-        
-        public void Setup()
+        public HeartBeatSenderConfigurationManagerTests()
         {
             config = new HeartBeatSenderConfiguration
                      {
-                         AddressRange = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                                     i => new Uri($"tcp://127.0.0.{i}:8080"))
+                         AddressRange = Randomizer.Int32(3, 6)
+                                                  .Produce(i => new Uri($"tcp://127.0.0.{i}:8080"))
                      };
             configManager = new HeartBeatSenderConfigurationManager(config);
         }

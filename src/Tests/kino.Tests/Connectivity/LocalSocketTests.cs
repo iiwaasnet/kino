@@ -4,19 +4,17 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Connectivity
 {
-    
     public class LocalSocketTests
     {
-        private LocalSocket<IMessage> socket;
-        private Mock<IPerformanceCounter> receivingRate;
-        private Mock<IPerformanceCounter> sendingRate;
+        private readonly LocalSocket<IMessage> socket;
+        private readonly Mock<IPerformanceCounter> receivingRate;
+        private readonly Mock<IPerformanceCounter> sendingRate;
 
-        
-        public void Setup()
+        public LocalSocketTests()
         {
             sendingRate = new Mock<IPerformanceCounter>();
             receivingRate = new Mock<IPerformanceCounter>();

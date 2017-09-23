@@ -11,25 +11,23 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using Moq;
 using NetMQ;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster
 {
-    
     public class HeartBeatSenderTests
     {
-        private HeartBeatSender heartBeatSender;
-        private Mock<ISocketFactory> socketFactory;
-        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private Mock<ILogger> logger;
-        private Mock<IHeartBeatSenderConfigurationManager> config;
-        private SocketEndpoint scaleOutAddress;
+        private readonly HeartBeatSender heartBeatSender;
+        private readonly Mock<ISocketFactory> socketFactory;
+        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private readonly Mock<ILogger> logger;
+        private readonly Mock<IHeartBeatSenderConfigurationManager> config;
+        private readonly SocketEndpoint scaleOutAddress;
         private TimeSpan heartBeatInterval;
-        private IEnumerable<Uri> heartBeatAddresses;
-        private Mock<ISocket> socket;
+        private readonly IEnumerable<Uri> heartBeatAddresses;
+        private readonly Mock<ISocket> socket;
 
-        
-        public void Setup()
+        public HeartBeatSenderTests()
         {
             socketFactory = new Mock<ISocketFactory>();
             socket = new Mock<ISocket>();

@@ -14,31 +14,29 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster
 {
-    
     public class AutoDiscoveryListenerTests
     {
         private readonly TimeSpan AsyncOp = TimeSpan.FromSeconds(1);
-        private AutoDiscoveryListener autoDiscoveryListener;
-        private ClusterMembershipConfiguration membershipConfiguration;
-        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
-        private Mock<ILogger> logger;
-        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private Mock<IRendezvousCluster> rendezvousCluster;
-        private Mock<ISocketFactory> socketFactory;
-        private Mock<ILocalSocket<IMessage>> localRouterSocket;
-        private Mock<ISocket> subscriptionSocket;
-        private Mock<Action> restartRequestHandler;
-        private Barrier gateway;
+        private readonly AutoDiscoveryListener autoDiscoveryListener;
+        private readonly ClusterMembershipConfiguration membershipConfiguration;
+        private readonly Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
+        private readonly Mock<ILogger> logger;
+        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private readonly Mock<IRendezvousCluster> rendezvousCluster;
+        private readonly Mock<ISocketFactory> socketFactory;
+        private readonly Mock<ILocalSocket<IMessage>> localRouterSocket;
+        private readonly Mock<ISocket> subscriptionSocket;
+        private readonly Mock<Action> restartRequestHandler;
+        private readonly Barrier gateway;
         private RendezvousEndpoint[] rendezvousEndpoints;
         private int currentRendezvousIndex;
-        private SocketEndpoint scaleOutAddress;
+        private readonly SocketEndpoint scaleOutAddress;
 
-        
-        public void Setup()
+        public AutoDiscoveryListenerTests()
         {
             rendezvousCluster = new Mock<IRendezvousCluster>();
             rendezvousEndpoints = new[]
