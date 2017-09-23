@@ -17,14 +17,14 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
 {
     public class NodeRoutesRegistrarTests
     {
-        private NodeRoutesRegistrar registrar;
-        private Mock<IClusterServices> clusterServices;
-        private Mock<IInternalRoutingTable> internalRoutingTable;
-        private Mock<ISecurityProvider> securityProvider;
-        private string domain;
-        private Mock<IClusterMonitor> clusterMonitor;
+        private readonly NodeRoutesRegistrar registrar;
+        private readonly Mock<IClusterServices> clusterServices;
+        private readonly Mock<IInternalRoutingTable> internalRoutingTable;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly string domain;
+        private readonly Mock<IClusterMonitor> clusterMonitor;
 
-        public void Setup()
+        public NodeRoutesRegistrarTests()
         {
             clusterServices = new Mock<IClusterServices>();
             clusterMonitor = new Mock<IClusterMonitor>();
@@ -41,8 +41,8 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
         [Fact]
         public void RegisterOwnGlobalRoutes_RegisteresOnlyGlobalyRegisteredActors()
         {
-            var actors = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
-                                                      i => new ReceiverIdentifierRegistration(ReceiverIdentities.CreateForActor(), i % 2 == 0));
+            var actors = Randomizer.Int32(5, 15)
+                                   .Produce(i => new ReceiverIdentifierRegistration(ReceiverIdentities.CreateForActor(), i % 2 == 0));
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
             var internalRoutes = new InternalRouting
                                  {
@@ -79,14 +79,14 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var min = 5;
             var internalRoutes = new InternalRouting
                                  {
-                                     Actors = EnumerableExtensions.Produce(Randomizer.Int32(min, 15),
-                                                                           () => new MessageActorRoute
-                                                                                 {
-                                                                                     Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
-                                                                                                                     Randomizer.UInt16(),
-                                                                                                                     Guid.NewGuid().ToByteArray()),
-                                                                                     Actors = new[] {receiverIdentifierRegistration}
-                                                                                 }),
+                                     Actors = Randomizer.Int32(min, 15)
+                                                        .Produce(() => new MessageActorRoute
+                                                                       {
+                                                                           Message = new MessageIdentifier(Guid.NewGuid().ToByteArray(),
+                                                                                                           Randomizer.UInt16(),
+                                                                                                           Guid.NewGuid().ToByteArray()),
+                                                                           Actors = new[] {receiverIdentifierRegistration}
+                                                                       }),
                                      MessageHubs = Enumerable.Empty<MessageHubRoute>()
                                  };
             internalRoutingTable.Setup(m => m.GetAllRoutes()).Returns(internalRoutes);
@@ -143,8 +143,8 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
         [Fact]
         public void RegisterOwnGlobalRoutes_RegisteresOnlyGlobalyRegisteredMessageHubsAndActors()
         {
-            var actors = EnumerableExtensions.Produce(Randomizer.Int32(5, 15),
-                                                      i => new ReceiverIdentifierRegistration(ReceiverIdentities.CreateForActor(), i % 2 == 0));
+            var actors = Randomizer.Int32(5, 15)
+                                   .Produce(i => new ReceiverIdentifierRegistration(ReceiverIdentities.CreateForActor(), i % 2 == 0));
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
             var internalRoutes = new InternalRouting
                                  {

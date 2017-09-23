@@ -11,12 +11,12 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
 {
     public class NodeMessageRoutesRequestHandlerTests
     {
-        private NodeMessageRoutesRequestHandler handler;
-        private Mock<ISecurityProvider> securityProvider;
-        private Mock<INodeRoutesRegistrar> nodeRoutesRegistrar;
-        private string domain;
+        private readonly NodeMessageRoutesRequestHandler handler;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly Mock<INodeRoutesRegistrar> nodeRoutesRegistrar;
+        private readonly string domain;
 
-        public void Setup()
+        public NodeMessageRoutesRequestHandlerTests()
         {
             securityProvider = new Mock<ISecurityProvider>();
             domain = Guid.NewGuid().ToString();

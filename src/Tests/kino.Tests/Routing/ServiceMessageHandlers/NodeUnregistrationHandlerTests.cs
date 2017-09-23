@@ -15,14 +15,14 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
 {
     public class NodeUnregistrationHandlerTests
     {
-        private NodeUnregistrationHandler handler;
-        private Mock<IClusterHealthMonitor> clusterHealthMonitor;
-        private Mock<IExternalRoutingTable> externalRoutingTable;
-        private Mock<ISecurityProvider> securityProvider;
-        private string domain;
-        private Mock<ISocket> backendSocket;
+        private readonly NodeUnregistrationHandler handler;
+        private readonly Mock<IClusterHealthMonitor> clusterHealthMonitor;
+        private readonly Mock<IExternalRoutingTable> externalRoutingTable;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly string domain;
+        private readonly Mock<ISocket> backendSocket;
 
-        public void Setup()
+        public NodeUnregistrationHandlerTests()
         {
             clusterHealthMonitor = new Mock<IClusterHealthMonitor>();
             externalRoutingTable = new Mock<IExternalRoutingTable>();

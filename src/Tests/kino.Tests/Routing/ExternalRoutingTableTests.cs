@@ -458,18 +458,21 @@ namespace kino.Tests.Routing
                              .BeEquivalentTo(routes.Where(r => r.Node.Equals(node)).SelectMany(r => r.MessageRoutes).Select(mr => mr.Message));
                 foreach (var messageIdentifier in messageRoutes.Select(mr => mr.Key))
                 {
-                    messageRoutes.Where(mr => mr.Key == messageIdentifier).SelectMany(mr => mr)
+                    messageRoutes.Where(mr => mr.Key == messageIdentifier)
+                                 .SelectMany(mr => mr)
                                  .Should()
                                  .BeEquivalentTo(routes.Where(r => r.Node.Equals(node))
                                                        .SelectMany(r => r.MessageRoutes)
                                                        .Where(mr => mr.Message == messageIdentifier)
-                                                       .SelectMany(mr => mr.Actors));
+                                                       .SelectMany(mr => mr.Actors)
+                                                       .Select(a => new ReceiverIdentifier(a.Identity)));
                 }
             }
 
             IEnumerable<ReceiverIdentifier> Actors()
                 => Randomizer.Int32(1, 8)
-                             .Produce(ReceiverIdentities.CreateForActor);
+                             .Produce(ReceiverIdentities.CreateForActor)
+                             .ToList();
         }
 
         private void IfNodeIdentifierIsNotProvidedOrNotFound_PeerRemovalResultIsNotFound(byte[] removeNodeIdentity)
