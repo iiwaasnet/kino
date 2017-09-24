@@ -7,7 +7,7 @@ using kino.Security;
 
 namespace Client
 {
-    class DomainScopeResolver : IDomainScopeResolver
+    public class DomainScopeResolver : IDomainScopeResolver
     {
         public IEnumerable<DomainScope> GetDomainMessages(IEnumerable<string> domains)
         {
