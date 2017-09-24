@@ -1,5 +1,4 @@
-﻿#if NET47
-using System;
+﻿using System;
 using WindowsServiceHost;
 using Autofac;
 using kino.Core.Diagnostics.Performance;
@@ -39,4 +38,3 @@ namespace kino.Rendezvous.Service
             => rendezvousService?.Stop();
     }
 }
-#endif
