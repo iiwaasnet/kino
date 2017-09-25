@@ -11,9 +11,7 @@
             "missingHeartBeatsBeforeReconnect": "3",
             "intercomEndpoint": "inproc://health",
             "members": [
-                "tcp://rendezvous.bwin.dev:7001",
-                "tcp://rendezvous.bwin.dev:7002",
-                "tcp://rendezvous.bwin.dev:7003"
+                "tcp://rendezvous1.bwin.dev:7001"
             ]
 
         },

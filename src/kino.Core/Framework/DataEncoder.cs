@@ -8,9 +8,7 @@ namespace kino.Core.Framework
         private static readonly Encoding Encoder;
 
         static DataEncoder()
-        {
-            Encoder = Encoding.UTF8;
-        }
+            => Encoder = Encoding.UTF8;
 
         public static ulong Combine(ushort v16, ushort v32)
             => v16
