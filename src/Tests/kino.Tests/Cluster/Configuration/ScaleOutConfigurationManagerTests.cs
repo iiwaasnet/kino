@@ -5,36 +5,34 @@ using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster.Configuration
 {
-    [TestFixture]
     public class ScaleOutConfigurationManagerTests
     {
-        private ScaleOutConfigurationManager configManager;
-        private ScaleOutSocketConfiguration config;
+        private readonly ScaleOutConfigurationManager configManager;
+        private readonly ScaleOutSocketConfiguration config;
 
-        [SetUp]
-        public void Setup()
+        public ScaleOutConfigurationManagerTests()
         {
             config = new ScaleOutSocketConfiguration
                      {
-                         AddressRange = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                                    i => new SocketEndpoint($"tcp://*:808{i}"))
+                         AddressRange = Randomizer.Int32(3, 6)
+                                                  .Produce(i => new SocketEndpoint($"tcp://*:808{i}"))
                      };
             configManager = new ScaleOutConfigurationManager(config);
         }
 
-        [Test]
+        [Fact]
         public void IfActiveScaleOutAddressIsNotSet_GetScaleOutAddressBlocks()
         {
             var task = Task.Factory.StartNew(() => configManager.GetScaleOutAddress());
             //
-            Assert.IsFalse(task.Wait(TimeSpan.FromSeconds(3)));
+            Assert.False(task.Wait(TimeSpan.FromSeconds(3)));
         }
 
-        [Test]
+        [Fact]
         public void GetScaleOutAddressUnblocks_WhenActiveScaleOutAddressIsSet()
         {
             var asyncOp = TimeSpan.FromSeconds(4);
@@ -45,10 +43,10 @@ namespace kino.Tests.Cluster.Configuration
                                       configManager.SetActiveScaleOutAddress(config.AddressRange.First());
                                   });
             //
-            Assert.IsTrue(task.Wait(asyncOp));
+            Assert.True(task.Wait(asyncOp));
         }
 
-        [Test]
+        [Fact]
         public void IfSocketEndpointDoesntBelongToInitialAddressRange_SetActiveScaleOutAddressThrowsException()
         {
             Assert.Throws<Exception>(() => configManager.SetActiveScaleOutAddress(new SocketEndpoint("tcp://*:43")));

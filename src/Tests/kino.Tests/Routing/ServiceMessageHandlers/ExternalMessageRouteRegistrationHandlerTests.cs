@@ -13,25 +13,23 @@ using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 using Health = kino.Messaging.Messages.Health;
 using MessageContract = kino.Messaging.Messages.MessageContract;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
-    [TestFixture]
     public class ExternalMessageRouteRegistrationHandlerTests
     {
-        private Mock<ILogger> logger;
-        private Mock<ISecurityProvider> securityProvider;
-        private string domain;
-        private Mock<IExternalRoutingTable> externalRoutingTable;
-        private ExternalMessageRouteRegistrationHandler handler;
-        private Mock<ISocket> socket;
-        private Mock<IClusterHealthMonitor> clusterHealthMonitor;
+        private readonly Mock<ILogger> logger;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly string domain;
+        private readonly Mock<IExternalRoutingTable> externalRoutingTable;
+        private readonly ExternalMessageRouteRegistrationHandler handler;
+        private readonly Mock<ISocket> socket;
+        private readonly Mock<IClusterHealthMonitor> clusterHealthMonitor;
 
-        [SetUp]
-        public void Setup()
+        public ExternalMessageRouteRegistrationHandlerTests()
         {
             logger = new Mock<ILogger>();
             socket = new Mock<ISocket>();
@@ -54,7 +52,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                                   logger.Object);
         }
 
-        [Test]
+        [Fact]
         public void PeerAddedToClusterHealthMonitor_OnlyOnce()
         {
             var payload = CreateRegisterExternalMessageRoutePayload();
@@ -65,10 +63,10 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             Func<Node, bool> isThisPeer = p => p.Uri.ToSocketAddress() == payload.Uri
                                                && Unsafe.ArraysEqual(p.SocketIdentity, payload.NodeIdentity);
-            clusterHealthMonitor.Verify(m => m.AddPeer(It.Is<Node>(p => isThisPeer(p)), It.IsAny<global::kino.Cluster.Health>()), Times.Once);
+            clusterHealthMonitor.Verify(m => m.AddPeer(It.Is<Node>(p => isThisPeer(p)), It.IsAny<kino.Cluster.Health>()), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void IfDomainIsAllowed_AllRoutesAreAdded()
         {
             var payload = CreateRegisterExternalMessageRoutePayload();
@@ -95,7 +93,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             externalRoutingTable.Verify(m => m.AddMessageRoute(It.Is<ExternalRouteRegistration>(er => thisMessageHub(er))), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void IfRegistrationDomainIsNotAllowed_RoutesAreNotAdded()
         {
             var payload = CreateRegisterExternalMessageRoutePayload();
@@ -106,10 +104,10 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             handler.Handle(message, socket.Object);
             //
             externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<ExternalRouteRegistration>()), Times.Never);
-            clusterHealthMonitor.Verify(m => m.AddPeer(It.IsAny<Node>(), It.IsAny<global::kino.Cluster.Health>()), Times.Never);
+            clusterHealthMonitor.Verify(m => m.AddPeer(It.IsAny<Node>(), It.IsAny<kino.Cluster.Health>()), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public void IfMessageDomainIsNotEqualToRegistrationDomain_MessageRouteIsNotAdded()
         {
             var payload = CreateRegisterExternalMessageRoutePayload();
@@ -143,12 +141,12 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                 {
                                     ReceiverIdentity = ReceiverIdentities.CreateForActor().Identity,
                                     MessageContracts = EnumerableExtensions.Produce(Randomizer.UInt16(2, 5),
-                                                                                   () => new MessageContract
-                                                                                         {
-                                                                                             Identity = Guid.NewGuid().ToByteArray(),
-                                                                                             Version = Randomizer.UInt16()
-                                                                                         })
-                                                                          .ToArray()
+                                                                                    () => new MessageContract
+                                                                                          {
+                                                                                              Identity = Guid.NewGuid().ToByteArray(),
+                                                                                              Version = Randomizer.UInt16()
+                                                                                          })
+                                                                           .ToArray()
                                 },
                                 new RouteRegistration
                                 {

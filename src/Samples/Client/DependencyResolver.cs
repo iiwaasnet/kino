@@ -1,5 +1,4 @@
-﻿using System;
-using Autofac;
+﻿using Autofac;
 using kino;
 
 namespace Client
@@ -29,7 +28,7 @@ namespace Client
                            ? container.Resolve<T>()
                            : context.Resolve<T>();
             }
-            catch (Exception)
+            catch
             {
                 return default(T);
             }

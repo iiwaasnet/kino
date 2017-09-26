@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
@@ -14,31 +15,29 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster
 {
-    [TestFixture]
     public class AutoDiscoveryListenerTests
     {
         private readonly TimeSpan AsyncOp = TimeSpan.FromSeconds(1);
-        private AutoDiscoveryListener autoDiscoveryListener;
-        private ClusterMembershipConfiguration membershipConfiguration;
-        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
-        private Mock<ILogger> logger;
-        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private Mock<IRendezvousCluster> rendezvousCluster;
-        private Mock<ISocketFactory> socketFactory;
-        private Mock<ILocalSocket<IMessage>> localRouterSocket;
-        private Mock<ISocket> subscriptionSocket;
-        private Mock<Action> restartRequestHandler;
-        private Barrier gateway;
+        private readonly AutoDiscoveryListener autoDiscoveryListener;
+        private readonly ClusterMembershipConfiguration membershipConfiguration;
+        private readonly Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
+        private readonly Mock<ILogger> logger;
+        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private readonly Mock<IRendezvousCluster> rendezvousCluster;
+        private readonly Mock<ISocketFactory> socketFactory;
+        private readonly Mock<ILocalSocket<IMessage>> localRouterSocket;
+        private readonly Mock<ISocket> subscriptionSocket;
+        private readonly Mock<Action> restartRequestHandler;
+        private readonly Barrier gateway;
         private RendezvousEndpoint[] rendezvousEndpoints;
         private int currentRendezvousIndex;
-        private SocketEndpoint scaleOutAddress;
+        private readonly SocketEndpoint scaleOutAddress;
 
-        [SetUp]
-        public void Setup()
+        public AutoDiscoveryListenerTests()
         {
             rendezvousCluster = new Mock<IRendezvousCluster>();
             rendezvousEndpoints = new[]
@@ -77,7 +76,7 @@ namespace kino.Tests.Cluster
                                                               logger.Object);
         }
 
-        [Test]
+        [Fact]
         public async Task IfHeartBeatDoesntArriveWithinHeartBeatSilenceBeforeRendezvousFailoverTime_ListenerRestartsConnectingToNextRendezvous()
         {
             var numberOfTimeouts = 3;
@@ -93,7 +92,7 @@ namespace kino.Tests.Cluster
             subscriptionSocket.Verify(m => m.Connect(GetCurrentRendezvous().BroadcastUri, true), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task IfHeartBeatArrivesWithinHeartBeatSilenceBeforeRendezvousFailoverTime_ListenerDoesntRestart()
         {
             var numberOfHeartBeats = 2;
@@ -107,7 +106,7 @@ namespace kino.Tests.Cluster
             rendezvousCluster.Verify(m => m.RotateRendezvousServers(), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public async Task IfRendezvousConfigurationChangedMessageArrives_RendezvousIsReconfiguredAndListenerRestartsConnectingToNewRendezvous()
         {
             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
@@ -130,17 +129,17 @@ namespace kino.Tests.Cluster
             restartRequestHandler.Verify(m => m(), Times.Once);
             Func<IEnumerable<RendezvousEndpoint>, bool> areNewNodes = nodes =>
                                                                       {
-                                                                          CollectionAssert.AreEquivalent(payload.RendezvousNodes
-                                                                                                                .Select(rn => new RendezvousEndpoint(rn.UnicastUri, rn.BroadcastUri)),
-                                                                                                         nodes);
+                                                                          nodes.Should()
+                                                                               .BeEquivalentTo(payload.RendezvousNodes
+                                                                                                      .Select(rn => new RendezvousEndpoint(rn.UnicastUri, rn.BroadcastUri)));
                                                                           return true;
                                                                       };
             rendezvousCluster.Verify(m => m.Reconfigure(It.Is<IEnumerable<RendezvousEndpoint>>(nodes => areNewNodes(nodes))), Times.Once);
-            Assert.AreEqual(GetCurrentRendezvous().BroadcastUri, new Uri(payload.RendezvousNodes.First().BroadcastUri));
+            Assert.Equal(GetCurrentRendezvous().BroadcastUri, new Uri(payload.RendezvousNodes.First().BroadcastUri));
             restartRequestHandler.Verify(m => m(), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public async Task IfRendezvousNotLeaderMessageArives_ListenerRestartsConnectingToNewRendezvousLeader()
         {
             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
@@ -162,15 +161,15 @@ namespace kino.Tests.Cluster
             restartRequestHandler.Verify(m => m(), Times.Once);
             Func<RendezvousEndpoint, bool> isNewLeader = rnd =>
                                                          {
-                                                             Assert.AreEqual(payload.NewLeader.BroadcastUri, rnd.BroadcastUri.ToSocketAddress());
-                                                             Assert.AreEqual(payload.NewLeader.UnicastUri, rnd.UnicastUri.ToSocketAddress());
+                                                             Assert.Equal(payload.NewLeader.BroadcastUri, rnd.BroadcastUri.ToSocketAddress());
+                                                             Assert.Equal(payload.NewLeader.UnicastUri, rnd.UnicastUri.ToSocketAddress());
                                                              return true;
                                                          };
             rendezvousCluster.Verify(m => m.SetCurrentRendezvousServer(It.Is<RendezvousEndpoint>(rnd => isNewLeader(rnd))), Times.Once);
             restartRequestHandler.Verify(m => m(), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void RoutingControlMessages_AreForwardedToRouterSocket()
         {
             foreach (var payload in GetRoutingControlMessages())

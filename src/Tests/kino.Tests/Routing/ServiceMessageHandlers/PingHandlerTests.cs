@@ -1,15 +1,12 @@
 ﻿using kino.Routing.ServiceMessageHandlers;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
-    [TestFixture]
     public class PingHandlerTests
     {
-        [Test]
+        [Fact]
         public void PingHandler_DoesNothing()
-        {
-            new PingHandler().Handle(null, null);
-        }
+            => new PingHandler().Handle(null, null);
     }
 }

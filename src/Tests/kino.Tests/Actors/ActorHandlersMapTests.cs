@@ -6,14 +6,13 @@ using kino.Core;
 using kino.Core.Framework;
 using kino.Messaging.Messages;
 using kino.Tests.Actors.Setup;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Actors
 {
-    [TestFixture]
     public class ActorHandlersMapTests
     {
-        [Test]
+        [Fact]
         public void AddingActorWithoutRegisteredMessageHandlers_ThrowsNoException()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -21,7 +20,7 @@ namespace kino.Tests.Actors
             actorHandlersMap.Add(voidActor);
         }
 
-        [Test]
+        [Fact]
         public void WhenDuplicatedKeyExceptionThrown_NonOfTheActorHandlersIsAdded()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -49,15 +48,15 @@ namespace kino.Tests.Actors
                                                               });
 
             actorHandlersMap.Add(simpleMessageActor);
-            Assert.DoesNotThrow(() => actorHandlersMap.Get(MessageIdentifier.Create<SimpleMessage>()));
+            actorHandlersMap.Get(MessageIdentifier.Create<SimpleMessage>());
 
             Assert.Throws<DuplicatedKeyException>(() => { actorHandlersMap.Add(exceptionMessageActor); });
 
-            Assert.DoesNotThrow(() => actorHandlersMap.Get(MessageIdentifier.Create<SimpleMessage>()));
+            actorHandlersMap.Get(MessageIdentifier.Create<SimpleMessage>());
             Assert.Throws<KeyNotFoundException>(() => actorHandlersMap.Get(MessageIdentifier.Create<ExceptionMessage>()));
         }
 
-        [Test]
+        [Fact]
         public void ActorHandlersMap_CanAddTwoActorsHandlingSameMessageTypeInDifferentPartitions()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -83,11 +82,11 @@ namespace kino.Tests.Actors
             actorHandlersMap.Add(actorWithoutPartition);
             actorHandlersMap.Add(actorWithPartition);
 
-            Assert.DoesNotThrow(() => actorHandlersMap.Get(MessageIdentifier.Create(typeof(SimpleMessage), partition)));
-            Assert.DoesNotThrow(() => actorHandlersMap.Get(MessageIdentifier.Create(typeof(SimpleMessage))));
+            actorHandlersMap.Get(MessageIdentifier.Create(typeof(SimpleMessage), partition));
+            actorHandlersMap.Get(MessageIdentifier.Create(typeof(SimpleMessage)));
         }
 
-        [Test]
+        [Fact]
         public void AddingActorsHandlingTheSameMessageTwice_ThowsDuplicatedKeyException()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -97,7 +96,7 @@ namespace kino.Tests.Actors
             Assert.Throws<DuplicatedKeyException>(() => { actorHandlersMap.Add(actor); });
         }
 
-        [Test]
+        [Fact]
         public void CanAddReturnsFalse_IfActorAlreadyAdded()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -105,19 +104,19 @@ namespace kino.Tests.Actors
 
             actorHandlersMap.Add(actor);
 
-            Assert.IsFalse(actorHandlersMap.CanAdd(actor));
+            Assert.False(actorHandlersMap.CanAdd(actor));
         }
 
-        [Test]
+        [Fact]
         public void CanAddReturnsTrue_IfActorIsNotYetAdded()
         {
             var actorHandlersMap = new ActorHandlerMap();
             var actor = new EchoActor();
 
-            Assert.IsTrue(actorHandlersMap.CanAdd(actor));
+            Assert.True(actorHandlersMap.CanAdd(actor));
         }
 
-        [Test]
+        [Fact]
         public void GettingHandlerForNonRegisteredMessageIdentifier_ThrowsKeyNotFoundException()
         {
             var actorHandlersMap = new ActorHandlerMap();

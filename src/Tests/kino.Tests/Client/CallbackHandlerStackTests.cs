@@ -5,22 +5,18 @@ using kino.Core.Framework;
 using kino.Messaging.Messages;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Client
 {
-    [TestFixture]
     public class CallbackHandlerStackTests
     {
-        private CallbackHandlerStack callbackHandlerStack;
+        private readonly CallbackHandlerStack callbackHandlerStack;
 
-        [SetUp]
-        public void Setup()
-        {
-            callbackHandlerStack = new CallbackHandlerStack();
-        }
+        public CallbackHandlerStackTests()
+            => callbackHandlerStack = new CallbackHandlerStack();
 
-        [Test]
+        [Fact]
         public void PushCallbackWithSamePromiseTwice_ThrowsDuplicatedKeyException()
         {
             var promise = new Promise(Randomizer.Int64());
@@ -29,7 +25,7 @@ namespace kino.Tests.Client
             Assert.Throws<DuplicatedKeyException>(() => { callbackHandlerStack.Push(promise, Enumerable.Empty<MessageIdentifier>()); });
         }
 
-        [Test]
+        [Fact]
         public void PopCallBackHandlerForSpecificCallbackKey_RemovesAllOtherHandlersForThisCallbackKey()
         {
             var promise = new Promise(Randomizer.Int64());
@@ -49,7 +45,7 @@ namespace kino.Tests.Client
                                                        CallbackKey = promise.CallbackKey.Value
                                                    });
 
-            Assert.IsNotNull(handler);
+            Assert.NotNull(handler);
 
             handler = callbackHandlerStack.Pop(new CallbackHandlerKey
                                                {
@@ -57,7 +53,7 @@ namespace kino.Tests.Client
                                                    Version = KinoMessages.Exception.Version,
                                                    CallbackKey = promise.CallbackKey.Value
                                                });
-            Assert.IsNull(handler);
+            Assert.Null(handler);
         }
     }
 }

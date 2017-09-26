@@ -14,28 +14,27 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
+using CollectionAssert = FluentAssertions.AssertionExtensions;
 
 namespace kino.Tests.Cluster
 {
-    [TestFixture]
     public class ScaleOutListenerTests
     {
-        private ScaleOutListener scaleOutListener;
-        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
-        private Mock<ILogger> logger;
-        private Mock<ISocketFactory> socketFactory;
-        private Mock<ILocalSendingSocket<IMessage>> localRouterSocket;
-        private Mock<IScaleOutConfigurationManager> scaleOutConfigurationManager;
-        private Mock<ISecurityProvider> securityProvider;
-        private Mock<ISocket> frontEndSocket;
-        private SocketEndpoint[] scaleOutAddresses;
+        private readonly ScaleOutListener scaleOutListener;
+        private readonly Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
+        private readonly Mock<ILogger> logger;
+        private readonly Mock<ISocketFactory> socketFactory;
+        private readonly Mock<ILocalSendingSocket<IMessage>> localRouterSocket;
+        private readonly Mock<IScaleOutConfigurationManager> scaleOutConfigurationManager;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly Mock<ISocket> frontEndSocket;
+        private readonly SocketEndpoint[] scaleOutAddresses;
         private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
-        private SocketConfiguration socketConfig;
-        private CancellationTokenSource tokenSource;
+        private readonly SocketConfiguration socketConfig;
+        private readonly CancellationTokenSource tokenSource;
 
-        [SetUp]
-        public void Setup()
+        public ScaleOutListenerTests()
         {
             tokenSource = new CancellationTokenSource();
             frontEndSocket = new Mock<ISocket>();
@@ -65,7 +64,7 @@ namespace kino.Tests.Cluster
                                                     logger.Object);
         }
 
-        [Test]
+        [Fact]
         public void IfFrontEndSocketReturnsNull_LocalRouterSocketSendIsNotCalled()
         {
             frontEndSocket.SetupMessageReceived(null, tokenSource.Token);
@@ -79,7 +78,7 @@ namespace kino.Tests.Cluster
             localRouterSocket.Verify(m => m.Send(It.IsAny<IMessage>()), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public void IfFrontEndSocketReturnsMessage_ItIsForwardedToLocalRouterSocket()
         {
             var message = Message.Create(new SimpleMessage());
@@ -93,7 +92,7 @@ namespace kino.Tests.Cluster
             localRouterSocket.Verify(m => m.Send(message), Times.Once);
         }
 
-        [Test]
+        [Fact]
         public void IfExceptionIsThrownAfterFrontEndSocketReceivedMessage_ExceptionMessageIsForwardedToLocalRouterSocketWithCallbackOfOriginalMessage()
         {
             var message = Message.Create(new SimpleMessage()).As<Message>();
@@ -119,19 +118,19 @@ namespace kino.Tests.Cluster
                                                                       return true;
                                                                   }
                                                                   var exception = msg.As<Message>();
-                                                                  Assert.AreEqual(KinoMessages.Exception, exception);
-                                                                  Assert.IsTrue(Unsafe.ArraysEqual(message.CallbackReceiverNodeIdentity, exception.CallbackReceiverNodeIdentity));
-                                                                  Assert.IsTrue(Unsafe.ArraysEqual(message.CallbackReceiverIdentity, exception.CallbackReceiverIdentity));
-                                                                  CollectionAssert.AreEquivalent(message.CallbackPoint, exception.CallbackPoint);
-                                                                  CollectionAssert.AreEquivalent(message.GetMessageRouting(), exception.GetMessageRouting());
-                                                                  Assert.AreEqual(message.CallbackKey, exception.CallbackKey);
-                                                                  Assert.IsTrue(Unsafe.ArraysEqual(message.CorrelationId, exception.CorrelationId));
+                                                                  Assert.Equal(KinoMessages.Exception, exception);
+                                                                  Assert.True(Unsafe.ArraysEqual(message.CallbackReceiverNodeIdentity, exception.CallbackReceiverNodeIdentity));
+                                                                  Assert.True(Unsafe.ArraysEqual(message.CallbackReceiverIdentity, exception.CallbackReceiverIdentity));
+                                                                  CollectionAssert.Should(message.CallbackPoint).BeEquivalentTo(exception.CallbackPoint);
+                                                                  CollectionAssert.Should(message.GetMessageRouting()).BeEquivalentTo(exception.GetMessageRouting());
+                                                                  Assert.Equal(message.CallbackKey, exception.CallbackKey);
+                                                                  Assert.True(Unsafe.ArraysEqual(message.CorrelationId, exception.CorrelationId));
                                                                   return true;
                                                               };
             localRouterSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isExceptionOrInitalMessage(msg))), Times.Exactly(2));
         }
 
-        [Test]
+        [Fact]
         public void IfExceptionIsThrownFromFrontEndSocketReceiveMessageMethod_ExceptionMessageIsForwardedToLocalRouterSocket()
         {
             var message = Message.Create(new SimpleMessage()).As<Message>();
@@ -151,19 +150,19 @@ namespace kino.Tests.Cluster
             Func<IMessage, bool> isExceptionMessage = msg =>
                                                       {
                                                           var exception = msg.As<Message>();
-                                                          Assert.AreEqual(KinoMessages.Exception, exception);
-                                                          Assert.IsNull(exception.CallbackReceiverNodeIdentity);
-                                                          Assert.IsNull(exception.CallbackReceiverIdentity);
-                                                          CollectionAssert.IsEmpty(exception.CallbackPoint);
-                                                          CollectionAssert.IsEmpty(exception.GetMessageRouting());
-                                                          Assert.AreEqual(0, exception.CallbackKey);
-                                                          Assert.IsTrue(Unsafe.ArraysEqual(Guid.Empty.ToString().GetBytes(), exception.CorrelationId));
+                                                          Assert.Equal(KinoMessages.Exception, exception);
+                                                          Assert.Null(exception.CallbackReceiverNodeIdentity);
+                                                          Assert.Null(exception.CallbackReceiverIdentity);
+                                                          Assert.Empty(exception.CallbackPoint);
+                                                          Assert.Empty(exception.GetMessageRouting());
+                                                          Assert.Equal(0, exception.CallbackKey);
+                                                          Assert.True(Unsafe.ArraysEqual(Guid.Empty.ToString().GetBytes(), exception.CorrelationId));
                                                           return true;
                                                       };
             localRouterSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isExceptionMessage(msg))), Times.AtLeastOnce);
         }
 
-        [Test]
+        [Fact]
         public void IfFrontEndSocketFailsBindingToOneAddress_ItRetriesWithOtherAddresses()
         {
             frontEndSocket.Setup(m => m.Bind(scaleOutAddresses.First().Uri)).Throws<Exception>();
@@ -176,9 +175,9 @@ namespace kino.Tests.Cluster
             logger.Verify(m => m.Info(It.IsAny<object>()), Times.Exactly(2));
         }
 
-        [Test]
-        [TestCase(0, 2000)]
-        [TestCase(3000, 2000)]
+        [Theory]
+        [InlineData(0, 2000)]
+        [InlineData(3000, 2000)]
         public void IfFrontEndSocketHWMEqualsZeroOrGreaterThanDefaultHWM_ThenFrontEndSocketHWMIsSetToDefaultValue(int frontEndSocketHwm, int defaultHwm)
         {
             socketConfig.ReceivingHighWatermark = defaultHwm;
@@ -191,7 +190,7 @@ namespace kino.Tests.Cluster
             frontEndSocket.Verify(m => m.SetReceiveHighWaterMark(frontEndSocketHwm), Times.Never);
         }
 
-        [Test]
+        [Fact]
         public void IfFrontEndSocketHWMLessThanDefaultHWMAndGreaterThanZero_ThenFrontEndSocketHWMIsSet()
         {
             var defaultHwm = 2000;

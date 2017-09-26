@@ -9,22 +9,20 @@ using kino.Routing;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
-    [TestFixture]
     public class NodeUnregistrationHandlerTests
     {
-        private NodeUnregistrationHandler handler;
-        private Mock<IClusterHealthMonitor> clusterHealthMonitor;
-        private Mock<IExternalRoutingTable> externalRoutingTable;
-        private Mock<ISecurityProvider> securityProvider;
-        private string domain;
-        private Mock<ISocket> backendSocket;
+        private readonly NodeUnregistrationHandler handler;
+        private readonly Mock<IClusterHealthMonitor> clusterHealthMonitor;
+        private readonly Mock<IExternalRoutingTable> externalRoutingTable;
+        private readonly Mock<ISecurityProvider> securityProvider;
+        private readonly string domain;
+        private readonly Mock<ISocket> backendSocket;
 
-        [SetUp]
-        public void Setup()
+        public NodeUnregistrationHandlerTests()
         {
             clusterHealthMonitor = new Mock<IClusterHealthMonitor>();
             externalRoutingTable = new Mock<IExternalRoutingTable>();
@@ -37,7 +35,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                     securityProvider.Object);
         }
 
-        [Test]
+        [Fact]
         public void IfDomainIsNotAllowed_NodeRouteIsNotRemoved()
         {
             var message = Message.Create(new UnregisterNodeMessage()).As<Message>();
@@ -50,11 +48,11 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             clusterHealthMonitor.Verify(m => m.DeletePeer(It.IsAny<ReceiverIdentifier>()), Times.Never);
         }
 
-        [Test(Description = "ScaleOutBackend socket disconnects peer only if PeerConnectionAction is Disconnect. " +
-                            "ClusterHealthMonitor deletes peer if PeerConnectionAction is not KeepConnection.")]
-        [TestCase(PeerConnectionAction.Disconnect)]
-        [TestCase(PeerConnectionAction.KeepConnection)]
-        [TestCase(PeerConnectionAction.KeepConnection)]
+        [Theory(DisplayName = "ScaleOutBackend socket disconnects peer only if PeerConnectionAction is Disconnect. " +
+                              "ClusterHealthMonitor deletes peer if PeerConnectionAction is not KeepConnection.")]
+        [InlineData(PeerConnectionAction.Disconnect)]
+        [InlineData(PeerConnectionAction.KeepConnection)]
+        [InlineData(PeerConnectionAction.KeepConnection)]
         public void BackendSocketDisconnectsPeer_OnlyIfPeerConnectionActionIsDisconnect(PeerConnectionAction peerConnectionAction)
         {
             var payload = new UnregisterNodeMessage {ReceiverNodeIdentity = Guid.NewGuid().ToByteArray()};

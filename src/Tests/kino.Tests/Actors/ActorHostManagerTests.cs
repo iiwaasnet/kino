@@ -3,21 +3,19 @@ using kino.Actors;
 using kino.Core.Diagnostics;
 using kino.Tests.Actors.Setup;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Actors
 {
-    [TestFixture]
     public class ActorHostManagerTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
-        private ILogger logger;
-        private ActorHostManager actorHostManager;
-        private Mock<IActorHostFactory> actorHostFactory;
-        private Mock<IActorHost> actorHost;
+        private readonly ILogger logger;
+        private readonly ActorHostManager actorHostManager;
+        private readonly Mock<IActorHostFactory> actorHostFactory;
+        private readonly Mock<IActorHost> actorHost;
 
-        [SetUp]
-        public void Setup()
+        public ActorHostManagerTests()
         {
             logger = new Mock<ILogger>().Object;
             actorHostFactory = new Mock<IActorHostFactory>();
@@ -27,19 +25,19 @@ namespace kino.Tests.Actors
                                                     logger);
         }
 
-        [Test(Description = "Assigning several actors, handling the same message type, should not throw exception.")]
+        [Trait(nameof(ActorHost), "Assigning several actors, handling the same message type, should not throw exception.")]
         public void AssignActorWithSameInterfaceTwice_ThrowsNoException()
         {
             var numberOfActors = 2;
             for (var i = 0; i < numberOfActors; i++)
             {
-                Assert.DoesNotThrow(() => actorHostManager.AssignActor(new EchoActor()));
+                actorHostManager.AssignActor(new EchoActor());
             }
             //
             actorHostFactory.Verify(m => m.Create(), Times.Exactly(numberOfActors));
         }
 
-        [Test]
+        [Fact]
         public void IfActorHostInstancePolicyIsAlwaysCreateNew_NewActorHostIsCreatedForEachActor()
         {
             actorHostManager.AssignActor(new EchoActor(), ActorHostInstancePolicy.AlwaysCreateNew);
@@ -48,7 +46,7 @@ namespace kino.Tests.Actors
             actorHostFactory.Verify(m => m.Create(), Times.Exactly(2));
         }
 
-        [Test]
+        [Fact]
         public void IfActorHostCanHostAllActorsBeingAssigned_ThisActorHostInstanceIsUsed()
         {
             var echoActor = new EchoActor();

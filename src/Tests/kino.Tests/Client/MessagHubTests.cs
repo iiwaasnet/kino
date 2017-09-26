@@ -14,32 +14,30 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Client
 {
-    [TestFixture]
     public class MessagHubTests
     {
         private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
-        private MessageHubSocketFactory messageHubSocketFactory;
+        private readonly MessageHubSocketFactory messageHubSocketFactory;
         private readonly string localhost = "tcp://localhost:43";
-        private Mock<ISocketFactory> socketFactory;
-        private ILogger logger;
-        private Mock<ICallbackHandlerStack> callbackHandlerStack;
-        private Mock<ISecurityProvider> securityProvider;
+        private readonly Mock<ISocketFactory> socketFactory;
+        private readonly ILogger logger;
+        private readonly Mock<ICallbackHandlerStack> callbackHandlerStack;
+        private readonly Mock<ISecurityProvider> securityProvider;
         private MessageHub messageHub;
-        private Mock<ILocalSocket<IMessage>> routerSocket;
-        private Mock<ILocalSendingSocket<InternalRouteRegistration>> registrationSocket;
-        private SocketEndpoint scaleOutAddress;
-        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private Mock<ILocalSocketFactory> localSocketFactory;
-        private Mock<ILocalSocket<IMessage>> receivingSocket;
+        private readonly Mock<ILocalSocket<IMessage>> routerSocket;
+        private readonly Mock<ILocalSendingSocket<InternalRouteRegistration>> registrationSocket;
+        private readonly SocketEndpoint scaleOutAddress;
+        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private readonly Mock<ILocalSocketFactory> localSocketFactory;
+        private readonly Mock<ILocalSocket<IMessage>> receivingSocket;
 
-        [SetUp]
-        public void Setup()
+        public MessagHubTests()
         {
             callbackHandlerStack = new Mock<ICallbackHandlerStack>();
             logger = new Mock<ILogger>().Object;
@@ -59,9 +57,9 @@ namespace kino.Tests.Client
             messageHub = CreateMessageHub();
         }
 
-        [Test]
-        [TestCase(true)]
-        [TestCase(false)]
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
         public void WhenMessageHubStarts_RegistrationMessageIsSentAsWithProperGlobalVisibility(bool keepRegistrationLocal)
         {
             try
@@ -80,7 +78,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void EnqueueRequest_RegistersMessageAndExceptionHandlers()
         {
             try
@@ -102,7 +100,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void EnqueueRequest_SendsMessageWithCallbackSetToThisMessageHub()
         {
             try
@@ -114,17 +112,19 @@ namespace kino.Tests.Client
                 messageHub.EnqueueRequest(message, callback);
                 AsyncOpCompletionDelay.Sleep();
                 //
-                Func<IMessage, bool> routerSocketIsReceiver = msg => Unsafe.ArraysEqual(msg.As<Message>().ReceiverNodeIdentity, scaleOutAddress.Identity)
-                                                                     && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
-                routerSocket.WaitUntilMessageSent(routerSocketIsReceiver);
+                routerSocket.WaitUntilMessageSent(RouterSocketIsReceiver);
             }
             finally
             {
                 messageHub.Stop();
             }
+
+            bool RouterSocketIsReceiver(IMessage msg)
+                => Unsafe.ArraysEqual(msg.As<Message>().ReceiverNodeIdentity, scaleOutAddress.Identity)
+                   && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
         }
 
-        [Test]
+        [Fact]
         public void WhenMessageReceived_CorrespondingPromiseResultSet()
         {
             try
@@ -138,7 +138,7 @@ namespace kino.Tests.Client
                 messageHub.Start();
                 var response = promise.GetResponse().Result;
                 //
-                Assert.AreEqual(message, response);
+                Assert.Equal(message, response);
             }
             finally
             {
@@ -146,7 +146,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void WhenResultMessageIsDelivered_PromiseIsDisposedAndItsCallbackIsRemoved()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
@@ -172,13 +172,13 @@ namespace kino.Tests.Client
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
                 //
-                Assert.IsNull(callbackHandlerStack.Pop(new CallbackHandlerKey
-                                                       {
-                                                           Version = callback.MessageIdentifiers.Single().Version,
-                                                           Identity = callback.MessageIdentifiers.Single().Identity,
-                                                           Partition = callback.MessageIdentifiers.Single().Partition,
-                                                           CallbackKey = promise.CallbackKey.Value
-                                                       }));
+                Assert.Null(callbackHandlerStack.Pop(new CallbackHandlerKey
+                                                     {
+                                                         Version = callback.MessageIdentifiers.Single().Version,
+                                                         Identity = callback.MessageIdentifiers.Single().Identity,
+                                                         Partition = callback.MessageIdentifiers.Single().Partition,
+                                                         CallbackKey = promise.CallbackKey.Value
+                                                     }));
             }
             finally
             {
@@ -186,7 +186,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void WhenExceptionMessageReceived_PromiseThrowsException()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
@@ -212,12 +212,13 @@ namespace kino.Tests.Client
                 //
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
+                TimeSpan.FromSeconds(80).Sleep();
                 //
-                Assert.Throws<AggregateException>(() =>
-                                                  {
-                                                      var _ = promise.GetResponse().Result;
-                                                  },
-                                                  errorMessage);
+                var err = Record.Exception(() =>
+                                           {
+                                               var _ = promise.GetResponse().Result;
+                                           });
+                Assert.Equal(errorMessage, err.InnerException.Message);
             }
             finally
             {
@@ -225,7 +226,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Test]
+        [Fact]
         public void WhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
         {
             var callbackHandlerStack = new CallbackHandlerStack();
@@ -252,7 +253,7 @@ namespace kino.Tests.Client
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
                 //
-                Assert.IsFalse(promise.GetResponse().Wait(AsyncOpCompletionDelay));
+                Assert.False(promise.GetResponse().Wait(AsyncOpCompletionDelay));
             }
             finally
             {

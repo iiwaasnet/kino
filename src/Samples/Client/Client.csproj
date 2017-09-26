@@ -1,144 +1,27 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{6A33C881-0AB8-405C-8CF8-5FC7C686FE3F}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Client</RootNamespace>
-    <AssemblyName>Client</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
+    <TargetFramework>net47</TargetFramework>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="AsyncIO, Version=0.1.25.0, Culture=neutral, PublicKeyToken=44a94435bd6f33f8, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\AsyncIO.0.1.26.0\lib\net40\AsyncIO.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Autofac, Version=4.6.1.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Autofac.4.6.1\lib\net45\Autofac.dll</HintPath>
-    </Reference>
-    <Reference Include="C5, Version=2.5.0.0, Culture=neutral, PublicKeyToken=282361b99ded7e8e, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\C5.2.5.3\lib\net45\C5.dll</HintPath>
-    </Reference>
-    <Reference Include="NetMQ, Version=4.0.0.1, Culture=neutral, PublicKeyToken=a6decef4ddc58b3a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NetMQ.4.0.0.1\lib\net40\NetMQ.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\NLog.4.4.12\lib\net45\NLog.dll</HintPath>
-    </Reference>
-    <Reference Include="protobuf-net, Version=2.3.2.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\protobuf-net.2.3.2\lib\net40\protobuf-net.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Configuration" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.Transactions" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
-    <Reference Include="TypedConfigProvider, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\TypedConfigProvider.1.1.0\lib\net461\TypedConfigProvider.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Autofac" Version="4.2.0" />
+    <PackageReference Include="NLog" Version="5.0.0-beta10" />
+    <PackageReference Include="TypedConfigProvider" Version="2.0.0" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="DependencyResolver.cs" />
-    <Compile Include="DomainPrivateKeyProvider.cs" />
-    <Compile Include="DomainScopeResolver.cs" />
-    <Compile Include="Logger.cs" />
-    <Compile Include="Messages\GroupCharsResponseMessage.cs" />
-    <Compile Include="MainModule.cs" />
-    <Compile Include="Messages\EhlloMessage.cs" />
-    <Compile Include="Messages\HelloMessage.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SecurityModule.cs" />
+    <ProjectReference Include="..\..\kino\kino.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="config\kino.config.json">
+    <None Update="config\kino.config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="config\NLog.config">
+    <None Update="config\NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <Content Include="NLog.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <None Include="NLog.xsd">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Integration\Autofac.kino\Autofac.kino.csproj">
-      <Project>{c50a6ac1-fa0f-42b5-b709-13832fd604d5}</Project>
-      <Name>Autofac.kino</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Client\kino.Client.csproj">
-      <Project>{2c69ba32-dadc-4e4e-8d91-055fb9d35bff}</Project>
-      <Name>kino.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Core\kino.Core.csproj">
-      <Project>{ac984f96-6d8f-466b-b6a7-b241a7c5dec1}</Project>
-      <Name>kino.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Messaging\kino.Messaging.csproj">
-      <Project>{6282f68e-6d06-4dab-8d8c-b8fcd4f18f9d}</Project>
-      <Name>kino.Messaging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Routing\kino.Routing.csproj">
-      <Project>{6809914A-DBDF-4801-A2CA-A03FD43F1172}</Project>
-      <Name>kino.Routing</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino.Security\kino.Security.csproj">
-      <Project>{33F0B37F-478E-405E-ACFB-65759C56228D}</Project>
-      <Name>kino.Security</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\kino\kino.csproj">
-      <Project>{dd0c07ed-15db-4a33-b796-2ad4058e7433}</Project>
-      <Name>kino</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

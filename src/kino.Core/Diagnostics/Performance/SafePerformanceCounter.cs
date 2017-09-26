@@ -1,10 +1,9 @@
-﻿using System;
+﻿#if NET47
+using System;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 
 namespace kino.Core.Diagnostics.Performance
 {
-    [ExcludeFromCodeCoverage]
     internal class SafePerformanceCounter : IPerformanceCounter, IDisposable
     {
         private readonly string categoryName;
@@ -87,3 +86,4 @@ namespace kino.Core.Diagnostics.Performance
         public bool IsEnabled() => perfCounter != null;
     }
 }
+#endif

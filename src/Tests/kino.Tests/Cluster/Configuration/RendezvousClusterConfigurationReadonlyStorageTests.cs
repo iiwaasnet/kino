@@ -1,37 +1,36 @@
 ﻿using System.Collections.Generic;
+using FluentAssertions;
 using kino.Cluster.Configuration;
 using kino.Tests.Helpers;
-using NUnit.Framework;
+using Xunit;
 
 namespace kino.Tests.Cluster.Configuration
 {
-    [TestFixture]
     public class RendezvousClusterConfigurationReadonlyStorageTests
     {
-        private RendezvousClusterConfigurationReadonlyStorage configStorage;
-        private IEnumerable<RendezvousEndpoint> initialConfiguration;
+        private readonly RendezvousClusterConfigurationReadonlyStorage configStorage;
+        private readonly IEnumerable<RendezvousEndpoint> initialConfiguration;
 
-        [SetUp]
-        public void Setup()
+        public RendezvousClusterConfigurationReadonlyStorageTests()
         {
-            initialConfiguration = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                               i => new RendezvousEndpoint($"tcp://*:808{i}", $"tcp://*:909{i}"));
+            initialConfiguration = Randomizer.Int32(3, 6)
+                                             .Produce(i => new RendezvousEndpoint($"tcp://*:808{i}", $"tcp://*:909{i}"));
             configStorage = new RendezvousClusterConfigurationReadonlyStorage(initialConfiguration);
         }
 
-        [Test]
+        [Fact]
         public void Update_RemovesAllPreviousRendezvousEndpointsAndAddsNewOnes()
         {
             var config = new RendezvousClusterConfiguration
                          {
-                             Cluster = EnumerableExtensions.Produce(Randomizer.Int32(3, 6),
-                                                                   i => new RendezvousEndpoint($"tcp://*:8{i}80", $"tcp://*:9{i}90"))
+                             Cluster = Randomizer.Int32(3, 6)
+                                                 .Produce(i => new RendezvousEndpoint($"tcp://*:8{i}80", $"tcp://*:9{i}90"))
                          };
-            CollectionAssert.AreEquivalent(initialConfiguration, configStorage.Read().Cluster);
+            initialConfiguration.Should().BeEquivalentTo(configStorage.Read().Cluster);
             //
             configStorage.Update(config);
             //
-            CollectionAssert.AreEquivalent(config.Cluster, configStorage.Read().Cluster);
+            config.Cluster.Should().BeEquivalentTo(configStorage.Read().Cluster);
         }
     }
 }

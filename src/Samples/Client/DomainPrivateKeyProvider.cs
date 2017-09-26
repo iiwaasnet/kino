@@ -5,14 +5,12 @@ using kino.Security;
 
 namespace Client
 {
-    class DomainPrivateKeyProvider : IDomainPrivateKeyProvider
+    public class DomainPrivateKeyProvider : IDomainPrivateKeyProvider
     {
         private readonly IEnumerable<string> domains;
 
-        public DomainPrivateKeyProvider()
-        {
-            domains = GetDomains();
-        }
+        public DomainPrivateKeyProvider() 
+            => domains = GetDomains();
 
         public IEnumerable<DomainPrivateKey> GetAllowedDomainKeys()
         {

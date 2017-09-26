@@ -23,10 +23,13 @@ namespace Autofac.kino
             RegisterConfigurations(builder);
             RegisterLocalSockets(builder);
             RegisterClusterServices(builder);
-
+#if NET47
             builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
                    .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
                    .SingleInstance();
+#else
+            //TODO: Declare implementation for .NET Standard
+#endif
 
             builder.RegisterType<LocalSocketFactory>()
                    .As<ILocalSocketFactory>()
