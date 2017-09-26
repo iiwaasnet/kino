@@ -11,7 +11,7 @@ Kino
 
 Fault-tolerance and load scale-out by redundant deployment of actors, possibility to broadcast messages – everything without additional infrastructure dependencies. Rendezvous service provides actors auto-discovery and reduces amount of required configuration.
 
-Platform requirements: .NET 4.6+.
+Supported Platforms: .NET 4.7, .NET Core 2.0
 
 It is simple!
 -------------------------------------
