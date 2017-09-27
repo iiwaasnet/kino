@@ -1,6 +1,9 @@
-﻿using Autofac;
-using kino.Core.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Autofac;
 using kino.Rendezvous.Configuration;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using TypedConfigProvider;
 
 namespace kino.Rendezvous.Service
@@ -13,8 +16,14 @@ namespace kino.Rendezvous.Service
                    .As<IConfigProvider>()
                    .SingleInstance();
 
-            builder.Register(c => new Logger("default"))
+            builder.Register(c => new LoggerFactory(c.ResolveOptional<IEnumerable<ILoggerProvider>>()
+                                                    ?? Enumerable.Empty<ILoggerProvider>())
+                                 .CreateLogger("default"))
                    .As<ILogger>()
+                   .SingleInstance();
+
+            builder.RegisterType<NLogLoggerProvider>()
+                   .As<ILoggerProvider>()
                    .SingleInstance();
 
             builder.RegisterType<AppConfigTargetProvider>()

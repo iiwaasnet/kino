@@ -12,6 +12,7 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Routing;
 using kino.Security;
+using Microsoft.Extensions.Logging;
 
 namespace kino.Client
 {
@@ -113,7 +114,7 @@ namespace kino.Client
                     }
                     catch (Exception err)
                     {
-                        logger.Error(err);
+                        logger.LogError(err);
                     }
                 }
                 registrationsQueue.Dispose();
@@ -123,7 +124,7 @@ namespace kino.Client
             }
             catch (Exception err)
             {
-                logger.Error(err);
+                logger.LogError(err);
             }
         }
 
@@ -172,15 +173,15 @@ namespace kino.Client
                     }
                     catch (Exception err)
                     {
-                        logger.Error(err);
+                        logger.LogError(err);
                     }
                 }
             }
             catch (Exception err)
             {
-                logger.Error(err);
+                logger.LogError(err);
             }
-            logger.Warn($"{GetType().Name} replies reading stopped.");
+            logger.LogWarning($"{GetType().Name} replies reading stopped.");
         }
 
         private void RegisterMessageHub()

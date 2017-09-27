@@ -3,11 +3,11 @@ using System.Linq;
 using kino.Cluster;
 using kino.Connectivity;
 using kino.Core;
-using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
+using Microsoft.Extensions.Logging;
 
 namespace kino.Routing.ServiceMessageHandlers
 {
@@ -70,7 +70,7 @@ namespace kino.Routing.ServiceMessageHandlers
                 }
                 else
                 {
-                    logger.Warn($"MessageIdentity {route.Message} doesn't belong to requested Domain {domain}!");
+                    logger.LogWarning($"MessageIdentity {route.Message} doesn't belong to requested Domain {domain}!");
                 }
             }
         }

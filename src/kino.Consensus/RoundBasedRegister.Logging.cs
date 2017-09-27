@@ -1,4 +1,5 @@
 ﻿using kino.Core.Framework;
+using Microsoft.Extensions.Logging;
 
 namespace kino.Consensus
 {
@@ -10,7 +11,7 @@ namespace kino.Consensus
         {
             if (writeBallot >= ballot)
             {
-                logger.Debug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
+                logger.LogDebug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
                              "NACK_READ ==WB== " +
                              $"{writeBallot.Timestamp.ToString(format)}-" +
                              $"{writeBallot.MessageNumber}-" +
@@ -22,7 +23,7 @@ namespace kino.Consensus
             }
             if (readBallot >= ballot)
             {
-                logger.Debug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
+                logger.LogDebug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
                              "NACK_READ ==RB== " +
                              $"{readBallot.Timestamp.ToString(format)}-" +
                              $"{readBallot.MessageNumber}-" +
@@ -38,7 +39,7 @@ namespace kino.Consensus
         {
             if (writeBallot < ballot)
             {
-                logger.Debug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
+                logger.LogDebug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
                              "ACK_READ ==WB== " +
                              $"{writeBallot.Timestamp.ToString(format)}-" +
                              $"{writeBallot.MessageNumber}-" +
@@ -50,7 +51,7 @@ namespace kino.Consensus
             }
             if (readBallot < ballot)
             {
-                logger.Debug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
+                logger.LogDebug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
                              "ACK_READ ==RB== " +
                              $"{readBallot.Timestamp.ToString(format)}-" +
                              $"{readBallot.MessageNumber}-" +
@@ -66,7 +67,7 @@ namespace kino.Consensus
         {
             if (writeBallot > ballot)
             {
-                logger.Debug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
+                logger.LogDebug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
                              "NACK_WRITE ==WB== " +
                              $"{writeBallot.Timestamp.ToString(format)}-" +
                              $"{writeBallot.MessageNumber}-" +
@@ -78,7 +79,7 @@ namespace kino.Consensus
             }
             if (readBallot > ballot)
             {
-                logger.Debug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
+                logger.LogDebug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
                              "NACK_WRITE ==RB== " +
                              $"{readBallot.Timestamp.ToString(format)}-" +
                              $"{readBallot.MessageNumber}-" +
@@ -94,7 +95,7 @@ namespace kino.Consensus
         {
             if (writeBallot <= ballot)
             {
-                logger.Debug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
+                logger.LogDebug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
                              "ACK_WRITE ==WB== " +
                              $"{writeBallot.Timestamp.ToString(format)}-" +
                              $"{writeBallot.MessageNumber}-" +
@@ -106,7 +107,7 @@ namespace kino.Consensus
             }
             if (readBallot <= ballot)
             {
-                logger.Debug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
+                logger.LogDebug($"process {synodConfigProvider.LocalNode.Uri.AbsoluteUri} " +
                              "ACK_WRITE ==RB== " +
                              $"{readBallot.Timestamp.ToString(format)}-" +
                              $"{readBallot.MessageNumber}-" +

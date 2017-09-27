@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 
 namespace kino.Consensus
 {
@@ -8,13 +9,13 @@ namespace kino.Consensus
 
         private void LogAwake()
         {
-            logger.Debug($"SLEEP === process {localNode.Uri.AbsoluteUri} " +
+            logger.LogDebug($"SLEEP === process {localNode.Uri.AbsoluteUri} " +
                          $"Waked up at {DateTime.UtcNow.ToString(format)}");
         }
 
         private void LogStartSleep()
         {
-            logger.Debug($"SLEEP === process {localNode.Uri.AbsoluteUri} " +
+            logger.LogDebug($"SLEEP === process {localNode.Uri.AbsoluteUri} " +
                          $"Sleep from {DateTime.UtcNow.ToString(format)}");
         }
 
@@ -24,7 +25,7 @@ namespace kino.Consensus
             {
                 if (IsLeaseOwner(lastReadLease))
                 {
-                    logger.Debug($"[{DateTime.UtcNow.ToString(format)}] " +
+                    logger.LogDebug($"[{DateTime.UtcNow.ToString(format)}] " +
                                  "PROLONG === process " +
                                  $"{localNode.Uri.AbsoluteUri} " +
                                  "wants to prolong it's lease " +
@@ -32,7 +33,7 @@ namespace kino.Consensus
                 }
                 else
                 {
-                    logger.Debug($"[{DateTime.UtcNow.ToString(format)}] " +
+                    logger.LogDebug($"[{DateTime.UtcNow.ToString(format)}] " +
                                  "RENEW === process " +
                                  $"{localNode.Uri.AbsoluteUri} " +
                                  "wants to renew lease " +

@@ -7,12 +7,12 @@ using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Configuration;
 using kino.Connectivity;
-using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Routing;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
+using Microsoft.Extensions.Logging;
 
 namespace kino
 {

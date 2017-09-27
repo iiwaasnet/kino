@@ -1,9 +1,9 @@
 ﻿using kino.Connectivity;
-using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Routing;
 using kino.Security;
+using Microsoft.Extensions.Logging;
 
 namespace kino.Actors
 {

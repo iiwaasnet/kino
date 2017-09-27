@@ -13,6 +13,7 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
+using Microsoft.Extensions.Logging;
 using NetMQ;
 
 namespace kino.Routing
@@ -136,20 +137,20 @@ namespace kino.Routing
                         }
                         catch (NetMQException err)
                         {
-                            logger.Error($"{nameof(err.ErrorCode)}:{err.ErrorCode} " +
+                            logger.LogError($"{nameof(err.ErrorCode)}:{err.ErrorCode} " +
                                          $"{nameof(err.Message)}:{err.Message} " +
                                          $"Exception:{err}");
                         }
                         catch (Exception err)
                         {
-                            logger.Error(err);
+                            logger.LogError(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                logger.Error(err);
+                logger.LogError(err);
             }
         }
 
@@ -206,7 +207,7 @@ namespace kino.Routing
                     {
                         clusterServices.GetClusterMonitor().UnregisterSelf(removedRoutes);
                     }
-                    logger.Error(err);
+                    logger.LogError(err);
                 }
             }
 
@@ -245,13 +246,13 @@ namespace kino.Routing
                 {
                     clusterServices.GetClusterHealthMonitor()
                                    .ScheduleConnectivityCheck(new ReceiverIdentifier(route.Node.SocketIdentity));
-                    logger.Error(err);
+                    logger.LogError(err);
                 }
                 catch (HostUnreachableException err)
                 {
                     var unregMessage = new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = route.Node.SocketIdentity};
                     TryHandleServiceMessage(Message.Create(unregMessage).As<Message>(), scaleOutBackend);
-                    logger.Error(err);
+                    logger.LogError(err);
                 }
             }
 
@@ -272,7 +273,7 @@ namespace kino.Routing
                 clusterServices.GetClusterMonitor().UnregisterSelf(messageRoute.ToEnumerable());
             }
             var route = message.As<Message>().GetMessageRouting().FirstOrDefault();
-            logger.Warn($"Route not found for Message:{lookupRequest.Message} lookup by " +
+            logger.LogWarning($"Route not found for Message:{lookupRequest.Message} lookup by " +
                         $"[{nameof(lookupRequest.ReceiverNodeIdentity)}:{lookupRequest.ReceiverNodeIdentity}]-" +
                         $"[{nameof(lookupRequest.ReceiverIdentity)}:{lookupRequest.ReceiverIdentity}]-" +
                         $"[{lookupRequest.Distribution}] " +

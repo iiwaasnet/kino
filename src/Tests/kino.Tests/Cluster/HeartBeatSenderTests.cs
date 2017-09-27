@@ -5,10 +5,10 @@ using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core;
-using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
+using Microsoft.Extensions.Logging;
 using Moq;
 using NetMQ;
 using Xunit;
@@ -99,8 +99,18 @@ namespace kino.Tests.Cluster
             socket.Verify(m => m.Dispose(), Times.Once);
             config.Verify(m => m.SetActiveHeartBeatAddress(It.IsAny<Uri>()), Times.Never);
             socket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Never);
-            logger.Verify(m => m.Error(It.IsAny<object>()));
-            logger.Verify(m => m.Warn("HeartBeating stopped."), Times.Once);
+            logger.Verify(m => m.Log(LogLevel.Error,
+                                     0,
+                                     It.IsAny<object>(),
+                                     It.IsAny<Exception>(),
+                                     It.IsAny<Func<object, Exception, string>>()),
+                          Times.Once);
+            logger.Verify(m => m.Log(LogLevel.Warning,
+                                     0,
+                                     It.Is<object>(f => f.ToString() == "HeartBeating stopped."),
+                                     null,
+                                     It.IsAny<Func<object, Exception, string>>()),
+                          Times.Once);
         }
     }
 }

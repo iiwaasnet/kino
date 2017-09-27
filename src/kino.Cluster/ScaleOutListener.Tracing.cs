@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using kino.Core.Framework;
 using kino.Messaging;
+using Microsoft.Extensions.Logging;
 
 namespace kino.Cluster
 {
@@ -14,7 +15,7 @@ namespace kino.Cluster
                                        message.GetMessageRouting()
                                               .Select(h => $"{nameof(h.Uri)}:{h.Uri.ToSocketAddress()}/{h.Identity.GetAnyString()}"));
 
-                logger.Trace($"Message: {message} received from other node via hops {hops}");
+                logger.LogTrace($"Message: {message} received from other node via hops {hops}");
             }
         }
     }

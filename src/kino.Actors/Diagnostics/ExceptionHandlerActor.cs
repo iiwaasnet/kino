@@ -2,6 +2,7 @@
 using kino.Core.Diagnostics;
 using kino.Messaging;
 using kino.Messaging.Messages;
+using Microsoft.Extensions.Logging;
 
 namespace kino.Actors.Diagnostics
 {
@@ -17,7 +18,7 @@ namespace kino.Actors.Diagnostics
         {
             var payload = message.GetPayload<ExceptionMessage>();
 
-            logger.Error(payload.Exception);
+            logger.LogError(payload.Exception);
 
             return null;
         }

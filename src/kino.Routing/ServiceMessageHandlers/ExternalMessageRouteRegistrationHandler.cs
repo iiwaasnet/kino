@@ -8,6 +8,7 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
+using Microsoft.Extensions.Logging;
 using Health = kino.Cluster.Health;
 
 namespace kino.Routing.ServiceMessageHandlers
@@ -76,12 +77,12 @@ namespace kino.Routing.ServiceMessageHandlers
                             }
                             else
                             {
-                                logger.Warn($"MessageIdentity {messageRoute.Message} doesn't belong to requested Domain {message.Domain}!");
+                                logger.LogWarning($"MessageIdentity {messageRoute.Message} doesn't belong to requested Domain {message.Domain}!");
                             }
                         }
                         catch (Exception err)
                         {
-                            logger.Error(err);
+                            logger.LogError(err);
                         }
                     }
                 }

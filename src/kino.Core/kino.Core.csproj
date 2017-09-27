@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="C5" Version="2.5.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net47'">

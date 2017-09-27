@@ -1,7 +1,7 @@
 ﻿using System;
 using kino.Actors;
-using kino.Core.Diagnostics;
 using kino.Tests.Actors.Setup;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 

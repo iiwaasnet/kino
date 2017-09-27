@@ -9,6 +9,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
+using Microsoft.Extensions.Logging;
 
 namespace kino.Cluster
 {
@@ -68,14 +69,14 @@ namespace kino.Cluster
                         }
                         catch (Exception err)
                         {
-                            logger.Error(err);
+                            logger.LogError(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                logger.Error(err);
+                logger.LogError(err);
             }
         }
 
@@ -105,7 +106,7 @@ namespace kino.Cluster
                 }
                 catch (Exception err)
                 {
-                    logger.Error(err);
+                    logger.LogError(err);
                 }
             }
         }
@@ -125,7 +126,7 @@ namespace kino.Cluster
             {
                 case WaitHandle.WaitTimeout:
                     var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
-                    logger.Info($"HeartBeat timeout Rendezvous {rendezvousServer.BroadcastUri.AbsoluteUri}");
+                    logger.LogInformation($"HeartBeat timeout Rendezvous {rendezvousServer.BroadcastUri.AbsoluteUri}");
                     rendezvousCluster.RotateRendezvousServers();
                     return true;
                 case rendezvousConfigurationChanged:
@@ -147,7 +148,7 @@ namespace kino.Cluster
             socket.Connect(rendezvousServer.BroadcastUri, true);
             socket.Subscribe();
 
-            logger.Info($"Connected to Rendezvous {rendezvousServer.BroadcastUri.AbsoluteUri}");
+            logger.LogInformation($"Connected to Rendezvous {rendezvousServer.BroadcastUri.AbsoluteUri}");
 
             return socket;
         }
@@ -165,7 +166,7 @@ namespace kino.Cluster
             if (shouldHandle)
             {
                 var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
-                logger.Info($"New Rendezvous cluster configuration. Disconnecting {rendezvousServer.BroadcastUri.AbsoluteUri}");
+                logger.LogInformation($"New Rendezvous cluster configuration. Disconnecting {rendezvousServer.BroadcastUri.AbsoluteUri}");
 
                 var payload = message.GetPayload<RendezvousConfigurationChangedMessage>();
                 rendezvousCluster.Reconfigure(payload.RendezvousNodes.Select(rn => new RendezvousEndpoint(rn.UnicastUri, rn.BroadcastUri)));
@@ -185,12 +186,12 @@ namespace kino.Cluster
                 var currentLeader = rendezvousCluster.GetCurrentRendezvousServer();
                 if (!currentLeader.Equals(newLeader))
                 {
-                    logger.Info($"New Rendezvous leader: {newLeader.BroadcastUri.AbsoluteUri}. " +
+                    logger.LogInformation($"New Rendezvous leader: {newLeader.BroadcastUri.AbsoluteUri}. " +
                                 $"Disconnecting {currentLeader.BroadcastUri.AbsoluteUri}");
 
                     if (!rendezvousCluster.SetCurrentRendezvousServer(newLeader))
                     {
-                        logger.Error($"New Rendezvous leader {newLeader.BroadcastUri.AbsoluteUri} "
+                        logger.LogError($"New Rendezvous leader {newLeader.BroadcastUri.AbsoluteUri} "
                                      + $"was not found within configured Rendezvous cluster: [{string.Join(",", rendezvousCluster.Nodes.Select(n => n.BroadcastUri.AbsoluteUri))}]");
                     }
 

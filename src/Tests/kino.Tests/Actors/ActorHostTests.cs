@@ -4,7 +4,6 @@ using System.Threading;
 using kino.Actors;
 using kino.Connectivity;
 using kino.Core;
-using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
@@ -12,6 +11,7 @@ using kino.Routing;
 using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 

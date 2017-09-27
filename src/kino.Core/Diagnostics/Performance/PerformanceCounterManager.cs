@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using kino.Core.Framework;
+using Microsoft.Extensions.Logging;
 
 namespace kino.Core.Diagnostics.Performance
 {

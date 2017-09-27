@@ -1,10 +1,10 @@
 ﻿using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
-using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace kino.Rendezvous
 {

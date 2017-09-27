@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
-using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Rendezvous.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace kino.Tests.Consensus.Setup

@@ -1,8 +1,12 @@
-﻿using Autofac;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Autofac;
 using kino;
 using kino.Actors;
 using kino.Configuration;
 using kino.Core.Diagnostics;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using Server.Actors;
 using TypedConfigProvider;
 
@@ -12,8 +16,14 @@ namespace Server
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.Register(c => new Logger("default"))
+            builder.Register(c => new LoggerFactory(c.ResolveOptional<IEnumerable<ILoggerProvider>>()
+                                                    ?? Enumerable.Empty<ILoggerProvider>())
+                                 .CreateLogger("default"))
                    .As<ILogger>()
+                   .SingleInstance();
+
+            builder.RegisterType<NLogLoggerProvider>()
+                   .As<ILoggerProvider>()
                    .SingleInstance();
 
             builder.RegisterType<RevertStringActor>()
