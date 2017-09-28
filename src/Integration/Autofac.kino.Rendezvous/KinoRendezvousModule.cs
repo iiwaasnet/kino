@@ -1,10 +1,12 @@
 ﻿using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
-using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous;
 using kino.Rendezvous.Configuration;
+#if NET47
+using kino.Core.Diagnostics.Performance;    
+#endif
 
 namespace Autofac.kino.Rendezvous
 {
@@ -15,11 +17,11 @@ namespace Autofac.kino.Rendezvous
             builder.RegisterType<SocketFactory>()
                    .As<ISocketFactory>()
                    .SingleInstance();
-
+#if NET47
             builder.RegisterType<InstanceNameResolver>()
                    .As<IInstanceNameResolver>()
                    .SingleInstance();
-
+#endif
             builder.RegisterType<SynodConfigurationProvider>()
                    .As<ISynodConfigurationProvider>()
                    .SingleInstance();

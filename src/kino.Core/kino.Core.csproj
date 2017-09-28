@@ -15,9 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="System.Management">
-      <HintPath>..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7\System.Management.dll</HintPath>
-    </Reference>
+    <Reference Include="System.Management" />
   </ItemGroup>
 
  <PropertyGroup Condition="'$(TargetFramework)'=='net47'">

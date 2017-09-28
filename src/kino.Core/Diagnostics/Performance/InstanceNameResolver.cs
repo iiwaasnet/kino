@@ -1,3 +1,4 @@
+#if NET47
 using System.Diagnostics;
 using System.Management;
 using System.Reflection;
@@ -26,3 +27,4 @@ namespace kino.Core.Diagnostics.Performance
         }
     }
 }
+#endif

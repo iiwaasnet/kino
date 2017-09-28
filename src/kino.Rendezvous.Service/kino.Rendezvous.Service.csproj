@@ -19,9 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="System.Configuration.Install">
-      <HintPath>..\..\..\..\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7\System.Configuration.Install.dll</HintPath>
-    </Reference>
+    <Reference Include="System.Configuration.Install" />
   </ItemGroup>
 
   <ItemGroup>
