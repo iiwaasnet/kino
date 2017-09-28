@@ -11,10 +11,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)'=='net47'">
     <Reference Include="System.Core" />
-    <Reference Include="System.Configuration.Install" />    
-  </ItemGroup>
-
-  <ItemGroup>
+    <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Management" />
   </ItemGroup>
 
