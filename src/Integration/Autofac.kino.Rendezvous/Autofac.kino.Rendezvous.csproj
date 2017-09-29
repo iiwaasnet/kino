@@ -2,6 +2,16 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net47</TargetFrameworks>
+      <Copyright>Copyright © 2015 Sergey Ivasenko</Copyright>
+      <PackageLicenseUrl>https://github.com/iiwaasnet/kino/blob/master/LICENSE</PackageLicenseUrl>
+      <PackageProjectUrl>https://github.com/iiwaasnet/kino</PackageProjectUrl>
+      <PackageIconUrl>https://cdn.rawgit.com/iiwaasnet/kino/master/img/kino-50x50-v2.png</PackageIconUrl>
+      <RepositoryUrl>https://github.com/iiwaasnet/kino</RepositoryUrl>
+      <RepositoryType>Git</RepositoryType>
+      <Description>Framework for building actors networks</Description>
+      <PackageTags>Actors framework</PackageTags>
+      <Authors>Sergey Ivasenko</Authors>
+	  <Version>0.0.1.43</Version>
   </PropertyGroup>
 
   <ItemGroup>

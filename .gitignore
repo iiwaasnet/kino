@@ -21,6 +21,7 @@ build/
 packages/
 !packages/repositories.config
 !packages/*/build/
+*.nupkg
 
 *.ide
 
