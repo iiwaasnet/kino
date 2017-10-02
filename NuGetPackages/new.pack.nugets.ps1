@@ -1,3 +1,13 @@
+param(
+    [string]$version
+)
+
+if (!$version)
+{
+    $vesrion = '0.0.0.1'
+    #throw '$version is not provided!'
+}
+
 function Get-NuGetDependencies([string]$projectFile, [string]$basePath)
 {
     $nugetRefs = @()
@@ -36,7 +46,16 @@ function Get-ProjectDependencies([string]$projectFile)
     [xml] $projectXml = Get-Content $projectFile
     foreach ($ref in $projectXml.Project.ItemGroup.ProjectReference.Include)
     {
-        $projectRefs += $ref
+        if ($projectXml.Project.ItemGroup.Condition)
+        {
+            [void]($projectXml.Project.ItemGroup.Condition -match "(?:==['](.*)['])")
+            $platform = $Matches[1]
+        }        
+
+        $projRef = New-Object System.Object
+        $projRef | Add-Member -type NoteProperty -name Name -value $ref
+        $projRef | Add-Member -type NoteProperty -name Platform -value $platform
+        $projectRefs += $projRef
     }
 
     return $projectRefs
@@ -134,6 +153,53 @@ function Get-XmlNs()
     return 'http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd'
 }
 
+function Add-PackageDependencies([xml]$nuSpec, [xml]$projectXml, $nugetRefs, $frameworks)
+{
+    $meta = $nuSpec.CreateElement('metadata', (Get-XmlNs))        
+    $root.AppendChild($meta)
+    (Copy-ProjectNuGetAttributes $projectXml $meta $nuSpec)
+    $dependencies = $nuSpec.CreateElement('dependencies', (Get-XmlNs))
+    $meta.AppendChild($dependencies)
+    foreach ($fw in $frameworks)
+    {
+        Write-Host $fw -ForegroundColor Yellow
+        $grp = $nuSpec.CreateElement('group', (Get-XmlNs))
+        $grp.SetAttribute('targetFramework', (Get-NuGetTargetPlatform $fw))
+        foreach ($nugetRef in $nugetRefs)
+        {
+            $ref = $nuSpec.CreateElement('dependency', (Get-XmlNs))
+            $ref.SetAttribute('id', $nugetRef.Name)
+            $ref.SetAttribute('version', $nugetRef.Version)
+            $grp.AppendChild($ref)
+        }
+        $dependencies.AppendChild($grp)
+    }
+}
+
+function Add-FileDependencies([xml]$nuSpec, [xml]$projectXml, $projectRefs, $frameworks)
+{
+    $files = $nuSpec.CreateElement('files', (Get-XmlNs))        
+    $root.AppendChild($files)    
+    foreach ($fw in $frameworks)
+    {
+        Write-Host $fw -ForegroundColor Yellow
+        foreach ($ref in $projectRefs)
+        {
+            if ($ref.Platform -eq $fw -or !$ref.Platform)
+            {
+                $fileName = [io.path]::GetFileNameWithoutExtension($ref.Name)
+                $source = '..\bin\Release\' + $fw + '\' + $fileName + '.dll'
+                $target = '..\lib\' + $fw + '\' + $fileName + '.dll'
+                $file = $nuSpec.CreateElement('file', (Get-XmlNs))
+                $file.SetAttribute('src', $source)
+                $file.SetAttribute('target', $target)
+
+                $files.AppendChild($file)
+            }
+        }        
+    }
+}
+
 $solutionFile = Get-ChildItem ..\src -Recurse | Where-Object {$_.Extension -eq ".sln"}
 
 foreach ($projectFile in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extension -eq ".csproj"})
@@ -142,20 +208,20 @@ foreach ($projectFile in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extens
     #Get file contents
     [xml] $projectXml = Get-Content $projectFile.FullName
     if ((Should-BuildNuGetPackage $projectXml))
-    {        
-        #Read supported .NET Frameworks
+    {                
         $frameworks = (Get-TargetFrameworks $projectXml)
     
         $nugetRefs = @()
         $projectRefs = @()
 
-        #Read Project references
-        $projectRefs = Get-ProjectDependencies($projectFile.FullName)
-        #Read referenced NuGet packages
+        
+        $projectRefs = (Get-ProjectDependencies $projectFile.FullName)
+        
         $basePath = (Split-Path -parent $projectFile.FullName)
-        $nugetRefs += (Get-NuGetDependencies $projectFile.FullName '.')        
+        $nugetRefs = (Get-NuGetDependencies $projectFile.FullName '.')        
         $nugetRefs = $nugetRefs |Sort-Object Name -Unique        
 
+        #Console log found references
         Write-Host $projectFile.FullName -ForegroundColor Yellow
         foreach ($nugetRef in $nugetRefs)
         {
@@ -164,7 +230,7 @@ foreach ($projectFile in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extens
 
         foreach ($projectRef in $projectRefs)
         {
-            Write-Host $projectRef -ForegroundColor Green           
+            Write-Host $projectRef.Name -ForegroundColor Green           
         }
 
         #Build NuSpec file
@@ -172,33 +238,16 @@ foreach ($projectFile in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extens
         $nuSpec.AppendChild($nuSpec.CreateXmlDeclaration("1.0","UTF-8",$null))
         $root = $nuSpec.CreateElement('package', (Get-XmlNs))
         $nuSpec.AppendChild($root)
-        $meta = $nuSpec.CreateElement('metadata', (Get-XmlNs))        
-        $root.AppendChild($meta)
-        (Copy-ProjectNuGetAttributes $projectXml $meta $nuSpec)
-        $dependencies = $nuSpec.CreateElement('dependencies', (Get-XmlNs))
-        $meta.AppendChild($dependencies)
-        foreach ($fw in $frameworks)
-        {
-            Write-Host $fw -ForegroundColor Yellow
-            $grp = $nuSpec.CreateElement('group', (Get-XmlNs))
-            $grp.SetAttribute('targetFramework', (Get-NuGetTargetPlatform $fw))
-            foreach ($nugetRef in $nugetRefs)
-            {
-                $ref = $nuSpec.CreateElement('dependency', (Get-XmlNs))
-                $ref.SetAttribute('id', $nugetRef.Name)
-                $ref.SetAttribute('version', $nugetRef.Version)
-                $grp.AppendChild($ref)
-            }
-            $dependencies.AppendChild($grp)
-        }
+        
+        (Add-PackageDependencies $nuSpec $projectXml $nugetRefs $frameworks)
+        (Add-FileDependencies $nuSpec $projectXml $projectRefs $frameworks)
 
         Write-Host $nuSpec.InnerXml
-    
-    }
-    #foreach ($child in $nuspecXml.package.files.file)
-    #{
-    #    $nuspecXml.package.files.RemoveChild($child)
-    #}
 
-    #$nuspecXml.Save($nuSpecFile.FullName)
+        #Save Nuspec file
+        $nuSpecFile = (Join-Path $projectFile.DirectoryName $projectFile.BaseName) + '.' + $version + '.nuspec'
+        $nuSpec.Save($nuSpecFile)
+
+        Write-Host $nuSpecFile -ForegroundColor Green
+    }
 }
