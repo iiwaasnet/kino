@@ -4,7 +4,8 @@ param(
 
 if (!$version)
 {
-    $vesrion = '0.0.0.1'
+	#Define based on RB number
+    $version = '0.0.0.1'
     #throw '$version is not provided!'
 }
 
@@ -63,11 +64,11 @@ function Get-ProjectDependencies([string]$projectFile)
 
 function Get-TargetFrameworks([xml]$projectXml)
 {
-    try
+    if ($projectXml.Project.PropertyGroup.TargetFrameworks)
     {
         return $projectXml.Project.PropertyGroup.TargetFrameworks -split ';'
     }
-    catch
+    else
     {
         return @($projectXml.Project.PropertyGroup.TargetFramework)
     }
@@ -88,6 +89,8 @@ function Get-NuGetTargetPlatform([string]$fw)
     {
         return '.NETFramework4.7'
     }
+	
+	# add other FWs, i.e. core, net461, etc
 
     throw 'Framework is not supported: ' + $fw
 }
@@ -187,9 +190,10 @@ function Add-FileDependencies([xml]$nuSpec, [xml]$projectXml, $projectRefs, $fra
         {
             if ($ref.Platform -eq $fw -or !$ref.Platform)
             {
+				# Configuration, i.e. Debug or Release can come with params to script
                 $fileName = [io.path]::GetFileNameWithoutExtension($ref.Name)
-                $source = '..\bin\Release\' + $fw + '\' + $fileName + '.dll'
-                $target = '..\lib\' + $fw + '\' + $fileName + '.dll'
+                $source = 'bin\Release\' + $fw + '\' + $fileName + '.dll'
+                $target = 'lib\' + $fw + '\' + $fileName + '.dll'
                 $file = $nuSpec.CreateElement('file', (Get-XmlNs))
                 $file.SetAttribute('src', $source)
                 $file.SetAttribute('target', $target)
@@ -199,6 +203,24 @@ function Add-FileDependencies([xml]$nuSpec, [xml]$projectXml, $projectRefs, $fra
         }        
     }
 }
+
+
+function Get-SelfAsProjectDenendency([string]$projectFile, $frameworks)
+{
+    $projectRefs = @()
+    foreach ($fw in $frameworks)
+    {
+        $projRef = New-Object System.Object
+        $projRef | Add-Member -type NoteProperty -name Name -value $projectFile
+        $projRef | Add-Member -type NoteProperty -name Platform -value $fw
+        $projectRefs += $projRef
+    }
+
+    return $projectRefs
+}
+
+
+# Entry point
 
 $solutionFile = Get-ChildItem ..\src -Recurse | Where-Object {$_.Extension -eq ".sln"}
 
@@ -212,10 +234,11 @@ foreach ($projectFile in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extens
         $frameworks = (Get-TargetFrameworks $projectXml)
     
         $nugetRefs = @()
-        $projectRefs = @()
+        [array]$projectRefs = @()
 
         
         $projectRefs = (Get-ProjectDependencies $projectFile.FullName)
+        $projectRefs += , @(Get-SelfAsProjectDenendency $projectFile.FullName $frameworks)
         
         $basePath = (Split-Path -parent $projectFile.FullName)
         $nugetRefs = (Get-NuGetDependencies $projectFile.FullName '.')        
