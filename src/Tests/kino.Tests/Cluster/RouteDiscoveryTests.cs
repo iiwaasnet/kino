@@ -19,7 +19,7 @@ namespace kino.Tests.Cluster
 {
     public class RouteDiscoveryTests
     {
-        private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(300);
+        private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(600);
         private readonly Mock<IAutoDiscoverySender> autoDiscoverySender;
         private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
         private readonly Mock<ISecurityProvider> securityProvider;
