@@ -4,7 +4,6 @@ using System.Security;
 using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Core;
-using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
