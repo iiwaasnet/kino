@@ -22,7 +22,7 @@ namespace kino.Tests.Cluster
     public class ClusterHealthMonitorTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
-        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private readonly Mock<ISocketFactory> socketFactory;
         private readonly Mock<ISocket> publisherSocket;
@@ -217,7 +217,7 @@ namespace kino.Tests.Cluster
         {
             config.StalePeersCheckInterval = TimeSpan.FromMinutes(1);
             var healthUri = new Uri("tcp://127.0.0.2:9090");
-            var heartBeatInterval = TimeSpan.FromMilliseconds(300);
+            var heartBeatInterval = TimeSpan.FromMilliseconds(500);
             var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             var payload = new StartPeerMonitoringMessage
                           {
