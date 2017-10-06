@@ -4,6 +4,7 @@ using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
 using kino.Core.Diagnostics.Performance;
+using kino.Core.Framework;
 using kino.Rendezvous.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -12,6 +13,8 @@ namespace kino.Tests.Consensus.Setup
 {
     public static class RoundBasedRegisterTestsHelper
     {
+        private static readonly TimeSpan WaitTime = TimeSpan.FromMilliseconds(300);
+
         internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<string> synod, string localNodeUri)
         {
             var appConfig = new RendezvousServiceConfiguration
@@ -64,7 +67,7 @@ namespace kino.Tests.Consensus.Setup
 
             LeaseTxResult result;
             while ((result = func()).TxOutcome != expected && repeat-- > 0)
-                ;
+                WaitTime.Sleep();
 
             return result;
         }
