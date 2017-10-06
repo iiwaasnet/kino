@@ -1,16 +1,19 @@
+$MsBuild = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\msbuild.exe"
+
 $SolutionFile = Get-ChildItem ..\src -Recurse | Where-Object {$_.Extension -eq ".sln"}
+nuget restore $SolutionFile.FullName
 
-foreach ($ProjectFile in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extension -eq ".csproj"})
+foreach ($NugetSpec in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extension -eq ".nuspec"})
 {
-	if (Get-Content $ProjectFile.FullName | Select-String -Pattern "Authors")
-	{
-        Write-Host 'Building package for project: '$ProjectFile.FullName -foregroundcolor "green"
+	$ProjectFile = Get-ChildItem $NugetSpec.DirectoryName | Where-Object {$_.Extension -eq ".csproj"}
 
-        $BuildArgs = @{
-            FilePath = 'dotnet'
-            ArgumentList =  "pack " + $ProjectFile.FullName + " -c Release -o " + $PSScriptRoot
-            Wait = $true
-        }	
-        Start-Process @BuildArgs -NoNewWindow
+	$BuildArgs = @{
+		FilePath = $MsBuild
+		ArgumentList = $ProjectFile.FullName,  "/p:Configuration=Release /t:Rebuild"
+		Wait = $true
 	}
+	
+	Start-Process @BuildArgs -NoNewWindow
+	#nuget pack $ProjectFile.FullName -BasePath $NugetSpec.DirectoryName -Build -Prop Configuration=Release -Prop FilePath=$MsBuild -NonInteractive -IncludeReferencedProjects
+	nuget pack $NugetSpec.FullName -BasePath $NugetSpec.DirectoryName -Prop Configuration=Release -NonInteractive -IncludeReferencedProjects
 }

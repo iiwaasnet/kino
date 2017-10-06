@@ -5,16 +5,21 @@ param(
 if (!$version)
 {
 	#Define based on RB number
-    $version = '0.0.0.1'
-    #throw '$version is not provided!'
+    throw '$version parameter is not provided!'
 }
+#================================================================================
+function Get-ProjectFileContent($projectFile)
+{
+    return [xml] $projectXml = Get-Content ($projectFile) -Encoding UTF8
+}
+
 
 function Get-NuGetDependencies([string]$projectFile, [string]$basePath)
 {
     $nugetRefs = @()
     $projectFile = [IO.Path]::GetFullPath([IO.Path]::Combine($basePath,$projectFile))
 
-    [xml] $projectXml = Get-Content ($projectFile)
+    [xml] $projectXml = (Get-ProjectFileContent $projectFile)
 
     $tmp = $projectXml.SelectSingleNode('//ItemGroup/PackageReference')
 
@@ -43,12 +48,11 @@ function Get-NuGetDependencies([string]$projectFile, [string]$basePath)
 function Get-ProjectDependencies([string]$projectFile)
 {
     $projectRefs = @()
-    [xml] $projectXml = Get-Content $projectFile
+    [xml] $projectXml = (Get-ProjectFileContent $projectFile)
     foreach ($ref in $projectXml.Project.ItemGroup.ProjectReference.Include)
     {
-        if ($projectXml.Project.ItemGroup.Condition)
-        {
-            [void]($projectXml.Project.ItemGroup.Condition -match "(?:==['](.*)['])")
+        if ($projectXml.Project.ItemGroup.Condition -match "(?:==['](.*)['])")
+        {            
             $platform = $Matches[1]
         }        
 
@@ -107,6 +111,7 @@ function Copy-ProjectNuGetAttributes([xml]$projectXml, [System.Xml.XmlNode]$meta
 function Get-ProjectNuGetAttributesMap()
 {
     $attrs = @()
+
     $attr = New-Object System.Object
     $attr | Add-Member -type NoteProperty -name Source -value 'Copyright'
     $attr | Add-Member -type NoteProperty -name Destination -value 'copyright'
@@ -155,10 +160,24 @@ function Get-XmlNs()
     return 'http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd'
 }
 
-function Add-PackageDependencies([xml]$nuSpec, [xml]$projectXml, $nugetRefs, $frameworks)
+function Add-PackageDependencies([xml]$nuSpec, $projectFile, $nugetRefs, $frameworks)
 {
+    [xml] $projectXml = (Get-ProjectFileContent $projectFile.FullName)
     $meta = $nuSpec.CreateElement('metadata', (Get-XmlNs))        
     $root.AppendChild($meta)
+
+    $id = $nuSpec.CreateElement('id', (Get-XmlNs))
+    $id.InnerText = $projectFile.BaseName
+    $meta.AppendChild($id)
+
+    $ver = $nuSpec.CreateElement('version', (Get-XmlNs))
+    $ver.InnerText = $version
+    $meta.AppendChild($ver)
+
+    $title = $nuSpec.CreateElement('title', (Get-XmlNs))
+    $title.InnerText = $projectFile.BaseName
+    $meta.AppendChild($title)
+
     (Copy-ProjectNuGetAttributes $projectXml $meta $nuSpec)
     $dependencies = $nuSpec.CreateElement('dependencies', (Get-XmlNs))
     $meta.AppendChild($dependencies)
@@ -225,7 +244,7 @@ function Get-SelfAsProjectDenendency([string]$projectFile, $frameworks)
     {    
 
         #Get file contents
-        [xml] $projectXml = Get-Content $projectFile.FullName
+        [xml] $projectXml = (Get-ProjectFileContent $projectFile.FullName)
         if ((Should-BuildNuGetPackage $projectXml))
         {                
             $frameworks = (Get-TargetFrameworks $projectXml)
@@ -241,14 +260,14 @@ function Get-SelfAsProjectDenendency([string]$projectFile, $frameworks)
             $nugetRefs = (Get-NuGetDependencies $projectFile.FullName '.')        
             $nugetRefs = $nugetRefs |Sort-Object Name -Unique        
 
-            #Build NuSpec file
+            #Build NuSpec file            
             [xml]$nuSpec = New-Object System.Xml.XmlDocument
             $nuSpec.AppendChild($nuSpec.CreateXmlDeclaration("1.0","UTF-8",$null))
             $root = $nuSpec.CreateElement('package', (Get-XmlNs))
             $nuSpec.AppendChild($root)
-           
+            
         
-            (Add-PackageDependencies $nuSpec $projectXml $nugetRefs $frameworks)
+            (Add-PackageDependencies $nuSpec $projectFile $nugetRefs $frameworks)
             (Add-FileDependencies $nuSpec $projectXml $projectRefs $frameworks)            
 
             #Save Nuspec file

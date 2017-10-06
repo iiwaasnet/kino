@@ -11,7 +11,7 @@
     <Description>Framework for building actors networks</Description>
     <PackageTags>Actors framework</PackageTags>
     <Authors>Sergey Ivasenko</Authors>
-    <Version>0.0.1.43</Version>
+	<BuildNuGetPackage/>
   </PropertyGroup>
 
   <ItemGroup>
