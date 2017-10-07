@@ -45,9 +45,11 @@ function Get-NuGetDependencies([string]$projectFile, [string]$basePath)
     return $nugetRefs
 }
 
-function Get-ProjectDependencies([string]$projectFile)
+function Get-ProjectDependencies([string]$projectFile, [string]$basePath)
 {
     $projectRefs = @()
+
+    $projectFile = [IO.Path]::GetFullPath([IO.Path]::Combine($basePath,$projectFile))
     [xml] $projectXml = (Get-ProjectFileContent $projectFile)
     foreach ($ref in $projectXml.Project.ItemGroup.ProjectReference.Include)
     {
@@ -60,6 +62,12 @@ function Get-ProjectDependencies([string]$projectFile)
         $projRef | Add-Member -type NoteProperty -name Name -value $ref
         $projRef | Add-Member -type NoteProperty -name Platform -value $platform
         $projectRefs += $projRef
+    }
+
+    foreach ($ref in $projectXml.Project.ItemGroup.ProjectReference.Include)
+    {
+        $basePath = (Split-Path -parent $projectFile)        
+        $projectRefs += (Get-ProjectDependencies $ref $basePath)
     }
 
     return $projectRefs
@@ -205,7 +213,7 @@ function Add-FileDependencies([xml]$nuSpec, [xml]$projectXml, $projectRefs, $fra
         foreach ($ref in $projectRefs)
         {
             if ($ref.Platform -eq $fw -or !$ref.Platform)
-        {				
+            {				
                 # Configuration, i.e. Debug or Release can come with params to script
                 $fileName = [io.path]::GetFileNameWithoutExtension($ref.Name)
                 $source = 'bin\Release\' + $fw + '\' + $fileName + '.dll'
@@ -253,8 +261,9 @@ function Get-SelfAsProjectDenendency([string]$projectFile, $frameworks)
             [array]$projectRefs = @()
 
         
-            $projectRefs = (Get-ProjectDependencies $projectFile.FullName)
+            $projectRefs = (Get-ProjectDependencies $projectFile.FullName '.')
             $projectRefs += , @(Get-SelfAsProjectDenendency $projectFile.FullName $frameworks)
+            $projectRefs = $projectRefs |Sort-Object Name -Unique
         
             $basePath = (Split-Path -parent $projectFile.FullName)
             $nugetRefs = (Get-NuGetDependencies $projectFile.FullName '.')        
