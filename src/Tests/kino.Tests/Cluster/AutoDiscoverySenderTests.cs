@@ -4,12 +4,12 @@ using System.Threading;
 using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
+using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 

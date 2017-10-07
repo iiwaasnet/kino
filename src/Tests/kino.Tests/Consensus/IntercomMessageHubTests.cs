@@ -6,12 +6,12 @@ using kino.Consensus;
 using kino.Consensus.Configuration;
 using kino.Consensus.Messages;
 using kino.Core;
+using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 

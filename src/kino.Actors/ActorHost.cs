@@ -10,7 +10,6 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Routing;
 using kino.Security;
-using Microsoft.Extensions.Logging;
 using MessageContract = kino.Routing.MessageContract;
 
 namespace kino.Actors
@@ -64,7 +63,7 @@ namespace kino.Actors
             }
             else
             {
-                logger.LogWarning($"Actor {actor.GetType().FullName}:{actor.Identifier} seems to not handle any message!");
+                logger.Warn($"Actor {actor.GetType().FullName}:{actor.Identifier} seems to not handle any message!");
             }
         }
 
@@ -106,7 +105,7 @@ namespace kino.Actors
                     }
                     catch (Exception err)
                     {
-                        logger.LogError(err);
+                        logger.Error(err);
                     }
                 }
             }
@@ -171,7 +170,7 @@ namespace kino.Actors
                                 {
                                     //TODO: Add more context to exception about which Actor failed
                                     CallbackException(err, message);
-                                    logger.LogError(err);
+                                    logger.Error(err);
                                 }
                             }
                         }
@@ -181,15 +180,15 @@ namespace kino.Actors
                     }
                     catch (Exception err)
                     {
-                        logger.LogError(err);
+                        logger.Error(err);
                     }
                 }
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
-            logger.LogWarning($"{GetType().Name} requests processing stopped.");
+            logger.Warn($"{GetType().Name} requests processing stopped.");
         }
 
         private void ProcessAsyncResponses(CancellationToken token)
@@ -218,7 +217,7 @@ namespace kino.Actors
                     }
                     catch (Exception err)
                     {
-                        logger.LogError(err);
+                        logger.Error(err);
                     }
                 }
             }
@@ -337,7 +336,7 @@ namespace kino.Actors
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
     }

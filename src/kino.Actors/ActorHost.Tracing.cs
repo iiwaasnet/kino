@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using kino.Messaging;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Actors
 {
@@ -11,7 +10,7 @@ namespace kino.Actors
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.LogTrace($"No Actor found for message: {message}");
+                logger.Trace($"No Actor found for message: {message}");
             }
         }
 
@@ -19,7 +18,7 @@ namespace kino.Actors
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.LogTrace($"Message processed sync: {message} " +
+                logger.Trace($"Message processed sync: {message} " +
                              $"Number of response messages:{responses.Count()}");
             }
         }
@@ -28,7 +27,7 @@ namespace kino.Actors
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.LogTrace($"Response: {nameof(sentSync)}:{sentSync} {message}");
+                logger.Trace($"Response: {nameof(sentSync)}:{sentSync} {message}");
             }
         }
     }

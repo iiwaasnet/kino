@@ -12,7 +12,6 @@ using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Consensus
 {
@@ -118,7 +117,7 @@ namespace kino.Consensus
                 timer.Change(synodConfigProvider.HeartBeatInterval, synodConfigProvider.HeartBeatInterval);
             }
 
-            logger.LogInformation($"Consensus HeartBeating {(nodeHealthInfo.Any() ? "started" : "disabled")}. "
+            logger.Info($"Consensus HeartBeating {(nodeHealthInfo.Any() ? "started" : "disabled")}. "
                         + $"Number of nodes in cluster: {synodConfigProvider.Synod.Count()}");
 
             return timer;
@@ -161,7 +160,7 @@ namespace kino.Consensus
                     }
                     catch (Exception err)
                     {
-                        logger.LogError(err);
+                        logger.Error(err);
                     }
                 }
             }
@@ -185,11 +184,11 @@ namespace kino.Consensus
                     socket.SafeDisconnect(new Uri(payload.OldUri));
                     socket.Connect(new Uri(payload.NewUri));
 
-                    logger.LogInformation($"Reconnected to node from {payload.OldUri} to {payload.NewUri}");
+                    logger.Info($"Reconnected to node from {payload.OldUri} to {payload.NewUri}");
                 }
                 else
                 {
-                    logger.LogWarning($"{message.Identity.GetAnyString()} came for unknown node: {payload.NewUri}");
+                    logger.Warn($"{message.Identity.GetAnyString()} came for unknown node: {payload.NewUri}");
                 }
             }
 
@@ -211,7 +210,7 @@ namespace kino.Consensus
                 {
                     if (!IsLocalNode(payload.NodeUri))
                     {
-                        logger.LogWarning($"{message.Identity.GetAnyString()} came from unknown node: {payload.NodeUri}");
+                        logger.Warn($"{message.Identity.GetAnyString()} came from unknown node: {payload.NodeUri}");
                     }
                 }
             }
@@ -231,7 +230,7 @@ namespace kino.Consensus
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
 
@@ -246,7 +245,7 @@ namespace kino.Consensus
                 ScheduleReconnectSocket(oldUri, newUri);
 
                 var lastKnownHeartBeat = unreachable.HealthInfo.LastKnownHeartBeat;
-                logger.LogWarning($"Reconnect to node {oldUri} scheduled due to old {nameof(lastKnownHeartBeat)}: {lastKnownHeartBeat}");
+                logger.Warn($"Reconnect to node {oldUri} scheduled due to old {nameof(lastKnownHeartBeat)}: {lastKnownHeartBeat}");
             }
 
             IEnumerable<(NodeHealthInfo HealthInfo, DynamicUri DynamicUri)> GetUnreachableNodes()
@@ -282,7 +281,7 @@ namespace kino.Consensus
             {
                 socket.Connect(node.Uri, true);
 
-                logger.LogInformation($"{nameof(IntercomMessageHub)} connected to: {node.Uri.ToSocketAddress()}");
+                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.Uri.ToSocketAddress()}");
             }
             if (ShouldDoHeartBeating())
             {
@@ -298,7 +297,7 @@ namespace kino.Consensus
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomSocketSendRate);
             socket.Bind(synodConfigProvider.LocalNode.Uri);
 
-            logger.LogInformation($"{nameof(IntercomMessageHub)} bound to: {synodConfigProvider.LocalNode.Uri.ToSocketAddress()}");
+            logger.Info($"{nameof(IntercomMessageHub)} bound to: {synodConfigProvider.LocalNode.Uri.ToSocketAddress()}");
 
             return socket;
         }
@@ -325,7 +324,7 @@ namespace kino.Consensus
                 }
                 catch (Exception err)
                 {
-                    logger.LogError(err);
+                    logger.Error(err);
                 }
             }
         }
@@ -347,7 +346,7 @@ namespace kino.Consensus
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
     }

@@ -11,7 +11,6 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Cluster
 {
@@ -117,12 +116,12 @@ namespace kino.Cluster
 
                     autoDiscoverySender.EnqueueMessage(message);
 
-                    logger.LogInformation($"Request to discover cluster routes for Domain [{domain}] sent.");
+                    logger.Info($"Request to discover cluster routes for Domain [{domain}] sent.");
                 }
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
 
@@ -142,7 +141,7 @@ namespace kino.Cluster
 
                 autoDiscoverySender.EnqueueMessage(message);
 
-                logger.LogDebug($"Unregistering self {scaleOutAddress.Identity.GetAnyString()} from Domain {domain}");
+                logger.Debug($"Unregistering self {scaleOutAddress.Identity.GetAnyString()} from Domain {domain}");
             }
 
             routeDiscoveryConfig.UnregisterMessageSendTimeout.Sleep();

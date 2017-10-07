@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Actors
 {
@@ -68,7 +67,7 @@ namespace kino.Actors
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
     }

@@ -4,7 +4,6 @@ using kino.Consensus.Configuration;
 using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Consensus
 {
@@ -86,7 +85,7 @@ namespace kino.Consensus
                 }
                 catch (Exception err)
                 {
-                    logger.LogError(err);
+                    logger.Error(err);
                 }
                 finally
                 {

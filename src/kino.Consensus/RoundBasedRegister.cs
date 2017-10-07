@@ -8,7 +8,6 @@ using kino.Consensus.Messages;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Consensus
 {
@@ -66,7 +65,7 @@ namespace kino.Consensus
             var started = intercomMessageHub.Start(StartTimeout);
             if (!started)
             {
-                logger.LogError($"Failed starting IntercomMessageHub! Method call timed out after {StartTimeout.TotalMilliseconds} ms.");
+                logger.Error($"Failed starting IntercomMessageHub! Method call timed out after {StartTimeout.TotalMilliseconds} ms.");
             }
         }
 

@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Autofac;
+﻿using Autofac;
 using kino;
 using kino.Configuration;
-using Microsoft.Extensions.Logging;
-using NLog.Extensions.Logging;
+using kino.Core.Diagnostics;
 using TypedConfigProvider;
 
 namespace Client
@@ -25,14 +22,8 @@ namespace Client
                    .As<KinoConfiguration>()
                    .SingleInstance();
 
-            builder.Register(c => new LoggerFactory(c.ResolveOptional<IEnumerable<ILoggerProvider>>()
-                                                    ?? Enumerable.Empty<ILoggerProvider>())
-                                 .CreateLogger("default"))
+            builder.Register(c => new Logger("default"))
                    .As<ILogger>()
-                   .SingleInstance();
-
-            builder.RegisterType<NLogLoggerProvider>()
-                   .As<ILoggerProvider>()
                    .SingleInstance();
 
             builder.Register(c => new DependencyResolver(c))

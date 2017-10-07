@@ -11,7 +11,6 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Rendezvous.Configuration;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Rendezvous
 {
@@ -109,7 +108,7 @@ namespace kino.Rendezvous
                             }
                             catch (Exception err)
                             {
-                                logger.LogError(err);
+                                logger.Error(err);
                             }
                         }
                     }
@@ -120,7 +119,7 @@ namespace kino.Rendezvous
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
 
@@ -156,7 +155,7 @@ namespace kino.Rendezvous
                             }
                             catch (Exception err)
                             {
-                                logger.LogError(err);
+                                logger.Error(err);
                             }
                         }
                     }
@@ -167,7 +166,7 @@ namespace kino.Rendezvous
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
 

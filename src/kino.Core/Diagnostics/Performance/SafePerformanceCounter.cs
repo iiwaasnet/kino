@@ -1,7 +1,6 @@
 ﻿#if NET47
 using System;
 using System.Diagnostics;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Core.Diagnostics.Performance
 {
@@ -33,8 +32,8 @@ namespace kino.Core.Diagnostics.Performance
             }
             catch (Exception err)
             {
-                logger.LogError(err);
-                logger.LogWarning($"Performance counter {categoryName}.{name} will be unavailable!");
+                logger.Error(err);
+                logger.Warn($"Performance counter {categoryName}.{name} will be unavailable!");
 
                 return null;
             }
@@ -68,8 +67,8 @@ namespace kino.Core.Diagnostics.Performance
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex);
-                    logger.LogWarning($"Performance counter {categoryName}.{name} will be unavailable!");
+                    logger.Error(ex);
+                    logger.Warn($"Performance counter {categoryName}.{name} will be unavailable!");
 
                     perfCounter = null;
                 }

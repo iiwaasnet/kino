@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Autofac;
 using kino.Actors;
-using Microsoft.Extensions.Logging;
+using kino.Core.Diagnostics;
 using static System.Console;
 
 namespace Server
@@ -28,18 +28,18 @@ namespace Server
                 foreach (var actor in container.Resolve<IEnumerable<IActor>>())
                 {
                     kino.AssignActor(actor);
-                    logger.LogDebug($"Actor {actor.Identifier} registered");
+                    logger.Debug($"Actor {actor.Identifier} registered");
                 }
                 Thread.Sleep(TimeSpan.FromMilliseconds(200));
             }
 
-            logger.LogDebug("ActorHost started...");
+            logger.Debug("ActorHost started...");
             ReadLine();
 
             kino.Stop();
             container.Dispose();
 
-            logger.LogDebug("ActorHost stopped.");
+            logger.Debug("ActorHost stopped.");
         }
     }
 }

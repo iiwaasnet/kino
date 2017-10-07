@@ -5,6 +5,7 @@ using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core;
+using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
@@ -12,7 +13,6 @@ using kino.Messaging.Messages;
 using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 using CollectionAssert = FluentAssertions.AssertionExtensions;
@@ -172,12 +172,7 @@ namespace kino.Tests.Cluster
             //
             frontEndSocket.Verify(m => m.Bind(scaleOutAddresses.First().Uri), Times.Once);
             frontEndSocket.Verify(m => m.Bind(scaleOutAddresses.Second().Uri), Times.Once);
-            logger.Verify(m => m.Log(LogLevel.Information,
-                                     0,
-                                     It.IsAny<object>(),
-                                     null,
-                                     It.IsAny<Func<object, Exception, string>>()),
-                          Times.Exactly(2));
+            logger.Verify(m => m.Info(It.IsAny<object>()), Times.Exactly(2));
         }
 
         [Theory]

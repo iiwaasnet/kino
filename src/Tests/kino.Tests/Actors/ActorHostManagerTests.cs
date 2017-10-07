@@ -1,7 +1,6 @@
-﻿using System;
-using kino.Actors;
+﻿using kino.Actors;
+using kino.Core.Diagnostics;
 using kino.Tests.Actors.Setup;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -9,7 +8,6 @@ namespace kino.Tests.Actors
 {
     public class ActorHostManagerTests
     {
-        private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
         private readonly ILogger logger;
         private readonly ActorHostManager actorHostManager;
         private readonly Mock<IActorHostFactory> actorHostFactory;
@@ -21,8 +19,7 @@ namespace kino.Tests.Actors
             actorHostFactory = new Mock<IActorHostFactory>();
             actorHost = new Mock<IActorHost>();
             actorHostFactory.Setup(m => m.Create()).Returns(actorHost.Object);
-            actorHostManager = new ActorHostManager(actorHostFactory.Object,
-                                                    logger);
+            actorHostManager = new ActorHostManager(actorHostFactory.Object, logger);
         }
 
         [Trait(nameof(ActorHost), "Assigning several actors, handling the same message type, should not throw exception.")]

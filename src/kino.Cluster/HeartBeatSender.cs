@@ -7,7 +7,6 @@ using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
-using Microsoft.Extensions.Logging;
 using NetMQ;
 
 namespace kino.Cluster
@@ -62,7 +61,7 @@ namespace kino.Cluster
                         try
                         {
                             socket.SendMessage(Message.Create(heartBeatMessage));
-                            //logger.LogDebug($"HeartBeat sent at {DateTime.UtcNow} UTC");
+                            //logger.Debug($"HeartBeat sent at {DateTime.UtcNow} UTC");
                             config.GetHeartBeatInterval().Sleep(token);
                             //await Task.Delay(config.GetHeartBeatInterval(), token);
                         }
@@ -71,16 +70,16 @@ namespace kino.Cluster
                         }
                         catch (Exception err)
                         {
-                            logger.LogError(err);
+                            logger.Error(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
-            logger.LogWarning("HeartBeating stopped.");
+            logger.Warn("HeartBeating stopped.");
         }
 
         private ISocket CreateHeartBeatSocket()
@@ -93,13 +92,13 @@ namespace kino.Cluster
                     socket.Bind(uri);
                     config.SetActiveHeartBeatAddress(uri);
 
-                    logger.LogInformation($"{GetType().Name} started at Uri:{uri.ToSocketAddress()}");
+                    logger.Info($"{GetType().Name} started at Uri:{uri.ToSocketAddress()}");
 
                     return socket;
                 }
                 catch (NetMQException)
                 {
-                    logger.LogInformation($"{GetType().Name} failed to bind to {uri.ToSocketAddress()}, retrying with next endpoint...");
+                    logger.Info($"{GetType().Name} failed to bind to {uri.ToSocketAddress()}, retrying with next endpoint...");
                 }
             }
             socket?.Dispose();

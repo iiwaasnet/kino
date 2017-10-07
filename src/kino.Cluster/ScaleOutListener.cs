@@ -9,7 +9,6 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Cluster
 {
@@ -83,19 +82,19 @@ namespace kino.Cluster
                         //catch (SecurityException err)
                         //{
                         //    CallbackException(err, message);
-                        //    logger.LogError(err);
+                        //    logger.Error(err);
                         //}
                         catch (Exception err)
                         {
                             CallbackException(err, message);
-                            logger.LogError(err);
+                            logger.Error(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
 
@@ -114,14 +113,14 @@ namespace kino.Cluster
                     socket.Bind(scaleOutAddress.Uri);
                     scaleOutConfigurationManager.SetActiveScaleOutAddress(scaleOutAddress);
 
-                    logger.LogInformation($"MessageRouter started at Uri:{scaleOutAddress.Uri.ToSocketAddress()} " +
+                    logger.Info($"MessageRouter started at Uri:{scaleOutAddress.Uri.ToSocketAddress()} " +
                                 $"Identity:{scaleOutAddress.Identity.GetAnyString()}");
 
                     return socket;
                 }
                 catch
                 {
-                    logger.LogInformation($"Failed to bind to {scaleOutAddress.Uri.ToSocketAddress()}, retrying with next endpoint...");
+                    logger.Info($"Failed to bind to {scaleOutAddress.Uri.ToSocketAddress()}, retrying with next endpoint...");
                 }
             }
 
@@ -135,7 +134,7 @@ namespace kino.Cluster
 
             if (hwm == 0 || hwm > internalSocketsHWM)
             {
-                logger.LogWarning($"ScaleOutReceiveMessageQueueLength ({hwm}) cannot be greater, than internal ReceivingHighWatermark ({internalSocketsHWM}). " +
+                logger.Warn($"ScaleOutReceiveMessageQueueLength ({hwm}) cannot be greater, than internal ReceivingHighWatermark ({internalSocketsHWM}). " +
                             $"Current value of ScaleOutReceiveMessageQueueLength will be set to {internalSocketsHWM}.");
                 hwm = internalSocketsHWM;
             }

@@ -4,13 +4,13 @@ using System.Security;
 using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Core;
+using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -185,12 +185,7 @@ namespace kino.Tests.Cluster
                                                           return true;
                                                       };
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isDiscoveryMessage(msg))), Times.Exactly(allowedDomains.Count()));
-            logger.Verify(m => m.Log(LogLevel.Error,
-                                     0,
-                                     It.IsAny<object>(),
-                                     It.Is<Exception>(exc => exc is SecurityException),
-                                     It.IsAny<Func<object, Exception, string>>()),
-                          Times.Once);
+            logger.Verify(m => m.Error(It.Is<Exception>(exc => exc is SecurityException)), Times.Once);
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using kino.Core.Framework;
 using kino.Messaging;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Client
 {
@@ -12,7 +11,7 @@ namespace kino.Client
             {
                 foreach (var messageIdentifier in message.CallbackPoint)
                 {
-                    logger.LogTrace($"Callback [{message.CallbackKey}] registered for Message {message}: " +
+                    logger.Trace($"Callback [{message.CallbackKey}] registered for Message {message}: " +
                                  $"{nameof(message.CallbackPoint)} {messageIdentifier} " +
                                  $"{nameof(message.CallbackReceiverIdentity)}:{message.CallbackReceiverIdentity.GetAnyString()} " +
                                  $"{nameof(message.CorrelationId)}:{message.CorrelationId.GetAnyString()}");
@@ -24,7 +23,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.LogTrace($"Message {message} with Callback [{message.CallbackKey}] sent to Router.");
+                logger.Trace($"Message {message} with Callback [{message.CallbackKey}] sent to Router.");
             }
         }
 
@@ -32,7 +31,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.LogTrace($"Callback [{message.CallbackKey}] set. Result message: {message}");
+                logger.Trace($"Callback [{message.CallbackKey}] set. Result message: {message}");
             }
         }
 
@@ -40,7 +39,7 @@ namespace kino.Client
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.LogTrace($"Callback [{message.CallbackKey}] not found! Result message: {message}");
+                logger.Trace($"Callback [{message.CallbackKey}] not found! Result message: {message}");
             }
         }
     }

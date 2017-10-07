@@ -6,7 +6,6 @@ using kino.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Cluster
 {
@@ -57,7 +56,7 @@ namespace kino.Cluster
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
 

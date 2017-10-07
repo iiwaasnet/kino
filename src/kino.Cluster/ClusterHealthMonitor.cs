@@ -11,7 +11,6 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
-using Microsoft.Extensions.Logging;
 using Bcl = System.Collections.Generic;
 
 namespace kino.Cluster
@@ -64,7 +63,7 @@ namespace kino.Cluster
 
         public void AddPeer(Node peer, Health health)
         {
-            logger.LogDebug($"AddPeer {peer.SocketIdentity.GetAnyString()}@{peer.Uri.ToSocketAddress()}");
+            logger.Debug($"AddPeer {peer.SocketIdentity.GetAnyString()}@{peer.Uri.ToSocketAddress()}");
 
             multiplexingSocket.Send(Message.Create(new AddPeerMessage
                                                    {
@@ -138,17 +137,17 @@ namespace kino.Cluster
                         }
                         catch (Exception err)
                         {
-                            logger.LogError(err);
+                            logger.Error(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
 
-            logger.LogWarning($"{GetType().Name} message processing stopped.");
+            logger.Warn($"{GetType().Name} message processing stopped.");
         }
 
         public void ScheduleConnectivityCheck(ReceiverIdentifier nodeIdentifier)
@@ -172,7 +171,7 @@ namespace kino.Cluster
                             var message = socket.ReceiveMessage(token);
                             if (message != null)
                             {
-                                //logger.LogDebug($"{GetType().Name} received {message.Identity.GetAnyString()} message");
+                                //logger.Debug($"{GetType().Name} received {message.Identity.GetAnyString()} message");
                                 ProcessMessage(message, socket);
                             }
                         }
@@ -181,17 +180,17 @@ namespace kino.Cluster
                         }
                         catch (Exception err)
                         {
-                            logger.LogError(err);
+                            logger.Error(err);
                         }
                     }
                 }
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
 
-            logger.LogWarning($"{GetType().Name} stopped.");
+            logger.Warn($"{GetType().Name} stopped.");
         }
 
         private void ProcessMessage(IMessage message, ISocket socket)
@@ -217,16 +216,16 @@ namespace kino.Cluster
                 {
                     connectedPeerRegistry.Remove(socketIdentifier);
 
-                    logger.LogDebug($"Left {connectedPeerRegistry.Count()} nodes to monitor.");
+                    logger.Debug($"Left {connectedPeerRegistry.Count()} nodes to monitor.");
                     if (meta.ConnectionEstablished)
                     {
                         socket.Disconnect(new Uri(meta.HealthUri));
-                        logger.LogWarning($"Stopped HeartBeat monitoring node {payload.NodeIdentity.GetAnyString()}@{meta.HealthUri}");
+                        logger.Warn($"Stopped HeartBeat monitoring node {payload.NodeIdentity.GetAnyString()}@{meta.HealthUri}");
                     }
                 }
                 else
                 {
-                    logger.LogWarning($"Unable to disconnect from unknown node [{payload.NodeIdentity.GetAnyString()}]");
+                    logger.Warn($"Unable to disconnect from unknown node [{payload.NodeIdentity.GetAnyString()}]");
                 }
             }
 
@@ -241,7 +240,7 @@ namespace kino.Cluster
                 var staleNodes = connectedPeerRegistry.GetStalePeers();
                 if (staleNodes.Any())
                 {
-                    logger.LogDebug($"Stale nodes detected: {staleNodes.Count()}. Connectivity check scheduled.");
+                    logger.Debug($"Stale nodes detected: {staleNodes.Count()}. Connectivity check scheduled.");
                     Task.Factory.StartNew(() => CheckConnectivity(cancellationTokenSource.Token, staleNodes), TaskCreationOptions.LongRunning);
                 }
             }
@@ -255,7 +254,7 @@ namespace kino.Cluster
             if (shouldHandle)
             {
                 var suspiciousNode = new ReceiverIdentifier(message.GetPayload<CheckPeerConnectionMessage>().SocketIdentity);
-                logger.LogDebug($"Connectivity check requested for node {suspiciousNode}");
+                logger.Debug($"Connectivity check requested for node {suspiciousNode}");
                 var meta = connectedPeerRegistry.Find(suspiciousNode);
                 if (meta != null)
                 {
@@ -278,7 +277,7 @@ namespace kino.Cluster
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
 
@@ -305,7 +304,7 @@ namespace kino.Cluster
                     catch (Exception err)
                     {
                         routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = nodeIdentifier.Identity}));
-                        logger.LogWarning($"Failed trying to check connectivity to node {nodeIdentifier}@{uri.ToSocketAddress()}. Peer deletion scheduled. {err}");
+                        logger.Warn($"Failed trying to check connectivity to node {nodeIdentifier}@{uri.ToSocketAddress()}. Peer deletion scheduled. {err}");
                     }
                 }
             }
@@ -323,7 +322,7 @@ namespace kino.Cluster
                                                           {
                                                               ReceiverNodeIdentity = deadNode.Key.Identity
                                                           }));
-                    logger.LogDebug($"Unreachable node {deadNode.Key}@{deadNode.Value.ScaleOutUri} " +
+                    logger.Debug($"Unreachable node {deadNode.Key}@{deadNode.Value.ScaleOutUri} " +
                                  $"with LastKnownHeartBeat {deadNode.Value.LastKnownHeartBeat} detected. " +
                                  "Route deletion scheduled.");
                 }
@@ -339,7 +338,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<AddPeerMessage>();
 
-                logger.LogDebug($"New node {payload.SocketIdentity.GetAnyString()} added.");
+                logger.Debug($"New node {payload.SocketIdentity.GetAnyString()} added.");
 
                 var meta = new ClusterMemberMeta
                            {
@@ -361,7 +360,7 @@ namespace kino.Cluster
             {
                 var payload = message.GetPayload<StartPeerMonitoringMessage>();
 
-                logger.LogDebug($"Received {typeof(StartPeerMonitoringMessage).Name} for node {payload.SocketIdentity.GetAnyString()}@{payload.Uri}. "
+                logger.Debug($"Received {typeof(StartPeerMonitoringMessage).Name} for node {payload.SocketIdentity.GetAnyString()}@{payload.Uri}. "
                              + $"HealthUri: {payload.Health.Uri}");
 
                 var meta = new ClusterMemberMeta
@@ -378,7 +377,7 @@ namespace kino.Cluster
                 StartDeadPeersCheck(meta.HeartBeatInterval);
                 socket.Connect(new Uri(meta.HealthUri));
 
-                logger.LogDebug($"Connected to node {payload.SocketIdentity.GetAnyString()}@{meta.HealthUri} for HeartBeat monitoring.");
+                logger.Debug($"Connected to node {payload.SocketIdentity.GetAnyString()}@{meta.HealthUri} for HeartBeat monitoring.");
             }
 
             return shouldHandle;
@@ -403,7 +402,7 @@ namespace kino.Cluster
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
 
@@ -415,7 +414,7 @@ namespace kino.Cluster
             }
             catch (Exception err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
 
@@ -430,19 +429,19 @@ namespace kino.Cluster
                 if (meta != null)
                 {
                     meta.LastKnownHeartBeat = DateTime.UtcNow;
-                    //logger.LogDebug($"Received HeartBeat from node {socketIdentifier}");
+                    //logger.Debug($"Received HeartBeat from node {socketIdentifier}");
                 }
                 else
                 {
                     //TODO: Send DiscoveryMessage? What if peer is not supporting message Domains to be used by this node?
-                    logger.LogWarning($"HeartBeat came from unknown node {payload.SocketIdentity.GetAnyString()}. Will disconnect from HealthUri: {payload.HealthUri}");
+                    logger.Warn($"HeartBeat came from unknown node {payload.SocketIdentity.GetAnyString()}. Will disconnect from HealthUri: {payload.HealthUri}");
                     try
                     {
                         socket.Disconnect(new Uri(payload.HealthUri));
                     }
                     catch (Exception err)
                     {
-                        logger.LogError(err);
+                        logger.Error(err);
                     }
                 }
             }

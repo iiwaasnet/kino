@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using kino.Core.Diagnostics;
 using kino.Messaging;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Consensus
 {
@@ -29,7 +28,7 @@ namespace kino.Consensus
                 }
                 catch (Exception err)
                 {
-                    logger.LogError(err);
+                    logger.Error(err);
                 }
             }
         }

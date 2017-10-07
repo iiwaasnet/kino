@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Linq;
 using C5;
 using kino.Core;
+using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
-using Microsoft.Extensions.Logging;
 using Bcl = System.Collections.Generic;
 
 namespace kino.Routing
@@ -41,11 +41,11 @@ namespace kino.Routing
                 MapActorToMessage(routeRegistration);
                 MapActorToNode(routeRegistration, nodeIdentifier);
 
-                logger.LogDebug("External route added " +
-                                $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
-                                $"Node:{nodeIdentifier} " +
-                                $"Actor:{routeRegistration.Route.Receiver}" +
-                                $"Message:{routeRegistration.Route.Message}");
+                logger.Debug("External route added " +
+                             $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
+                             $"Node:{nodeIdentifier} " +
+                             $"Actor:{routeRegistration.Route.Receiver}" +
+                             $"Message:{routeRegistration.Route.Message}");
             }
             else
             {
@@ -53,10 +53,10 @@ namespace kino.Routing
                 {
                     MapMessageHubToNode(routeRegistration, nodeIdentifier);
 
-                    logger.LogDebug("External route added " +
-                                    $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
-                                    $"Node:{nodeIdentifier} " +
-                                    $"MessageHub:{routeRegistration.Route.Receiver}");
+                    logger.Debug("External route added " +
+                                 $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
+                                 $"Node:{nodeIdentifier} " +
+                                 $"MessageHub:{routeRegistration.Route.Receiver}");
                 }
                 else
                 {
@@ -81,7 +81,7 @@ namespace kino.Routing
 
             nodes.Add(new ReceiverIdentifier(connection.Node.SocketIdentity));
 
-            logger.LogDebug($"[{nodes.Count}] node(s) registered at {uri}.");
+            logger.Debug($"[{nodes.Count}] node(s) registered at {uri}.");
         }
 
         private PeerConnection MapNodeToConnection(ExternalRouteRegistration routeRegistration, ReceiverIdentifier nodeIdentifier)
@@ -228,8 +228,8 @@ namespace kino.Routing
                     }
                 }
 
-                logger.LogDebug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
-                                $"Node:{nodeIdentifier.Identity.GetAnyString()}");
+                logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
+                             $"Node:{nodeIdentifier.Identity.GetAnyString()}");
             }
             return new PeerRemoveResult
                    {
@@ -249,12 +249,12 @@ namespace kino.Routing
                     {
                         uriToNodeMap.Remove(uri);
 
-                        logger.LogDebug($"Zero nodes left registered at {uri}. Endpoint will be disconnected.");
+                        logger.Debug($"Zero nodes left registered at {uri}. Endpoint will be disconnected.");
 
                         return PeerConnectionAction.Disconnect;
                     }
 
-                    logger.LogDebug($"[{nodes.Count}] node(s) left at {uri}.");
+                    logger.Debug($"[{nodes.Count}] node(s) left at {uri}.");
 
                     return PeerConnectionAction.KeepConnection;
                 }
@@ -292,7 +292,7 @@ namespace kino.Routing
                     nodeToConnectionMap.Remove(nodeIdentifier);
                     connectionAction = RemovePeerNode(connection);
 
-                    logger.LogDebug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} Node:{nodeIdentifier}");
+                    logger.Debug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} Node:{nodeIdentifier}");
                 }
             }
 
@@ -378,9 +378,9 @@ namespace kino.Routing
                     actorToMessageMap.Remove(routeRemoval.Route.Receiver);
                     RemoveNodeActor(routeRemoval, nodeIdentifier);
                 }
-                logger.LogDebug("External message route removed " +
-                                $"Node:[{nodeIdentifier}] " +
-                                $"Message:[{routeRemoval.Route.Message}]");
+                logger.Debug("External message route removed " +
+                             $"Node:[{nodeIdentifier}] " +
+                             $"Message:[{routeRemoval.Route.Message}]");
             }
         }
 
@@ -422,9 +422,9 @@ namespace kino.Routing
                     {
                         nodeMessageHubs.Remove(nodeIdentifier);
                     }
-                    logger.LogDebug("External MessageHub removed " +
-                                    $"Node:[{nodeIdentifier}] " +
-                                    $"Identity:[{routeRemoval.Route.Receiver}]");
+                    logger.Debug("External MessageHub removed " +
+                                 $"Node:[{nodeIdentifier}] " +
+                                 $"Identity:[{routeRemoval.Route.Receiver}]");
                 }
             }
         }

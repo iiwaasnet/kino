@@ -1,6 +1,5 @@
 ﻿using kino.Core.Framework;
 using kino.Messaging;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Routing
 {
@@ -10,7 +9,7 @@ namespace kino.Routing
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.LogTrace($"Message: {message} " +
+                logger.Trace($"Message: {message} " +
                              $"routed to {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetAnyString()}");
             }
         }
@@ -19,11 +18,9 @@ namespace kino.Routing
         {
             if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
             {
-                logger.LogTrace($"Message: {message} " +
+                logger.Trace($"Message: {message} " +
                              $"forwarded to other node {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetAnyString()}");
             }
         }
-
-        
     }
 }

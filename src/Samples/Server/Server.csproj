@@ -6,15 +6,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Client\DomainPrivateKeyProvider.cs" Link="DomainPrivateKeyProvider.cs" />
+    <Compile Include="..\Client\DomainScopeResolver.cs" Link="DomainScopeResolver.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
       <PackageReference Include="Autofac" Version="4.2.0" />
       <PackageReference Include="NLog" Version="5.0.0-beta11" />
-      <PackageReference Include="NLog.Extensions.Logging" Version="1.0.0-rtm-beta6" />
       <PackageReference Include="TypedConfigProvider" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\kino\kino.csproj" />
-    <ProjectReference Include="..\Client\Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config\kino.config.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="config\NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 

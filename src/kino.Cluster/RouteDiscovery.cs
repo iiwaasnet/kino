@@ -10,7 +10,6 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
-using Microsoft.Extensions.Logging;
 
 namespace kino.Cluster
 {
@@ -75,7 +74,7 @@ namespace kino.Cluster
                 }
                 catch (Exception err)
                 {
-                    logger.LogError(err);
+                    logger.Error(err);
                 }
             }
         }
@@ -114,7 +113,7 @@ namespace kino.Cluster
             }
             catch (SecurityException err)
             {
-                logger.LogError(err);
+                logger.Error(err);
             }
         }
 
