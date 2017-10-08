@@ -1,4 +1,10 @@
+param(
+    [string]$version
+)
+
 $MsBuild = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\msbuild.exe"
+
+& ".\build.nuspecs.ps1" $version -NoNewWindow
 
 $SolutionFile = Get-ChildItem ..\src -Recurse | Where-Object {$_.Extension -eq ".sln"}
 nuget restore $SolutionFile.FullName
