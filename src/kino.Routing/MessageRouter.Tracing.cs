@@ -7,7 +7,7 @@ namespace kino.Routing
     {
         private void RoutedToLocalActor(Message message)
         {
-            if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
+            if ((message.TraceOptions & MessageTraceOptions.Routing) == MessageTraceOptions.Routing)
             {
                 logger.Trace($"Message: {message} " +
                              $"routed to {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetAnyString()}");
@@ -16,7 +16,7 @@ namespace kino.Routing
 
         private void ForwardedToOtherNode(Message message)
         {
-            if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
+            if ((message.TraceOptions & MessageTraceOptions.Routing) == MessageTraceOptions.Routing)
             {
                 logger.Trace($"Message: {message} " +
                              $"forwarded to other node {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetAnyString()}");

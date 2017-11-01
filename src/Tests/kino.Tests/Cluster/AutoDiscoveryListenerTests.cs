@@ -140,7 +140,7 @@ namespace kino.Tests.Cluster
         }
 
         [Fact]
-        public async Task IfRendezvousNotLeaderMessageArives_ListenerRestartsConnectingToNewRendezvousLeader()
+        public async Task IfRendezvousNotLeaderMessageArrives_ListenerRestartsConnectingToNewRendezvousLeader()
         {
             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
             var cancellatioSource = new CancellationTokenSource(AsyncOp);

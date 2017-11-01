@@ -14,14 +14,10 @@ namespace kino.Messaging
         private static readonly byte[] EmptyFrame = new byte[0];
 
         internal MultipartMessage(Message message)
-        {
-            frames = WriteFrames(message);
-        }
+            => frames = WriteFrames(message);
 
         internal MultipartMessage(IList<byte[]> frames)
-        {
-            this.frames = frames;
-        }
+            => this.frames = frames;
 
         private IList<byte[]> WriteFrames(Message message)
         {
@@ -75,11 +71,9 @@ namespace kino.Messaging
         }
 
         private ushort GetMessageBodyStartFrame(Message message, ulong entryCount)
-        {
-            return (ushort) ((entryCount > 0)
-                                 ? GetMessageBodyStartFrameIndex(message)
-                                 : 0);
-        }
+            => (ushort) ((entryCount > 0)
+                             ? GetMessageBodyStartFrameIndex(message)
+                             : 0);
 
         private ushort GetMessageBodyStartFrameIndex(Message message)
         {
@@ -118,11 +112,9 @@ namespace kino.Messaging
         }
 
         private ushort GetRoutingStartFrame(Message message, ulong routingEnreyCount)
-        {
-            return (ushort) ((routingEnreyCount > 0)
-                                 ? GetRoutingStartFrameIndex(message)
-                                 : 0);
-        }
+            => (ushort) ((routingEnreyCount > 0)
+                             ? GetRoutingStartFrameIndex(message)
+                             : 0);
 
         private ushort GetRoutingStartFrameIndex(Message message)
         {

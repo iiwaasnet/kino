@@ -8,7 +8,7 @@ namespace kino.Cluster
     {
         private void ReceivedFromOtherNode(Message message)
         {
-            if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
+            if ((message.TraceOptions & MessageTraceOptions.Routing) == MessageTraceOptions.Routing)
             {
                 var hops = string.Join("|",
                                        message.GetMessageRouting()

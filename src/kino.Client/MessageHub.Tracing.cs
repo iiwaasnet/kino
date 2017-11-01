@@ -7,7 +7,7 @@ namespace kino.Client
     {
         private void CallbackRegistered(Message message)
         {
-            if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
+            if ((message.TraceOptions & MessageTraceOptions.Routing) == MessageTraceOptions.Routing)
             {
                 foreach (var messageIdentifier in message.CallbackPoint)
                 {
@@ -21,7 +21,7 @@ namespace kino.Client
 
         private void SentToRouter(Message message)
         {
-            if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
+            if ((message.TraceOptions & MessageTraceOptions.Routing) == MessageTraceOptions.Routing)
             {
                 logger.Trace($"Message {message} with Callback [{message.CallbackKey}] sent to Router.");
             }
@@ -29,7 +29,7 @@ namespace kino.Client
 
         private void CallbackResultSet(Message message)
         {
-            if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
+            if ((message.TraceOptions & MessageTraceOptions.Routing) == MessageTraceOptions.Routing)
             {
                 logger.Trace($"Callback [{message.CallbackKey}] set. Result message: {message}");
             }
@@ -37,7 +37,7 @@ namespace kino.Client
 
         private void CallbackNotFound(Message message)
         {
-            if (message.TraceOptions.HasFlag(MessageTraceOptions.Routing))
+            if ((message.TraceOptions & MessageTraceOptions.Routing) == MessageTraceOptions.Routing)
             {
                 logger.Trace($"Callback [{message.CallbackKey}] not found! Result message: {message}");
             }
