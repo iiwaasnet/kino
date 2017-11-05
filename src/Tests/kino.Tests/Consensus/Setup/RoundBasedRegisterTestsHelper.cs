@@ -56,6 +56,8 @@ namespace kino.Tests.Consensus.Setup
                                                             appConfig.Lease,
                                                             logger.Object);
 
+            logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
+
             return new RoundBasedRegisterTestSetup(ballotGenerator,
                                                    synodConfigProvider.LocalNode,
                                                    roundBasedRegister);

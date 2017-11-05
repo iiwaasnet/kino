@@ -14,7 +14,7 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
     {
         private readonly byte[] ownerPayload;
 
-        public RoundBasedRegisterTests_LemmaR1() 
+        public RoundBasedRegisterTests_LemmaR1()
             => ownerPayload = Guid.NewGuid().ToByteArray();
 
         [Fact]
