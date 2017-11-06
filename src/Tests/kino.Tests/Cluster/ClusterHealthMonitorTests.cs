@@ -50,6 +50,7 @@ namespace kino.Tests.Cluster
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(subscriberSocket.Object);
             localSocketFactory = new Mock<ILocalSocketFactory>();
             multiplexingSocket = new Mock<ILocalSocket<IMessage>>();
+            multiplexingSocket.Setup(m => m.CanReceive()).Returns(new ManualResetEvent(false));
             localSocketFactory.Setup(m => m.Create<IMessage>()).Returns(multiplexingSocket.Object);
             securityProvider = new Mock<ISecurityProvider>();
             var pingDomain = Guid.NewGuid().ToString();
@@ -161,6 +162,7 @@ namespace kino.Tests.Cluster
             ReceiveMessageCompletionDelay.Sleep();
             clusterHealthMonitor.Stop();
             //
+            logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
             publisherSocket.Verify(m => m.SendMessage(message), Times.Once);
         }
 
@@ -170,14 +172,15 @@ namespace kino.Tests.Cluster
             config.StalePeersCheckInterval = TimeSpan.FromMilliseconds(200);
             //
             clusterHealthMonitor.Start();
-            config.StalePeersCheckInterval.MultiplyBy(10).Sleep();
+            config.StalePeersCheckInterval.MultiplyBy(20).Sleep();
             clusterHealthMonitor.Stop();
             //
+            logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
             multiplexingSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.CheckStalePeers))), Times.AtLeastOnce);
         }
 
         [Fact]
-        public void IfStartPeerMonitoringMessadeReceived_ConnectsToPeerHealthUri()
+        public void IfStartPeerMonitoringMessageReceived_ConnectionToPeerHealthUriEsteblished()
         {
             var healthUri = new Uri("tcp://127.0.0.2:9090");
             var peerIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
@@ -204,10 +207,11 @@ namespace kino.Tests.Cluster
             subscriberSocket.SetupMessageReceived(message, tokenSource.Token);
             //
             clusterHealthMonitor.Start();
-            TimeSpan.FromMilliseconds(100).Sleep();
+            AsyncOp.Sleep();
             tokenSource.Cancel();
             clusterHealthMonitor.Stop();
             //
+            logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
             subscriberSocket.Verify(m => m.Connect(healthUri, false), Times.Once);
             Assert.True(meta.ConnectionEstablished);
         }

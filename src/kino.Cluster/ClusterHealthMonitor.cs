@@ -137,7 +137,7 @@ namespace kino.Cluster
                         }
                         catch (Exception err)
                         {
-                            logger.Error(err);
+                           logger.Error(err);
                         }
                     }
                 }
