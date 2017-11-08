@@ -13,7 +13,7 @@ namespace kino.Tests.Consensus.Setup
 {
     public static class RoundBasedRegisterTestsHelper
     {
-        private static readonly TimeSpan WaitTime = TimeSpan.FromMilliseconds(300);
+        private static readonly TimeSpan WaitTime = TimeSpan.FromMilliseconds(500);
 
         internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<string> synod, string localNodeUri)
         {
@@ -65,12 +65,13 @@ namespace kino.Tests.Consensus.Setup
 
         internal static LeaseTxResult RepeatUntil(Func<LeaseTxResult> func, TxOutcome expected)
         {
-            var repeat = 3;
+            var repeat = 5;
 
             LeaseTxResult result;
             while ((result = func()).TxOutcome != expected && repeat-- > 0)
+            {
                 WaitTime.Sleep();
-
+            }
             return result;
         }
 
