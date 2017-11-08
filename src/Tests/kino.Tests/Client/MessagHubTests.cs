@@ -20,7 +20,7 @@ namespace kino.Tests.Client
 {
     public class MessagHubTests
     {
-        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(500);
+        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
         private readonly MessageHubSocketFactory messageHubSocketFactory;
