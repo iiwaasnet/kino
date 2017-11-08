@@ -212,7 +212,6 @@ namespace kino.Tests.Client
                 //
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
-                TimeSpan.FromSeconds(80).Sleep();
                 //
                 var err = Record.Exception(() =>
                                            {
