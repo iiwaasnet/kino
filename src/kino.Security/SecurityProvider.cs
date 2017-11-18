@@ -52,23 +52,14 @@ namespace kino.Security
         }
 
         private DomainPrivateKey FindDomain(AnyVersionMessageIdentifier identity)
-        {
-            if (messageToDomainMap.TryGetValue(identity, out var domain))
-            {
-                return domain;
-            }
-            throw new MessageNotSupportedException(identity.ToString());
-        }
+            => messageToDomainMap.TryGetValue(identity, out var domain)
+                   ? domain
+                   : throw new MessageNotSupportedException(identity.ToString());
 
         private DomainPrivateKey FindDomain(string name)
-        {
-            if (nameToDomainMap.TryGetValue(name, out var domain))
-            {
-                return domain;
-            }
-
-            throw new SecurityException($"Domain {name} is not allowed!");
-        }
+            => nameToDomainMap.TryGetValue(name, out var domain)
+                   ? domain
+                   : throw new SecurityException($"Domain {name} is not allowed!");
 
         private static IDictionary<AnyVersionMessageIdentifier, DomainPrivateKey> CreateMessageMapping(IDictionary<string, DomainPrivateKey> domainKeys,
                                                                                                        IDomainScopeResolver domainScopeResolver)

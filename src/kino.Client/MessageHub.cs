@@ -194,11 +194,28 @@ namespace kino.Client
             internalRegistrationsSender.Send(registration);
         }
 
-        public IPromise EnqueueRequest(IMessage message, CallbackPoint callbackPoint)
+        public IPromise Send(IMessage message, CallbackPoint callbackPoint)
         {
             message.As<Message>().SetDomain(securityProvider.GetDomain(message.Identity));
 
             return InternalEnqueueRequest(message, callbackPoint);
+        }
+
+        public IPromise Send(IMessage message)
+        {
+            AssertMessageIsNotBroadcast(message);
+
+            message.As<Message>().SetDomain(securityProvider.GetDomain(message.Identity));
+
+            return InternalEnqueueRequest(message, CallbackPoint.Create<ReceiptConfirmationMessage>());
+        }
+
+        private static void AssertMessageIsNotBroadcast(IMessage message)
+        {
+            if (message.Distribution == DistributionPattern.Broadcast)
+            {
+                throw new Exception($"{nameof(DistributionPattern.Broadcast)} message can't be sent with receipt confirmation!");
+            }
         }
 
         public void SendOneWay(IMessage message)

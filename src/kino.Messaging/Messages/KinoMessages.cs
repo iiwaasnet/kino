@@ -27,5 +27,6 @@ namespace kino.Messaging.Messages
         public static readonly MessageIdentifier RequestExternalRoutes = MessageIdentifier.Create<RequestExternalRoutesMessage>();
         public static readonly MessageIdentifier ExternalRoutes = MessageIdentifier.Create<ExternalRoutesMessage>();
         public static readonly MessageIdentifier CheckPeerConnection = MessageIdentifier.Create<CheckPeerConnectionMessage>();
+        public static readonly MessageIdentifier ReceiptConfirmation = MessageIdentifier.Create<ReceiptConfirmationMessage>();
     }
 }

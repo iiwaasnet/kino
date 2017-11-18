@@ -45,6 +45,7 @@ namespace Client
                     messageIdentities.Add(KinoMessages.RequestExternalRoutes.Identity.GetString());
                     messageIdentities.Add(KinoMessages.RequestMessageExternalRoutes.Identity.GetString());
                     messageIdentities.Add(KinoMessages.MessageExternalRoutes.Identity.GetString());
+                    messageIdentities.Add(KinoMessages.ReceiptConfirmation.Identity.GetString());
                 }
 
                 domainMessageMappings.Add(domainMessages);
