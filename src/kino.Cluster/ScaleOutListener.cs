@@ -196,7 +196,7 @@ namespace kino.Cluster
                                              KinoMessages.ReceiptConfirmation,
                                              messageIn.CallbackKey);
             messageOut.SetCorrelationId(messageIn.CorrelationId);
-            //messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
+            messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
             messageOut.TraceOptions |= messageIn.TraceOptions;
 
             localRouterSocket.Send(messageOut);
