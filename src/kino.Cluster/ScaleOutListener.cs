@@ -61,7 +61,7 @@ namespace kino.Cluster
         {
             cancellationTokenSource?.Cancel();
             listening?.Wait();
-            receiptConfirmation?.Dispose();
+            receiptConfirmation?.Wait();
             cancellationTokenSource?.Dispose();
             receiptConfirmationQueue?.Dispose();
         }
