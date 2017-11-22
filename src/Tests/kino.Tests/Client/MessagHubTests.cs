@@ -87,7 +87,7 @@ namespace kino.Tests.Client
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
                 var callback = CallbackPoint.Create<SimpleMessage>();
                 //
-                messageHub.EnqueueRequest(message, callback);
+                messageHub.Send(message, callback);
                 AsyncOpCompletionDelay.Sleep();
                 //
                 callbackHandlerStack.Verify(m => m.Push(It.IsAny<IPromise>(),
@@ -109,7 +109,7 @@ namespace kino.Tests.Client
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
                 var callback = CallbackPoint.Create<SimpleMessage>();
                 //
-                messageHub.EnqueueRequest(message, callback);
+                messageHub.Send(message, callback);
                 AsyncOpCompletionDelay.Sleep();
                 //
                 routerSocket.WaitUntilMessageSent(RouterSocketIsReceiver);
@@ -131,7 +131,7 @@ namespace kino.Tests.Client
             {
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
                 var callback = CallbackPoint.Create<SimpleMessage>();
-                var promise = messageHub.EnqueueRequest(message, callback);
+                var promise = messageHub.Send(message, callback);
                 callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
                 //
                 receivingSocket.SetupMessageReceived(message);
@@ -161,7 +161,7 @@ namespace kino.Tests.Client
             {
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
                 var callback = CallbackPoint.Create<NullMessage>();
-                var promise = messageHub.EnqueueRequest(message, callback);
+                var promise = messageHub.Send(message, callback);
                 var callbackMessage = Message.Create(new NullMessage()).As<Message>();
                 callbackMessage.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
                                                       Guid.NewGuid().ToByteArray(),
@@ -201,7 +201,7 @@ namespace kino.Tests.Client
             {
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
                 var callback = CallbackPoint.Create<NullMessage>();
-                var promise = messageHub.EnqueueRequest(message, callback);
+                var promise = messageHub.Send(message, callback);
                 var errorMessage = Guid.NewGuid().ToString();
                 var exception = Message.Create(new ExceptionMessage {Exception = new Exception(errorMessage)}).As<Message>();
                 exception.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
@@ -240,7 +240,7 @@ namespace kino.Tests.Client
             {
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
                 var callback = CallbackPoint.Create<NullMessage>();
-                var promise = messageHub.EnqueueRequest(message, callback);
+                var promise = messageHub.Send(message, callback);
                 var callbackMessage = Message.Create(new NullMessage()).As<Message>();
                 var nonExistingCallbackKey = -1L;
                 callbackMessage.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),

@@ -18,7 +18,9 @@ namespace Server.Actors
             //return new ActorResult(Message.Create(new EhlloMessage {Ehllo = reversedString},
             //                                      securityProvider.GetDomain(Ehhlo.Identity)));
 
-            return new ActorResult(Message.Create(new EhlloMessage {Ehllo = hello.Greeting}));
+            return new ActorResult(Message.Create(new EhlloMessage { Ehllo = hello.Greeting }));
+
+            return ActorResult.NoWait;
         }
     }
 }

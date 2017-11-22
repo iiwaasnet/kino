@@ -60,7 +60,8 @@ namespace Client
                     //request.SetReceiverActor(new ReceiverIdentifier(route.NodeIdentity), new ReceiverIdentifier(route.ReceiverIdentity.First()));
                     //request.SetReceiverNode(new ReceiverIdentifier(route.NodeIdentity));
                     var callbackPoint = CallbackPoint.Create<EhlloMessage>();
-                    promises.Add(messageHub.EnqueueRequest(request, callbackPoint));
+                    promises.Add(messageHub.Send(request, callbackPoint));
+                    //promises.Add(messageHub.Send(request));
                 }
 
                 var timeout = TimeSpan.FromMilliseconds(4000);
@@ -70,7 +71,7 @@ namespace Client
                     {
                         if (promise.GetResponse().Wait(timeout))
                         {
-                            promise.GetResponse().Result.GetPayload<EhlloMessage>();
+                            //promise.GetResponse().Result.GetPayload<EhlloMessage>();
                         }
                         else
                         {
