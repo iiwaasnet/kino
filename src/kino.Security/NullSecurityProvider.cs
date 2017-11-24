@@ -9,10 +9,8 @@ namespace kino.Security
     {
         private static readonly string[] allowedDomains;
 
-        static NullSecurityProvider()
-        {
-            allowedDomains = new[] {string.Empty};
-        }
+        static NullSecurityProvider() 
+            => allowedDomains = new[] {string.Empty};
 
         public byte[] CreateSignature(string domain, byte[] buffer)
             => IdentityExtensions.Empty;

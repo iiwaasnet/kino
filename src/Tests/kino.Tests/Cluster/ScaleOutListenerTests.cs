@@ -204,5 +204,42 @@ namespace kino.Tests.Cluster
             frontEndSocket.Verify(m => m.SetReceiveHighWaterMark(frontEndSocketHwm), Times.Once);
             frontEndSocket.Verify(m => m.SetReceiveHighWaterMark(defaultHwm), Times.Never);
         }
+
+        [Fact]
+        public void IfFrontEndSocketReceivesMessageToBeConfirmed_ReceiptConfirmationMessageIsForwardedToLocalRouterSocketAndCallbackRemoved()
+        {
+            var message = Message.Create(new SimpleMessage()).As<Message>();
+            message.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
+                                          Guid.NewGuid().ToByteArray(),
+                                          new[] { KinoMessages.ReceiptConfirmation },
+                                          Randomizer.Int64());
+            message.PushRouterAddress(new SocketEndpoint("tcp://127.0.0.4:7878"));
+            message.PushRouterAddress(new SocketEndpoint("tcp://127.0.0.5:5464"));
+            message.SetCorrelationId(Guid.NewGuid().ToByteArray());
+            frontEndSocket.SetupMessageReceived(message, tokenSource.Token);
+            //
+            scaleOutListener.Start();
+            AsyncOp.Sleep();
+            tokenSource.Cancel();
+            scaleOutListener.Stop();
+            //
+            Func<IMessage, bool> isReceiptConfirmationOrInitalMessage = msg =>
+            {
+                if (message.Equals(msg))
+                {
+                    return true;
+                }
+                var receiptConfirmation = msg.As<Message>();
+                Assert.Equal(KinoMessages.ReceiptConfirmation, receiptConfirmation);
+                Assert.True(Unsafe.ArraysEqual(message.CallbackReceiverNodeIdentity, receiptConfirmation.CallbackReceiverNodeIdentity));
+                Assert.True(Unsafe.ArraysEqual(message.CallbackReceiverIdentity, receiptConfirmation.CallbackReceiverIdentity));
+                CollectionAssert.Should(message.CallbackPoint).BeEmpty();
+                CollectionAssert.Should(message.GetMessageRouting()).BeEquivalentTo(receiptConfirmation.GetMessageRouting());
+                Assert.Equal(message.CallbackKey, receiptConfirmation.CallbackKey);
+                Assert.True(Unsafe.ArraysEqual(message.CorrelationId, receiptConfirmation.CorrelationId));
+                return true;
+            };
+            localRouterSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isReceiptConfirmationOrInitalMessage(msg))), Times.Exactly(2));
+        }
     }
 }

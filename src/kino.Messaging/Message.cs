@@ -16,6 +16,7 @@ namespace kino.Messaging
 
         private object payload;
         private List<SocketEndpoint> routing;
+        private List<MessageIdentifier> callbackPoint;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
         private Message(IPayload payload)
@@ -24,7 +25,7 @@ namespace kino.Messaging
             Domain = string.Empty;
             WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
-            CallbackPoint = Enumerable.Empty<MessageIdentifier>();
+            callbackPoint = new List<MessageIdentifier>();
             Body = Serialize(payload);
             TTL = TimeSpan.Zero;
             Hops = 0;
@@ -111,6 +112,9 @@ namespace kino.Messaging
 
             MatchMessageAgainstCallbackPoint();
         }
+
+        internal bool RemoveCallbackPoint(MessageIdentifier callbackPoint)
+            => this.callbackPoint.Remove(callbackPoint);
 
         private void MatchMessageAgainstCallbackPoint()
         {
@@ -272,7 +276,11 @@ namespace kino.Messaging
 
         public byte[] Signature { get; private set; }
 
-        public IEnumerable<MessageIdentifier> CallbackPoint { get; private set; }
+        public IEnumerable<MessageIdentifier> CallbackPoint
+        {
+            get => callbackPoint;
+            private set => callbackPoint = value.ToList();
+        }
 
         public long CallbackKey { get; private set; }
 

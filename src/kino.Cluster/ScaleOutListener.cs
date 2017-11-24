@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using kino.Cluster.Configuration;
@@ -19,8 +20,10 @@ namespace kino.Cluster
         private readonly IScaleOutConfigurationManager scaleOutConfigurationManager;
         private readonly ISecurityProvider securityProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
+        private BlockingCollection<Message> receiptConfirmationQueue;
         private readonly ILogger logger;
         private Task listening;
+        private Task receiptConfirmation;
         private CancellationTokenSource cancellationTokenSource;
 
         public ScaleOutListener(ISocketFactory socketFactory,
@@ -35,25 +38,32 @@ namespace kino.Cluster
             this.scaleOutConfigurationManager = scaleOutConfigurationManager;
             this.securityProvider = securityProvider;
             this.performanceCounterManager = performanceCounterManager;
+            receiptConfirmationQueue = new BlockingCollection<Message>(new ConcurrentQueue<Message>());
             this.logger = logger;
         }
 
         public void Start()
         {
+            receiptConfirmationQueue = new BlockingCollection<Message>(new ConcurrentQueue<Message>());
             cancellationTokenSource = new CancellationTokenSource();
             using (var barrier = new Barrier(2))
             {
                 listening = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, barrier),
                                                   TaskCreationOptions.LongRunning);
+                receiptConfirmation = Task.Factory.StartNew(_ => SendReceiptConfirmations(cancellationTokenSource.Token),
+                                                  TaskCreationOptions.LongRunning);
                 barrier.SignalAndWait(cancellationTokenSource.Token);
             }
         }
 
+        
         public void Stop()
         {
             cancellationTokenSource?.Cancel();
             listening?.Wait();
+            receiptConfirmation?.Wait();
             cancellationTokenSource?.Dispose();
+            receiptConfirmationQueue?.Dispose();
         }
 
         private void RoutePeerMessages(CancellationToken token, Barrier barrier)
@@ -73,6 +83,12 @@ namespace kino.Cluster
                             if (message != null)
                             {
                                 message.VerifySignature(securityProvider);
+                                var receiptConfirmationRequested = message.RemoveCallbackPoint(KinoMessages.ReceiptConfirmation);
+
+                                if (receiptConfirmationRequested)
+                                {
+                                    receiptConfirmationQueue.Add(message, token);
+                                }
                                 localRouterSocket.Send(message);
 
                                 ReceivedFromOtherNode(message);
@@ -97,6 +113,33 @@ namespace kino.Cluster
                 logger.Error(err);
             }
         }
+
+        private void SendReceiptConfirmations(CancellationToken token)
+        {
+            try
+            {
+                foreach (var message in receiptConfirmationQueue.GetConsumingEnumerable(token))
+                {
+                    try
+                    {
+                        SendReceiptConfirmation(message);
+                    }
+                    catch (Exception err)
+                    {
+                        logger.Error(err);
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }            
+            logger.Warn($"{nameof(SendReceiptConfirmations)} thread stopped!");
+        }
+
 
         private ISocket CreateScaleOutFrontendSocket()
         {
@@ -140,6 +183,23 @@ namespace kino.Cluster
             }
 
             return hwm;
+        }
+
+        private void SendReceiptConfirmation(Message messageIn)
+        {
+            var messageOut = Message.Create(ReceiptConfirmationMessage.Instance)
+                                    .As<Message>();
+            messageOut.SetDomain(securityProvider.GetDomain(KinoMessages.ReceiptConfirmation.Identity));
+
+            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
+                                             messageIn.CallbackReceiverIdentity,
+                                             KinoMessages.ReceiptConfirmation,
+                                             messageIn.CallbackKey);
+            messageOut.SetCorrelationId(messageIn.CorrelationId);
+            messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
+            messageOut.TraceOptions |= messageIn.TraceOptions;
+
+            localRouterSocket.Send(messageOut);
         }
 
         private void CallbackException(Exception err, Message messageIn)
