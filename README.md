@@ -35,7 +35,7 @@ IMessage request = Message.CreateFlowStartMessage(new MyMessage());
 // Define result message you would like to receive
 ICallbackPoint callbackPoint = CallbackPoint.Create<ResultMessage>();
 // Now, send the message. No need to know actor address, ID or anything else!
-IPromise promise = messageHub.EnqueueRequest(request, callbackPoint);
+IPromise promise = messageHub.Send(request, callbackPoint);
 // Wait for result
 ResultMessage result = promise.GetResponse().Result.GetPayload<ResultMessage>();
 ```
