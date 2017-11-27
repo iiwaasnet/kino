@@ -65,7 +65,7 @@ namespace kino.Tests.Consensus.Setup
 
         internal static LeaseTxResult RepeatUntil(Func<LeaseTxResult> func, TxOutcome expected)
         {
-            var repeat = 5;
+            var repeat = 10;
 
             LeaseTxResult result;
             while ((result = func()).TxOutcome != expected && repeat-- > 0)
