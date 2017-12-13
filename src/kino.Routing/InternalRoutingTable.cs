@@ -10,13 +10,15 @@ namespace kino.Routing
 {
     public class InternalRoutingTable : IInternalRoutingTable
     {
+        private readonly IRoundRobinDestinationList roundRobinList;
         private readonly Bcl.IDictionary<ReceiverIdentifier, ILocalSendingSocket<IMessage>> messageHubs;
         private readonly Bcl.IDictionary<MessageIdentifier, HashedLinkedList<ReceiverIdentifier>> messageToActorMap;
         private readonly Bcl.IDictionary<ReceiverIdentifier, ILocalSendingSocket<IMessage>> actorToSocketMap;
         private readonly Bcl.IDictionary<ILocalSendingSocket<IMessage>, Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<MessageIdentifier>>> socketToActorMessagesMap;
 
-        public InternalRoutingTable()
+        public InternalRoutingTable(IRoundRobinDestinationList roundRobinList)
         {
+            this.roundRobinList = roundRobinList;
             messageHubs = new Bcl.Dictionary<ReceiverIdentifier, ILocalSendingSocket<IMessage>>();
             messageToActorMap = new Bcl.Dictionary<MessageIdentifier, HashedLinkedList<ReceiverIdentifier>>();
             actorToSocketMap = new Bcl.Dictionary<ReceiverIdentifier, ILocalSendingSocket<IMessage>>();
@@ -25,11 +27,16 @@ namespace kino.Routing
 
         public void AddMessageRoute(InternalRouteRegistration routeRegistration)
         {
+            var shouldAddSocket = false;
             if (routeRegistration.ReceiverIdentifier.IsMessageHub())
             {
                 var registration = new ReceiverIdentifierRegistration(routeRegistration.ReceiverIdentifier,
                                                                       routeRegistration.KeepRegistrationLocal);
-                messageHubs[registration] = routeRegistration.DestinationSocket;
+                shouldAddSocket = !messageHubs.ContainsKey(registration);
+                if (shouldAddSocket)
+                {
+                    messageHubs.Add(registration, routeRegistration.DestinationSocket);
+                }
             }
             else
             {
@@ -41,12 +48,21 @@ namespace kino.Routing
                         MapMessageToActor(routeRegistration, messageContract);
                         MapActorToMessage(routeRegistration, actorMessages, messageContract);
                     }
-                    actorToSocketMap[routeRegistration.ReceiverIdentifier] = routeRegistration.DestinationSocket;
+                    shouldAddSocket = !actorToSocketMap.ContainsKey(routeRegistration.ReceiverIdentifier);
+                    if (shouldAddSocket)
+                    {
+                        actorToSocketMap[routeRegistration.ReceiverIdentifier] = routeRegistration.DestinationSocket;
+                    }
                 }
                 else
                 {
                     throw new ArgumentException($"Requested registration is for unknown Receiver type: [{routeRegistration.ReceiverIdentifier}]!");
                 }
+            }
+
+            if (shouldAddSocket)
+            {
+                roundRobinList.Add(routeRegistration.DestinationSocket);
             }
         }
 
@@ -60,6 +76,7 @@ namespace kino.Routing
                                 };
                 socketToActorMessagesMap[routeRegistration.DestinationSocket] = actorMessages;
             }
+
             return actorMessages;
         }
 
@@ -72,6 +89,7 @@ namespace kino.Routing
                 messages = new Bcl.HashSet<MessageIdentifier>();
                 actorMessages[routeRegistration.ReceiverIdentifier] = messages;
             }
+
             messages.Add(messageContract.Message);
         }
 
@@ -82,6 +100,7 @@ namespace kino.Routing
                 actors = new HashedLinkedList<ReceiverIdentifier>();
                 messageToActorMap[messageContract.Message] = actors;
             }
+
             if (!actors.Contains(routeRegistration.ReceiverIdentifier))
             {
                 var registration = new ReceiverIdentifierRegistration(routeRegistration.ReceiverIdentifier,
@@ -127,7 +146,7 @@ namespace kino.Routing
                 {
                     if (lookupRequest.Distribution == DistributionPattern.Unicast)
                     {
-                        if (actorToSocketMap.TryGetValue(Get(actors), out socket))
+                        if (actorToSocketMap.TryGetValue(actors.RoundRobinGet(), out socket))
                         {
                             sockets.Add(socket);
                         }
@@ -151,26 +170,10 @@ namespace kino.Routing
             return sockets;
         }
 
-        private static T Get<T>(HashedLinkedList<T> hashSet)
-        {
-            var count = hashSet.Count;
-            if (count > 0)
-            {
-                var first = (count > 1) ? hashSet.RemoveFirst() : hashSet.First;
-                if (count > 1)
-                {
-                    hashSet.InsertLast(first);
-                }
-                return first;
-            }
-
-            return default;
-        }
-
         public Bcl.IEnumerable<MessageRoute> RemoveReceiverRoute(ILocalSendingSocket<IMessage> receivingSocket)
             => RemoveActors(receivingSocket)
-                .Concat(RemoveMessageHub(receivingSocket))
-                .ToList();
+              .Concat(RemoveMessageHub(receivingSocket))
+              .ToList();
 
         private Bcl.IEnumerable<MessageRoute> RemoveMessageHub(ILocalSendingSocket<IMessage> receivingSocket)
         {
@@ -178,6 +181,7 @@ namespace kino.Routing
             var messageHub = messageHubs.Where(kv => kv.Value.Equals(receivingSocket))
                                         .Select(kv => kv.Key)
                                         .FirstOrDefault();
+            roundRobinList.Remove(receivingSocket);
             if (messageHub != null)
             {
                 messageHubs.Remove(messageHub);
@@ -191,6 +195,7 @@ namespace kino.Routing
             if (socketToActorMessagesMap.TryGetValue(receivingSocket, out var actorMessages))
             {
                 socketToActorMessagesMap.Remove(receivingSocket);
+                roundRobinList.Remove(receivingSocket);
                 foreach (var actor in actorMessages.Keys)
                 {
                     actorToSocketMap.Remove(actor);

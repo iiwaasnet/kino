@@ -3,7 +3,7 @@ using kino.Core.Framework;
 
 namespace kino.Core
 {
-    public class Node : IEquatable<Node>
+    public class Node : IEquatable<Node>, IDestination
     {
         private readonly int hashCode;
 
@@ -34,6 +34,7 @@ namespace kino.Core
             {
                 return false;
             }
+
             return Equals((Node) obj);
         }
 
@@ -47,12 +48,31 @@ namespace kino.Core
             {
                 return true;
             }
+
             return StructuralCompare(other);
+        }
+
+        public bool Equals(IDestination other)
+        {
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+            if (other.GetType() != GetType())
+            {
+                return false;
+            }
+
+            return StructuralCompare(other.As<Node>());
         }
 
         private bool StructuralCompare(Node other)
             => Unsafe.ArraysEqual(SocketIdentity, other.SocketIdentity)
-               && Uri.AbsoluteUri == other.Uri.AbsoluteUri;
+            && Uri.AbsoluteUri == other.Uri.AbsoluteUri;
 
         public override int GetHashCode()
             => hashCode;
@@ -64,6 +84,9 @@ namespace kino.Core
                 return (Uri.GetHashCode() * 397) ^ SocketIdentity.ComputeHash();
             }
         }
+
+        public override string ToString()
+            => $"{SocketIdentity.GetAnyString()}@{Uri.ToSocketAddress()}";
 
         public Uri Uri { get; }
 
