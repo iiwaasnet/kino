@@ -12,6 +12,14 @@
     <PackageReference Include="WindowsService.Host" Version="0.0.0.7" />
   </ItemGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+        <LangVersion>7.2</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+        <LangVersion>7.2</LangVersion>
+    </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\kino.Rendezvous\kino.Rendezvous.csproj" />
   </ItemGroup>

@@ -9,6 +9,14 @@
     <PackageReference Include="protobuf-net" Version="2.3.2" />
   </ItemGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+        <LangVersion>7.2</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+        <LangVersion>7.2</LangVersion>
+    </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\kino.Core\kino.Core.csproj" />
     <ProjectReference Include="..\kino.Security\kino.Security.csproj" />

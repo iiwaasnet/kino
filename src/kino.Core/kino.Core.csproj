@@ -14,6 +14,14 @@
     <Reference Include="System.Management" />
   </ItemGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+        <LangVersion>7.2</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+        <LangVersion>7.2</LangVersion>
+    </PropertyGroup>
+
  <PropertyGroup Condition="'$(TargetFramework)'=='net47'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
  </PropertyGroup>

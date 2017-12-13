@@ -191,7 +191,7 @@ namespace kino.Routing
                 return first;
             }
 
-            return default(T);
+            return default;
         }
 
         public PeerRemoveResult RemoveNodeRoute(ReceiverIdentifier nodeIdentifier)

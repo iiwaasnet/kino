@@ -8,6 +8,14 @@
     <PackageReference Include="NetMQ" Version="4.0.0.1" />
   </ItemGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+        <LangVersion>7.2</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+        <LangVersion>7.2</LangVersion>
+    </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\kino.Core\kino.Core.csproj" />
     <ProjectReference Include="..\kino.Messaging\kino.Messaging.csproj" />

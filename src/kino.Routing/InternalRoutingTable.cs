@@ -164,7 +164,7 @@ namespace kino.Routing
                 return first;
             }
 
-            return default(T);
+            return default;
         }
 
         public Bcl.IEnumerable<MessageRoute> RemoveReceiverRoute(ILocalSendingSocket<IMessage> receivingSocket)

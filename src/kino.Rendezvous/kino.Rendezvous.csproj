@@ -11,8 +11,16 @@
       <Description>Framework for building actors networks</Description>
       <PackageTags>Actors framework</PackageTags>
       <Authors>Sergey Ivasenko</Authors>
-	  <BuildNuGetPackage/>
+	  <BuildNuGetPackage />
   </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+        <LangVersion>7.2</LangVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+        <LangVersion>7.2</LangVersion>
+    </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\kino.Consensus\kino.Consensus.csproj" />
