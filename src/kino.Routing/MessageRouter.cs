@@ -217,7 +217,7 @@ namespace kino.Routing
                     {
                         handled = SendMessageLocally(localDestinations, message);
                     }
-                    if (!handled && remote.Node.Equals(destination))
+                    if (!handled)
                     {
                         handled = SendMessageAway(remoteDestinations, message, scaleOutBackend);
                     }

@@ -49,6 +49,7 @@ namespace kino.Tests.Routing
         private readonly Mock<IExternalRoutingTable> externalRoutingTable;
         private readonly SocketEndpoint localNodeEndpoint;
         private readonly Mock<IClusterMonitor> clusterMonitor;
+        private readonly RoundRobinDestinationList roundRobinDestinationList;
 
         public MessageRouterTests()
         {
@@ -79,6 +80,7 @@ namespace kino.Tests.Routing
             clusterServices.Setup(m => m.GetClusterMonitor()).Returns(clusterMonitor.Object);
             internalRoutingTable = new Mock<IInternalRoutingTable>();
             externalRoutingTable = new Mock<IExternalRoutingTable>();
+            roundRobinDestinationList = new RoundRobinDestinationList(logger.Object);
             messageRouter = CreateMessageRouter();
         }
 
@@ -114,11 +116,12 @@ namespace kino.Tests.Routing
         [Fact]
         public void IfLocalRouterSocketIsReadyToReceive_ItsTryReceiveMethodIsCalled()
         {
-            localRouterSocket.Setup(m => m.TryReceive()).Returns(() =>
-                                                                 {
-                                                                     localRouterSocketWaitHandle.Reset();
-                                                                     return null;
-                                                                 });
+            localRouterSocket.Setup(m => m.TryReceive())
+                             .Returns(() =>
+                                      {
+                                          localRouterSocketWaitHandle.Reset();
+                                          return null;
+                                      });
             messageRouter.Start();
             //
             localRouterSocketWaitHandle.Set();
@@ -132,11 +135,12 @@ namespace kino.Tests.Routing
         [Fact]
         public void IfInternalRegistrationsReceiverIsReadyToReceive_ItsTryReceiveMethidIsCalled()
         {
-            internalRegistrationsReceiver.Setup(m => m.TryReceive()).Returns(() =>
-                                                                             {
-                                                                                 internalRegistrationsReceiverWaitHandle.Reset();
-                                                                                 return null;
-                                                                             });
+            internalRegistrationsReceiver.Setup(m => m.TryReceive())
+                                         .Returns(() =>
+                                                  {
+                                                      internalRegistrationsReceiverWaitHandle.Reset();
+                                                      return null;
+                                                  });
             messageRouter.Start();
             //
             internalRegistrationsReceiverWaitHandle.Set();
@@ -192,11 +196,12 @@ namespace kino.Tests.Routing
         public void IfInternalRegistrationMessageIsReceived_InternalRegistrationHandlerIsCalled()
         {
             var internalRouteRegistration = new InternalRouteRegistration();
-            internalRegistrationsReceiver.Setup(m => m.TryReceive()).Returns(() =>
-                                                                             {
-                                                                                 internalRegistrationsReceiverWaitHandle.Reset();
-                                                                                 return internalRouteRegistration;
-                                                                             });
+            internalRegistrationsReceiver.Setup(m => m.TryReceive())
+                                         .Returns(() =>
+                                                  {
+                                                      internalRegistrationsReceiverWaitHandle.Reset();
+                                                      return internalRouteRegistration;
+                                                  });
             messageRouter.Start();
             //
             internalRegistrationsReceiverWaitHandle.Set();
@@ -210,11 +215,12 @@ namespace kino.Tests.Routing
         public void IfInternalRegistrationMessageIsNull_InternalRegistrationHandlerIsNotCalled()
         {
             var internalRouteRegistration = new InternalRouteRegistration();
-            internalRegistrationsReceiver.Setup(m => m.TryReceive()).Returns(() =>
-                                                                             {
-                                                                                 internalRegistrationsReceiverWaitHandle.Reset();
-                                                                                 return null;
-                                                                             });
+            internalRegistrationsReceiver.Setup(m => m.TryReceive())
+                                         .Returns(() =>
+                                                  {
+                                                      internalRegistrationsReceiverWaitHandle.Reset();
+                                                      return null;
+                                                  });
             messageRouter.Start();
             //
             internalRegistrationsReceiverWaitHandle.Set();
@@ -487,8 +493,8 @@ namespace kino.Tests.Routing
         private MessageRouter CreateMessageRouter(IInternalRoutingTable internalRoutingTable = null,
                                                   IExternalRoutingTable externalRoutingTable = null)
             => new MessageRouter(socketFactory.Object,
-                                 internalRoutingTable ?? new InternalRoutingTable(),
-                                 externalRoutingTable ?? new ExternalRoutingTable(logger.Object),
+                                 internalRoutingTable ?? new InternalRoutingTable(roundRobinDestinationList),
+                                 externalRoutingTable ?? new ExternalRoutingTable(roundRobinDestinationList, logger.Object),
                                  scaleOutConfigurationProvider.Object,
                                  clusterServices.Object,
                                  serviceMessageHandlerRegistry.Object,
@@ -497,6 +503,7 @@ namespace kino.Tests.Routing
                                  localRouterSocket.Object,
                                  internalRegistrationsReceiver.Object,
                                  internalRegistrationHandler.Object,
+                                 roundRobinDestinationList,
                                  logger.Object);
     }
 }
