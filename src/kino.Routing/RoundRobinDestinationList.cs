@@ -1,42 +1,44 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using C5;
 using kino.Core;
+using kino.Core.Diagnostics;
 
 namespace kino.Routing
 {
     public class RoundRobinDestinationList : IRoundRobinDestinationList
     {
+        private readonly ILogger logger;
         private readonly HashedLinkedList<IDestination> destinations;
 
-        public RoundRobinDestinationList()
-            => destinations = new HashedLinkedList<IDestination>();
-
-        public IDestination SelectNextDestination(IDestination first, IDestination second)
+        public RoundRobinDestinationList(ILogger logger)
         {
-            var firstIndex = destinations.IndexOf(first);
-            if (firstIndex < 0)
-            {
-                destinations.InsertLast(first);
-                return first;
-            }
-            var secondIndex = destinations.IndexOf(second);
-            if (secondIndex < 0)
-            {
-                destinations.InsertLast(second);
-                return second;
-            }
-            if (firstIndex < secondIndex)
-            {
-                destinations.RemoveAt(firstIndex);
-                destinations.InsertLast(first);
+            this.logger = logger;
+            destinations = new HashedLinkedList<IDestination>();
+        }
 
-                return first;
+        public IDestination SelectNextDestination(params IDestination[] receivers)
+        {
+            receivers = receivers.Where(d => d != null)
+                                 .ToArray();
+            var indexes = new List<int>();
+            foreach (var receiver in receivers)
+            {
+                var index = destinations.IndexOf(receiver);
+                if (index < 0)
+                {
+                    logger.Warn($"Destination [{receiver}] is not found in {GetType().Name}");
+                    return receiver;
+                }
+                indexes.Add(index);
             }
 
-            destinations.RemoveAt(secondIndex);
-            destinations.InsertLast(second);
+            var nextDestinationIndex = indexes.Min();
+            var destination = destinations.RemoveAt(nextDestinationIndex);
+            destinations.InsertLast(destination);
 
-            return second;
+            return destination;
         }
 
         public void Add(IDestination destination)

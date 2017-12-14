@@ -4,7 +4,7 @@ namespace kino.Routing
 {
     public interface IRoundRobinDestinationList
     {
-        IDestination SelectNextDestination(IDestination first, IDestination second);
+        IDestination SelectNextDestination(params IDestination[] receivers);
 
         void Add(IDestination destination);
 
