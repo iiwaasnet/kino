@@ -210,10 +210,10 @@ namespace kino.Routing
                 var local = localDestinations.FirstOrDefault();
                 var remote = remoteDestinations.FirstOrDefault();
 
-                var destination = roundRobinDestinationList.SelectNextDestination(local, remote.Node);
+                var destination = roundRobinDestinationList.SelectNextDestination(local, remote?.Node);
                 if (destination != null)
                 {
-                    if (MessageCameFromOtherNode(message) || local.Equals(destination))
+                    if (MessageCameFromOtherNode(message) || destination.Equals(local))
                     {
                         handled = SendMessageLocally(localDestinations, message);
                     }

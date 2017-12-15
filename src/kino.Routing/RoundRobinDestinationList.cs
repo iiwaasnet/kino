@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using C5;
 using kino.Core;
@@ -22,32 +21,32 @@ namespace kino.Routing
         {
             receivers = receivers.Where(d => d != null)
                                  .ToArray();
-            var indexes = new List<int>();
-            foreach (var receiver in receivers)
+            if (receivers.Any())
             {
-                var index = destinations.IndexOf(receiver);
-                if (index < 0)
+                var indexes = new List<int>();
+                foreach (var receiver in receivers)
                 {
-                    logger.Warn($"Destination [{receiver}] is not found in {GetType().Name}");
-                    return receiver;
+                    var index = destinations.IndexOf(receiver);
+                    if (index < 0)
+                    {
+                        logger.Warn($"Destination [{receiver}] is not found in {GetType().Name}");
+                        return receiver;
+                    }
+                    indexes.Add(index);
                 }
-                indexes.Add(index);
+
+                var nextDestinationIndex = indexes.Min();
+                var destination = destinations.RemoveAt(nextDestinationIndex);
+                destinations.InsertLast(destination);
+
+                return destination;
             }
 
-            var nextDestinationIndex = indexes.Min();
-            var destination = destinations.RemoveAt(nextDestinationIndex);
-            destinations.InsertLast(destination);
-
-            return destination;
+            return null;
         }
 
         public void Add(IDestination destination)
-        {
-            if (!destinations.Add(destination))
-            {
-                throw new Exception($"Destination [{destination}] already exists!");
-            }
-        }
+            => destinations.Add(destination);
 
         public void Remove(IDestination destination)
             => destinations.Remove(destination);
