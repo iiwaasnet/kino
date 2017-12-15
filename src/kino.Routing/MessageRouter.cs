@@ -189,28 +189,24 @@ namespace kino.Routing
         private bool SelectReceiverAndSend(Message message, ISocket scaleOutBackend, ExternalRouteLookupRequest lookupRequest)
         {
             var handled = false;
-            var localDestinations = internalRoutingTable.FindRoutes(lookupRequest);
-            var remoteDestinations = externalRoutingTable.FindRoutes(lookupRequest);
 
             if (message.Distribution == DistributionPattern.Broadcast)
             {
-                handled = SendMessageLocally(localDestinations, message);
-                handled = handled || MessageCameFromLocalActor(message)
-                       && SendMessageAway(remoteDestinations, message, scaleOutBackend);
+                handled = SendMessageLocally(internalRoutingTable.FindRoutes(lookupRequest), message);
+                handled = MessageCameFromLocalActor(message)
+                       && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
+                       || handled;
             }
             else
             {
-                //if (MessageCameFromOtherNode(message))
-                //{
-                //    handled = SendMessageLocally(localDestinations, message)
-                //           || SendMessageAway(remoteDestinations, message, scaleOutBackend);
-                //}
-                //else
-                //{
-                var local = localDestinations.FirstOrDefault();
-                var remote = remoteDestinations.FirstOrDefault();
+                var localDestinations = internalRoutingTable.FindRoutes(lookupRequest);
+                var remoteDestinations = externalRoutingTable.FindRoutes(lookupRequest);
+                var local = localDestinations.FirstOrDefault()?.As<IDestination>();
+                var remote = remoteDestinations.FirstOrDefault()?.Node.As<IDestination>();
 
-                var destination = roundRobinDestinationList.SelectNextDestination(local, remote?.Node);
+                var destination = (local != null && remote != null)
+                                      ? roundRobinDestinationList.SelectNextDestination(local, remote)
+                                      : (local ?? remote);
                 if (destination != null)
                 {
                     if (MessageCameFromOtherNode(message) || destination.Equals(local))
@@ -222,7 +218,6 @@ namespace kino.Routing
                         handled = SendMessageAway(remoteDestinations, message, scaleOutBackend);
                     }
                 }
-                //}
             }
 
             return handled;
