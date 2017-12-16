@@ -65,11 +65,12 @@ namespace kino.Tests.Client
             try
             {
                 messageHub = CreateMessageHub(keepRegistrationLocal);
+                receivingSocket.As<ILocalSendingSocket<IMessage>>().Setup(m => m.Equals(receivingSocket.Object)).Returns(true);
                 //
                 messageHub.Start();
                 //
                 Func<InternalRouteRegistration, bool> globalRegistration = msg => msg.KeepRegistrationLocal == keepRegistrationLocal
-                                                                                  && msg.DestinationSocket == receivingSocket.Object;
+                                                                                  && msg.DestinationSocket.Equals(receivingSocket.Object);
                 registrationSocket.Verify(m => m.Send(It.Is<InternalRouteRegistration>(msg => globalRegistration(msg))));
             }
             finally

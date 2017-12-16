@@ -19,7 +19,6 @@ using kino.Tests.Helpers;
 using Moq;
 using NetMQ;
 using Xunit;
-using Xunit.Sdk;
 using Health = kino.Cluster.Health;
 using MessageRoute = kino.Cluster.MessageRoute;
 
@@ -50,7 +49,7 @@ namespace kino.Tests.Routing
         private readonly Mock<IExternalRoutingTable> externalRoutingTable;
         private readonly SocketEndpoint localNodeEndpoint;
         private readonly Mock<IClusterMonitor> clusterMonitor;
-        private readonly RoundRobinDestinationList roundRobinDestinationList;
+        private readonly Mock<IRoundRobinDestinationList> roundRobinDestinationList;
 
         public MessageRouterTests()
         {
@@ -81,7 +80,7 @@ namespace kino.Tests.Routing
             clusterServices.Setup(m => m.GetClusterMonitor()).Returns(clusterMonitor.Object);
             internalRoutingTable = new Mock<IInternalRoutingTable>();
             externalRoutingTable = new Mock<IExternalRoutingTable>();
-            roundRobinDestinationList = new RoundRobinDestinationList(logger.Object);
+            roundRobinDestinationList = new Mock<IRoundRobinDestinationList>();
             messageRouter = CreateMessageRouter();
         }
 
@@ -343,25 +342,26 @@ namespace kino.Tests.Routing
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
         }
 
-        // TODO: Not a valid test anymore. Should add test for new routing
-        //[Fact]
-        //public void IfMessageReceiverNodeIdentityIsNotSet_MessageIsRoutedInternally()
-        //{
-        //    messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
-        //    var localSocket = new Mock<ILocalSocket<IMessage>>();
-        //    localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
-        //    var routes = new[] {localSocket.Object};
-        //    internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-        //    var message = Message.Create(new SimpleMessage()).As<Message>();
-        //    localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
-        //    //
-        //    messageRouter.Start();
-        //    ReceiveMessageCompletionDelay.Sleep();
-        //    messageRouter.Stop();
-        //    //
-        //    internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
-        //    externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
-        //}
+        [Fact]
+        public void IfForMessageInternalAndExternalRoutesExist_FinalDestinationIsSelectedRoundRobin()
+        {
+            messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
+            var localSocket = new Mock<ILocalSocket<IMessage>>();
+            localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
+            internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(new[] { localSocket.Object });
+            var peerConnection = new PeerConnection { Node = new Node("tcp://127.0.0.1:9009", new ReceiverIdentifier(Guid.NewGuid().ToByteArray()).Identity) };
+            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] { peerConnection });
+            var message = Message.Create(new SimpleMessage()).As<Message>();
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
+            //
+            messageRouter.Start();
+            ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
+            //
+            internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
+            externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
+            roundRobinDestinationList.Verify(m => m.SelectNextDestination(localSocket.Object, peerConnection.Node), Times.Once);
+        }
 
         [Fact]
         public void IfMessageReceiverNodeIdentitySetToRemoteNodeIdentity_MessageIsSentToThatNode()
@@ -461,11 +461,9 @@ namespace kino.Tests.Routing
         }
 
         [Fact]
-        public void IfMessageFromLocalActorIsUnhandled_RequestToDiscoverUnhandledMessageRouteIsSent()
+        public void IfMessageIsUnhandled_RequestToDiscoverUnhandledMessageRouteIsSent()
         {
             var message = Message.Create(new SimpleMessage()).As<Message>();
-            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(Enumerable.Empty<PeerConnection>());
-            internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(Enumerable.Empty<ILocalSendingSocket<IMessage>>());
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
             //
@@ -477,12 +475,27 @@ namespace kino.Tests.Routing
         }
 
         [Fact]
+        public void IfMessageIsNotHandledLocaly_ItIsForwardedAway()
+        {
+            messageRouter = CreateMessageRouter(externalRoutingTable: externalRoutingTable.Object);
+            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
+            var peerConnection = new PeerConnection { Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity) };
+            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] { peerConnection });
+            localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
+            //
+            messageRouter.Start();
+            ReceiveMessageCompletionDelay.Sleep();
+            messageRouter.Stop();
+            //
+            scaleOutSocket.Verify(m => m.SendMessage(message));
+        }
+
+        [Fact]
         public void IfMessageFromRemoteActorIsUnhandled_NodeUnregistersSelfFromHandlingThisMesssage()
         {
             var message = Message.Create(new SimpleMessage()).As<Message>();
             message.AddHop();
-            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(Enumerable.Empty<PeerConnection>());
-            internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(Enumerable.Empty<ILocalSendingSocket<IMessage>>());
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
             //
@@ -496,8 +509,8 @@ namespace kino.Tests.Routing
         private MessageRouter CreateMessageRouter(IInternalRoutingTable internalRoutingTable = null,
                                                   IExternalRoutingTable externalRoutingTable = null)
             => new MessageRouter(socketFactory.Object,
-                                 internalRoutingTable ?? new InternalRoutingTable(roundRobinDestinationList),
-                                 externalRoutingTable ?? new ExternalRoutingTable(roundRobinDestinationList, logger.Object),
+                                 internalRoutingTable ?? new InternalRoutingTable(roundRobinDestinationList.Object),
+                                 externalRoutingTable ?? new ExternalRoutingTable(roundRobinDestinationList.Object, logger.Object),
                                  scaleOutConfigurationProvider.Object,
                                  clusterServices.Object,
                                  serviceMessageHandlerRegistry.Object,
@@ -506,7 +519,7 @@ namespace kino.Tests.Routing
                                  localRouterSocket.Object,
                                  internalRegistrationsReceiver.Object,
                                  internalRegistrationHandler.Object,
-                                 roundRobinDestinationList,
+                                 roundRobinDestinationList.Object,
                                  logger.Object);
     }
 }
