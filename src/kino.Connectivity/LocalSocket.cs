@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Threading;
 using kino.Core;
 using kino.Core.Diagnostics.Performance;
+using kino.Core.Framework;
 
 namespace kino.Connectivity
 {
-    public class LocalSocket<T> : ILocalSocket<T>, IEquatable<ILocalSocket<T>>
+    public class LocalSocket<T> : ILocalSocket<T>
     {
         private readonly ManualResetEvent dataAvailable;
         private readonly BlockingCollection<T> messageQueue;
@@ -38,6 +38,7 @@ namespace kino.Connectivity
             {
                 messageQueue.TryTake(out message);
             }
+
             if (!messageQueue.TryTake(out lookup))
             {
                 dataAvailable.Reset();
@@ -71,10 +72,11 @@ namespace kino.Connectivity
             {
                 return false;
             }
-            return Equals((ILocalSocket<T>) obj);
+
+            return Equals((ILocalSendingSocket<T>) obj);
         }
 
-        public bool Equals(ILocalSocket<T> other)
+        public bool Equals(ILocalSendingSocket<T> other)
         {
             if (ReferenceEquals(null, other))
             {
@@ -85,8 +87,31 @@ namespace kino.Connectivity
                 return true;
             }
 
-            return GetIdentity() == other.GetIdentity();
+            return GetIdentity() == other.As<ILocalSocket<T>>()
+                                         .GetIdentity();
         }
+
+        public bool Equals(IDestination other)
+        {
+            if (ReferenceEquals(null, other))
+            {
+                return false;
+            }
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+            if (other.GetType() != GetType())
+            {
+                return false;
+            }
+
+            return GetIdentity() == other.As<ILocalSocket<T>>()
+                                         .GetIdentity();
+        }
+
+        public override string ToString()
+            => $"{GetType().Name}:{socketIdentity}";
 
         public override int GetHashCode()
             => hashCode;

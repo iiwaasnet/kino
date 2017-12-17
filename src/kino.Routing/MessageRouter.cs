@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,6 +36,7 @@ namespace kino.Routing
         private readonly ILocalSocket<IMessage> localRouterSocket;
         private readonly ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver;
         private readonly IInternalMessageRouteRegistrationHandler internalRegistrationHandler;
+        private readonly IRoundRobinDestinationList roundRobinDestinationList;
         private byte[] thisNodeIdentity;
         private bool isStarted;
 
@@ -49,6 +51,7 @@ namespace kino.Routing
                              ILocalSocket<IMessage> localRouterSocket,
                              ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver,
                              IInternalMessageRouteRegistrationHandler internalRegistrationHandler,
+                             IRoundRobinDestinationList roundRobinDestinationList,
                              ILogger logger)
         {
             this.logger = logger;
@@ -65,6 +68,7 @@ namespace kino.Routing
             this.localRouterSocket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterLocalSocketReceiveRate);
             this.internalRegistrationsReceiver = internalRegistrationsReceiver;
             this.internalRegistrationHandler = internalRegistrationHandler;
+            this.roundRobinDestinationList = roundRobinDestinationList;
         }
 
         public void Start()
@@ -122,7 +126,7 @@ namespace kino.Routing
                                 if (message != null)
                                 {
                                     var _ = TryHandleServiceMessage(message, scaleOutBackend)
-                                            || HandleOperationMessage(message, scaleOutBackend);
+                                         || HandleOperationMessage(message, scaleOutBackend);
                                 }
                             }
                             if (receiverId == InternalRegistrationsReceiverId)
@@ -162,22 +166,65 @@ namespace kino.Routing
                                     Distribution = message.Distribution,
                                     ReceiverNodeIdentity = new ReceiverIdentifier(message.ReceiverNodeIdentity ?? IdentityExtensions.Empty)
                                 };
-            var handleMessageLocally = !message.ReceiverNodeIdentity.IsSet()
-                                       || Unsafe.ArraysEqual(message.ReceiverNodeIdentity, thisNodeIdentity);
 
-            var handled = handleMessageLocally && HandleMessageLocally(lookupRequest, message);
-            if (!handled || message.Distribution == DistributionPattern.Broadcast)
-            {
-                handled = ForwardMessageAway(lookupRequest, message, scaleOutBackend) || handled;
-            }
+            var handled = message.ReceiverNodeIdentity.IsSet()
+                              ? SendToExactReceiver(message, scaleOutBackend, lookupRequest)
+                              : SelectReceiverAndSend(message, scaleOutBackend, lookupRequest);
 
             return handled || ProcessUnhandledMessage(message, lookupRequest);
         }
 
-        private bool HandleMessageLocally(InternalRouteLookupRequest lookupRequest, Message message)
+        private bool SendToExactReceiver(Message message, ISocket scaleOutBackend, ExternalRouteLookupRequest lookupRequest)
         {
-            var destinations = internalRoutingTable.FindRoutes(lookupRequest);
+            if (Unsafe.ArraysEqual(message.ReceiverNodeIdentity, thisNodeIdentity))
+            {
+                var localDestinations = internalRoutingTable.FindRoutes(lookupRequest);
+                return SendMessageLocally(localDestinations, message);
+            }
 
+            var remoteDestinations = externalRoutingTable.FindRoutes(lookupRequest);
+            return SendMessageAway(remoteDestinations, message, scaleOutBackend);
+        }
+
+        private bool SelectReceiverAndSend(Message message, ISocket scaleOutBackend, ExternalRouteLookupRequest lookupRequest)
+        {
+            var handled = false;
+
+            if (message.Distribution == DistributionPattern.Broadcast)
+            {
+                handled = SendMessageLocally(internalRoutingTable.FindRoutes(lookupRequest), message);
+                handled = MessageCameFromLocalActor(message)
+                       && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
+                       || handled;
+            }
+            else
+            {
+                var localDestinations = internalRoutingTable.FindRoutes(lookupRequest);
+                var remoteDestinations = externalRoutingTable.FindRoutes(lookupRequest);
+                var local = localDestinations.FirstOrDefault()?.As<IDestination>();
+                var remote = remoteDestinations.FirstOrDefault()?.Node.As<IDestination>();
+
+                var destination = (local != null && remote != null)
+                                      ? roundRobinDestinationList.SelectNextDestination(local, remote)
+                                      : (local ?? remote);
+                if (destination != null)
+                {
+                    if (MessageCameFromOtherNode(message) || destination.Equals(local))
+                    {
+                        handled = SendMessageLocally(localDestinations, message);
+                    }
+                    if (!handled)
+                    {
+                        handled = SendMessageAway(remoteDestinations, message, scaleOutBackend);
+                    }
+                }
+            }
+
+            return handled;
+        }
+
+        private bool SendMessageLocally(IEnumerable<ILocalSendingSocket<IMessage>> destinations, Message message)
+        {
             foreach (var destination in destinations)
             {
                 try
@@ -213,12 +260,8 @@ namespace kino.Routing
             return destinations.Any();
         }
 
-        private bool ForwardMessageAway(ExternalRouteLookupRequest lookupRequest, Message message, ISocket scaleOutBackend)
+        private bool SendMessageAway(IEnumerable<PeerConnection> routes, Message message, ISocket scaleOutBackend)
         {
-            var routes = message.Distribution == DistributionPattern.Broadcast && !MessageCameFromLocalActor(message)
-                             ? Enumerable.Empty<PeerConnection>()
-                             : externalRoutingTable.FindRoutes(lookupRequest);
-
             foreach (var route in routes)
             {
                 try

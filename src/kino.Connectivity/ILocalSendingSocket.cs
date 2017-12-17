@@ -1,8 +1,10 @@
-﻿using kino.Core.Diagnostics.Performance;
+﻿using System;
+using kino.Core;
+using kino.Core.Diagnostics.Performance;
 
 namespace kino.Connectivity
 {
-    public interface ILocalSendingSocket<in T>
+    public interface ILocalSendingSocket<T> : IEquatable<ILocalSendingSocket<T>>, IDestination
     {
         void Send(T message);
 

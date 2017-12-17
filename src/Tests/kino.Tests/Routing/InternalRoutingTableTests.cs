@@ -3,11 +3,13 @@ using System.Linq;
 using FluentAssertions;
 using kino.Connectivity;
 using kino.Core;
+using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Routing;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
+using Moq;
 using Xunit;
 
 namespace kino.Tests.Routing
@@ -17,7 +19,7 @@ namespace kino.Tests.Routing
         private readonly InternalRoutingTable internalRoutingTable;
 
         public InternalRoutingTableTests()
-            => internalRoutingTable = new InternalRoutingTable();
+            => internalRoutingTable = new InternalRoutingTable(new RoundRobinDestinationList(new Mock<ILogger>().Object));
 
         [Fact]
         public void IfReceiverIdentifierNeitherMessageHubNorActor_AddMessageRouteThrowsException()
@@ -136,8 +138,9 @@ namespace kino.Tests.Routing
                                                          {
                                                              ReceiverIdentifier = ReceiverIdentities.CreateForMessageHub(),
                                                              DestinationSocket = new LocalSocket<IMessage>()
-                                                         });
-            registrations.ForEach(r => internalRoutingTable.AddMessageRoute(r));
+                                                         })
+                                          .ForEach(r => internalRoutingTable.AddMessageRoute(r))
+                                          .ToList();
             var lookupRoute = registrations.First();
             var messageHub = lookupRoute.ReceiverIdentifier;
             var localSocket = lookupRoute.DestinationSocket;
@@ -162,8 +165,9 @@ namespace kino.Tests.Routing
                                                              ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
                                                              DestinationSocket = new LocalSocket<IMessage>(),
                                                              MessageContracts = new[] {new MessageContract {Message = messageIdentifier}}
-                                                         });
-            registrations.ForEach(r => internalRoutingTable.AddMessageRoute(r));
+                                                         })
+                                          .ForEach(r => internalRoutingTable.AddMessageRoute(r))
+                                          .ToList();
             var lookupRoute = registrations.First();
             var actor = lookupRoute.ReceiverIdentifier;
             var localSocket = lookupRoute.DestinationSocket;
@@ -188,8 +192,9 @@ namespace kino.Tests.Routing
                                                              ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
                                                              DestinationSocket = new LocalSocket<IMessage>(),
                                                              MessageContracts = new[] {new MessageContract {Message = messageIdentifier}}
-                                                         });
-            registrations.ForEach(r => internalRoutingTable.AddMessageRoute(r));
+                                                         })
+                                          .ForEach(r => internalRoutingTable.AddMessageRoute(r))
+                                          .ToList();
             //
             foreach (var registration in registrations)
             {
@@ -214,8 +219,9 @@ namespace kino.Tests.Routing
                                                              ReceiverIdentifier = ReceiverIdentities.CreateForActor(),
                                                              DestinationSocket = new LocalSocket<IMessage>(),
                                                              MessageContracts = new[] {new MessageContract {Message = messageIdentifier}}
-                                                         });
-            registrations.ForEach(r => internalRoutingTable.AddMessageRoute(r));
+                                                         })
+                                          .ForEach(r => internalRoutingTable.AddMessageRoute(r))
+                                          .ToList();
             //
             var sockets = internalRoutingTable.FindRoutes(new InternalRouteLookupRequest
                                                           {

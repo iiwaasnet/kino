@@ -6,11 +6,12 @@ namespace kino.Core.Framework
 {
     public static class LinqExtensions
     {
-        public static void ForEach<T>(this IEnumerable<T> collection, Action<T> exp)
+        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> collection, Action<T> exp)
         {
             foreach (var el in collection)
             {
                 exp(el);
+                yield return el;
             }
         }
 

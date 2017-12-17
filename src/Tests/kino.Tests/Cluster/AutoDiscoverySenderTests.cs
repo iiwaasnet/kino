@@ -56,8 +56,10 @@ namespace kino.Tests.Cluster
         [Fact]
         public void StartBlockingSendMessages_SendsEnqueuedMessages()
         {
-            var messages = Randomizer.Int32(2, 5).Produce(() => Message.Create(new SimpleMessage()));
-            messages.ForEach(msg => autoDiscoverSender.EnqueueMessage(msg));
+            var messages = Randomizer.Int32(2, 5)
+                                     .Produce(() => Message.Create(new SimpleMessage()))
+                                     .ForEach(msg => autoDiscoverSender.EnqueueMessage(msg))
+                                     .ToList();
             var tokenSource = new CancellationTokenSource(AsyncOp);
             var barrier = new Barrier(1);
             //
@@ -70,8 +72,10 @@ namespace kino.Tests.Cluster
         public void MessageIsNotEnqueued_IfQueueLengthIsGreaterThanMaxAutoDiscoverySenderQueueLength()
         {
             config.RouteDiscovery.MaxAutoDiscoverySenderQueueLength = Randomizer.Int32(10, 20);
-            var messages = (config.RouteDiscovery.MaxAutoDiscoverySenderQueueLength + 1).Produce(() => Message.Create(new SimpleMessage()));
-            messages.ForEach(msg => autoDiscoverSender.EnqueueMessage(msg));
+            (config.RouteDiscovery.MaxAutoDiscoverySenderQueueLength + 1)
+               .Produce(() => Message.Create(new SimpleMessage()))
+               .ForEach(msg => autoDiscoverSender.EnqueueMessage(msg))
+               .ToList();
             var tokenSource = new CancellationTokenSource(AsyncOp);
             var barrier = new Barrier(1);
             //

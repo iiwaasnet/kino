@@ -18,10 +18,12 @@ namespace kino.Routing
         private readonly Bcl.IDictionary<MessageIdentifier, HashedLinkedList<ReceiverIdentifier>> messageToNodeMap;
         private readonly Bcl.IDictionary<ReceiverIdentifier, PeerConnection> nodeToConnectionMap;
         private readonly Bcl.IDictionary<string, Bcl.HashSet<ReceiverIdentifier>> uriToNodeMap;
+        private readonly IRoundRobinDestinationList roundRobinList;
         private readonly ILogger logger;
 
-        public ExternalRoutingTable(ILogger logger)
+        public ExternalRoutingTable(IRoundRobinDestinationList roundRobinList, ILogger logger)
         {
+            this.roundRobinList = roundRobinList;
             this.logger = logger;
             nodeMessageHubs = new Bcl.Dictionary<ReceiverIdentifier, Bcl.HashSet<ReceiverIdentifier>>();
             nodeActors = new Bcl.Dictionary<ReceiverIdentifier, Bcl.HashSet<ReceiverIdentifier>>();
@@ -41,11 +43,11 @@ namespace kino.Routing
                 MapActorToMessage(routeRegistration);
                 MapActorToNode(routeRegistration, nodeIdentifier);
 
-                logger.Debug("External route added " +
-                             $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
-                             $"Node:{nodeIdentifier} " +
-                             $"Actor:{routeRegistration.Route.Receiver}" +
-                             $"Message:{routeRegistration.Route.Message}");
+                logger.Debug("External route added "
+                           + $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} "
+                           + $"Node:{nodeIdentifier} "
+                           + $"Actor:{routeRegistration.Route.Receiver}"
+                           + $"Message:{routeRegistration.Route.Message}");
             }
             else
             {
@@ -53,10 +55,10 @@ namespace kino.Routing
                 {
                     MapMessageHubToNode(routeRegistration, nodeIdentifier);
 
-                    logger.Debug("External route added " +
-                                 $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} " +
-                                 $"Node:{nodeIdentifier} " +
-                                 $"MessageHub:{routeRegistration.Route.Receiver}");
+                    logger.Debug("External route added "
+                               + $"Uri:{routeRegistration.Peer.Uri.AbsoluteUri} "
+                               + $"Node:{nodeIdentifier} "
+                               + $"MessageHub:{routeRegistration.Route.Receiver}");
                 }
                 else
                 {
@@ -65,7 +67,7 @@ namespace kino.Routing
             }
 
             var connection = MapNodeToConnection(routeRegistration, nodeIdentifier);
-            MapConnectionToNode(connection);
+            MapConnectionToNode(connection);            
 
             return connection;
         }
@@ -95,7 +97,10 @@ namespace kino.Routing
                                      Connected = false
                                  };
                 nodeToConnectionMap[nodeIdentifier] = peerConnection;
+
+                roundRobinList.Add(peerConnection.Node);
             }
+
             return peerConnection;
         }
 
@@ -107,6 +112,7 @@ namespace kino.Routing
                 messageHubs = new Bcl.HashSet<ReceiverIdentifier>();
                 nodeMessageHubs[nodeIdentifier] = messageHubs;
             }
+
             messageHubs.Add(messageHub);
         }
 
@@ -117,6 +123,7 @@ namespace kino.Routing
                 actorMessages = new Bcl.HashSet<MessageIdentifier>();
                 actorToMessageMap[routeRegistration.Route.Receiver] = actorMessages;
             }
+
             actorMessages.Add(routeRegistration.Route.Message);
         }
 
@@ -127,6 +134,7 @@ namespace kino.Routing
                 actors = new Bcl.HashSet<ReceiverIdentifier>();
                 nodeActors[nodeIdentifier] = actors;
             }
+
             actors.Add(routeRegistration.Route.Receiver);
         }
 
@@ -138,6 +146,7 @@ namespace kino.Routing
                 nodes = new HashedLinkedList<ReceiverIdentifier>();
                 messageToNodeMap[messageIdentifier] = nodes;
             }
+
             if (!nodes.Contains(nodeIdentifier))
             {
                 nodes.InsertLast(nodeIdentifier);
@@ -160,7 +169,7 @@ namespace kino.Routing
                 {
                     if (lookupRequest.Distribution == DistributionPattern.Unicast)
                     {
-                        peers.Add(nodeToConnectionMap[Get(nodes)]);
+                        peers.Add(nodeToConnectionMap[nodes.RoundRobinGet()]);
                     }
                     else
                     {
@@ -178,22 +187,6 @@ namespace kino.Routing
             return peers;
         }
 
-        private static T Get<T>(IList<T> hashSet)
-        {
-            var count = hashSet.Count;
-            if (count > 0)
-            {
-                var first = (count > 1) ? hashSet.RemoveFirst() : hashSet.First;
-                if (count > 1)
-                {
-                    hashSet.InsertLast(first);
-                }
-                return first;
-            }
-
-            return default;
-        }
-
         public PeerRemoveResult RemoveNodeRoute(ReceiverIdentifier nodeIdentifier)
         {
             var peerConnectionAction = PeerConnectionAction.NotFound;
@@ -202,6 +195,7 @@ namespace kino.Routing
             {
                 nodeToConnectionMap.Remove(nodeIdentifier);
                 peerConnectionAction = RemovePeerNode(connection);
+                roundRobinList.Remove(connection.Node);
                 nodeMessageHubs.Remove(nodeIdentifier);
                 if (nodeActors.TryGetValue(nodeIdentifier, out var actors))
                 {
@@ -228,9 +222,10 @@ namespace kino.Routing
                     }
                 }
 
-                logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} " +
-                             $"Node:{nodeIdentifier.Identity.GetAnyString()}");
+                logger.Debug($"External route removed Uri:{connection.Node.Uri.AbsoluteUri} "
+                           + $"Node:{nodeIdentifier.Identity.GetAnyString()}");
             }
+
             return new PeerRemoveResult
                    {
                        Uri = connection?.Node.Uri,
@@ -287,10 +282,12 @@ namespace kino.Routing
                         RemoveActorsByMessage(routeRemoval, nodeIdentifier);
                     }
                 }
+
                 if (!nodeActors.ContainsKey(nodeIdentifier) && !nodeMessageHubs.ContainsKey(nodeIdentifier))
                 {
                     nodeToConnectionMap.Remove(nodeIdentifier);
                     connectionAction = RemovePeerNode(connection);
+                    roundRobinList.Remove(connection.Node);
 
                     logger.Debug($"External route removed Uri:{connection?.Node.Uri.AbsoluteUri} Node:{nodeIdentifier}");
                 }
@@ -310,20 +307,20 @@ namespace kino.Routing
             {
                 foreach (var node in nodes)
                 {
-                    Bcl.HashSet<ReceiverIdentifier> actors;
-                    if (nodeActors.TryGetValue(node, out actors))
+                    if (nodeActors.TryGetValue(node, out var actors))
                     {
                         messageRoutes.Add(new NodeActors
                                           {
                                               NodeIdentifier = node,
                                               Actors = actorToMessageMap.Where(kv => actors.Contains(kv.Key)
-                                                                                     && kv.Value.Contains(messageIdentifier))
+                                                                                  && kv.Value.Contains(messageIdentifier))
                                                                         .Select(kv => kv.Key)
                                                                         .ToList()
                                           });
                     }
                 }
             }
+
             return messageRoutes;
         }
 
@@ -337,6 +334,7 @@ namespace kino.Routing
                     {
                         messageToNodeMap.Remove(routeRemoval.Route.Message);
                     }
+
                     var emptyActors = new Bcl.List<ReceiverIdentifier>();
                     if (nodeActors.TryGetValue(nodeIdentifier, out var actors))
                     {
@@ -354,10 +352,12 @@ namespace kino.Routing
                                 }
                             }
                         }
+
                         foreach (var emptyActor in emptyActors)
                         {
                             actors.Remove(emptyActor);
                         }
+
                         if (!actors.Any())
                         {
                             nodeActors.Remove(nodeIdentifier);
@@ -378,9 +378,10 @@ namespace kino.Routing
                     actorToMessageMap.Remove(routeRemoval.Route.Receiver);
                     RemoveNodeActor(routeRemoval, nodeIdentifier);
                 }
-                logger.Debug("External message route removed " +
-                             $"Node:[{nodeIdentifier}] " +
-                             $"Message:[{routeRemoval.Route.Message}]");
+
+                logger.Debug("External message route removed "
+                           + $"Node:[{nodeIdentifier}] "
+                           + $"Message:[{routeRemoval.Route.Message}]");
             }
         }
 
@@ -394,6 +395,7 @@ namespace kino.Routing
                     {
                         nodeActors.Remove(nodeIdentifier);
                     }
+
                     RemoveMessageToNodeMap(routeRemoval, nodeIdentifier);
                 }
             }
@@ -422,9 +424,10 @@ namespace kino.Routing
                     {
                         nodeMessageHubs.Remove(nodeIdentifier);
                     }
-                    logger.Debug("External MessageHub removed " +
-                                 $"Node:[{nodeIdentifier}] " +
-                                 $"Identity:[{routeRemoval.Route.Receiver}]");
+
+                    logger.Debug("External MessageHub removed "
+                               + $"Node:[{nodeIdentifier}] "
+                               + $"Identity:[{routeRemoval.Route.Receiver}]");
                 }
             }
         }
@@ -451,14 +454,15 @@ namespace kino.Routing
 
         private Bcl.IEnumerable<MessageActorRoute> GetNodeActors(ReceiverIdentifier node)
         {
-            return GetNodeMessageToActorsMap().Select(ma => new MessageActorRoute
-                                                            {
-                                                                Message = ma.Key,
-                                                                Actors = ma.Value
-                                                                           .Select(a => new ReceiverIdentifierRegistration(a, false))
-                                                                           .ToList()
-                                                            })
-                                              .ToList();
+            return GetNodeMessageToActorsMap()
+                  .Select(ma => new MessageActorRoute
+                                {
+                                    Message = ma.Key,
+                                    Actors = ma.Value
+                                               .Select(a => new ReceiverIdentifierRegistration(a, false))
+                                               .ToList()
+                                })
+                  .ToList();
 
             Bcl.IDictionary<MessageIdentifier, Bcl.HashSet<ReceiverIdentifier>> GetNodeMessageToActorsMap()
             {
@@ -476,6 +480,7 @@ namespace kino.Routing
                                     tmpActors = new Bcl.HashSet<ReceiverIdentifier>();
                                     messageActors[message] = tmpActors;
                                 }
+
                                 tmpActors.Add(actor);
                             }
                         }

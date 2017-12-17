@@ -16,7 +16,7 @@ namespace kino.Cluster
     public partial class ScaleOutListener : IScaleOutListener
     {
         private readonly ISocketFactory socketFactory;
-        private readonly ILocalSendingSocket<Message> localRouterSocket;
+        private readonly ILocalSendingSocket<IMessage> localRouterSocket;
         private readonly IScaleOutConfigurationManager scaleOutConfigurationManager;
         private readonly ISecurityProvider securityProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;

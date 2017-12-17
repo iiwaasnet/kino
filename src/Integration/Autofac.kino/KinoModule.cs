@@ -56,6 +56,10 @@ namespace Autofac.kino
                    .As<IExternalRoutingTable>()
                    .SingleInstance();
 
+            builder.RegisterType<RoundRobinDestinationList>()
+                   .As<IRoundRobinDestinationList>()
+                   .SingleInstance();
+
             builder.RegisterType<AutoDiscoverySender>()
                    .As<IAutoDiscoverySender>()
                    .SingleInstance();
