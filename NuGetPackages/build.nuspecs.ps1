@@ -10,7 +10,7 @@ if (!$version)
 #================================================================================
 function Get-ProjectFileContent($projectFile)
 {
-    return [xml] $projectXml = Get-Content ($projectFile) -Encoding UTF8
+    return Get-Content ($projectFile) -Encoding UTF8
 }
 
 
@@ -76,12 +76,21 @@ function Get-ProjectDependencies([string]$projectFile, [string]$basePath)
 function Get-TargetFrameworks([xml]$projectXml)
 {
     if ($projectXml.Project.PropertyGroup.TargetFrameworks)
-    {
-        return $projectXml.Project.PropertyGroup.TargetFrameworks -split ';'
+    {        
+        $frameworks = ([string] $projectXml.Project.PropertyGroup.TargetFrameworks).Split(";", [System.StringSplitOptions]::RemoveEmptyEntries)
+        $index = 0
+        foreach ($el in $frameworks)
+        {
+            $frameworks[$index] = $el.Trim()
+            $index++
+        }
+        return $frameworks
+
     }
     else
     {
-        return @($projectXml.Project.PropertyGroup.TargetFramework)
+        [string] $framework = $projectXml.Project.PropertyGroup.TargetFramework
+        return ($framework.Trim())
     }
 }
 
@@ -103,7 +112,7 @@ function Get-NuGetTargetPlatform([string]$fw)
 	
 	# add other FWs, i.e. core, net461, etc
 
-    throw 'Framework is not supported: ' + $fw
+    throw 'Framework is not supported: [' + $fw + ']'
 }
 
 function Copy-ProjectNuGetAttributes([xml]$projectXml, [System.Xml.XmlNode]$meta, [System.Xml.XmlDocument]$doc)
@@ -254,7 +263,8 @@ function Get-SelfAsProjectDenendency([string]$projectFile, $frameworks)
         #Get file contents
         [xml] $projectXml = (Get-ProjectFileContent $projectFile.FullName)
         if ((Should-BuildNuGetPackage $projectXml))
-        {                
+        {
+            Write-Host 'Building NuSpec file for project:' $projectFile.FullName '...' -ForegroundColor White
             $frameworks = (Get-TargetFrameworks $projectXml)
     
             $nugetRefs = @()
@@ -283,7 +293,7 @@ function Get-SelfAsProjectDenendency([string]$projectFile, $frameworks)
             $nuSpecFile = (Join-Path $projectFile.DirectoryName $projectFile.BaseName) + '.' + $version + '.nuspec'
             $nuSpec.Save($nuSpecFile)
 
-            Write-Host $nuSpecFile -ForegroundColor Green
+            Write-Host 'DONE:' $nuSpecFile -ForegroundColor Green
         }
     }
 } | Out-Null
