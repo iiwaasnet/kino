@@ -29,7 +29,7 @@ namespace kino.Client
         private readonly bool keepRegistrationLocal;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
-        private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception);
+        private static readonly MessageIdentifier[] ExceptionMessageIdentifier = {new MessageIdentifier(KinoMessages.Exception)};
         private long lastCallbackKey = 0;
         private readonly ILocalSocket<IMessage> receivingSocket;
         private byte[] callbackReceiverNodeIdentity;
@@ -105,7 +105,7 @@ namespace kino.Client
                                                           promise.CallbackKey.Value);
 
                             callbackHandlers.Push(promise,
-                                                  callbackPoint.MessageIdentifiers.Concat(new[] {ExceptionMessageIdentifier}));
+                                                  callbackPoint.MessageIdentifiers.Concat(ExceptionMessageIdentifier));
                             CallbackRegistered(message);
                         }
                         localRouterSocket.Send(message);
@@ -127,7 +127,7 @@ namespace kino.Client
             }
         }
 
-        private bool CallbackRequired(CallbackRegistration callbackRegistration)
+        private static bool CallbackRequired(CallbackRegistration callbackRegistration)
             => callbackRegistration.Promise != null && callbackRegistration.CallbackPoint != null;
 
         private void ReadReplies(CancellationToken token)

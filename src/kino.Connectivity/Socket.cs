@@ -35,10 +35,10 @@ namespace kino.Connectivity
                 {
                     var buffer = frames[i];
                     msg.InitGC(buffer, buffer.Length);
-                    var sendingTimeout1 = config.SendTimeout;
-                    if (!socket.TrySend(ref msg, sendingTimeout1, ++i < framesCount))
+                    var sendingTimeout = config.SendTimeout;
+                    if (!socket.TrySend(ref msg, sendingTimeout, ++i < framesCount))
                     {
-                        throw new TimeoutException($"Sending timed out after {sendingTimeout1.TotalMilliseconds} ms!");
+                        throw new TimeoutException($"Sending timed out after {sendingTimeout.TotalMilliseconds} ms!");
                     }
                 }
                 SendRate?.Increment();

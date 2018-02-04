@@ -10,13 +10,14 @@ namespace kino.Core.Framework
     public static class UriExtensions
     {
         private static readonly Regex WildcardTcpAddress;
+        private static readonly char[] AddressPortSeparator = {':'};
 
         static UriExtensions()
             => WildcardTcpAddress = new Regex(@"tcp:\/\/\*:", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public static IEnumerable<Uri> GetAddressRange(this string uri)
         {
-            var addressParts = uri.Split(":".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            var addressParts = uri.Split(AddressPortSeparator, StringSplitOptions.RemoveEmptyEntries);
             if (addressParts.Length != 3)
             {
                 throw new FormatException(uri);
@@ -51,7 +52,9 @@ namespace kino.Core.Framework
         {
             if (NotIpAddressOrLoopback())
             {
-                var ipAddress = GetHostIpAddress(uri.IsLoopback ? Environment.MachineName : uri.Host);
+                var ipAddress = GetHostIpAddress(uri.IsLoopback
+                                                     ? Environment.MachineName
+                                                     : uri.Host);
                 return new Uri($"{uri.Scheme}://{ipAddress}:{uri.Port}");
             }
 
@@ -85,6 +88,6 @@ namespace kino.Core.Framework
             => Dns.GetHostEntry(host)
                   .AddressList
                   .FirstOrDefault(ip => ip.AddressFamily == AddressFamily.InterNetwork)
-                  ?.ToString();
+                 ?.ToString();
     }
 }
