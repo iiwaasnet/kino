@@ -6,12 +6,30 @@ namespace kino.Core.Framework
 {
     public static class LinqExtensions
     {
-        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> collection, Action<T> exp)
+        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> collection, Action<T> action)
+        {
+            if (collection is ICollection<T>)
+            {
+                collection.ExecuteForEach(action);
+            }
+            else
+            {
+                collection = collection.Select(e =>
+                                               {
+                                                   action(e);
+                                                   return e;
+                                               })
+                                       .ToList();
+            }
+
+            return collection;
+        }
+
+        public static void ExecuteForEach<T>(this IEnumerable<T> collection, Action<T> action)
         {
             foreach (var el in collection)
             {
-                exp(el);
-                yield return el;
+                action(el);
             }
         }
 

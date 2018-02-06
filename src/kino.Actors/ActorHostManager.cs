@@ -44,9 +44,8 @@ namespace kino.Actors
         {
             var actorHost = actorHosts.FirstOrDefault(ah => ah.CanAssignActor(actor));
 
-            if (actorHostInstancePolicy == ActorHostInstancePolicy.AlwaysCreateNew
-                || !actorHosts.Any()
-                || actorHost == null)
+            if (actorHostInstancePolicy == ActorHostInstancePolicy.AlwaysCreateNew || !actorHosts.Any()
+                                                                                   || actorHost == null)
             {
                 actorHost = actorHostFactory.Create();
                 actorHost.Start();
@@ -60,7 +59,7 @@ namespace kino.Actors
         {
             try
             {
-                actorHosts.ForEach(actorHost => actorHost.Stop());
+                actorHosts.ExecuteForEach(actorHost => actorHost.Stop());
                 actorHosts.Clear();
 
                 isDisposed = true;
