@@ -9,9 +9,7 @@ namespace kino.Actors
     public abstract class Actor : IActor
     {
         protected Actor()
-        {
-            Identifier = ReceiverIdentities.CreateForActor();
-        }
+            => Identifier = ReceiverIdentities.CreateForActor();
 
         public virtual IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
             => GetActorRegistrationsByAttributes();
@@ -19,11 +17,11 @@ namespace kino.Actors
         private IEnumerable<MessageHandlerDefinition> GetActorRegistrationsByAttributes()
         {
             var methods = GetType()
-                .FindMembers(MemberTypes.Method,
-                             BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
-                             InterfaceMethodFilter,
-                             typeof(MessageHandlerDefinitionAttribute))
-                .Cast<MethodInfo>();
+                         .FindMembers(MemberTypes.Method,
+                                      BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
+                                      InterfaceMethodFilter,
+                                      typeof(MessageHandlerDefinitionAttribute))
+                         .Cast<MethodInfo>();
 
             return methods.Select(Selector);
         }

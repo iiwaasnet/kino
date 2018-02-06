@@ -12,9 +12,7 @@ namespace kino.Client
         private readonly ConcurrentDictionary<long, IDictionary<MessageIdentifier, IPromise>> keyPromiseMap;
 
         public CallbackHandlerStack()
-        {
-            keyPromiseMap = new ConcurrentDictionary<long, IDictionary<MessageIdentifier, IPromise>>();
-        }
+            => keyPromiseMap = new ConcurrentDictionary<long, IDictionary<MessageIdentifier, IPromise>>();
 
         public void Push(IPromise promise, IEnumerable<MessageIdentifier> messageIdentifiers)
         {

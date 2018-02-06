@@ -19,6 +19,7 @@ namespace kino.Consensus
         private volatile Lease lastKnownLease;
         private readonly TimeSpan leaseRenewWaitTimeout;
         private byte[] ownerPayload;
+        private static readonly byte[] NullPayload = new byte[0];
 
         public LeaseProvider(IRoundBasedRegister register,
                              IBallotGenerator ballotGenerator,
@@ -39,7 +40,7 @@ namespace kino.Consensus
         }
 
         public Lease GetLease()
-            => GetLease(new byte[0]);
+            => GetLease(NullPayload);
 
         public Lease GetLease(byte[] ownerPayload)
         {
@@ -65,8 +66,8 @@ namespace kino.Consensus
                                     $"{nameof(config.MessageRoundtrip)}[{config.MessageRoundtrip.TotalMilliseconds} msec]");
             }
             if (config.MaxLeaseTimeSpan
-                - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
-                - config.ClockDrift <= TimeSpan.Zero)
+              - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
+              - config.ClockDrift <= TimeSpan.Zero)
             {
                 throw new Exception($"{nameof(config.MaxLeaseTimeSpan)}[{config.MaxLeaseTimeSpan.TotalMilliseconds} msec] " +
                                     "should be longer than " +
@@ -111,17 +112,17 @@ namespace kino.Consensus
 
         private bool ProcessLostLeadership(Lease nextLease, Lease previousLease)
             => (previousLease != null && Unsafe.ArraysEqual(previousLease.OwnerIdentity, localNode.SocketIdentity)
-                && nextLease != null && !Unsafe.ArraysEqual(nextLease.OwnerIdentity, localNode.SocketIdentity));
+                                      && nextLease != null && !Unsafe.ArraysEqual(nextLease.OwnerIdentity, localNode.SocketIdentity));
 
         private bool ProcessBecameLeader(Lease nextLease, Lease previousLease)
             => ((previousLease == null || !Unsafe.ArraysEqual(previousLease.OwnerIdentity, localNode.SocketIdentity))
-                && nextLease != null && Unsafe.ArraysEqual(nextLease.OwnerIdentity, localNode.SocketIdentity));
+             && nextLease != null && Unsafe.ArraysEqual(nextLease.OwnerIdentity, localNode.SocketIdentity));
 
         private TimeSpan CalcLeaseRenewPeriod(bool leader)
             => (leader)
                    ? config.MaxLeaseTimeSpan
-                     - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
-                     - config.ClockDrift
+                   - TimeSpan.FromTicks(config.MessageRoundtrip.Ticks * 2)
+                   - config.ClockDrift
                    : config.MaxLeaseTimeSpan;
 
         private Lease GetLastKnownLease()
@@ -184,7 +185,7 @@ namespace kino.Consensus
 
         private bool LeaseIsNotSafelyExpired(Lease lease, DateTime now)
             => lease != null
-               && lease.ExpiresAt < now
-               && lease.ExpiresAt + config.ClockDrift > now;
+            && lease.ExpiresAt < now
+            && lease.ExpiresAt + config.ClockDrift > now;
     }
 }

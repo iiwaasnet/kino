@@ -11,9 +11,7 @@ namespace kino.Actors
         private readonly ConcurrentDictionary<MessageIdentifier, MessageHandler> messageHandlers;
 
         public ActorHandlerMap()
-        {
-            messageHandlers = new ConcurrentDictionary<MessageIdentifier, MessageHandler>();
-        }
+            => messageHandlers = new ConcurrentDictionary<MessageIdentifier, MessageHandler>();
 
         public IEnumerable<ActorMessageHandlerIdentifier> Add(IActor actor)
         {
@@ -62,11 +60,11 @@ namespace kino.Actors
 
         private static IEnumerable<KeyValuePair<MessageIdentifier, MessageHandlerDefinition>> GetActorRegistrations(IActor actor)
             => actor
-                .GetInterfaceDefinition()
-                .Select(messageMap =>
-                            new KeyValuePair<MessageIdentifier, MessageHandlerDefinition>(new MessageIdentifier(messageMap.Message.Identity,
-                                                                                                                messageMap.Message.Version,
-                                                                                                                messageMap.Message.Partition),
-                                                                                          messageMap));
+              .GetInterfaceDefinition()
+              .Select(messageMap =>
+                          new KeyValuePair<MessageIdentifier, MessageHandlerDefinition>(new MessageIdentifier(messageMap.Message.Identity,
+                                                                                                              messageMap.Message.Version,
+                                                                                                              messageMap.Message.Partition),
+                                                                                        messageMap));
     }
 }
