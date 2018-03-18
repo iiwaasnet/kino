@@ -9,7 +9,7 @@
       <RepositoryUrl>https://github.com/iiwaasnet/kino</RepositoryUrl>
       <RepositoryType>Git</RepositoryType>
       <Description>Framework for building actors networks</Description>
-      <PackageTags>Actors framework</PackageTags>
+      <PackageTags>actor-framework actor-model actors kino</PackageTags>
       <Authors>Sergey Ivasenko</Authors>
 	  <BuildNuGetPackage />
   </PropertyGroup>
