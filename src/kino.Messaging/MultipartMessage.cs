@@ -12,12 +12,16 @@ namespace kino.Messaging
         private const ushort FramesPerRoutingEntry = 2;
         private readonly IList<byte[]> frames;
         private static readonly byte[] EmptyFrame = new byte[0];
+        private Memory<byte> serviceFrame;
 
         internal MultipartMessage(Message message)
             => frames = WriteFrames(message);
 
         internal MultipartMessage(IList<byte[]> frames)
-            => this.frames = frames;
+        {
+            this.frames = frames;
+            serviceFrame = new Memory<byte>(frames[frames.Count - 1]);
+        }
 
         private IList<byte[]> WriteFrames(Message message)
         {
@@ -26,39 +30,87 @@ namespace kino.Messaging
             frames.Add(GetSocketIdentity(message));
             frames.Add(EmptyFrame);
             frames.Add(GetMessageBodyFrame(message));
+            var serviceFrame = new Span<byte>();
             foreach (var route in message.GetMessageRouting())
             {
                 // NOTE: New frames come here
-                frames.Add(route.Uri.ToSocketAddress().GetBytes());
-                frames.Add(route.Identity);
+                var buf = route.Uri.ToSocketAddress().GetBytes();
+                ((int) buf.Length).GetBytes().CopyTo(serviceFrame);
+                buf.CopyTo(serviceFrame);
+
+                ((int) route.Identity.Length).GetBytes().CopyTo(serviceFrame);
+                route.Identity.CopyTo(serviceFrame);
+
+                //frames.Add(route.Uri.ToSocketAddress().GetBytes());
+                //frames.Add(route.Identity);
             }
             foreach (var callback in message.CallbackPoint)
             {
                 // NOTE: New frames come here
-                frames.Add(callback.Partition);
-                frames.Add(callback.Version.GetBytes());
-                frames.Add(callback.Identity);
-            }
-            //TODO: Optimize calculation of body, callbacks and routing frames offsets
-            frames.Add(GetCallbackReceiverNodeIdentityFrame(message)); // 17
-            frames.Add(GetCallbackKeyFrame(message)); // 16
-            frames.Add(GetDomainFrame(message)); // 15
-            frames.Add(GetSignatureFrame(message)); // 14
-            frames.Add(GetRoutingDescriptionFrame(message)); // 13
-            frames.Add(GetCallbackDescriptionFrame(message)); // 12
-            frames.Add(GetReceiverIdentityFrame(message)); // 11
-            frames.Add(GetCallbackReceiverIdentityFrame(message)); // 10
-            frames.Add(GetReceiverNodeIdentityFrame(message)); // 9
-            frames.Add(GetPartitionFrame(message)); // 8
-            frames.Add(GetVersionFrame(message)); // 7
-            frames.Add(GetMessageIdentityFrame(message)); // 6
-            frames.Add(GetTraceOptionsDistributionFrame(message)); // 5
-            frames.Add(GetCorrelationIdFrame(message)); // 4
-            frames.Add(GetTTLFrame(message)); // 3
-            frames.Add(GetMessageBodyDescriptionFrame(message)); // 2
-            frames.Add(GetWireFormatVersionFrame(message)); // 1
+                ((int) callback.Partition.Length).GetBytes().CopyTo(serviceFrame);
+                callback.Partition.CopyTo(serviceFrame);
 
+                var buf = callback.Version.GetBytes();
+                ((int) buf.Length).GetBytes().CopyTo(serviceFrame);
+                buf.CopyTo(serviceFrame);
+
+                ((int) callback.Identity.Length).GetBytes().CopyTo(serviceFrame);
+                callback.Identity.CopyTo(serviceFrame);
+
+                //frames.Add(callback.Partition);
+                //frames.Add(callback.Version.GetBytes());
+                //frames.Add(callback.Identity);
+            }
+            {
+                //TODO: Optimize calculation of body, callbacks and routing frames offsets
+                foreach (var frame in GetServiceFrames(message))
+                {
+                    ((int) frame.Length).GetBytes().CopyTo(serviceFrame);
+                    frame.CopyTo(serviceFrame);
+                }
+
+                frames.Add(serviceFrame.ToArray());
+
+                //frames.Add(GetCallbackReceiverNodeIdentityFrame(message)); // 17
+                //frames.Add(GetCallbackKeyFrame(message)); // 16
+                //frames.Add(GetDomainFrame(message)); // 15
+                //frames.Add(GetSignatureFrame(message)); // 14
+                //frames.Add(GetRoutingDescriptionFrame(message)); // 13
+                //frames.Add(GetCallbackDescriptionFrame(message)); // 12
+                //frames.Add(GetReceiverIdentityFrame(message)); // 11
+                //frames.Add(GetCallbackReceiverIdentityFrame(message)); // 10
+                //frames.Add(GetReceiverNodeIdentityFrame(message)); // 9
+                //frames.Add(GetPartitionFrame(message)); // 8
+                //frames.Add(GetVersionFrame(message)); // 7
+                //frames.Add(GetMessageIdentityFrame(message)); // 6
+                //frames.Add(GetTraceOptionsDistributionFrame(message)); // 5
+                //frames.Add(GetCorrelationIdFrame(message)); // 4
+                //frames.Add(GetTTLFrame(message)); // 3
+                //frames.Add(GetMessageBodyDescriptionFrame(message)); // 2
+                //frames.Add(GetWireFormatVersionFrame(message)); // 1}
+            }
             return frames;
+        }
+
+        private IEnumerable<byte[]> GetServiceFrames(Message message)
+        {
+            yield return GetCallbackReceiverNodeIdentityFrame(message); // 17
+            yield return GetCallbackKeyFrame(message); // 16
+            yield return GetDomainFrame(message); // 15
+            yield return GetSignatureFrame(message); // 14
+            yield return GetRoutingDescriptionFrame(message); // 13
+            yield return GetCallbackDescriptionFrame(message); // 12
+            yield return GetReceiverIdentityFrame(message); // 11
+            yield return GetCallbackReceiverIdentityFrame(message); // 10
+            yield return GetReceiverNodeIdentityFrame(message); // 9
+            yield return GetPartitionFrame(message); // 8
+            yield return GetVersionFrame(message); // 7
+            yield return GetMessageIdentityFrame(message); // 6
+            yield return GetTraceOptionsDistributionFrame(message); // 5
+            yield return GetCorrelationIdFrame(message); // 4
+            yield return GetTTLFrame(message); // 3
+            yield return GetMessageBodyDescriptionFrame(message); // 2
+            yield return GetWireFormatVersionFrame(message); // 1}
         }
 
         private byte[] GetMessageBodyDescriptionFrame(Message message)
