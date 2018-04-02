@@ -10,89 +10,131 @@ namespace kino.Messaging
     {
         private const ushort FramesPerCallbackEntry = 3;
         private const ushort FramesPerRoutingEntry = 2;
-        private readonly IList<byte[]> frames;
+        private readonly IList<byte[]> wireFrames;
+        private readonly IList<byte[]> messageFrames;
         private static readonly byte[] EmptyFrame = new byte[0];
-        private Memory<byte> serviceFrame;
 
         internal MultipartMessage(Message message)
-            => frames = WriteFrames(message);
+            => wireFrames = GetWireFrames(message);
 
-        internal MultipartMessage(IList<byte[]> frames)
+        internal MultipartMessage(IList<byte[]> wireFrames)
+            => messageFrames = GetMessageFrames(wireFrames);
+
+        private IList<byte[]> GetMessageFrames(IList<byte[]> wireFrames)
         {
-            this.frames = frames;
-            serviceFrame = new Memory<byte>(frames[frames.Count - 1]);
+            var frames = new List<byte[]>();
+            frames.AddRange(wireFrames.Take(wireFrames.Count -1));
+
+            var metaFrame = new Span<byte>(wireFrames[wireFrames.Count - 1]);
+
+            var metaFramePointer = 0;
+            var routingFramesCount = metaFrame.Slice(metaFramePointer, 4).ToArray().GetInt() * 2;
+            metaFramePointer += 4;
+            for (var i = 0; i < routingFramesCount; i++)
+            {
+                var size = metaFrame.Slice(metaFramePointer, 4).ToArray().GetInt();
+                metaFramePointer += 4;
+                frames.Add(metaFrame.Slice(metaFramePointer, size).ToArray());
+                metaFramePointer += size;
+            }
+
+            var callbackPointCount = metaFrame.Slice(metaFramePointer, 4).ToArray().GetInt() * 3;
+            metaFramePointer += 4;
+            for (var i = 0; i < callbackPointCount; i++)
+            {
+                var size = metaFrame.Slice(metaFramePointer, 4).ToArray().GetInt();
+                metaFramePointer += 4;
+                frames.Add(metaFrame.Slice(metaFramePointer, size).ToArray());
+                metaFramePointer += size;
+            }
+
+            for (var i = 0; i < 17; i++)
+            {
+                var size = metaFrame.Slice(metaFramePointer, 4).ToArray().GetInt();
+                metaFramePointer += 4;
+                frames.Add(metaFrame.Slice(metaFramePointer, size).ToArray());
+                metaFramePointer += size;
+            }
+
+            return frames;
         }
 
-        private IList<byte[]> WriteFrames(Message message)
+        private IList<byte[]> GetWireFrames(Message message)
         {
             var frames = new List<byte[]>(50);
 
             frames.Add(GetSocketIdentity(message));
             frames.Add(EmptyFrame);
             frames.Add(GetMessageBodyFrame(message));
-            var serviceFrame = new Span<byte>();
-            foreach (var route in message.GetMessageRouting())
-            {
-                // NOTE: New frames come here
-                var buf = route.Uri.ToSocketAddress().GetBytes();
-                ((int) buf.Length).GetBytes().CopyTo(serviceFrame);
-                buf.CopyTo(serviceFrame);
 
-                ((int) route.Identity.Length).GetBytes().CopyTo(serviceFrame);
-                route.Identity.CopyTo(serviceFrame);
+            frames.Add(GetMetaFrame(message));
 
-                //frames.Add(route.Uri.ToSocketAddress().GetBytes());
-                //frames.Add(route.Identity);
-            }
-            foreach (var callback in message.CallbackPoint)
-            {
-                // NOTE: New frames come here
-                ((int) callback.Partition.Length).GetBytes().CopyTo(serviceFrame);
-                callback.Partition.CopyTo(serviceFrame);
-
-                var buf = callback.Version.GetBytes();
-                ((int) buf.Length).GetBytes().CopyTo(serviceFrame);
-                buf.CopyTo(serviceFrame);
-
-                ((int) callback.Identity.Length).GetBytes().CopyTo(serviceFrame);
-                callback.Identity.CopyTo(serviceFrame);
-
-                //frames.Add(callback.Partition);
-                //frames.Add(callback.Version.GetBytes());
-                //frames.Add(callback.Identity);
-            }
-            {
-                //TODO: Optimize calculation of body, callbacks and routing frames offsets
-                foreach (var frame in GetServiceFrames(message))
-                {
-                    ((int) frame.Length).GetBytes().CopyTo(serviceFrame);
-                    frame.CopyTo(serviceFrame);
-                }
-
-                frames.Add(serviceFrame.ToArray());
-
-                //frames.Add(GetCallbackReceiverNodeIdentityFrame(message)); // 17
-                //frames.Add(GetCallbackKeyFrame(message)); // 16
-                //frames.Add(GetDomainFrame(message)); // 15
-                //frames.Add(GetSignatureFrame(message)); // 14
-                //frames.Add(GetRoutingDescriptionFrame(message)); // 13
-                //frames.Add(GetCallbackDescriptionFrame(message)); // 12
-                //frames.Add(GetReceiverIdentityFrame(message)); // 11
-                //frames.Add(GetCallbackReceiverIdentityFrame(message)); // 10
-                //frames.Add(GetReceiverNodeIdentityFrame(message)); // 9
-                //frames.Add(GetPartitionFrame(message)); // 8
-                //frames.Add(GetVersionFrame(message)); // 7
-                //frames.Add(GetMessageIdentityFrame(message)); // 6
-                //frames.Add(GetTraceOptionsDistributionFrame(message)); // 5
-                //frames.Add(GetCorrelationIdFrame(message)); // 4
-                //frames.Add(GetTTLFrame(message)); // 3
-                //frames.Add(GetMessageBodyDescriptionFrame(message)); // 2
-                //frames.Add(GetWireFormatVersionFrame(message)); // 1}
-            }
             return frames;
         }
 
-        private IEnumerable<byte[]> GetServiceFrames(Message message)
+        private byte[] GetMetaFrame(Message message)
+        {
+            var frames = new List<byte[]>();
+
+            var messageRouting = message.GetMessageRouting();
+            frames.Add(((int) messageRouting.Count()).GetBytes());
+
+            foreach (var route in messageRouting)
+            {
+                // NOTE: New frames come here
+                var bytes = route.Uri.ToSocketAddress().GetBytes();
+                frames.Add(((int)bytes.Count()).GetBytes());
+                frames.Add(bytes);
+
+                frames.Add(((int)route.Identity.Count()).GetBytes());
+                frames.Add(route.Identity);
+            }
+
+            frames.Add(((int) message.CallbackPoint.Count()).GetBytes());
+            foreach (var callback in message.CallbackPoint)
+            {
+                // NOTE: New frames come here
+                frames.Add(((int)callback.Partition.Count()).GetBytes());
+                frames.Add(callback.Partition);
+
+                var bytes = callback.Version.GetBytes();
+                frames.Add(((int)bytes.Count()).GetBytes());
+                frames.Add(bytes);
+
+                frames.Add(((int)callback.Identity.Count()).GetBytes());
+                frames.Add(callback.Identity);
+            }
+
+            //TODO: Optimize calculation of body, callbacks and routing frames offsets
+
+            foreach (var metaFrame in GetMetaFrames(message))
+            {
+                frames.Add(((int) metaFrame.Length).GetBytes());
+                frames.Add(metaFrame);
+            }
+
+            //frames.Add(GetCallbackReceiverNodeIdentityFrame(message)); // 17
+            //frames.Add(GetCallbackKeyFrame(message)); // 16
+            //frames.Add(GetDomainFrame(message)); // 15
+            //frames.Add(GetSignatureFrame(message)); // 14
+            //frames.Add(GetRoutingDescriptionFrame(message)); // 13
+            //frames.Add(GetCallbackDescriptionFrame(message)); // 12
+            //frames.Add(GetReceiverIdentityFrame(message)); // 11
+            //frames.Add(GetCallbackReceiverIdentityFrame(message)); // 10
+            //frames.Add(GetReceiverNodeIdentityFrame(message)); // 9
+            //frames.Add(GetPartitionFrame(message)); // 8
+            //frames.Add(GetVersionFrame(message)); // 7
+            //frames.Add(GetMessageIdentityFrame(message)); // 6
+            //frames.Add(GetTraceOptionsDistributionFrame(message)); // 5
+            //frames.Add(GetCorrelationIdFrame(message)); // 4
+            //frames.Add(GetTTLFrame(message)); // 3
+            //frames.Add(GetMessageBodyDescriptionFrame(message)); // 2
+            //frames.Add(GetWireFormatVersionFrame(message)); // 1}
+
+            return Concatenate(frames);
+        }
+
+        private IEnumerable<byte[]> GetMetaFrames(Message message)
         {
             yield return GetCallbackReceiverNodeIdentityFrame(message); // 17
             yield return GetCallbackKeyFrame(message); // 16
@@ -111,6 +153,19 @@ namespace kino.Messaging
             yield return GetTTLFrame(message); // 3
             yield return GetMessageBodyDescriptionFrame(message); // 2
             yield return GetWireFormatVersionFrame(message); // 1}
+        }
+
+        private byte[] Concatenate(IEnumerable<byte[]> frames)
+        {
+            var rv = new byte[frames.Sum(a => a.Length)];
+            var offset = 0;
+            foreach (var array in frames)
+            {
+                Buffer.BlockCopy(array, 0, rv, offset, array.Length);
+                offset += array.Length;
+            }
+
+            return rv;
         }
 
         private byte[] GetMessageBodyDescriptionFrame(Message message)
@@ -221,69 +276,71 @@ namespace kino.Messaging
         private byte[] GetReceiverNodeIdentityFrame(Message message)
             => message.ReceiverNodeIdentity ?? EmptyFrame;
 
+        //======================================================================
+
         internal byte[] GetMessageIdentity()
-            => frames[frames.Count - ReversedFramesV5.Identity];
+            => messageFrames[messageFrames.Count - ReversedFramesV5.Identity];
 
         internal byte[] GetMessagePartition()
-            => frames[frames.Count - ReversedFramesV5.Partition];
+            => messageFrames[messageFrames.Count - ReversedFramesV5.Partition];
 
         internal byte[] GetMessageVersion()
-            => frames[frames.Count - ReversedFramesV5.Version];
+            => messageFrames[messageFrames.Count - ReversedFramesV5.Version];
 
         internal byte[] GetMessageBody()
         {
-            var data = frames[frames.Count - ReversedFramesV5.BodyDescription].GetULong();
+            var data = messageFrames[messageFrames.Count - ReversedFramesV5.BodyDescription].GetULong();
             var offset = data.Split16();
 
-            return frames[frames.Count - offset];
+            return messageFrames[messageFrames.Count - offset];
         }
 
         internal TimeSpan GetMessageTTL()
-            => frames[frames.Count - ReversedFramesV5.TTL].GetTimeSpan();
+            => messageFrames[messageFrames.Count - ReversedFramesV5.TTL].GetTimeSpan();
 
         internal (MessageTraceOptions, DistributionPattern) GetTraceOptionsDistributionPattern()
         {
-            var data = frames[frames.Count - ReversedFramesV5.TraceOptionsDistributiomPattern].GetULong();
+            var data = messageFrames[messageFrames.Count - ReversedFramesV5.TraceOptionsDistributiomPattern].GetULong();
             (var v1, var v2) = data.Split32();
 
             return ((MessageTraceOptions) v1, (DistributionPattern) v2);
         }
 
         public long GetCallbackKey()
-            => frames[frames.Count - ReversedFramesV5.CallbackKey].GetLong();
+            => messageFrames[messageFrames.Count - ReversedFramesV5.CallbackKey].GetLong();
 
         internal string GetDomain()
-            => frames[frames.Count - ReversedFramesV5.Domain].GetString();
+            => messageFrames[messageFrames.Count - ReversedFramesV5.Domain].GetString();
 
         internal byte[] GetSignature()
-            => frames[frames.Count - ReversedFramesV5.Signature];
+            => messageFrames[messageFrames.Count - ReversedFramesV5.Signature];
 
         internal byte[] GetCallbackReceiverIdentity()
-            => frames[frames.Count - ReversedFramesV5.CallbackReceiverIdentity];
+            => messageFrames[messageFrames.Count - ReversedFramesV5.CallbackReceiverIdentity];
 
         internal byte[] GetCallbackReceiverNodeIdentity()
-            => frames[frames.Count - ReversedFramesV5.CallbackReceiverNodeIdentity];
+            => messageFrames[messageFrames.Count - ReversedFramesV5.CallbackReceiverNodeIdentity];
 
         internal byte[] GetCorrelationId()
-            => frames[frames.Count - ReversedFramesV5.CorrelationId];
+            => messageFrames[messageFrames.Count - ReversedFramesV5.CorrelationId];
 
         internal byte[] GetReceiverIdentity()
-            => frames[frames.Count - ReversedFramesV5.ReceiverIdentity];
+            => messageFrames[messageFrames.Count - ReversedFramesV5.ReceiverIdentity];
 
         internal byte[] GetWireFormatVersion()
-            => frames[frames.Count - ReversedFramesV5.WireFormatVersion];
+            => messageFrames[messageFrames.Count - ReversedFramesV5.WireFormatVersion];
 
         internal byte[] GetReceiverNodeIdentity()
-            => frames[frames.Count - ReversedFramesV5.ReceiverNodeIdentity];
+            => messageFrames[messageFrames.Count - ReversedFramesV5.ReceiverNodeIdentity];
 
-        internal IEnumerable<byte[]> Frames => frames;
+        internal IEnumerable<byte[]> Frames => wireFrames;
 
         internal IEnumerable<MessageIdentifier> GetCallbackPoints()
         {
-            var data = frames[frames.Count - ReversedFramesV5.CallbackDescription].GetULong();
+            var data = messageFrames[messageFrames.Count - ReversedFramesV5.CallbackDescription].GetULong();
 
             var (offset, entryCount, frameDivisor) = data.Split48();
-            var startIndex = frames.Count - offset;
+            var startIndex = messageFrames.Count - offset;
             var frameCount = entryCount * frameDivisor;
 
             var callbacks = new List<MessageIdentifier>();
@@ -292,9 +349,9 @@ namespace kino.Messaging
                 var endIndex = startIndex - frameCount;
                 while (startIndex > endIndex)
                 {
-                    var identity = frames[startIndex];
-                    var version = frames[startIndex - 1].GetUShort();
-                    var partition = frames[startIndex - 2];
+                    var identity = messageFrames[startIndex];
+                    var version = messageFrames[startIndex - 1].GetUShort();
+                    var partition = messageFrames[startIndex - 2];
 
                     callbacks.Add(new MessageIdentifier(identity, version, partition));
 
@@ -307,10 +364,10 @@ namespace kino.Messaging
 
         internal (List<SocketEndpoint> routing, ushort hops) GetMessageRouting()
         {
-            var data = frames[frames.Count - ReversedFramesV5.RoutingDescription].GetULong();
+            var data = messageFrames[messageFrames.Count - ReversedFramesV5.RoutingDescription].GetULong();
 
             var (offset, entryCount, frameDivisor, hops) = data.Split64();
-            var startIndex = frames.Count - offset;
+            var startIndex = messageFrames.Count - offset;
             var frameCount = entryCount * frameDivisor;
 
             var routing = new List<SocketEndpoint>();
@@ -319,8 +376,8 @@ namespace kino.Messaging
                 var endIndex = startIndex - frameCount;
                 while (startIndex > endIndex)
                 {
-                    var identity = frames[startIndex];
-                    var uri = new Uri(frames[startIndex - 1].GetString());
+                    var identity = messageFrames[startIndex];
+                    var uri = new Uri(messageFrames[startIndex - 1].GetString());
 
                     routing.Add(new SocketEndpoint(uri, identity));
 
