@@ -8,7 +8,7 @@ namespace kino.Messaging.Messages
         private static readonly byte[] MessageIdentity = BuildFullIdentity("RCPTCONFIRM");
         private static readonly ushort MessageVersion = Message.CurrentVersion;
 
-        public static readonly ReceiptConfirmationMessage Instance = new ReceiptConfirmationMessage();
+        internal static readonly ReceiptConfirmationMessage Instance = new ReceiptConfirmationMessage();
 
         public override ushort Version => MessageVersion;
 
