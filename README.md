@@ -7,9 +7,9 @@
 
 Kino
 ------------------------
-**Kino** is an *[Actor](https://en.wikipedia.org/wiki/Actor_model)* framework, based on message-driven communication.
+**Kino** is a simple communication framework based on *[Actor model](https://en.wikipedia.org/wiki/Actor_model)*.
 
-Fault-tolerance and load scale-out by redundant deployment of actors, possibility to broadcast messages – everything without additional infrastructure dependencies. Rendezvous service provides actors auto-discovery and reduces amount of required configuration.
+Unicast, multicast and direct message addressing, delivery-to-node confirmation, callbacks (routing response message to the *resumption* actor). Rendezvous service provides actors auto-discovery and reduces amount of required configuration. Actors can be single- or multithreaded.
 
 Supported Platforms: .NET 4.7, .NET Core 2.0
 
