@@ -10,6 +10,6 @@ namespace kino.Messaging.Messages
         public byte[] NodeIdentity { get; set; }
 
         [ProtoMember(2)]
-        public IEnumerable<byte[]> ReceiverIdentity { get; set; }
+        public IEnumerable<byte[]> ActorIdentity { get; set; }
     }
 }

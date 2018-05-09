@@ -15,7 +15,7 @@ namespace kino.Messaging.Messages
         public MessageReceivingRoute[] ExternalRoutes { get; set; }
 
         [ProtoMember(3)]
-        public MessageReceivingRoute[] InternalRoutes { get; set; }
+        public MessageReceivingRoute InternalRoutes { get; set; }
 
         public override ushort Version => MessageVersion;
 

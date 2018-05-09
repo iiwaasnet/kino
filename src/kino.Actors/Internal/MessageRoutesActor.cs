@@ -45,18 +45,16 @@ namespace kino.Actors.Internal
                                ExternalRoutes = externalRoutes.Select(r => new MessageReceivingRoute
                                                                            {
                                                                                NodeIdentity = r.NodeIdentifier.Identity,
-                                                                               ReceiverIdentity = r.Actors.Select(a => a.Identity)
-                                                                                                   .ToList()
+                                                                               ActorIdentity = r.Actors
+                                                                                                .Select(a => a.Identity)
+                                                                                                .ToList()
                                                                            })
                                                               .ToArray(),
-                               InternalRoutes = new[]
+                               InternalRoutes = new MessageReceivingRoute
                                                 {
-                                                    new MessageReceivingRoute
-                                                    {
-                                                        NodeIdentity = localScaleOutSocket.Identity,
-                                                        ReceiverIdentity = internalRoutes.Select(r => r.Identity)
-                                                                                         .ToList()
-                                                    }
+                                                    NodeIdentity = localScaleOutSocket.Identity,
+                                                    ActorIdentity = internalRoutes.Select(r => r.Identity)
+                                                                                  .ToList()
                                                 }
                            };
 

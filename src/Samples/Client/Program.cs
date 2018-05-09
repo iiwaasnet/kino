@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Autofac;
 using Client.Messages;
 using kino.Client;
@@ -40,9 +41,10 @@ namespace Client
                                                                                          Identity = messageIdentifier.Identity,
                                                                                          Version = messageIdentifier.Version,
                                                                                          Partition = messageIdentifier.Partition
-                                                                                     }
+                                                                                     },
+                                                                   RouteType = RouteType.All
                                                                });
-            //var response = messageHub.EnqueueRequest(routesRequest, CallbackPoint.Create<MessageRoutesMessage>());
+            //var response = messageHub.Send(routesRequest, CallbackPoint.Create<MessageRoutesMessage>());
             //var route = response.GetResponse().Result.GetPayload<MessageRoutesMessage>().ExternalRoutes.First();
 
             //Thread.Sleep(TimeSpan.FromSeconds(5));
@@ -57,7 +59,7 @@ namespace Client
                 {
                     var request = Message.CreateFlowStartMessage(new HelloMessage {Greeting = Guid.NewGuid().ToString()});
                     request.TraceOptions = MessageTraceOptions.None;
-                    //request.SetReceiverActor(new ReceiverIdentifier(route.NodeIdentity), new ReceiverIdentifier(route.ReceiverIdentity.First()));
+                    //request.SetReceiverActor(new ReceiverIdentifier(route.NodeIdentity), new ReceiverIdentifier(route.ActorIdentity.First()));
                     //request.SetReceiverNode(new ReceiverIdentifier(route.NodeIdentity));
                     var callbackPoint = CallbackPoint.Create<EhlloMessage>();
                     promises.Add(messageHub.Send(request, callbackPoint));
