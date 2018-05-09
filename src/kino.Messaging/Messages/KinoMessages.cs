@@ -22,8 +22,8 @@ namespace kino.Messaging.Messages
         public static readonly MessageIdentifier CheckStalePeers = MessageIdentifier.Create<CheckStalePeersMessage>();
         public static readonly MessageIdentifier DeletePeer = MessageIdentifier.Create<DeletePeerMessage>();
         public static readonly MessageIdentifier AddPeer = MessageIdentifier.Create<AddPeerMessage>();
-        public static readonly MessageIdentifier RequestMessageExternalRoutes = MessageIdentifier.Create<RequestMessageExternalRoutesMessage>();
-        public static readonly MessageIdentifier MessageExternalRoutes = MessageIdentifier.Create<MessageExternalRoutesMessage>();
+        public static readonly MessageIdentifier RequestMessageExternalRoutes = MessageIdentifier.Create<RequestMessageRoutesMessage>();
+        public static readonly MessageIdentifier MessageExternalRoutes = MessageIdentifier.Create<MessageRoutesMessage>();
         public static readonly MessageIdentifier RequestExternalRoutes = MessageIdentifier.Create<RequestExternalRoutesMessage>();
         public static readonly MessageIdentifier ExternalRoutes = MessageIdentifier.Create<ExternalRoutesMessage>();
         public static readonly MessageIdentifier CheckPeerConnection = MessageIdentifier.Create<CheckPeerConnectionMessage>();

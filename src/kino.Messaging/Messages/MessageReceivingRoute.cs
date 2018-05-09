@@ -4,7 +4,7 @@ using ProtoBuf;
 namespace kino.Messaging.Messages
 {
     [ProtoContract]
-    public class ExternalRoute
+    public class MessageReceivingRoute
     {
         [ProtoMember(1)]
         public byte[] NodeIdentity { get; set; }

@@ -33,7 +33,7 @@ namespace Client
             var runs = 10000;
 
             var messageIdentifier = MessageIdentifier.Create<HelloMessage>();
-            var routesRequest = Message.CreateFlowStartMessage(new RequestMessageExternalRoutesMessage
+            var routesRequest = Message.CreateFlowStartMessage(new RequestMessageRoutesMessage
                                                                {
                                                                    MessageContract = new MessageContract
                                                                                      {
@@ -42,8 +42,8 @@ namespace Client
                                                                                          Partition = messageIdentifier.Partition
                                                                                      }
                                                                });
-            //var response = messageHub.EnqueueRequest(routesRequest, CallbackPoint.Create<MessageExternalRoutesMessage>());
-            //var route = response.GetResponse().Result.GetPayload<MessageExternalRoutesMessage>().Routes.First();
+            //var response = messageHub.EnqueueRequest(routesRequest, CallbackPoint.Create<MessageRoutesMessage>());
+            //var route = response.GetResponse().Result.GetPayload<MessageRoutesMessage>().ExternalRoutes.First();
 
             //Thread.Sleep(TimeSpan.FromSeconds(5));
             while (true)
