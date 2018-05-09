@@ -20,11 +20,12 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
         [Fact]
         public void ReadIsAborted_AfterReadWithBallotEqualToCurrent()
         {
-            using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
+            var synodMembers = GetSynodMembers();
+            using (CreateRoundBasedRegister(synodMembers, synodMembers.First()))
             {
-                using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Second()))
+                using (CreateRoundBasedRegister(synodMembers, synodMembers.Second()))
                 {
-                    using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
+                    using (var testSetup = CreateRoundBasedRegister(synodMembers, synodMembers.Third()))
                     {
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
@@ -44,11 +45,12 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
         [Fact]
         public void ReadIsAborted_AfterReadWithBallotGreaterThanCurrent()
         {
-            using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
+            var synodMembers = GetSynodMembers();
+            using (CreateRoundBasedRegister(synodMembers, synodMembers.First()))
             {
-                using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Second()))
+                using (CreateRoundBasedRegister(synodMembers, synodMembers.Second()))
                 {
-                    using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
+                    using (var testSetup = CreateRoundBasedRegister(synodMembers, synodMembers.Third()))
                     {
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
@@ -70,11 +72,12 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
         [Fact]
         public void ReadIsAborted_AfterWriteWithBallotEqualToCurrent()
         {
-            using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
+            var synodMembers = GetSynodMembers();
+            using (CreateRoundBasedRegister(synodMembers, synodMembers.First()))
             {
-                using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Second()))
+                using (CreateRoundBasedRegister(synodMembers, synodMembers.Second()))
                 {
-                    using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
+                    using (var testSetup = CreateRoundBasedRegister(synodMembers, synodMembers.Third()))
                     {
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
@@ -95,11 +98,12 @@ operation READ(k0) or WRITE(k0; *) was invoked with k0 >= k.")]
         [Fact]
         public void ReadIsAborted_AfterWriteWithBallotGreaterThanCurrent()
         {
-            using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
+            var synodMembers = GetSynodMembers();
+            using (CreateRoundBasedRegister(synodMembers, synodMembers.First()))
             {
-                using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Second()))
+                using (CreateRoundBasedRegister(synodMembers, synodMembers.Second()))
                 {
-                    using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
+                    using (var testSetup = CreateRoundBasedRegister(synodMembers, synodMembers.Third()))
                     {
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;

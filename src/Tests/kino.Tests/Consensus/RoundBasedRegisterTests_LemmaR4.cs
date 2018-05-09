@@ -21,11 +21,12 @@ and v != null, then some operation WRITE(k0; v) was invoked with k0 < k.")]
         [Fact]
         public void ReadCommitsWithNonEmptyLease_IfWriteCommittedLeaseWithBallotLessThanCurrent()
         {
-            using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().First()))
+            var synodMembers = GetSynodMembers();
+            using (CreateRoundBasedRegister(synodMembers, synodMembers.First()))
             {
-                using (CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Second()))
+                using (CreateRoundBasedRegister(synodMembers, synodMembers.Second()))
                 {
-                    using (var testSetup = CreateRoundBasedRegister(GetSynodMembers(), GetSynodMembers().Third()))
+                    using (var testSetup = CreateRoundBasedRegister(synodMembers, synodMembers.Third()))
                     {
                         var ballotGenerator = testSetup.BallotGenerator;
                         var localNode = testSetup.LocalNode;
