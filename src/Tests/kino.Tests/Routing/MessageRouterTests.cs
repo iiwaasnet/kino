@@ -133,7 +133,7 @@ namespace kino.Tests.Routing
         }
 
         [Fact]
-        public void IfInternalRegistrationsReceiverIsReadyToReceive_ItsTryReceiveMethidIsCalled()
+        public void IfInternalRegistrationsReceiverIsReadyToReceive_ItsTryReceiveMethodIsCalled()
         {
             internalRegistrationsReceiver.Setup(m => m.TryReceive())
                                          .Returns(() =>
