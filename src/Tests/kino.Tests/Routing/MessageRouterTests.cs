@@ -188,7 +188,7 @@ namespace kino.Tests.Routing
         public void IfMessageProcessedByServiceMessageHandler_InternalRoutingTableIsNotLookedUp()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object);
-            var message = SyntacticSugar.As<Message>(Message.Create(new DiscoverMessageRouteMessage()));
+            var message = Message.Create(new DiscoverMessageRouteMessage()).As<Message>();
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             var serviceMessageHandler = new Mock<IServiceMessageHandler>();
             serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(message)).Returns(serviceMessageHandler.Object);
@@ -221,7 +221,7 @@ namespace kino.Tests.Routing
             tryReceiveWait.WaitOne();
             messageRouter.Stop();
             //
-            internalRegistrationHandler.Verify(m => m.Handle(internalRouteRegistration), Times.Once);
+            internalRegistrationHandler.Verify(m => m.Handle(internalRouteRegistration), Times.AtLeastOnce);
         }
 
         [Fact]
