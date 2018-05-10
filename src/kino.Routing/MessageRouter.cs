@@ -82,7 +82,7 @@ namespace kino.Routing
                     clusterServices.StartClusterServices();
                     localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, barrier),
                                                          TaskCreationOptions.LongRunning);
-                    barrier.SignalAndWait();
+                    barrier.SignalAndWait(cancellationTokenSource.Token);
                     isStarted = true;
                 }
             }
