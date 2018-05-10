@@ -116,11 +116,16 @@ namespace kino.Tests.Routing
         [Fact]
         public void IfLocalRouterSocketIsReadyToReceive_ItsTryReceiveMethodIsCalled()
         {
+            var receiveWait = new ManualResetEventSlim(true);
             localRouterSocket.Setup(m => m.CanReceive())
-                             .Returns(() => new ManualResetEventSlim(true).WaitHandle);
+                             .Returns(() => receiveWait.WaitHandle);
             localRouterSocket.Setup(m => m.TryReceive())
                              .Returns(() => null)
-                             .Callback(() => localRouterSocketWaitHandle.Reset());
+                             .Callback(() =>
+                                       {
+                                           localRouterSocketWaitHandle.Reset();
+                                           receiveWait.Reset();
+                                       });
             messageRouter.Start();
             //
             localRouterSocketWaitHandle.Set();
@@ -133,9 +138,16 @@ namespace kino.Tests.Routing
         [Fact]
         public void IfInternalRegistrationsReceiverIsReadyToReceive_ItsTryReceiveMethodIsCalled()
         {
+            var receiveWait = new ManualResetEventSlim(true);
             internalRegistrationsReceiver.Setup(m => m.CanReceive())
-                                         .Returns(() => new ManualResetEventSlim(true).WaitHandle)
-                                         .Callback(() => internalRegistrationsReceiverWaitHandle.Reset());
+                                         .Returns(() => receiveWait.WaitHandle);
+            internalRegistrationsReceiver.Setup(m => m.TryReceive())
+                                         .Returns(() => null)
+                                         .Callback(() =>
+                                                   {
+                                                       internalRegistrationsReceiverWaitHandle.Reset();
+                                                       receiveWait.Reset();
+                                                   });
             messageRouter.Start();
             //
             internalRegistrationsReceiverWaitHandle.Set();
