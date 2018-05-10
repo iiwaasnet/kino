@@ -39,9 +39,9 @@ namespace kino.Tests.Routing
         private readonly Mock<IPerformanceCounterManager<KinoPerformanceCounters>> perfCounterManager;
         private readonly Mock<ISecurityProvider> securityProvider;
         private readonly Mock<ILocalSocket<IMessage>> localRouterSocket;
+
         private MessageRouter messageRouter;
-        private readonly ManualResetEventSlim localRouterSocketWaitHandle;
-        private readonly ManualResetEventSlim internalRegistrationsReceiverWaitHandle;
+
         private readonly Mock<ISocket> scaleOutSocket;
         private readonly Mock<IPerformanceCounter> perfCounter;
         private readonly Mock<IServiceMessageHandlerRegistry> serviceMessageHandlerRegistry;
@@ -68,11 +68,9 @@ namespace kino.Tests.Routing
             perfCounterManager.Setup(m => m.GetCounter(It.IsAny<KinoPerformanceCounters>())).Returns(perfCounter.Object);
             securityProvider = new Mock<ISecurityProvider>();
             localRouterSocket = new Mock<ILocalSocket<IMessage>>();
-            localRouterSocketWaitHandle = new ManualResetEventSlim(false);
-            localRouterSocket.Setup(m => m.CanReceive()).Returns(localRouterSocketWaitHandle.WaitHandle);
+            localRouterSocket.Setup(m => m.CanReceive()).Returns(new ManualResetEventSlim(false).WaitHandle);
             internalRegistrationsReceiver = new Mock<ILocalReceivingSocket<InternalRouteRegistration>>();
-            internalRegistrationsReceiverWaitHandle = new ManualResetEventSlim(false);
-            internalRegistrationsReceiver.Setup(m => m.CanReceive()).Returns(internalRegistrationsReceiverWaitHandle.WaitHandle);
+            internalRegistrationsReceiver.Setup(m => m.CanReceive()).Returns(new ManualResetEventSlim(false).WaitHandle);
             internalRegistrationHandler = new Mock<IInternalMessageRouteRegistrationHandler>();
             clusterHealthMonitor = new Mock<IClusterHealthMonitor>();
             clusterServices.Setup(m => m.GetClusterHealthMonitor()).Returns(clusterHealthMonitor.Object);
@@ -118,19 +116,20 @@ namespace kino.Tests.Routing
         {
             internalRegistrationsReceiver.Setup(m => m.CanReceive())
                                          .Returns(new ManualResetEventSlim(false).WaitHandle);
-            var receiveWait = new ManualResetEventSlim(true);
+            var canReceiveWait = new ManualResetEventSlim(true);
+            var tryReceiveWait = new ManualResetEventSlim(false);
             localRouterSocket.Setup(m => m.CanReceive())
-                             .Returns(() => receiveWait.WaitHandle);
+                             .Returns(() => canReceiveWait.WaitHandle);
             localRouterSocket.Setup(m => m.TryReceive())
                              .Returns(() => null)
                              .Callback(() =>
                                        {
-                                           localRouterSocketWaitHandle.Reset();
-                                           receiveWait.Reset();
+                                           tryReceiveWait.Set();
+                                           canReceiveWait.Reset();
                                        });
             messageRouter.Start();
             //
-            localRouterSocketWaitHandle.Set();
+            tryReceiveWait.Wait();
             messageRouter.Stop();
             //
             localRouterSocket.Verify(m => m.TryReceive(), Times.Once);
@@ -140,19 +139,20 @@ namespace kino.Tests.Routing
         [Fact]
         public void IfInternalRegistrationsReceiverIsReadyToReceive_ItsTryReceiveMethodIsCalled()
         {
-            var receiveWait = new ManualResetEventSlim(true);
+            var canRecieveWait = new ManualResetEventSlim(true);
+            var tryRecieveWait = new ManualResetEventSlim(false);
             internalRegistrationsReceiver.Setup(m => m.CanReceive())
-                                         .Returns(() => receiveWait.WaitHandle);
+                                         .Returns(() => canRecieveWait.WaitHandle);
             internalRegistrationsReceiver.Setup(m => m.TryReceive())
                                          .Returns(() => null)
                                          .Callback(() =>
                                                    {
-                                                       internalRegistrationsReceiverWaitHandle.Reset();
-                                                       receiveWait.Reset();
+                                                       tryRecieveWait.Set();
+                                                       canRecieveWait.Reset();
                                                    });
             messageRouter.Start();
             //
-            internalRegistrationsReceiverWaitHandle.Set();
+            tryRecieveWait.Wait();
             messageRouter.Stop();
             //
             internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Once);
@@ -205,18 +205,20 @@ namespace kino.Tests.Routing
         public void IfInternalRegistrationMessageIsReceived_InternalRegistrationHandlerIsCalled()
         {
             var internalRouteRegistration = new InternalRouteRegistration();
-            var invocationCount = 0;
+            var canReceiveWait = new ManualResetEvent(true);
+            var tryReceiveWait = new ManualResetEvent(false);
             internalRegistrationsReceiver.Setup(m => m.CanReceive())
-                                         .Returns(() => new ManualResetEventSlim(true).WaitHandle)
-                                         .Callback(() => internalRegistrationsReceiverWaitHandle.Reset());
+                                         .Returns(() => new ManualResetEventSlim(true).WaitHandle);
             internalRegistrationsReceiver.Setup(m => m.TryReceive())
-                                         .Returns(() => invocationCount == 0
-                                                            ? internalRouteRegistration
-                                                            : null)
-                                         .Callback(() => invocationCount++);
+                                         .Returns(() => internalRouteRegistration)
+                                         .Callback(() =>
+                                                   {
+                                                       tryReceiveWait.Set();
+                                                       canReceiveWait.Reset();
+                                                   });
             messageRouter.Start();
             //
-            internalRegistrationsReceiverWaitHandle.Set();
+            tryReceiveWait.WaitOne();
             messageRouter.Stop();
             //
             internalRegistrationHandler.Verify(m => m.Handle(internalRouteRegistration), Times.Once);
@@ -226,14 +228,20 @@ namespace kino.Tests.Routing
         public void IfInternalRegistrationMessageIsNull_InternalRegistrationHandlerIsNotCalled()
         {
             var internalRouteRegistration = new InternalRouteRegistration();
+            var canReceiveWait = new ManualResetEventSlim(true);
+            var tryReceiveWait = new ManualResetEventSlim(false);
             internalRegistrationsReceiver.Setup(m => m.CanReceive())
-                                         .Returns(() => new ManualResetEventSlim(true).WaitHandle)
-                                         .Callback(() => internalRegistrationsReceiverWaitHandle.Reset());
+                                         .Returns(() => canReceiveWait.WaitHandle);
             internalRegistrationsReceiver.Setup(m => m.TryReceive())
-                                         .Returns(() => null);
+                                         .Returns(() => null)
+                                         .Callback(() =>
+                                                   {
+                                                       canReceiveWait.Reset();
+                                                       tryReceiveWait.Set();
+                                                   });
             messageRouter.Start();
             //
-            internalRegistrationsReceiverWaitHandle.Set();
+            tryReceiveWait.Wait();
             messageRouter.Stop();
             //
             internalRegistrationHandler.Verify(m => m.Handle(internalRouteRegistration), Times.Never);
