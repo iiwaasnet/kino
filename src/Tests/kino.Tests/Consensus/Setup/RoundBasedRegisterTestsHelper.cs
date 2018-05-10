@@ -83,9 +83,9 @@ namespace kino.Tests.Consensus.Setup
 
             IEnumerable<string> GetSynodMembers()
             {
-                yield return $"tcp://127.0.0.2:{portNumber++}";
-                yield return $"tcp://127.0.0.2:{portNumber++}";
-                yield return $"tcp://127.0.0.2:{portNumber++}";
+                yield return $"tcp://127.0.0.22:{portNumber++}";
+                yield return $"tcp://127.0.0.22:{portNumber++}";
+                yield return $"tcp://127.0.0.22:{portNumber++}";
             }
 
             //yield return "tcp://127.0.0.2:3001";

@@ -22,7 +22,7 @@ namespace kino.Tests.Cluster
     public class ClusterHealthMonitorTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
-        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(1000);
+        private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(2000);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private readonly Mock<ISocketFactory> socketFactory;
         private readonly Mock<ISocket> publisherSocket;
