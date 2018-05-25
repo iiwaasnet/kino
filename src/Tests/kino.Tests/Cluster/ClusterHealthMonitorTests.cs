@@ -153,7 +153,7 @@ namespace kino.Tests.Cluster
         }
 
         [Fact]
-        public void MessageReceiverOverMultiplexingSocket_IsSentToPublisherSocket()
+        public void MessageReceivedOverMultiplexingSocket_IsSentToPublisherSocket()
         {
             var message = Message.Create(new SimpleMessage());
             multiplexingSocket.SetupMessageReceived(message, ReceiveMessageDelay);

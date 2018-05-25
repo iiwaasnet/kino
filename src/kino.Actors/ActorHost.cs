@@ -209,10 +209,13 @@ namespace kino.Actors
                         foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
                         {
                             messageOut.SetDomain(securityProvider.GetDomain(messageOut.Identity));
-                            messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverNodeIdentity,
-                                                             messageContext.CallbackReceiverIdentity,
-                                                             messageContext.CallbackPoint,
-                                                             messageContext.CallbackKey);
+                            if (messageOut.Distribution == DistributionPattern.Unicast)
+                            {
+                                messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverNodeIdentity,
+                                                                 messageContext.CallbackReceiverIdentity,
+                                                                 messageContext.CallbackPoint,
+                                                                 messageContext.CallbackKey);
+                            }
                             messageOut.SetCorrelationId(messageContext.CorrelationId);
                             messageOut.CopyMessageRouting(messageContext.MessageHops);
                             messageOut.TraceOptions |= messageContext.TraceOptions;
@@ -247,10 +250,13 @@ namespace kino.Actors
                     foreach (var messageOut in response.Cast<Message>())
                     {
                         messageOut.SetDomain(securityProvider.GetDomain(messageOut.Identity));
-                        messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
-                                                         messageIn.CallbackReceiverIdentity,
-                                                         messageIn.CallbackPoint,
-                                                         messageIn.CallbackKey);
+                        if (messageOut.Distribution == DistributionPattern.Unicast)
+                        {
+                            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
+                                                             messageIn.CallbackReceiverIdentity,
+                                                             messageIn.CallbackPoint,
+                                                             messageIn.CallbackKey);
+                        }
                         messageOut.SetCorrelationId(messageIn.CorrelationId);
                         messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
                         messageOut.TraceOptions |= messageIn.TraceOptions;
