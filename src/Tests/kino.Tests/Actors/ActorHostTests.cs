@@ -228,13 +228,22 @@ namespace kino.Tests.Actors
                 }
                 else
                 {
-                    localRouterSocket.WaitUntilMessageSent();
+                    localRouterSocket.WaitUntilMessageSent(AssertCallbackPropertiesNotCopied);
                 }
 
                 bool AssertCallbackPropertiesCopied(Message messageOut)
                     => messageIn.CallbackPoint.SequenceEqual(messageOut.CallbackPoint)
                     && Unsafe.ArraysEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity)
                     && Unsafe.ArraysEqual(messageIn.CallbackReceiverNodeIdentity, messageOut.CallbackReceiverNodeIdentity);
+
+                bool AssertCallbackPropertiesNotCopied(Message messageOut)
+                {
+                    Assert.Empty(messageOut.CallbackPoint);
+                    Assert.Null(messageOut.CallbackReceiverIdentity);
+                    Assert.Null(messageOut.CallbackReceiverNodeIdentity);
+
+                    return true;
+                }
             }
             finally
             {
@@ -278,13 +287,22 @@ namespace kino.Tests.Actors
                 }
                 else
                 {
-                    localRouterSocket.WaitUntilMessageSent();
+                    localRouterSocket.WaitUntilMessageSent(AssertCallbackPropertiesNotCopied);
                 }
 
                 bool AssertCallbackPropertiesCopied(Message messageOut)
                     => messageIn.CallbackPoint.SequenceEqual(messageOut.CallbackPoint)
                     && Unsafe.ArraysEqual(messageIn.CallbackReceiverIdentity, messageOut.CallbackReceiverIdentity)
                     && Unsafe.ArraysEqual(messageIn.CallbackReceiverNodeIdentity, messageOut.CallbackReceiverNodeIdentity);
+
+                bool AssertCallbackPropertiesNotCopied(Message messageOut)
+                {
+                    Assert.Empty(messageOut.CallbackPoint);
+                    Assert.Null(messageOut.CallbackReceiverIdentity);
+                    Assert.Null(messageOut.CallbackReceiverNodeIdentity);
+
+                    return true;
+                }
             }
             finally
             {
