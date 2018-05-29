@@ -198,6 +198,8 @@ namespace kino.Rendezvous
             socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousSocketReceiveRate);
             socket.Bind(configProvider.UnicastUri);
 
+            logger.Info($"Receiving cluster messages started on: {configProvider.UnicastUri.ToSocketAddress()}");
+
             return socket;
         }
 
@@ -207,6 +209,8 @@ namespace kino.Rendezvous
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousBroadcastSocketSendRate);
             socket.Bind(configProvider.BroadcastUri);
 
+            logger.Info($"Broadcasting cluster messages started on: {configProvider.BroadcastUri.ToSocketAddress()}");
+
             return socket;
         }
 
@@ -215,6 +219,8 @@ namespace kino.Rendezvous
             var socket = socketFactory.CreateDealerSocket();
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousHeartBeatSocketSendRate);
             socket.Connect(configProvider.UnicastUri, true);
+
+            logger.Info($"HeartBeating started on: {configProvider.UnicastUri.ToSocketAddress()}");
 
             return socket;
         }
