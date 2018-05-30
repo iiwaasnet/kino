@@ -29,7 +29,8 @@ namespace kino.Client
         private readonly bool keepRegistrationLocal;
         private readonly ILogger logger;
         private static readonly TimeSpan TerminationWaitTimeout = TimeSpan.FromSeconds(3);
-        private static readonly MessageIdentifier[] ExceptionMessageIdentifier = {new MessageIdentifier(KinoMessages.Exception)};
+        private static readonly MessageIdentifier ExceptionMessageIdentifier = new MessageIdentifier(KinoMessages.Exception);
+        private static readonly MessageIdentifier[] ExceptionMessageIdentifierCollection = {ExceptionMessageIdentifier};
         private long lastCallbackKey = 0;
         private readonly ILocalSocket<IMessage> receivingSocket;
         private byte[] callbackReceiverNodeIdentity;
@@ -98,14 +99,19 @@ namespace kino.Client
                         if (CallbackRequired(callbackRegistration))
                         {
                             var promise = callbackRegistration.Promise;
+
                             var callbackPoint = callbackRegistration.CallbackPoint;
+
+                            var messageIdentifiers = callbackPoint.MessageIdentifiers.Contains(ExceptionMessageIdentifier)
+                                                         ? callbackPoint.MessageIdentifiers
+                                                         : callbackPoint.MessageIdentifiers.Concat(ExceptionMessageIdentifierCollection);
+
                             message.RegisterCallbackPoint(callbackReceiverNodeIdentity,
                                                           ReceiverIdentifier.Identity,
-                                                          callbackPoint.MessageIdentifiers,
+                                                          messageIdentifiers,
                                                           promise.CallbackKey.Value);
 
-                            callbackHandlers.Push(promise,
-                                                  callbackPoint.MessageIdentifiers.Concat(ExceptionMessageIdentifier));
+                            callbackHandlers.Push(promise, messageIdentifiers);
                             CallbackRegistered(message);
                         }
                         localRouterSocket.Send(message);
