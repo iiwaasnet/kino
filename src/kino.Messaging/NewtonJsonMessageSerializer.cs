@@ -10,11 +10,11 @@ namespace kino.Messaging
         {
             using (var stream = new MemoryStream())
             {
-                using (var writer = new BsonWriter(stream))
+                using (var writer = new BsonDataWriter(stream))
                 {
                     JsonSerializer
-                        .Create()
-                        .Serialize(writer, obj);
+                       .Create()
+                       .Serialize(writer, obj);
 
                     writer.Flush();
 
@@ -27,11 +27,11 @@ namespace kino.Messaging
         {
             using (var stream = new MemoryStream(buffer))
             {
-                using (var reader = new BsonReader(stream))
+                using (var reader = new BsonDataReader(stream))
                 {
                     return JsonSerializer
-                        .Create()
-                        .Deserialize<T>(reader);
+                          .Create()
+                          .Deserialize<T>(reader);
                 }
             }
         }

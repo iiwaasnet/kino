@@ -1,9 +1,8 @@
 ﻿using System;
-using ProtoBuf;
+using System.Text;
 
 namespace kino.Messaging.Messages
 {
-    [ProtoContract]
     public class ExceptionMessage : Payload
     {
         private static readonly IMessageSerializer MessageSerializer = new NewtonJsonMessageSerializer();
@@ -15,10 +14,25 @@ namespace kino.Messaging.Messages
         {
         }
 
-        [ProtoMember(1)]
+        public override T Deserialize<T>(byte[] content)
+        {
+            try
+            {
+                return MessageSerializer.Deserialize<T>(content);
+            }
+            catch (Exception err)
+            {
+                return (T) (object) new ExceptionMessage {Exception = CreateSubstitutionException(err, content)};
+            }
+        }
+
+        private Exception CreateSubstitutionException(Exception serializationException, byte[] content)
+            => new Exception($"This is the substitution {nameof(ExceptionMessage)} generated due to deserialization error: "
+                           + $"==> {serializationException} <== "
+                           + $"Original message content: ==> {Encoding.Default.GetString(content)} <==");
+
         public Exception Exception { get; set; }
 
-        [ProtoMember(2)]
         public string StackTrace { get; set; }
 
         public override ushort Version => Message.CurrentVersion;
