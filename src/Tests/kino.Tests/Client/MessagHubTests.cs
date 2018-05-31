@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using kino.Client;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
@@ -26,7 +27,7 @@ namespace kino.Tests.Client
         private readonly MessageHubSocketFactory messageHubSocketFactory;
         private readonly string localhost = "tcp://localhost:43";
         private readonly Mock<ISocketFactory> socketFactory;
-        private readonly ILogger logger;
+        private readonly Mock<ILogger> logger;
         private readonly Mock<ICallbackHandlerStack> callbackHandlerStack;
         private readonly Mock<ISecurityProvider> securityProvider;
         private MessageHub messageHub;
@@ -40,7 +41,7 @@ namespace kino.Tests.Client
         public MessagHubTests()
         {
             callbackHandlerStack = new Mock<ICallbackHandlerStack>();
-            logger = new Mock<ILogger>().Object;
+            logger = new Mock<ILogger>();
             messageHubSocketFactory = new MessageHubSocketFactory();
             socketFactory = new Mock<ISocketFactory>();
             socketFactory.Setup(m => m.CreateDealerSocket()).Returns(messageHubSocketFactory.CreateSocket);
@@ -50,6 +51,7 @@ namespace kino.Tests.Client
             registrationSocket = new Mock<ILocalSendingSocket<InternalRouteRegistration>>();
             localSocketFactory = new Mock<ILocalSocketFactory>();
             receivingSocket = new Mock<ILocalSocket<IMessage>>();
+            receivingSocket.Setup(m => m.CanReceive()).Returns(new ManualResetEvent(false));
             localSocketFactory.Setup(m => m.Create<IMessage>()).Returns(receivingSocket.Object);
             scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
@@ -64,13 +66,14 @@ namespace kino.Tests.Client
         {
             try
             {
+                // arrange
                 messageHub = CreateMessageHub(keepRegistrationLocal);
                 receivingSocket.As<ILocalSendingSocket<IMessage>>().Setup(m => m.Equals(receivingSocket.Object)).Returns(true);
-                //
+                // act
                 messageHub.Start();
-                //
+                // assert
                 Func<InternalRouteRegistration, bool> globalRegistration = msg => msg.KeepRegistrationLocal == keepRegistrationLocal
-                                                                                  && msg.DestinationSocket.Equals(receivingSocket.Object);
+                                                                               && msg.DestinationSocket.Equals(receivingSocket.Object);
                 registrationSocket.Verify(m => m.Send(It.Is<InternalRouteRegistration>(msg => globalRegistration(msg))));
             }
             finally
@@ -80,19 +83,26 @@ namespace kino.Tests.Client
         }
 
         [Fact]
-        public void EnqueueRequest_RegistersMessageAndExceptionHandlers()
+        public void Send_RegistersMessageAndExceptionHandlers()
         {
             try
             {
+                // arrange
                 messageHub.Start();
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
                 var callback = CallbackPoint.Create<SimpleMessage>();
-                //
+                // act
                 messageHub.Send(message, callback);
                 AsyncOpCompletionDelay.Sleep();
-                //
+                // assert
+                Func<IEnumerable<MessageIdentifier>, bool> hasAllRegistrations = (registrations) =>
+                                                                                 {
+                                                                                     return registrations.Any(h => Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
+                                                                                         && registrations.Any(h => Equals(h.Version, KinoMessages.Exception.Version))
+                                                                                         && registrations.Any(h => Equals(h.Partition, KinoMessages.Exception.Partition));
+                                                                                 };
                 callbackHandlerStack.Verify(m => m.Push(It.IsAny<IPromise>(),
-                                                        It.Is<IEnumerable<MessageIdentifier>>(en => ContainsMessageAndExceptionRegistrations(en))),
+                                                        It.Is<IEnumerable<MessageIdentifier>>(en => hasAllRegistrations(en))),
                                             Times.Once);
             }
             finally
@@ -102,17 +112,49 @@ namespace kino.Tests.Client
         }
 
         [Fact]
-        public void EnqueueRequest_SendsMessageWithCallbackSetToThisMessageHub()
+        public void NoExceptionIsThrownAndMessageIsSent_IfExceptionCallbackIsRegisteredExplicitly()
         {
+            try
+            {
+                // arrange
+                messageHub.Start();
+                var message = Message.CreateFlowStartMessage(new SimpleMessage());
+                var callback = CallbackPoint.Create<SimpleMessage, ExceptionMessage>();
+                // act
+                messageHub.Send(message, callback);
+                AsyncOpCompletionDelay.Sleep();
+                // assert
+                Func<IEnumerable<MessageIdentifier>, bool> hasAllRegistrations = (registrations) =>
+                                                                                 {
+                                                                                     return registrations.Any(h => Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
+                                                                                         && registrations.Any(h => Equals(h.Version, KinoMessages.Exception.Version))
+                                                                                         && registrations.Any(h => Equals(h.Partition, KinoMessages.Exception.Partition));
+                                                                                 };
+                callbackHandlerStack.Verify(m => m.Push(It.IsAny<IPromise>(),
+                                                        It.Is<IEnumerable<MessageIdentifier>>(en => hasAllRegistrations(en))),
+                                            Times.Once);
+                routerSocket.Verify(m => m.Send(It.IsAny<IMessage>()), Times.Once);
+                logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
+            }
+            finally
+            {
+                messageHub.Stop();
+            }
+        }
+
+        [Fact]
+        public void Send_SendsMessageWithCallbackSetToThisMessageHub()
+        {
+            // arrange
             try
             {
                 messageHub.Start();
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
                 var callback = CallbackPoint.Create<SimpleMessage>();
-                //
+                // act
                 messageHub.Send(message, callback);
                 AsyncOpCompletionDelay.Sleep();
-                //
+                // assert
                 routerSocket.WaitUntilMessageSent(RouterSocketIsReceiver);
             }
             finally
@@ -122,23 +164,24 @@ namespace kino.Tests.Client
 
             bool RouterSocketIsReceiver(IMessage msg)
                 => Unsafe.ArraysEqual(msg.As<Message>().ReceiverNodeIdentity, scaleOutAddress.Identity)
-                   && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
+                && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
         }
 
         [Fact]
         public void WhenMessageReceived_CorrespondingPromiseResultSet()
         {
+            // arrange
             try
             {
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
                 var callback = CallbackPoint.Create<SimpleMessage>();
                 var promise = messageHub.Send(message, callback);
                 callbackHandlerStack.Setup(m => m.Pop(It.IsAny<CallbackHandlerKey>())).Returns(promise);
-                //
+                // act
                 receivingSocket.SetupMessageReceived(message);
                 messageHub.Start();
                 var response = promise.GetResponse().Result;
-                //
+                // assert
                 Assert.Equal(message, response);
             }
             finally
@@ -150,6 +193,7 @@ namespace kino.Tests.Client
         [Fact]
         public void WhenResultMessageIsDelivered_PromiseIsDisposedAndItsCallbackIsRemoved()
         {
+            // arrange
             var callbackHandlerStack = new CallbackHandlerStack();
             var messageHub = new MessageHub(callbackHandlerStack,
                                             routerSocket.Object,
@@ -157,7 +201,7 @@ namespace kino.Tests.Client
                                             localSocketFactory.Object,
                                             scaleOutConfigurationProvider.Object,
                                             securityProvider.Object,
-                                            logger);
+                                            logger.Object);
             try
             {
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
@@ -169,10 +213,10 @@ namespace kino.Tests.Client
                                                       callback.MessageIdentifiers,
                                                       promise.CallbackKey.Value);
                 receivingSocket.SetupMessageReceived(callbackMessage, ReceiveMessageDelay);
-                //
+                // act
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
-                //
+                // assert
                 Assert.Null(callbackHandlerStack.Pop(new CallbackHandlerKey
                                                      {
                                                          Version = callback.MessageIdentifiers.Single().Version,
@@ -190,6 +234,7 @@ namespace kino.Tests.Client
         [Fact]
         public void WhenExceptionMessageReceived_PromiseThrowsException()
         {
+            // arrange
             var callbackHandlerStack = new CallbackHandlerStack();
             var messageHub = new MessageHub(callbackHandlerStack,
                                             routerSocket.Object,
@@ -197,7 +242,7 @@ namespace kino.Tests.Client
                                             localSocketFactory.Object,
                                             scaleOutConfigurationProvider.Object,
                                             securityProvider.Object,
-                                            logger);
+                                            logger.Object);
             try
             {
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
@@ -210,10 +255,10 @@ namespace kino.Tests.Client
                                                 callback.MessageIdentifiers,
                                                 promise.CallbackKey.Value);
                 receivingSocket.SetupMessageReceived(exception, ReceiveMessageDelay);
-                //
+                // act
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
-                //
+                // assert
                 var err = Record.Exception(() =>
                                            {
                                                var _ = promise.GetResponse().Result;
@@ -229,6 +274,7 @@ namespace kino.Tests.Client
         [Fact]
         public void WhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
         {
+            // arrange
             var callbackHandlerStack = new CallbackHandlerStack();
             var messageHub = new MessageHub(callbackHandlerStack,
                                             routerSocket.Object,
@@ -236,7 +282,7 @@ namespace kino.Tests.Client
                                             localSocketFactory.Object,
                                             scaleOutConfigurationProvider.Object,
                                             securityProvider.Object,
-                                            logger);
+                                            logger.Object);
             try
             {
                 var message = Message.CreateFlowStartMessage(new SimpleMessage());
@@ -249,10 +295,10 @@ namespace kino.Tests.Client
                                                       callback.MessageIdentifiers,
                                                       nonExistingCallbackKey);
                 receivingSocket.SetupMessageReceived(callbackMessage, ReceiveMessageDelay);
-                //
+                // act
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
-                //
+                // assert
                 Assert.False(promise.GetResponse().Wait(AsyncOpCompletionDelay));
             }
             finally
@@ -268,12 +314,7 @@ namespace kino.Tests.Client
                               localSocketFactory.Object,
                               scaleOutConfigurationProvider.Object,
                               securityProvider.Object,
-                              logger,
+                              logger.Object,
                               keepRegistrationLocal);
-
-        private static bool ContainsMessageAndExceptionRegistrations(IEnumerable<MessageIdentifier> registrations)
-            => registrations.Any(h => Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
-               && registrations.Any(h => Equals(h.Version, KinoMessages.Exception.Version))
-               && registrations.Any(h => Equals(h.Partition, KinoMessages.Exception.Partition));
     }
 }
