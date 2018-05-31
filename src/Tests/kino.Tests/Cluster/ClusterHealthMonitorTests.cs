@@ -52,6 +52,7 @@ namespace kino.Tests.Cluster
             multiplexingSocket = new Mock<ILocalSocket<IMessage>>();
             multiplexingSocket.Setup(m => m.CanReceive()).Returns(new ManualResetEvent(false));
             localSocketFactory.Setup(m => m.Create<IMessage>()).Returns(multiplexingSocket.Object);
+            multiplexingSocket.Setup(m => m.CanReceive()).Returns(new ManualResetEvent(false));
             securityProvider = new Mock<ISecurityProvider>();
             var pingDomain = Guid.NewGuid().ToString();
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(pingDomain);
