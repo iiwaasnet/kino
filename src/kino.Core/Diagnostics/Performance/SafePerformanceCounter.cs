@@ -1,5 +1,4 @@
-﻿#if NET47
-using System;
+﻿using System;
 using System.Diagnostics;
 
 namespace kino.Core.Diagnostics.Performance
@@ -86,4 +85,3 @@ namespace kino.Core.Diagnostics.Performance
         public bool IsEnabled() => perfCounter != null;
     }
 }
-#endif

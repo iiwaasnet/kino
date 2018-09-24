@@ -1,5 +1,4 @@
-﻿#if NET47
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -81,4 +80,3 @@ namespace kino.Core.Diagnostics.Performance
             => counters.Values.ForEach(c => c.As<IDisposable>().Dispose());
     }
 }
-#endif

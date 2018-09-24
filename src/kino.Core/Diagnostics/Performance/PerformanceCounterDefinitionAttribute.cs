@@ -1,5 +1,4 @@
-﻿#if NET47
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
@@ -27,4 +26,3 @@ namespace kino.Core.Diagnostics.Performance
         public PerformanceCounterType Type { get; }
     }
 }
-#endif

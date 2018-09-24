@@ -18,12 +18,10 @@ namespace kino.Rendezvous
             var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);
 #if NET47
             var instanceNameResolver = resolver.Resolve<IInstanceNameResolver>() ?? new InstanceNameResolver();
-
-            var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver,
-                                                                                                   logger);
 #else
-            var performanceCounterManager = default(IPerformanceCounterManager<KinoPerformanceCounters>);
+            var instanceNameResolver = resolver.Resolve<IInstanceNameResolver>();
 #endif
+            var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver, logger);
             var intercomMessageHub = new IntercomMessageHub(socketFactory,
                                                             synodConfigProvider,
                                                             performanceCounterManager,
