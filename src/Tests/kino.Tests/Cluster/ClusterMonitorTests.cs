@@ -11,28 +11,29 @@ using kino.Messaging.Messages;
 using kino.Security;
 using kino.Tests.Actors.Setup;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
     public class ClusterMonitorTests
     {
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(100);
-        private readonly Mock<ILogger> logger;
-        private readonly Mock<IRouteDiscovery> routeDiscovery;
-        private readonly Mock<ISecurityProvider> securityProvider;
-        private readonly string domain;
-        private readonly ClusterMonitor clusterMonitor;
-        private readonly SocketEndpoint scaleOutAddress;
-        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private readonly Mock<IAutoDiscoverySender> autoDiscoverySender;
-        private readonly Mock<IAutoDiscoveryListener> autoDiscoveryListener;
-        private readonly Mock<IHeartBeatSenderConfigurationProvider> heartBeatSenderConfigProvider;
-        private readonly Uri heartBeatUri;
-        private readonly TimeSpan heartBeatInterval;
-        private readonly ClusterMembershipConfiguration config;
+        private Mock<ILogger> logger;
+        private Mock<IRouteDiscovery> routeDiscovery;
+        private Mock<ISecurityProvider> securityProvider;
+        private string domain;
+        private ClusterMonitor clusterMonitor;
+        private SocketEndpoint scaleOutAddress;
+        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private Mock<IAutoDiscoverySender> autoDiscoverySender;
+        private Mock<IAutoDiscoveryListener> autoDiscoveryListener;
+        private Mock<IHeartBeatSenderConfigurationProvider> heartBeatSenderConfigProvider;
+        private Uri heartBeatUri;
+        private TimeSpan heartBeatInterval;
+        private ClusterMembershipConfiguration config;
 
-        public ClusterMonitorTests()
+        [SetUp]
+        public void Setup()
         {
             securityProvider = new Mock<ISecurityProvider>();
             domain = Guid.NewGuid().ToString();
@@ -70,7 +71,7 @@ namespace kino.Tests.Cluster
                                                 logger.Object);
         }
 
-        [Fact]
+        [Test]
         public void RegisterSelf_SendsRegistrationMessageForEachReceiver()
         {
             var actorIdentifier = ReceiverIdentities.CreateForActor();
@@ -100,10 +101,10 @@ namespace kino.Tests.Cluster
                                                            if (msg.Equals(MessageIdentifier.Create<RegisterExternalMessageRouteMessage>()))
                                                            {
                                                                var payload = msg.GetPayload<RegisterExternalMessageRouteMessage>();
-                                                               Assert.Equal(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
+                                                               Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
                                                                Assert.True(Unsafe.ArraysEqual(payload.NodeIdentity, scaleOutAddress.Identity));
-                                                               Assert.Equal(payload.Health.Uri, heartBeatUri.ToSocketAddress());
-                                                               Assert.Equal(payload.Health.HeartBeatInterval, heartBeatInterval);
+                                                               Assert.AreEqual(payload.Health.Uri, heartBeatUri.ToSocketAddress());
+                                                               Assert.AreEqual(payload.Health.HeartBeatInterval, heartBeatInterval);
                                                                var actorRoutes = payload.Routes
                                                                                         .First(r => Unsafe.ArraysEqual(r.ReceiverIdentity, actorIdentifier.Identity));
                                                                foreach (var registration in registrations.Where(r => r.Receiver == actorIdentifier))
@@ -123,7 +124,7 @@ namespace kino.Tests.Cluster
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => messageIsConsistent(msg))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void RegisterSelf_SendsOneRegistrationMessageForSpecifiedDomainButNotMessageDomain()
         {
             var actorIdentifier = ReceiverIdentities.CreateForActor();
@@ -152,7 +153,7 @@ namespace kino.Tests.Cluster
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => msg.Domain == domain)), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void UnregisterSelf_SendsOneUnregisterMessageRouteMessagePerDomain()
         {
             var actorIdentifier = ReceiverIdentities.CreateForActor();
@@ -188,7 +189,7 @@ namespace kino.Tests.Cluster
                                                            if (msg.Equals(MessageIdentifier.Create<UnregisterMessageRouteMessage>()))
                                                            {
                                                                var payload = msg.GetPayload<UnregisterMessageRouteMessage>();
-                                                               Assert.Equal(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
+                                                               Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
                                                                Assert.True(Unsafe.ArraysEqual(payload.ReceiverNodeIdentity, scaleOutAddress.Identity));
                                                                Assert.True(allowedDomains.Contains(msg.Domain));
                                                                return true;
@@ -199,7 +200,7 @@ namespace kino.Tests.Cluster
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => messageIsConsistent(msg))), Times.Exactly(allowedDomains.Length));
         }
 
-        [Fact]
+        [Test]
         public void UnregisterSelfForMessagesWithoutReceiver_GroupsMessagesForSendingWithoutException()
         {
             var unregRoutes = new[]
@@ -228,11 +229,11 @@ namespace kino.Tests.Cluster
                                                            if (msg.Equals(MessageIdentifier.Create<UnregisterMessageRouteMessage>()))
                                                            {
                                                                var payload = msg.GetPayload<UnregisterMessageRouteMessage>();
-                                                               Assert.Equal(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
+                                                               Assert.AreEqual(payload.Uri, scaleOutAddress.Uri.ToSocketAddress());
                                                                Assert.True(Unsafe.ArraysEqual(payload.ReceiverNodeIdentity, scaleOutAddress.Identity));
-                                                               Assert.Equal(domain, msg.Domain);
-                                                               Assert.Equal(1, payload.Routes.Length);
-                                                               Assert.Equal(payload.Routes.First().MessageContracts.Length, unregRoutes.Length);
+                                                               Assert.AreEqual(domain, msg.Domain);
+                                                               Assert.AreEqual(1, payload.Routes.Length);
+                                                               Assert.AreEqual(payload.Routes.First().MessageContracts.Length, unregRoutes.Length);
                                                                Assert.True(payload.Routes.All(r => r.ReceiverIdentity == null));
                                                                return true;
                                                            }
@@ -242,7 +243,7 @@ namespace kino.Tests.Cluster
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => messageIsConsistent(msg))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void WhenClusterMonitorStarts_ClusterRoutesAreRequested()
         {
             Func<Barrier, bool> setBarrier = (b) =>
@@ -269,7 +270,7 @@ namespace kino.Tests.Cluster
                                                                     {
                                                                         var payload = msg.GetPayload<RequestClusterMessageRoutesMessage>();
                                                                         Assert.True(Unsafe.ArraysEqual(scaleOutAddress.Identity, payload.RequestorNodeIdentity));
-                                                                        Assert.Equal(scaleOutAddress.Uri.ToSocketAddress(), payload.RequestorUri);
+                                                                        Assert.AreEqual(scaleOutAddress.Uri.ToSocketAddress(), payload.RequestorUri);
                                                                         return true;
                                                                     }
 
@@ -278,7 +279,7 @@ namespace kino.Tests.Cluster
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isRequestClusterRoutesMessage(msg.As<Message>()))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void WhenCusterMonitorStops_UnregisterNodeMessageIsSent()
         {
             Func<Barrier, bool> setBarrier = (b) =>
@@ -306,7 +307,7 @@ namespace kino.Tests.Cluster
                                                                {
                                                                    var payload = msg.GetPayload<UnregisterNodeMessage>();
                                                                    Assert.True(Unsafe.ArraysEqual(scaleOutAddress.Identity, payload.ReceiverNodeIdentity));
-                                                                   Assert.Equal(scaleOutAddress.Uri.ToSocketAddress(), payload.Uri);
+                                                                   Assert.AreEqual(scaleOutAddress.Uri.ToSocketAddress(), payload.Uri);
                                                                    return true;
                                                                }
 
@@ -315,7 +316,7 @@ namespace kino.Tests.Cluster
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isUnregistrationMessage(msg))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void ClusterMonitor_PeriodicallySendsClusterRoutesRequests()
         {
             Func<Barrier, bool> setBarrier = (b) =>
@@ -343,7 +344,7 @@ namespace kino.Tests.Cluster
                                                                     {
                                                                         var payload = msg.GetPayload<RequestClusterMessageRoutesMessage>();
                                                                         Assert.True(Unsafe.ArraysEqual(scaleOutAddress.Identity, payload.RequestorNodeIdentity));
-                                                                        Assert.Equal(scaleOutAddress.Uri.ToSocketAddress(), payload.RequestorUri);
+                                                                        Assert.AreEqual(scaleOutAddress.Uri.ToSocketAddress(), payload.RequestorUri);
                                                                         return true;
                                                                     }
 

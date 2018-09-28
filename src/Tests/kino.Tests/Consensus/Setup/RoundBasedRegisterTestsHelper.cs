@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
@@ -14,6 +15,7 @@ namespace kino.Tests.Consensus.Setup
     public static class RoundBasedRegisterTestsHelper
     {
         private static readonly TimeSpan WaitTime = TimeSpan.FromMilliseconds(500);
+        private static int portNumber = 100;
 
         internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<string> synod, string localNodeUri)
         {
@@ -29,7 +31,7 @@ namespace kino.Tests.Consensus.Setup
                                         },
                                 Lease = new LeaseConfiguration
                                         {
-                                            ClockDrift = TimeSpan.FromMilliseconds(10),
+                                            ClockDrift = TimeSpan.Zero,
                                             MessageRoundtrip = TimeSpan.FromMilliseconds(100),
                                             NodeResponseTimeout = TimeSpan.FromMilliseconds(1000),
                                             MaxLeaseTimeSpan = TimeSpan.FromSeconds(3)
@@ -77,9 +79,18 @@ namespace kino.Tests.Consensus.Setup
 
         internal static IEnumerable<string> GetSynodMembers()
         {
-            yield return "tcp://127.0.0.1:3001";
-            yield return "tcp://127.0.0.1:3002";
-            yield return "tcp://127.0.0.1:3003";
+            return GetSynodMembers().ToList();
+
+            IEnumerable<string> GetSynodMembers()
+            {
+                yield return $"tcp://127.0.0.22:{portNumber++}";
+                yield return $"tcp://127.0.0.22:{portNumber++}";
+                yield return $"tcp://127.0.0.22:{portNumber++}";
+            }
+
+            //yield return "tcp://127.0.0.2:3001";
+            //yield return "tcp://127.0.0.2:3002";
+            //yield return "tcp://127.0.0.2:3003";
         }
     }
 }

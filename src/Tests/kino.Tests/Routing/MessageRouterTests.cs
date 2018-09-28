@@ -18,7 +18,7 @@ using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
 using NetMQ;
-using Xunit;
+using NUnit.Framework;
 using Health = kino.Cluster.Health;
 using MessageRoute = kino.Cluster.MessageRoute;
 
@@ -29,29 +29,30 @@ namespace kino.Tests.Routing
         private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(3000);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromMilliseconds(100);
-        private readonly Mock<ISocketFactory> socketFactory;
-        private readonly Mock<ILogger> logger;
-        private readonly Mock<IClusterHealthMonitor> clusterHealthMonitor;
-        private readonly Mock<IInternalMessageRouteRegistrationHandler> internalRegistrationHandler;
-        private readonly Mock<ILocalReceivingSocket<InternalRouteRegistration>> internalRegistrationsReceiver;
-        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private readonly Mock<IClusterServices> clusterServices;
-        private readonly Mock<IPerformanceCounterManager<KinoPerformanceCounters>> perfCounterManager;
-        private readonly Mock<ISecurityProvider> securityProvider;
-        private readonly Mock<ILocalSocket<IMessage>> localRouterSocket;
-        private MessageRouter messageRouter;
-        private readonly ManualResetEventSlim localRouterSocketWaitHandle;
-        private readonly ManualResetEventSlim internalRegistrationsReceiverWaitHandle;
-        private readonly Mock<ISocket> scaleOutSocket;
-        private readonly Mock<IPerformanceCounter> perfCounter;
-        private readonly Mock<IServiceMessageHandlerRegistry> serviceMessageHandlerRegistry;
-        private readonly Mock<IInternalRoutingTable> internalRoutingTable;
-        private readonly Mock<IExternalRoutingTable> externalRoutingTable;
-        private readonly SocketEndpoint localNodeEndpoint;
-        private readonly Mock<IClusterMonitor> clusterMonitor;
-        private readonly Mock<IRoundRobinDestinationList> roundRobinDestinationList;
+        private Mock<ISocketFactory> socketFactory;
+        private Mock<ILogger> logger;
+        private Mock<IClusterHealthMonitor> clusterHealthMonitor;
+        private Mock<IInternalMessageRouteRegistrationHandler> internalRegistrationHandler;
+        private Mock<ILocalReceivingSocket<InternalRouteRegistration>> internalRegistrationsReceiver;
+        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private Mock<IClusterServices> clusterServices;
+        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> perfCounterManager;
+        private Mock<ISecurityProvider> securityProvider;
+        private Mock<ILocalSocket<IMessage>> localRouterSocket;
 
-        public MessageRouterTests()
+        private MessageRouter messageRouter;
+
+        private Mock<ISocket> scaleOutSocket;
+        private Mock<IPerformanceCounter> perfCounter;
+        private Mock<IServiceMessageHandlerRegistry> serviceMessageHandlerRegistry;
+        private Mock<IInternalRoutingTable> internalRoutingTable;
+        private Mock<IExternalRoutingTable> externalRoutingTable;
+        private SocketEndpoint localNodeEndpoint;
+        private Mock<IClusterMonitor> clusterMonitor;
+        private Mock<IRoundRobinDestinationList> roundRobinDestinationList;
+
+        [SetUp]
+        public void Setup()
         {
             socketFactory = new Mock<ISocketFactory>();
             scaleOutSocket = new Mock<ISocket>();
@@ -68,11 +69,9 @@ namespace kino.Tests.Routing
             perfCounterManager.Setup(m => m.GetCounter(It.IsAny<KinoPerformanceCounters>())).Returns(perfCounter.Object);
             securityProvider = new Mock<ISecurityProvider>();
             localRouterSocket = new Mock<ILocalSocket<IMessage>>();
-            localRouterSocketWaitHandle = new ManualResetEventSlim(false);
-            localRouterSocket.Setup(m => m.CanReceive()).Returns(localRouterSocketWaitHandle.WaitHandle);
+            localRouterSocket.Setup(m => m.CanReceive()).Returns(new ManualResetEventSlim(false).WaitHandle);
             internalRegistrationsReceiver = new Mock<ILocalReceivingSocket<InternalRouteRegistration>>();
-            internalRegistrationsReceiverWaitHandle = new ManualResetEventSlim(false);
-            internalRegistrationsReceiver.Setup(m => m.CanReceive()).Returns(internalRegistrationsReceiverWaitHandle.WaitHandle);
+            internalRegistrationsReceiver.Setup(m => m.CanReceive()).Returns(new ManualResetEventSlim(false).WaitHandle);
             internalRegistrationHandler = new Mock<IInternalMessageRouteRegistrationHandler>();
             clusterHealthMonitor = new Mock<IClusterHealthMonitor>();
             clusterServices.Setup(m => m.GetClusterHealthMonitor()).Returns(clusterHealthMonitor.Object);
@@ -84,7 +83,7 @@ namespace kino.Tests.Routing
             messageRouter = CreateMessageRouter();
         }
 
-        [Fact]
+        [Test]
         public void StartMessageRouter_StartsClusterServices()
         {
             messageRouter.Start();
@@ -94,7 +93,7 @@ namespace kino.Tests.Routing
             scaleOutConfigurationProvider.Verify(m => m.GetScaleOutAddress(), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void WhenMessageRouterStarts_SocketWaitHandlesAreRetreived()
         {
             messageRouter.Start();
@@ -104,7 +103,7 @@ namespace kino.Tests.Routing
             internalRegistrationsReceiver.Verify(m => m.CanReceive(), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void WhenMessageRouterStarts_ScaleOutBackendSocketIsCreated()
         {
             messageRouter.Start();
@@ -113,44 +112,55 @@ namespace kino.Tests.Routing
             socketFactory.Verify(m => m.CreateRouterSocket(), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfLocalRouterSocketIsReadyToReceive_ItsTryReceiveMethodIsCalled()
         {
+            internalRegistrationsReceiver.Setup(m => m.CanReceive())
+                                         .Returns(new ManualResetEventSlim(false).WaitHandle);
+            var canReceiveWait = new ManualResetEventSlim(true);
+            var tryReceiveWait = new ManualResetEventSlim(false);
+            localRouterSocket.Setup(m => m.CanReceive())
+                             .Returns(() => canReceiveWait.WaitHandle);
             localRouterSocket.Setup(m => m.TryReceive())
-                             .Returns(() =>
-                                      {
-                                          localRouterSocketWaitHandle.Reset();
-                                          return null;
-                                      });
+                             .Returns(() => null)
+                             .Callback(() =>
+                                       {
+                                           tryReceiveWait.Set();
+                                           canReceiveWait.Reset();
+                                       });
             messageRouter.Start();
             //
-            localRouterSocketWaitHandle.Set();
-            AsyncOpCompletionDelay.Sleep();
+            tryReceiveWait.Wait();
             messageRouter.Stop();
             //
             localRouterSocket.Verify(m => m.TryReceive(), Times.Once);
             internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Never);
         }
 
-        [Fact]
-        public void IfInternalRegistrationsReceiverIsReadyToReceive_ItsTryReceiveMethidIsCalled()
+        [Test]
+        public void IfInternalRegistrationsReceiverIsReadyToReceive_ItsTryReceiveMethodIsCalled()
         {
+            var canRecieveWait = new ManualResetEventSlim(true);
+            var tryRecieveWait = new ManualResetEventSlim(false);
+            internalRegistrationsReceiver.Setup(m => m.CanReceive())
+                                         .Returns(() => canRecieveWait.WaitHandle);
             internalRegistrationsReceiver.Setup(m => m.TryReceive())
-                                         .Returns(() =>
-                                                  {
-                                                      internalRegistrationsReceiverWaitHandle.Reset();
-                                                      return null;
-                                                  });
+                                         .Returns(() => null)
+                                         .Callback(() =>
+                                                   {
+                                                       tryRecieveWait.Set();
+                                                       canRecieveWait.Reset();
+                                                   });
             messageRouter.Start();
             //
-            internalRegistrationsReceiverWaitHandle.Set();
+            tryRecieveWait.Wait();
             messageRouter.Stop();
             //
             internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Once);
             localRouterSocket.Verify(m => m.TryReceive(), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void ReceivedOverLocalRouterSocketMessage_AlwaysPassedToServiceMessageHandlers()
         {
             var message = Message.Create(new SimpleMessage());
@@ -163,7 +173,7 @@ namespace kino.Tests.Routing
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfLocalRouterSocketReceivesNullMessage_ServiceMessageHandlersAreNotCalled()
         {
             localRouterSocket.SetupMessageReceived(null, ReceiveMessageDelay);
@@ -175,7 +185,7 @@ namespace kino.Tests.Routing
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.IsAny<MessageIdentifier>()), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void IfMessageProcessedByServiceMessageHandler_InternalRoutingTableIsNotLookedUp()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object);
@@ -192,48 +202,57 @@ namespace kino.Tests.Routing
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfInternalRegistrationMessageIsReceived_InternalRegistrationHandlerIsCalled()
         {
             var internalRouteRegistration = new InternalRouteRegistration();
+            var canReceiveWait = new ManualResetEvent(true);
+            var tryReceiveWait = new ManualResetEvent(false);
+            internalRegistrationsReceiver.Setup(m => m.CanReceive())
+                                         .Returns(() => new ManualResetEventSlim(true).WaitHandle);
             internalRegistrationsReceiver.Setup(m => m.TryReceive())
-                                         .Returns(() =>
-                                                  {
-                                                      internalRegistrationsReceiverWaitHandle.Reset();
-                                                      return internalRouteRegistration;
-                                                  });
+                                         .Returns(() => internalRouteRegistration)
+                                         .Callback(() =>
+                                                   {
+                                                       tryReceiveWait.Set();
+                                                       canReceiveWait.Reset();
+                                                   });
             messageRouter.Start();
             //
-            internalRegistrationsReceiverWaitHandle.Set();
-            AsyncOpCompletionDelay.Sleep();
+            tryReceiveWait.WaitOne();
             messageRouter.Stop();
             //
-            internalRegistrationHandler.Verify(m => m.Handle(internalRouteRegistration), Times.Once);
+            internalRegistrationHandler.Verify(m => m.Handle(internalRouteRegistration), Times.AtLeastOnce);
         }
 
-        [Fact]
+        [Test]
         public void IfInternalRegistrationMessageIsNull_InternalRegistrationHandlerIsNotCalled()
         {
             var internalRouteRegistration = new InternalRouteRegistration();
+            var canReceiveWait = new ManualResetEventSlim(true);
+            var tryReceiveWait = new ManualResetEventSlim(false);
+            internalRegistrationsReceiver.Setup(m => m.CanReceive())
+                                         .Returns(() => canReceiveWait.WaitHandle);
             internalRegistrationsReceiver.Setup(m => m.TryReceive())
-                                         .Returns(() =>
-                                                  {
-                                                      internalRegistrationsReceiverWaitHandle.Reset();
-                                                      return null;
-                                                  });
+                                         .Returns(() => null)
+                                         .Callback(() =>
+                                                   {
+                                                       canReceiveWait.Reset();
+                                                       tryReceiveWait.Set();
+                                                   });
             messageRouter.Start();
             //
-            internalRegistrationsReceiverWaitHandle.Set();
+            tryReceiveWait.Wait();
             messageRouter.Stop();
             //
             internalRegistrationHandler.Verify(m => m.Handle(internalRouteRegistration), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void IfMessageIsNotProcessedByServiceMessageHandler_InternalRoutingTableIsLookedUp()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object);
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(message)).Returns((IServiceMessageHandler) null);
             //
@@ -245,7 +264,7 @@ namespace kino.Tests.Routing
             serviceMessageHandlerRegistry.Verify(m => m.GetMessageHandler(It.Is<MessageIdentifier>(id => id.Equals(message))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfMessageCameFromLocalActor_ItIsCloned()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object);
@@ -264,7 +283,7 @@ namespace kino.Tests.Routing
             localSocket.Verify(m => m.Send(It.Is<IMessage>(msg => !ReferenceEquals(msg, message))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfMessageCameFromOtherNode_ItIsNotCloned()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object);
@@ -272,7 +291,7 @@ namespace kino.Tests.Routing
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             message.AddHop();
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
@@ -283,7 +302,7 @@ namespace kino.Tests.Routing
             localSocket.Verify(m => m.Send(It.Is<IMessage>(msg => ReferenceEquals(msg, message))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void BroadcastMessageFromLocalActor_IsSentToLocalAndRemoteActors()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
@@ -291,7 +310,7 @@ namespace kino.Tests.Routing
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-            var message = Message.Create(new SimpleMessage(), DistributionPattern.Broadcast).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage(), DistributionPattern.Broadcast));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
             messageRouter.Start();
@@ -302,7 +321,7 @@ namespace kino.Tests.Routing
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void BroadcastMessageFromRemoteActor_IsSentOnlyToLocalActors()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
@@ -310,7 +329,7 @@ namespace kino.Tests.Routing
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-            var message = Message.Create(new SimpleMessage(), DistributionPattern.Broadcast).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage(), DistributionPattern.Broadcast));
             message.AddHop();
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
@@ -322,7 +341,7 @@ namespace kino.Tests.Routing
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void IfMessageReceiverNodeIdentitySetToLocalNodeIdentity_MessageIsRoutedInternally()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
@@ -330,7 +349,7 @@ namespace kino.Tests.Routing
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             message.SetReceiverNode(new ReceiverIdentifier(localNodeEndpoint.Identity));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
@@ -342,16 +361,16 @@ namespace kino.Tests.Routing
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void IfForMessageInternalAndExternalRoutesExist_FinalDestinationIsSelectedRoundRobin()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
             var localSocket = new Mock<ILocalSocket<IMessage>>();
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
-            internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(new[] { localSocket.Object });
-            var peerConnection = new PeerConnection { Node = new Node("tcp://127.0.0.1:9009", new ReceiverIdentifier(Guid.NewGuid().ToByteArray()).Identity) };
-            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] { peerConnection });
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(new[] {localSocket.Object});
+            var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", new ReceiverIdentifier(Guid.NewGuid().ToByteArray()).Identity)};
+            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] {peerConnection});
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
             messageRouter.Start();
@@ -363,7 +382,7 @@ namespace kino.Tests.Routing
             roundRobinDestinationList.Verify(m => m.SelectNextDestination(localSocket.Object, peerConnection.Node), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfMessageReceiverNodeIdentitySetToRemoteNodeIdentity_MessageIsSentToThatNode()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object, externalRoutingTable.Object);
@@ -371,7 +390,7 @@ namespace kino.Tests.Routing
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             message.SetReceiverNode(otherNode);
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity)};
@@ -388,11 +407,11 @@ namespace kino.Tests.Routing
             scaleOutSocket.Verify(m => m.SendMessage(message));
         }
 
-        [Fact]
+        [Test]
         public void IfScaleOutSocketWasNotConnectedToRemoteNode_ConnectionIsEstablished()
         {
             messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             var otherNodeIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             var otherNode = new Node("tcp://127.0.0.1:9009", otherNodeIdentifier.Identity);
             var peerConnection = new PeerConnection
@@ -417,11 +436,11 @@ namespace kino.Tests.Routing
             Assert.True(peerConnection.Connected);
         }
 
-        [Fact]
+        [Test]
         public void IfScaleOutBackendSocketSendMessageThrowsTimeoutException_ConnectivityCheckIsScheduled()
         {
             messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             message.SetReceiverNode(otherNode);
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity)};
@@ -436,11 +455,11 @@ namespace kino.Tests.Routing
             clusterHealthMonitor.Verify(m => m.ScheduleConnectivityCheck(It.Is<ReceiverIdentifier>(id => Unsafe.ArraysEqual(id.Identity, peerConnection.Node.SocketIdentity))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfScaleOutBackendSocketSendMessageThrowsHostUnreachableException_UnreachableNodeIsUnregistered()
         {
             messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             message.SetReceiverNode(otherNode);
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity)};
@@ -460,10 +479,10 @@ namespace kino.Tests.Routing
             serviceMessageHandler.Verify(m => m.Handle(unregMessage, scaleOutSocket.Object));
         }
 
-        [Fact]
+        [Test]
         public void IfMessageIsUnhandled_RequestToDiscoverUnhandledMessageRouteIsSent()
         {
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
             //
@@ -474,14 +493,14 @@ namespace kino.Tests.Routing
             clusterMonitor.Verify(m => m.DiscoverMessageRoute(It.Is<MessageRoute>(mr => mr.Message.Equals(message))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfMessageIsNotHandledLocaly_ItIsForwardedAway()
         {
             messageRouter = CreateMessageRouter(externalRoutingTable: externalRoutingTable.Object);
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
-            var peerConnection = new PeerConnection { Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity) };
-            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] { peerConnection });
+            var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity)};
+            externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] {peerConnection});
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
             messageRouter.Start();
@@ -491,10 +510,10 @@ namespace kino.Tests.Routing
             scaleOutSocket.Verify(m => m.SendMessage(message));
         }
 
-        [Fact]
+        [Test]
         public void IfMessageFromRemoteActorIsUnhandled_NodeUnregistersSelfFromHandlingThisMesssage()
         {
-            var message = Message.Create(new SimpleMessage()).As<Message>();
+            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             message.AddHop();
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<HostUnreachableException>();

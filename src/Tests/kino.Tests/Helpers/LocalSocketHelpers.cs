@@ -46,11 +46,10 @@ namespace kino.Tests.Helpers
             var delaySend = receiveAfter != TimeSpan.Zero;
             var waitHandle = new AutoResetEvent(!delaySend);
             mock.Setup(m => m.CanReceive()).Returns(waitHandle);
-            mock.Setup(m => m.TryReceive()).Returns(() =>
-                                                    {
-                                                        waitHandle.Reset();
-                                                        return messageIn;
-                                                    });
+            mock.Setup(m => m.TryReceive())
+                .Returns(() => messageIn)
+                .Callback(() => waitHandle.Reset());
+
             if (delaySend)
             {
                 Task.Delay(receiveAfter).ContinueWith(_ => waitHandle.Set());

@@ -1,24 +1,24 @@
 ﻿using System.Collections.Generic;
-using FluentAssertions;
 using kino.Cluster.Configuration;
 using kino.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Cluster.Configuration
 {
     public class RendezvousClusterConfigurationReadonlyStorageTests
     {
-        private readonly RendezvousClusterConfigurationReadonlyStorage configStorage;
-        private readonly IEnumerable<RendezvousEndpoint> initialConfiguration;
+        private RendezvousClusterConfigurationReadonlyStorage configStorage;
+        private IEnumerable<RendezvousEndpoint> initialConfiguration;
 
-        public RendezvousClusterConfigurationReadonlyStorageTests()
+        [SetUp]
+        public void Setup()
         {
             initialConfiguration = Randomizer.Int32(3, 6)
                                              .Produce(i => new RendezvousEndpoint($"tcp://*:808{i}", $"tcp://*:909{i}"));
             configStorage = new RendezvousClusterConfigurationReadonlyStorage(initialConfiguration);
         }
 
-        [Fact]
+        [Test]
         public void Update_RemovesAllPreviousRendezvousEndpointsAndAddsNewOnes()
         {
             var config = new RendezvousClusterConfiguration
@@ -26,11 +26,11 @@ namespace kino.Tests.Cluster.Configuration
                              Cluster = Randomizer.Int32(3, 6)
                                                  .Produce(i => new RendezvousEndpoint($"tcp://*:8{i}80", $"tcp://*:9{i}90"))
                          };
-            initialConfiguration.Should().BeEquivalentTo(configStorage.Read().Cluster);
+            CollectionAssert.AreEquivalent(initialConfiguration, configStorage.Read().Cluster);
             //
             configStorage.Update(config);
             //
-            config.Cluster.Should().BeEquivalentTo(configStorage.Read().Cluster);
+            CollectionAssert.AreEquivalent(config.Cluster, configStorage.Read().Cluster);
         }
     }
 }

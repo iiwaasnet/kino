@@ -6,13 +6,11 @@ using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Configuration;
 using kino.Connectivity;
+using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Routing;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
-#if NET47
-using kino.Core.Diagnostics.Performance;
-#endif
 
 namespace Autofac.kino
 {
@@ -29,12 +27,10 @@ namespace Autofac.kino
             builder.RegisterType<InstanceNameResolver>()
                    .As<IInstanceNameResolver>()
                    .SingleInstance();
-
+#endif
             builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
                    .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
                    .SingleInstance();
-#else //TODO: Declare implementation for .NET Standard
-#endif
 
             builder.RegisterType<LocalSocketFactory>()
                    .As<ILocalSocketFactory>()

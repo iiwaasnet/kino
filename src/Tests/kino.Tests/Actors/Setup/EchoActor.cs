@@ -9,21 +9,32 @@ namespace kino.Tests.Actors.Setup
         [MessageHandlerDefinition(typeof(SimpleMessage))]
         private async Task<IActorResult> Process(IMessage messageIn)
         {
-            return new ActorResult(messageIn);
+            var messageOut = Message.Create(new SimpleMessage
+                                            {
+                                                Content = messageIn.GetPayload<SimpleMessage>().Content,
+                                                Partition = messageIn.Partition
+                                            },
+                                            messageIn.Distribution);
+
+            return new ActorResult(messageOut);
         }
 
         [MessageHandlerDefinition(typeof(AsyncMessage))]
         private async Task<IActorResult> AsyncProcess(IMessage messageIn)
         {
             var delay = messageIn.GetPayload<AsyncMessage>().Delay;
+            var messageOut = Message.Create(new AsyncMessage
+                                            {
+                                                Delay = delay,
+                                                Partition = messageIn.Partition
+                                            },
+                                            messageIn.Distribution);
 
-            return new ActorResult(await Task.Delay(delay).ContinueWith(_ => messageIn).ConfigureAwait(false));
+            return new ActorResult(await Task.Delay(delay).ContinueWith(_ => messageOut).ConfigureAwait(false));
         }
 
         [MessageHandlerDefinition(typeof(LocalMessage), keepRegistrationLocal: true)]
         private async Task<IActorResult> ProcessLocalMessage(IMessage messageIn)
-        {
-            return null;
-        }
+            => null;
     }
 }

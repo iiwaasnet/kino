@@ -7,37 +7,37 @@ using kino.Messaging;
 using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
-using Xunit;
-using CollectionAssert = FluentAssertions.AssertionExtensions;
+using NUnit.Framework;
 
 namespace kino.Tests.Messaging
 {
     public class MessageTests
     {
-        private readonly ISecurityProvider securityProvider;
+        private ISecurityProvider securityProvider;
 
-        public MessageTests()
+        [SetUp]
+        public void Setup()
             => securityProvider = new SecurityProvider(HMACMD5.Create, new DomainScopeResolver(), new DomainPrivateKeyProvider());
 
-        [Fact]
+        [Test]
         public void FlowStartMessage_HasCorrelationIdSet()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
             Assert.NotNull(message.CorrelationId);
-            Assert.NotEmpty(message.CorrelationId);
+            CollectionAssert.IsNotEmpty(message.CorrelationId);
         }
 
-        [Fact]
+        [Test]
         public void Message_HasVersionSet()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
             Assert.NotNull(message.Version);
-            Assert.Equal(Message.CurrentVersion, message.Version);
+            Assert.AreEqual(Message.CurrentVersion, message.Version);
         }
 
-        [Fact]
+        [Test]
         public void Message_HasIdentitySet()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
@@ -46,37 +46,37 @@ namespace kino.Tests.Messaging
             Assert.True(message.Equals(MessageIdentifier.Create<SimpleMessage>()));
         }
 
-        [Fact]
+        [Test]
         public void Message_HasDistributionPatternSet()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
-            Assert.Contains(message.Distribution, Enum.GetValues(typeof(DistributionPattern)).OfType<DistributionPattern>());
+            CollectionAssert.Contains(Enum.GetValues(typeof(DistributionPattern)).OfType<DistributionPattern>(), message.Distribution);
         }
 
-        [Fact]
-        public void Message_HasInitialyZeroHops()
+        [Test]
+        public void Message_HasInitiallyZeroHops()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
 
-            Assert.Equal(0, message.Hops);
+            Assert.AreEqual(0, message.Hops);
         }
 
-        [Fact]
+        [Test]
         public void AddHop_IncreasesHopsCountByOne()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage());
             var hopsCount = 0;
-            Assert.Equal(hopsCount, message.Hops);
+            Assert.AreEqual(hopsCount, message.Hops);
 
             ((Message) message).AddHop();
-            Assert.Equal(++hopsCount, message.Hops);
+            Assert.AreEqual(++hopsCount, message.Hops);
 
             ((Message) message).AddHop();
-            Assert.Equal(++hopsCount, message.Hops);
+            Assert.AreEqual(++hopsCount, message.Hops);
         }
 
-        [Fact]
+        [Test]
         public void PushRouterAddress_AddsOneRouterAddress()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
@@ -91,12 +91,12 @@ namespace kino.Tests.Messaging
                 message.PushRouterAddress(socketEndpoint);
             }
 
-            CollectionAssert.Should(socketEnpoints).BeEquivalentTo(message.GetMessageRouting());
+            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
         }
 
-        [Theory]
-        [InlineData(MessageTraceOptions.Routing)]
-        [InlineData(MessageTraceOptions.None)]
+        [Test]
+        [TestCase(MessageTraceOptions.Routing)]
+        [TestCase(MessageTraceOptions.None)]
         public void RouterAddress_AlwaysAddedToMessageHops(MessageTraceOptions traceOptions)
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
@@ -110,20 +110,20 @@ namespace kino.Tests.Messaging
             {
                 message.PushRouterAddress(socketEndpoint);
             }
-            CollectionAssert.Should(socketEnpoints).BeEquivalentTo(message.GetMessageRouting());
+            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
         }
 
-        [Fact]
+        [Test]
         public void MessageRouting_IsConsistentlyTransferredViaMultipartMessage()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = MessageTraceOptions.Routing;
-            var socketEnpoints = new[]
-                                 {
-                                     new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
-                                     new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray())
-                                 };
-            foreach (var socketEndpoint in socketEnpoints)
+            var socketEndpoints = new[]
+                                  {
+                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
+                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray())
+                                  };
+            foreach (var socketEndpoint in socketEndpoints)
             {
                 message.PushRouterAddress(socketEndpoint);
             }
@@ -131,10 +131,10 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            CollectionAssert.Should(socketEnpoints).BeEquivalentTo(message.GetMessageRouting());
+            CollectionAssert.AreEquivalent(socketEndpoints, message.GetMessageRouting());
         }
 
-        [Fact]
+        [Test]
         public void CorrelationId_IsConsistentlyTransferredViaMultipartMessage()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
@@ -144,10 +144,10 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Equal(correlationId, message.CorrelationId);
+            Assert.AreEqual(correlationId, message.CorrelationId);
         }
 
-        [Fact]
+        [Test]
         public void ReceiverNode_IsConsistentlyTransferredViaMultipartMessage()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
@@ -157,10 +157,10 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Equal(receiverNode.Identity, message.ReceiverNodeIdentity);
+            Assert.AreEqual(receiverNode.Identity, message.ReceiverNodeIdentity);
         }
 
-        [Fact]
+        [Test]
         public void MessageContent_IsConsistentlyTransferredViaMultipartMessage()
         {
             var messageText = Guid.NewGuid().ToString();
@@ -169,11 +169,11 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Equal(messageText, message.GetPayload<SimpleMessage>().Content);
+            Assert.AreEqual(messageText, message.GetPayload<SimpleMessage>().Content);
             Assert.True(message.Equals(MessageIdentifier.Create<SimpleMessage>()));
         }
 
-        [Fact]
+        [Test]
         public void RegisteringCallbackPoint_SetsCallbackIdentityAndCallbackReceiverIdentity()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
@@ -192,13 +192,13 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Contains(callbackMessageIdentifier, message.CallbackPoint);
-            Assert.Equal(callbackReceiverIdentity, message.CallbackReceiverIdentity);
-            Assert.Equal(callbackReceiverNodeIdentity, message.CallbackReceiverNodeIdentity);
-            Assert.Empty(message.ReceiverIdentity);
+            CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifier);
+            Assert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
+            Assert.AreEqual(callbackReceiverNodeIdentity, message.CallbackReceiverNodeIdentity);
+            CollectionAssert.IsEmpty(message.ReceiverIdentity);
         }
 
-        [Fact]
+        [Test]
         public void IfCallbackIdentityIsEqualToMessageIdentity_ReceiverIdentitiesAreSetToCallbackReceiverIdentities()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
@@ -216,16 +216,16 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Contains(callbackMessageIdentifier, message.CallbackPoint);
-            Assert.Equal(callbackReceiverIdentity, message.CallbackReceiverIdentity);
-            Assert.Equal(callbackReceiverIdentity, message.ReceiverIdentity);
-            Assert.Equal(callbackReceiverNodeIdentity, message.CallbackReceiverNodeIdentity);
-            Assert.Equal(callbackReceiverNodeIdentity, message.ReceiverNodeIdentity);
+            CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifier);
+            Assert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
+            Assert.AreEqual(callbackReceiverIdentity, message.ReceiverIdentity);
+            Assert.AreEqual(callbackReceiverNodeIdentity, message.CallbackReceiverNodeIdentity);
+            Assert.AreEqual(callbackReceiverNodeIdentity, message.ReceiverNodeIdentity);
         }
 
-        [Theory]
-        [InlineData(DistributionPattern.Broadcast)]
-        [InlineData(DistributionPattern.Unicast)]
+        [Test]
+        [TestCase(DistributionPattern.Broadcast)]
+        [TestCase(DistributionPattern.Unicast)]
         public void MessageDistribution_IsConsistentlyTransferredViaMultipartMessage(DistributionPattern distributionPattern)
         {
             var message = Message.Create(new SimpleMessage(), distributionPattern).As<Message>();
@@ -233,10 +233,10 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Equal(distributionPattern, message.Distribution);
+            Assert.AreEqual(distributionPattern, message.Distribution);
         }
 
-        [Fact]
+        [Test]
         public void MessagePartition_IsConsistentlyTransferredViaMultipartMessage()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage
@@ -251,7 +251,7 @@ namespace kino.Tests.Messaging
             Assert.True(Unsafe.ArraysEqual(partition, message.Partition));
         }
 
-        [Fact]
+        [Test]
         public void MessageHops_AreConsistentlyTransferredViaMultipartMessage()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
@@ -262,26 +262,26 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Equal(hops, message.Hops);
+            Assert.AreEqual(hops, message.Hops);
         }
 
-        [Fact]
+        [Test]
         public void MessageWireFormatVersion_IsConsistentlyTransferredViaMultipartMessage()
         {
             const int wireMessageFormat = 5;
 
             var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
-            Assert.Equal(wireMessageFormat, message.WireFormatVersion);
+            Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
 
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Equal(wireMessageFormat, message.WireFormatVersion);
+            Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
         }
 
-        [Theory]
-        [InlineData(MessageTraceOptions.None)]
-        [InlineData(MessageTraceOptions.Routing)]
+        [Test]
+        [TestCase(MessageTraceOptions.None)]
+        [TestCase(MessageTraceOptions.Routing)]
         public void MessageTraceOptions_IsConsistentlyTransferredViaMultipartMessage(MessageTraceOptions routeOptions)
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
@@ -290,10 +290,10 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Equal(routeOptions, message.TraceOptions);
+            Assert.AreEqual(routeOptions, message.TraceOptions);
         }
 
-        [Fact]
+        [Test]
         public void MessageTTL_IsConsistentlyTransferredViaMultipartMessage()
         {
             var ttl = TimeSpan.FromSeconds(Randomizer.Int32(2, 60));
@@ -303,10 +303,10 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Equal(ttl, message.TTL);
+            Assert.AreEqual(ttl, message.TTL);
         }
 
-        [Fact]
+        [Test]
         public void SecurityDomain_IsConsistentlyTransferredViaMultipartMessage()
         {
             var securityDomain = Guid.NewGuid().ToString();
@@ -316,10 +316,10 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Equal(securityDomain, message.Domain);
+            Assert.AreEqual(securityDomain, message.Domain);
         }
 
-        [Fact]
+        [Test]
         public void CallbackKey_IsConsistentlyTransferredViaMultipartMessage()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
@@ -332,10 +332,10 @@ namespace kino.Tests.Messaging
             var multipart = new MultipartMessage(message);
             message = Message.FromMultipartMessage(multipart);
 
-            Assert.Equal(callbackKey, message.CallbackKey);
+            Assert.AreEqual(callbackKey, message.CallbackKey);
         }
 
-        [Fact]
+        [Test]
         public void MessageSignature_IsConsistentlyTransferredViaMultipartMessage()
         {
             var simpleMessage = new SimpleMessage();
@@ -350,7 +350,7 @@ namespace kino.Tests.Messaging
             message.VerifySignature(securityProvider);
         }
 
-        [Fact]
+        [Test]
         public void CallbackTriggeresForEveryMessageInCallbackPoint()
         {
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
@@ -374,7 +374,7 @@ namespace kino.Tests.Messaging
                                               callbackReceiverIdentity,
                                               callbackMessageIdentifier,
                                               Randomizer.Int32());
-                Assert.Equal(callbackReceiverIdentity, message.CallbackReceiverIdentity);
+                Assert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
             }
         }
     }

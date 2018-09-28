@@ -72,16 +72,21 @@ namespace kino.Actors
 
         public void Start()
         {
-            cancellationTokenSource = new CancellationTokenSource();
-            registrationsProcessing = Task.Factory.StartNew(_ => SafeExecute(() => RegisterActors(cancellationTokenSource.Token)),
-                                                            cancellationTokenSource.Token,
-                                                            TaskCreationOptions.LongRunning);
-            syncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessRequests(cancellationTokenSource.Token)),
-                                                   cancellationTokenSource.Token,
-                                                   TaskCreationOptions.LongRunning);
-            asyncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessAsyncResponses(cancellationTokenSource.Token)),
-                                                    cancellationTokenSource.Token,
-                                                    TaskCreationOptions.LongRunning);
+            using (var barrier = new Barrier(2))
+            {
+                cancellationTokenSource = new CancellationTokenSource();
+                registrationsProcessing = Task.Factory.StartNew(_ => SafeExecute(() => RegisterActors(cancellationTokenSource.Token)),
+                                                                cancellationTokenSource.Token,
+                                                                TaskCreationOptions.LongRunning);
+                syncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessRequests(cancellationTokenSource.Token, barrier)),
+                                                       cancellationTokenSource.Token,
+                                                       TaskCreationOptions.LongRunning);
+                asyncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessAsyncResponses(cancellationTokenSource.Token)),
+                                                        cancellationTokenSource.Token,
+                                                        TaskCreationOptions.LongRunning);
+
+                barrier.SignalAndWait(cancellationTokenSource.Token);
+            }
         }
 
         public void Stop()
@@ -133,7 +138,7 @@ namespace kino.Actors
             internalRegistrationsSender.Send(routeReg);
         }
 
-        private void ProcessRequests(CancellationToken token)
+        private void ProcessRequests(CancellationToken token, Barrier barrier)
         {
             try
             {
@@ -142,6 +147,8 @@ namespace kino.Actors
                                       receivingSocket.CanReceive(),
                                       token.WaitHandle
                                   };
+                barrier.SignalAndWait(token);
+
                 while (!token.IsCancellationRequested)
                 {
                     try
@@ -202,10 +209,13 @@ namespace kino.Actors
                         foreach (var messageOut in messageContext.OutMessages.Cast<Message>())
                         {
                             messageOut.SetDomain(securityProvider.GetDomain(messageOut.Identity));
-                            messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverNodeIdentity,
-                                                             messageContext.CallbackReceiverIdentity,
-                                                             messageContext.CallbackPoint,
-                                                             messageContext.CallbackKey);
+                            if (messageOut.Distribution == DistributionPattern.Unicast)
+                            {
+                                messageOut.RegisterCallbackPoint(messageContext.CallbackReceiverNodeIdentity,
+                                                                 messageContext.CallbackReceiverIdentity,
+                                                                 messageContext.CallbackPoint,
+                                                                 messageContext.CallbackKey);
+                            }
                             messageOut.SetCorrelationId(messageContext.CorrelationId);
                             messageOut.CopyMessageRouting(messageContext.MessageHops);
                             messageOut.TraceOptions |= messageContext.TraceOptions;
@@ -240,10 +250,13 @@ namespace kino.Actors
                     foreach (var messageOut in response.Cast<Message>())
                     {
                         messageOut.SetDomain(securityProvider.GetDomain(messageOut.Identity));
-                        messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
-                                                         messageIn.CallbackReceiverIdentity,
-                                                         messageIn.CallbackPoint,
-                                                         messageIn.CallbackKey);
+                        if (messageOut.Distribution == DistributionPattern.Unicast)
+                        {
+                            messageOut.RegisterCallbackPoint(messageIn.CallbackReceiverNodeIdentity,
+                                                             messageIn.CallbackReceiverIdentity,
+                                                             messageIn.CallbackPoint,
+                                                             messageIn.CallbackKey);
+                        }
                         messageOut.SetCorrelationId(messageIn.CorrelationId);
                         messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
                         messageOut.TraceOptions |= messageIn.TraceOptions;
@@ -304,7 +317,8 @@ namespace kino.Actors
                 var message = Message.Create(new ExceptionMessage
                                              {
                                                  Exception = new OperationCanceledException()
-                                             }).As<Message>();
+                                             })
+                                     .As<Message>();
                 message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
                 return new ActorResult(message);
             }

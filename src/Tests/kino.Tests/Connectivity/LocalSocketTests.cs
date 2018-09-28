@@ -4,17 +4,18 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Tests.Helpers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Connectivity
 {
     public class LocalSocketTests
     {
-        private readonly LocalSocket<IMessage> socket;
-        private readonly Mock<IPerformanceCounter> receivingRate;
-        private readonly Mock<IPerformanceCounter> sendingRate;
+        private LocalSocket<IMessage> socket;
+        private Mock<IPerformanceCounter> receivingRate;
+        private Mock<IPerformanceCounter> sendingRate;
 
-        public LocalSocketTests()
+        [SetUp]
+        public void Setup()
         {
             sendingRate = new Mock<IPerformanceCounter>();
             receivingRate = new Mock<IPerformanceCounter>();
@@ -25,7 +26,7 @@ namespace kino.Tests.Connectivity
                      };
         }
 
-        [Fact]
+        [Test]
         public void WhenSendIsCalled_SendingRatePerformanceCounterIsIncremented()
         {
             var times = Randomizer.Int32(3, 5);
@@ -38,7 +39,7 @@ namespace kino.Tests.Connectivity
             receivingRate.Verify(m => m.Increment(1), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void WhenTryReceiveIsCalled_ReceivingRatePerformanceCounterIsIncremented()
         {
             var times = Randomizer.Int32(3, 5);

@@ -13,7 +13,7 @@ using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
 using kino.Tests.Helpers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 using Health = kino.Messaging.Messages.Health;
 using MessageContract = kino.Messaging.Messages.MessageContract;
 
@@ -21,15 +21,16 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
 {
     public class ExternalMessageRouteRegistrationHandlerTests
     {
-        private readonly Mock<ILogger> logger;
-        private readonly Mock<ISecurityProvider> securityProvider;
-        private readonly string domain;
-        private readonly Mock<IExternalRoutingTable> externalRoutingTable;
-        private readonly ExternalMessageRouteRegistrationHandler handler;
-        private readonly Mock<ISocket> socket;
-        private readonly Mock<IClusterHealthMonitor> clusterHealthMonitor;
+        private Mock<ILogger> logger;
+        private Mock<ISecurityProvider> securityProvider;
+        private string domain;
+        private Mock<IExternalRoutingTable> externalRoutingTable;
+        private ExternalMessageRouteRegistrationHandler handler;
+        private Mock<ISocket> socket;
+        private Mock<IClusterHealthMonitor> clusterHealthMonitor;
 
-        public ExternalMessageRouteRegistrationHandlerTests()
+        [SetUp]
+        public void Setup()
         {
             logger = new Mock<ILogger>();
             socket = new Mock<ISocket>();
@@ -52,7 +53,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                                   logger.Object);
         }
 
-        [Fact]
+        [Test]
         public void PeerAddedToClusterHealthMonitor_OnlyOnce()
         {
             var payload = CreateRegisterExternalMessageRoutePayload();
@@ -66,7 +67,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             clusterHealthMonitor.Verify(m => m.AddPeer(It.Is<Node>(p => isThisPeer(p)), It.IsAny<kino.Cluster.Health>()), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfDomainIsAllowed_AllRoutesAreAdded()
         {
             var payload = CreateRegisterExternalMessageRoutePayload();
@@ -93,7 +94,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             externalRoutingTable.Verify(m => m.AddMessageRoute(It.Is<ExternalRouteRegistration>(er => thisMessageHub(er))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfRegistrationDomainIsNotAllowed_RoutesAreNotAdded()
         {
             var payload = CreateRegisterExternalMessageRoutePayload();
@@ -107,7 +108,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             clusterHealthMonitor.Verify(m => m.AddPeer(It.IsAny<Node>(), It.IsAny<kino.Cluster.Health>()), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void IfMessageDomainIsNotEqualToRegistrationDomain_MessageRouteIsNotAdded()
         {
             var payload = CreateRegisterExternalMessageRoutePayload();

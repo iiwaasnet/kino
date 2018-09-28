@@ -13,22 +13,23 @@ using kino.Messaging;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Consensus
 {
     public class IntercomMessageHubTests
     {
         private IntercomMessageHub messageHub;
-        private readonly Mock<ISocketFactory> socketFactory;
-        private readonly Mock<ISynodConfigurationProvider> synodConfigProvider;
-        private readonly Mock<IPerformanceCounterManager<KinoPerformanceCounters>> perfCounterManager;
-        private readonly Mock<IPerformanceCounter> perfCounter;
-        private readonly Mock<ILogger> logger;
-        private readonly Mock<ISocket> publisherSocket;
-        private readonly Mock<ISocket> subscriberSocket;
+        private Mock<ISocketFactory> socketFactory;
+        private Mock<ISynodConfigurationProvider> synodConfigProvider;
+        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> perfCounterManager;
+        private Mock<IPerformanceCounter> perfCounter;
+        private Mock<ILogger> logger;
+        private Mock<ISocket> publisherSocket;
+        private Mock<ISocket> subscriberSocket;
 
-        public IntercomMessageHubTests()
+        [SetUp]
+        public void Setup()
         {
             socketFactory = new Mock<ISocketFactory>();
             publisherSocket = new Mock<ISocket>();
@@ -55,18 +56,18 @@ namespace kino.Tests.Consensus
                                                 logger.Object);
         }
 
-        [Fact]
+        [Test]
         public void IfSynodConsistsOfMoreThanOneNode_HeartBeatingIsStarted()
         {
             messageHub.Start(TimeSpan.FromSeconds(3));
             synodConfigProvider.Object.HeartBeatInterval.MultiplyBy(2).Sleep();
             messageHub.Stop();
             //
-            Assert.InRange(synodConfigProvider.Object.Synod.Count(), 2, Int32.MaxValue);
+            Assert.That(synodConfigProvider.Object.Synod.Count(), Is.InRange(2, Int32.MaxValue));
             publisherSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(MessageIdentifier.Create<HeartBeatMessage>()))), Times.AtLeast(1));
         }
 
-        [Fact]
+        [Test]
         public void IfSynodConsistsOfOneNode_NoHeartBeatingStarted()
         {
             var localNode = new Node("tcp://127.0.0.1:800", ReceiverIdentifier.CreateIdentity());
@@ -82,11 +83,11 @@ namespace kino.Tests.Consensus
             synodConfigProvider.Object.HeartBeatInterval.MultiplyBy(2).Sleep();
             messageHub.Stop();
             //
-            Assert.Equal(1, synodConfigProvider.Object.Synod.Count());
+            Assert.AreEqual(1, synodConfigProvider.Object.Synod.Count());
             publisherSocket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void IfSomeClusterNodeIsNotHealthy_ConnectionMessageIsSent()
         {
             messageHub.Start(TimeSpan.FromSeconds(3));
@@ -99,7 +100,7 @@ namespace kino.Tests.Consensus
                                    Times.AtLeast(clusterHealthInfo.Count()));
         }
 
-        [Fact]
+        [Test]
         public void IfReconnectMessageArrives_ConnectionToNodeIsReestablished()
         {
             var messageCount = 1;
@@ -109,7 +110,10 @@ namespace kino.Tests.Consensus
                                              OldUri = deadNode.NodeUri.ToSocketAddress(),
                                              NewUri = deadNode.NodeUri.ToSocketAddress()
                                          });
-            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => messageCount-- > 0 ? message : null);
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>()))
+                            .Returns(() => messageCount-- > 0
+                                               ? message
+                                               : null);
             synodConfigProvider.Object
                                .HeartBeatInterval
                                .MultiplyBy(synodConfigProvider.Object.MissingHeartBeatsBeforeReconnect + 1)
@@ -124,11 +128,11 @@ namespace kino.Tests.Consensus
             //
             subscriberSocket.Verify(m => m.Disconnect(deadNode.NodeUri), Times.Once);
             subscriberSocket.Verify(m => m.Connect(deadNode.NodeUri, false), Times.Once);
-            Assert.InRange(deadNode.LastReconnectAttempt, now, DateTime.MaxValue);
+            Assert.That(deadNode.LastReconnectAttempt, Is.InRange(now, DateTime.MaxValue));
             Assert.False(deadNode.IsHealthy());
         }
 
-        [Fact]
+        [Test]
         public void WhenHeartBeatMessageArrives_LastKnownHeartBeatIsUpdated()
         {
             synodConfigProvider.Setup(m => m.MissingHeartBeatsBeforeReconnect).Returns(1);
@@ -139,7 +143,10 @@ namespace kino.Tests.Consensus
             var messageCount = 1;
             var deadNode = messageHub.GetClusterHealthInfo().First();
             var message = Message.Create(new HeartBeatMessage {NodeUri = deadNode.NodeUri.ToSocketAddress()});
-            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => messageCount-- > 0 ? message : null);
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>()))
+                            .Returns(() => messageCount-- > 0
+                                               ? message
+                                               : null);
 
             synodConfigProvider.Object
                                .HeartBeatInterval
@@ -157,12 +164,15 @@ namespace kino.Tests.Consensus
             Assert.True(deadNode.IsHealthy());
         }
 
-        [Fact]
+        [Test]
         public void WhenMessageArrives_SubscriberIsNotified()
         {
             var messageCount = 1;
             var message = Message.Create(new SimpleMessage());
-            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() => messageCount-- > 0 ? message : null);
+            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>()))
+                            .Returns(() => messageCount-- > 0
+                                               ? message
+                                               : null);
             var observer = new Mock<IObserver<IMessage>>();
             messageHub.Subscribe().Subscribe(observer.Object);
             //
@@ -174,7 +184,7 @@ namespace kino.Tests.Consensus
             observer.Verify(m => m.OnNext(message), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void Send_SendsMessageToSocket()
         {
             var message = Message.Create(new SimpleMessage()).As<Message>();

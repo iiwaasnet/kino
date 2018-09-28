@@ -20,7 +20,7 @@ namespace Server.Actors
 
             return new ActorResult(Message.Create(new EhlloMessage { Ehllo = hello.Greeting }));
 
-            return ActorResult.NoWait;
+            return ActorResult.Empty;
         }
     }
 }

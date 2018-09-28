@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using FluentAssertions;
 using kino.Cluster;
 using kino.Connectivity;
 using kino.Core;
@@ -11,21 +10,22 @@ using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
 using kino.Tests.Helpers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 using MessageRoute = kino.Cluster.MessageRoute;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
     public class InternalMessageRouteRegistrationHandlerTests
     {
-        private readonly InternalMessageRouteRegistrationHandler handler;
-        private readonly Mock<IClusterMonitor> clusterMonitor;
-        private readonly Mock<IInternalRoutingTable> internalRoutingTable;
-        private readonly Mock<ISecurityProvider> securityProvider;
-        private readonly Mock<ILocalSendingSocket<IMessage>> destinationSocket;
-        private readonly string domain;
+        private InternalMessageRouteRegistrationHandler handler;
+        private Mock<IClusterMonitor> clusterMonitor;
+        private Mock<IInternalRoutingTable> internalRoutingTable;
+        private Mock<ISecurityProvider> securityProvider;
+        private Mock<ILocalSendingSocket<IMessage>> destinationSocket;
+        private string domain;
 
-        public InternalMessageRouteRegistrationHandlerTests()
+        [SetUp]
+        public void Setup()
         {
             clusterMonitor = new Mock<IClusterMonitor>();
             internalRoutingTable = new Mock<IInternalRoutingTable>();
@@ -39,7 +39,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                                   securityProvider.Object);
         }
 
-        [Fact]
+        [Test]
         public void IfReceiverIdentifierIsNeitherActorNorMessageHub_MessageRouteIsNotAdded()
         {
             var routeRegistration = new InternalRouteRegistration
@@ -52,7 +52,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             internalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<InternalRouteRegistration>()), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void LocalyRegisteredMessageHub_IsRegisteredInLocalRoutingTableButNotInCluster()
         {
             var routeRegistration = new InternalRouteRegistration
@@ -69,7 +69,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                   Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void GlobalyRegisteredMessageHub_IsRegisteredInLocalRoutingTableAndCluster()
         {
             var routeRegistration = new InternalRouteRegistration
@@ -87,7 +87,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                   Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void GlobalyRegisteredMessageHub_IsRegisteredInClusterOncePerEachDomain()
         {
             var allowedDomains = Randomizer.Int32(2, 5)
@@ -108,7 +108,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                   Times.Exactly(allowedDomains.Count()));
         }
 
-        [Fact]
+        [Test]
         public void LocalyRegisteredMessageRoutes_AreRegisteredInLocalRoutingTableButNotInCluster()
         {
             var routeRegistration = new InternalRouteRegistration
@@ -131,7 +131,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             clusterMonitor.Verify(m => m.RegisterSelf(It.IsAny<IEnumerable<MessageRoute>>(), It.IsAny<string>()), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void OnlyGlobalyRegisteredMessageRoutes_AreRegisteredInLocalRoutingTableButAndCluster()
         {
             var routeRegistration = new InternalRouteRegistration
@@ -152,18 +152,17 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             Func<IEnumerable<MessageRoute>, bool> areGlobalMessageRoutes = mrs =>
                                                                            {
-                                                                               routeRegistration.MessageContracts
-                                                                                                .Where(mc => !mc.KeepRegistrationLocal)
-                                                                                                .Select(mc => mc.Message)
-                                                                                                .Should()
-                                                                                                .BeEquivalentTo(mrs.Select(mr => mr.Message));
+                                                                               CollectionAssert.AreEquivalent(routeRegistration.MessageContracts
+                                                                                                                               .Where(mc => !mc.KeepRegistrationLocal)
+                                                                                                                               .Select(mc => mc.Message),
+                                                                                                              mrs.Select(mr => mr.Message));
                                                                                return true;
                                                                            };
             internalRoutingTable.Verify(m => m.AddMessageRoute(routeRegistration), Times.Once);
             clusterMonitor.Verify(m => m.RegisterSelf(It.Is<IEnumerable<MessageRoute>>(mrs => areGlobalMessageRoutes(mrs)), domain), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void MessageRouteRegistrations_AreGroupedByDomainWhenRegisteredAtCluster()
         {
             var routeRegistration = new InternalRouteRegistration
@@ -186,10 +185,9 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             Func<IEnumerable<MessageRoute>, bool> areGlobalMessageRoutes = mrs =>
                                                                            {
-                                                                               mrs.Select(mr => mr.Message)
-                                                                                  .Should()
-                                                                                  .BeSubsetOf(routeRegistration.MessageContracts
-                                                                                                               .Select(mc => mc.Message));
+                                                                               CollectionAssert.IsSubsetOf(mrs.Select(mr => mr.Message),
+                                                                                                           routeRegistration.MessageContracts
+                                                                                                                            .Select(mc => mc.Message));
                                                                                return true;
                                                                            };
             internalRoutingTable.Verify(m => m.AddMessageRoute(routeRegistration), Times.Once);

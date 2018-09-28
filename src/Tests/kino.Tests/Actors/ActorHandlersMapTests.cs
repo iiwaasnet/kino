@@ -6,13 +6,13 @@ using kino.Core;
 using kino.Core.Framework;
 using kino.Messaging.Messages;
 using kino.Tests.Actors.Setup;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Actors
 {
     public class ActorHandlersMapTests
     {
-        [Fact]
+        [Test]
         public void AddingActorWithoutRegisteredMessageHandlers_ThrowsNoException()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -20,7 +20,7 @@ namespace kino.Tests.Actors
             actorHandlersMap.Add(voidActor);
         }
 
-        [Fact]
+        [Test]
         public void WhenDuplicatedKeyExceptionThrown_NonOfTheActorHandlersIsAdded()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -56,7 +56,7 @@ namespace kino.Tests.Actors
             Assert.Throws<KeyNotFoundException>(() => actorHandlersMap.Get(MessageIdentifier.Create<ExceptionMessage>()));
         }
 
-        [Fact]
+        [Test]
         public void ActorHandlersMap_CanAddTwoActorsHandlingSameMessageTypeInDifferentPartitions()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -86,7 +86,7 @@ namespace kino.Tests.Actors
             actorHandlersMap.Get(MessageIdentifier.Create(typeof(SimpleMessage)));
         }
 
-        [Fact]
+        [Test]
         public void AddingActorsHandlingTheSameMessageTwice_ThowsDuplicatedKeyException()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -96,7 +96,7 @@ namespace kino.Tests.Actors
             Assert.Throws<DuplicatedKeyException>(() => { actorHandlersMap.Add(actor); });
         }
 
-        [Fact]
+        [Test]
         public void CanAddReturnsFalse_IfActorAlreadyAdded()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -107,7 +107,7 @@ namespace kino.Tests.Actors
             Assert.False(actorHandlersMap.CanAdd(actor));
         }
 
-        [Fact]
+        [Test]
         public void CanAddReturnsTrue_IfActorIsNotYetAdded()
         {
             var actorHandlersMap = new ActorHandlerMap();
@@ -116,7 +116,7 @@ namespace kino.Tests.Actors
             Assert.True(actorHandlersMap.CanAdd(actor));
         }
 
-        [Fact]
+        [Test]
         public void GettingHandlerForNonRegisteredMessageIdentifier_ThrowsKeyNotFoundException()
         {
             var actorHandlersMap = new ActorHandlerMap();

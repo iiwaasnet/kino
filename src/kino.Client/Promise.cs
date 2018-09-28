@@ -30,7 +30,7 @@ namespace kino.Client
 
         internal void SetResult(IMessage message)
         {
-            RemoveCallbackHander();
+            RemoveCallbackHandler();
 
             if (message.Equals(KinoMessages.Exception))
             {
@@ -48,11 +48,11 @@ namespace kino.Client
             if (!isDisposed)
             {
                 isDisposed = true;
-                RemoveCallbackHander();
+                RemoveCallbackHandler();
             }
         }
 
-        private void RemoveCallbackHander()
+        private void RemoveCallbackHandler()
         {
             var tmp = removeCallbackHandler;
             if (tmp != null)

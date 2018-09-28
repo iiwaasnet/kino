@@ -4,16 +4,17 @@ using System.Threading.Tasks;
 using kino.Cluster.Configuration;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Cluster.Configuration
 {
     public class HeartBeatSenderConfigurationManagerTests
     {
-        private readonly HeartBeatSenderConfigurationManager configManager;
-        private readonly HeartBeatSenderConfiguration config;
+        private HeartBeatSenderConfigurationManager configManager;
+        private HeartBeatSenderConfiguration config;
 
-        public HeartBeatSenderConfigurationManagerTests()
+        [SetUp]
+        public void Setup()
         {
             config = new HeartBeatSenderConfiguration
                      {
@@ -23,7 +24,7 @@ namespace kino.Tests.Cluster.Configuration
             configManager = new HeartBeatSenderConfigurationManager(config);
         }
 
-        [Fact]
+        [Test]
         public void GetHeartBeatAddressBlock_IfSetActiveHeartBeatAddressIsNotSet()
         {
             var task = Task.Factory.StartNew(() => configManager.GetHeartBeatAddress());
@@ -31,7 +32,7 @@ namespace kino.Tests.Cluster.Configuration
             Assert.False(task.Wait(TimeSpan.FromSeconds(3)));
         }
 
-        [Fact]
+        [Test]
         public void GetScaleOutAddressUnblocks_WhenActiveScaleOutAddressIsSet()
         {
             var asyncOp = TimeSpan.FromSeconds(4);
@@ -45,7 +46,7 @@ namespace kino.Tests.Cluster.Configuration
             Assert.True(task.Wait(asyncOp));
         }
 
-        [Fact]
+        [Test]
         public void IfSocketEndpointDoesntBelongToInitialAddressRange_SetActiveScaleOutAddressThrowsException()
         {
             Assert.Throws<Exception>(() => configManager.SetActiveHeartBeatAddress(new Uri("inproc://test")));

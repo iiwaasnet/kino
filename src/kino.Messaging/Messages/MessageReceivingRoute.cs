@@ -4,12 +4,12 @@ using ProtoBuf;
 namespace kino.Messaging.Messages
 {
     [ProtoContract]
-    public class ExternalRoute
+    public class MessageReceivingRoute
     {
         [ProtoMember(1)]
         public byte[] NodeIdentity { get; set; }
 
         [ProtoMember(2)]
-        public IEnumerable<byte[]> ReceiverIdentity { get; set; }
+        public IEnumerable<byte[]> ActorIdentity { get; set; }
     }
 }

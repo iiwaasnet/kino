@@ -1,11 +1,12 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Routing;
-using ExternalRoute = kino.Messaging.Messages.ExternalRoute;
 using MessageContract = kino.Messaging.Messages.MessageContract;
 
 namespace kino.Actors.Internal
@@ -13,36 +14,64 @@ namespace kino.Actors.Internal
     public class MessageRoutesActor : Actor
     {
         private readonly IInternalRoutingTable internalRoutingTable;
+        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly IExternalRoutingTable externalRoutingTable;
 
         public MessageRoutesActor(IExternalRoutingTable externalRoutingTable,
-                                  IInternalRoutingTable internalRoutingTable)
+                                  IInternalRoutingTable internalRoutingTable,
+                                  IScaleOutConfigurationProvider scaleOutConfigurationProvider)
         {
             this.externalRoutingTable = externalRoutingTable;
             this.internalRoutingTable = internalRoutingTable;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
         }
 
-        [MessageHandlerDefinition(typeof(RequestMessageExternalRoutesMessage), true)]
+        [MessageHandlerDefinition(typeof(RequestMessageRoutesMessage), true)]
         public async Task<IActorResult> GetMessageExternalRoutes(IMessage message)
         {
-            var messageContract = message.GetPayload<RequestMessageExternalRoutesMessage>().MessageContract;
+            var payload = message.GetPayload<RequestMessageRoutesMessage>();
+            var messageContract = payload.MessageContract;
+            var messageIdentifier = new MessageIdentifier(messageContract.Identity,
+                                                          messageContract.Version,
+                                                          messageContract.Partition);
 
-            var routes = externalRoutingTable.FindAllActors(new MessageIdentifier(messageContract.Identity,
-                                                                                  messageContract.Version,
-                                                                                  messageContract.Partition));
-            var response = new MessageExternalRoutesMessage
+            var externalRoutes = GetExternalRoutes();
+            var internalRoutes = GetInternalRoutes();
+            var localScaleOutSocket = scaleOutConfigurationProvider.GetScaleOutAddress();
+
+            var response = new MessageRoutesMessage
                            {
                                MessageContract = messageContract,
-                               Routes = routes.Select(r => new ExternalRoute
-                                                           {
-                                                               NodeIdentity = r.NodeIdentifier.Identity,
-                                                               ReceiverIdentity = r.Actors.Select(a => a.Identity)
-                                                                                   .ToList()
-                                                           })
-                                              .ToArray()
+                               ExternalRoutes = externalRoutes.Select(r => new MessageReceivingRoute
+                                                                           {
+                                                                               NodeIdentity = r.NodeIdentifier.Identity,
+                                                                               ActorIdentity = r.Actors
+                                                                                                .Select(a => a.Identity)
+                                                                                                .ToList()
+                                                                           })
+                                                              .ToArray(),
+                               InternalRoutes = new MessageReceivingRoute
+                                                {
+                                                    NodeIdentity = localScaleOutSocket.Identity,
+                                                    ActorIdentity = internalRoutes.Select(r => r.Identity)
+                                                                                  .ToList()
+                                                }
                            };
 
             return new ActorResult(Message.Create(response));
+
+            IEnumerable<NodeActors> GetExternalRoutes()
+                => (payload.RouteType != RouteType.Internal)
+                       ? externalRoutingTable.FindAllActors(messageIdentifier)
+                       : Enumerable.Empty<NodeActors>();
+
+            IEnumerable<ReceiverIdentifierRegistration> GetInternalRoutes()
+                => (payload.RouteType != RouteType.External)
+                       ? internalRoutingTable.GetAllRoutes()
+                                             .Actors
+                                             .Where(a => a.Message.Equals(messageIdentifier))
+                                             .SelectMany(a => a.Actors)
+                       : Enumerable.Empty<ReceiverIdentifierRegistration>();
         }
 
         [MessageHandlerDefinition(typeof(RequestExternalRoutesMessage), true)]

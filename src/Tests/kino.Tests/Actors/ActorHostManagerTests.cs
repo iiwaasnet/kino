@@ -2,18 +2,19 @@
 using kino.Core.Diagnostics;
 using kino.Tests.Actors.Setup;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Actors
 {
     public class ActorHostManagerTests
     {
-        private readonly ILogger logger;
-        private readonly ActorHostManager actorHostManager;
-        private readonly Mock<IActorHostFactory> actorHostFactory;
-        private readonly Mock<IActorHost> actorHost;
+        private ILogger logger;
+        private ActorHostManager actorHostManager;
+        private Mock<IActorHostFactory> actorHostFactory;
+        private Mock<IActorHost> actorHost;
 
-        public ActorHostManagerTests()
+        [SetUp]
+        public void Setup()
         {
             logger = new Mock<ILogger>().Object;
             actorHostFactory = new Mock<IActorHostFactory>();
@@ -22,7 +23,7 @@ namespace kino.Tests.Actors
             actorHostManager = new ActorHostManager(actorHostFactory.Object, logger);
         }
 
-        [Trait(nameof(ActorHost), "Assigning several actors, handling the same message type, should not throw exception.")]
+        [Test(Description = "Assigning several actors, handling the same message type, should not throw exception.")]
         public void AssignActorWithSameInterfaceTwice_ThrowsNoException()
         {
             var numberOfActors = 2;
@@ -34,7 +35,7 @@ namespace kino.Tests.Actors
             actorHostFactory.Verify(m => m.Create(), Times.Exactly(numberOfActors));
         }
 
-        [Fact]
+        [Test]
         public void IfActorHostInstancePolicyIsAlwaysCreateNew_NewActorHostIsCreatedForEachActor()
         {
             actorHostManager.AssignActor(new EchoActor(), ActorHostInstancePolicy.AlwaysCreateNew);
@@ -43,7 +44,7 @@ namespace kino.Tests.Actors
             actorHostFactory.Verify(m => m.Create(), Times.Exactly(2));
         }
 
-        [Fact]
+        [Test]
         public void IfActorHostCanHostAllActorsBeingAssigned_ThisActorHostInstanceIsUsed()
         {
             var echoActor = new EchoActor();

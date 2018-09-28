@@ -11,23 +11,24 @@ using kino.Messaging;
 using kino.Messaging.Messages;
 using Moq;
 using NetMQ;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
     public class HeartBeatSenderTests
     {
-        private readonly HeartBeatSender heartBeatSender;
-        private readonly Mock<ISocketFactory> socketFactory;
-        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private readonly Mock<ILogger> logger;
-        private readonly Mock<IHeartBeatSenderConfigurationManager> config;
-        private readonly SocketEndpoint scaleOutAddress;
+        private HeartBeatSender heartBeatSender;
+        private Mock<ISocketFactory> socketFactory;
+        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private Mock<ILogger> logger;
+        private Mock<IHeartBeatSenderConfigurationManager> config;
+        private SocketEndpoint scaleOutAddress;
         private TimeSpan heartBeatInterval;
-        private readonly IEnumerable<Uri> heartBeatAddresses;
-        private readonly Mock<ISocket> socket;
+        private IEnumerable<Uri> heartBeatAddresses;
+        private Mock<ISocket> socket;
 
-        public HeartBeatSenderTests()
+        [SetUp]
+        public void Setup()
         {
             socketFactory = new Mock<ISocketFactory>();
             socket = new Mock<ISocket>();
@@ -48,7 +49,7 @@ namespace kino.Tests.Cluster
                                                   logger.Object);
         }
 
-        [Fact]
+        [Test]
         public void HeartBeatMessageIsSent_EveryHeartBeatInterval()
         {
             var heartBeatsToSend = 2;
@@ -62,13 +63,13 @@ namespace kino.Tests.Cluster
                                                       {
                                                           var payload = msg.GetPayload<HeartBeatMessage>();
                                                           Assert.True(Unsafe.ArraysEqual(scaleOutAddress.Identity, payload.SocketIdentity));
-                                                          Assert.Equal(heartBeatInterval, payload.HeartBeatInterval);
+                                                          Assert.AreEqual(heartBeatInterval, payload.HeartBeatInterval);
                                                           return true;
                                                       };
             socket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => isHeartBeatMessage(msg))), Times.AtLeast(heartBeatsToSend));
         }
 
-        [Fact]
+        [Test]
         public void IfSocketFailsBindingToOneAddress_ItRetriesWithTheNextOne()
         {
             var asyncOp = TimeSpan.FromSeconds(1);
@@ -85,7 +86,7 @@ namespace kino.Tests.Cluster
             socket.Verify(m => m.Dispose(), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfSocketFailsBindingToAllAddress_HeartBeatSenderDoesntSendMessages()
         {
             var asyncOp = TimeSpan.FromSeconds(1);

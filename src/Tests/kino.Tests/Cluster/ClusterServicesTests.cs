@@ -1,18 +1,19 @@
 ﻿using kino.Cluster;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
     public class ClusterServicesTests
     {
-        private readonly ClusterServices clusterServices;
-        private readonly Mock<IClusterMonitor> clusterMonitor;
-        private readonly Mock<IScaleOutListener> scaleOutListener;
-        private readonly Mock<IHeartBeatSender> heartBeatSender;
-        private readonly Mock<IClusterHealthMonitor> clusterHealthMonitor;
+        private ClusterServices clusterServices;
+        private Mock<IClusterMonitor> clusterMonitor;
+        private Mock<IScaleOutListener> scaleOutListener;
+        private Mock<IHeartBeatSender> heartBeatSender;
+        private Mock<IClusterHealthMonitor> clusterHealthMonitor;
 
-        public ClusterServicesTests()
+        [SetUp]
+        public void Setup()
         {
             clusterMonitor = new Mock<IClusterMonitor>();
             scaleOutListener = new Mock<IScaleOutListener>();
@@ -24,7 +25,7 @@ namespace kino.Tests.Cluster
                                                   clusterHealthMonitor.Object);
         }
 
-        [Fact]
+        [Test]
         public void WhenClusterServicesStarts_ItStartsAllOtherServices()
         {
             clusterServices.StartClusterServices();
@@ -35,7 +36,7 @@ namespace kino.Tests.Cluster
             clusterHealthMonitor.Verify(m => m.Start(), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void WhenClusterServicesStops_ItStopsAllOtherServices()
         {
             clusterServices.StopClusterServices();
@@ -46,16 +47,16 @@ namespace kino.Tests.Cluster
             clusterHealthMonitor.Verify(m => m.Stop(), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void GetClusterMonitor_ReturnsClusterMonitor()
         {
-            Assert.Equal(clusterMonitor.Object, clusterServices.GetClusterMonitor());
+            Assert.AreEqual(clusterMonitor.Object, clusterServices.GetClusterMonitor());
         }
 
-        [Fact]
+        [Test]
         public void GetClusterHealthMonitor_ReturnsClusterHealthMonitor()
         {
-            Assert.Equal(clusterHealthMonitor.Object, clusterServices.GetClusterHealthMonitor());
+            Assert.AreEqual(clusterHealthMonitor.Object, clusterServices.GetClusterHealthMonitor());
         }
     }
 }

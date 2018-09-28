@@ -1,12 +1,10 @@
 ﻿using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
+using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous;
 using kino.Rendezvous.Configuration;
-#if NET47
-using kino.Core.Diagnostics.Performance;    
-#endif
 
 namespace Autofac.kino.Rendezvous
 {
@@ -42,13 +40,9 @@ namespace Autofac.kino.Rendezvous
                    .AsSelf()
                    .SingleInstance();
 
-#if NET47
             builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
                    .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
                    .SingleInstance();
-#else
-            //TODO: Declare implementation for .NET Standard
-#endif
 
             builder.RegisterType<IntercomMessageHub>()
                    .As<IIntercomMessageHub>()

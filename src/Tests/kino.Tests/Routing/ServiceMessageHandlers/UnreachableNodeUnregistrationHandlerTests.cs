@@ -7,18 +7,19 @@ using kino.Messaging.Messages;
 using kino.Routing;
 using kino.Routing.ServiceMessageHandlers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
     public class UnreachableNodeUnregistrationHandlerTests
     {
-        private readonly UnreachableNodeUnregistrationHandler handler;
-        private readonly Mock<IClusterHealthMonitor> clusterHealthMonitor;
-        private readonly Mock<IExternalRoutingTable> externalRoutingTable;
-        private readonly Mock<ISocket> backendSocket;
+        private UnreachableNodeUnregistrationHandler handler;
+        private Mock<IClusterHealthMonitor> clusterHealthMonitor;
+        private Mock<IExternalRoutingTable> externalRoutingTable;
+        private Mock<ISocket> backendSocket;
 
-        public UnreachableNodeUnregistrationHandlerTests()
+        [SetUp]
+        public void Setup()
         {
             clusterHealthMonitor = new Mock<IClusterHealthMonitor>();
             externalRoutingTable = new Mock<IExternalRoutingTable>();
@@ -27,11 +28,11 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                                externalRoutingTable.Object);
         }
 
-        [Theory(DisplayName = "ScaleOutBackend socket disconnects peer only if PeerConnectionAction is Disconnect." +
+        [Test(Description = "ScaleOutBackend socket disconnects peer only if PeerConnectionAction is Disconnect." +
                               "ClusterHealthMonitor deletes peer only if PeerConnectionAction is not KeepConnection.")]
-        [InlineData(PeerConnectionAction.KeepConnection)]
-        [InlineData(PeerConnectionAction.Disconnect)]
-        [InlineData(PeerConnectionAction.NotFound)]
+        [TestCase(PeerConnectionAction.KeepConnection)]
+        [TestCase(PeerConnectionAction.Disconnect)]
+        [TestCase(PeerConnectionAction.NotFound)]
         public void PeerIsDisconnected_OnlyIfPeerConnectionActionIsDisconnect(PeerConnectionAction peerConnectionAction)
         {
             var receiverNodeIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
