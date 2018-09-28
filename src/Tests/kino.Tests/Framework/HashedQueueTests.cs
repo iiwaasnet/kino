@@ -4,13 +4,13 @@ using System.Linq;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Framework
 {
     public class HashedQueueTests
     {
-        [Fact]
+        [Test]
         public void TryEnqueue_DoesntInsertDuplicatedItems()
         {
             var queue = new HashedQueue<MessageIdentifier>();
@@ -21,10 +21,10 @@ namespace kino.Tests.Framework
 
             IList<MessageIdentifier> messageIdentifiers;
             queue.TryPeek(out messageIdentifiers, 10);
-            Assert.Equal(1, messageIdentifiers.Count);
+            Assert.AreEqual(1, messageIdentifiers.Count);
         }
 
-        [Fact]
+        [Test]
         public void TryEnqueue_DoesntInsertItemsMoreThanMaxQueueLengthSize()
         {
             var maxQueueLength = 2;
@@ -44,10 +44,10 @@ namespace kino.Tests.Framework
 
             IList<MessageIdentifier> messageIdentifiers;
             queue.TryPeek(out messageIdentifiers, maxQueueLength + 2);
-            Assert.Equal(maxQueueLength, messageIdentifiers.Count);
+            Assert.AreEqual(maxQueueLength, messageIdentifiers.Count);
         }
 
-        [Fact]
+        [Test]
         public void TryEnqueue_AddsItemsAtEnd()
         {
             var queue = new HashedQueue<MessageIdentifier>();
@@ -61,11 +61,11 @@ namespace kino.Tests.Framework
             IList<MessageIdentifier> messageIdentifiers;
             queue.TryPeek(out messageIdentifiers, 2);
 
-            Assert.Equal(ms1, messageIdentifiers.First());
-            Assert.Equal(ms2, messageIdentifiers.Second());
+            Assert.AreEqual(ms1, messageIdentifiers.First());
+            Assert.AreEqual(ms2, messageIdentifiers.Second());
         }
 
-        [Fact]
+        [Test]
         public void TryDelete_DeletesOnlySpecificItems()
         {
             var queue = new HashedQueue<MessageIdentifier>();
@@ -80,13 +80,13 @@ namespace kino.Tests.Framework
 
             IList<MessageIdentifier> messageIdentifiers;
             Assert.True(queue.TryPeek(out messageIdentifiers, 2));
-            Assert.Equal(ms1, messageIdentifiers.First());
+            Assert.AreEqual(ms1, messageIdentifiers.First());
 
             queue.TryDelete(new[] {ms1});
             Assert.False(queue.TryPeek(out messageIdentifiers, 2));
         }
 
-        [Fact]
+        [Test]
         public void TryDelete_DoesntFailIfDeletingMoreItemsThanExist()
         {
             var queue = new HashedQueue<MessageIdentifier>();

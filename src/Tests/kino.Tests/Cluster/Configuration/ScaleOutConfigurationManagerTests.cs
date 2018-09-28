@@ -5,16 +5,17 @@ using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Cluster.Configuration
 {
     public class ScaleOutConfigurationManagerTests
     {
-        private readonly ScaleOutConfigurationManager configManager;
-        private readonly ScaleOutSocketConfiguration config;
+        private ScaleOutConfigurationManager configManager;
+        private ScaleOutSocketConfiguration config;
 
-        public ScaleOutConfigurationManagerTests()
+        [SetUp]
+        public void Setup()
         {
             config = new ScaleOutSocketConfiguration
                      {
@@ -24,7 +25,7 @@ namespace kino.Tests.Cluster.Configuration
             configManager = new ScaleOutConfigurationManager(config);
         }
 
-        [Fact]
+        [Test]
         public void IfActiveScaleOutAddressIsNotSet_GetScaleOutAddressBlocks()
         {
             var task = Task.Factory.StartNew(() => configManager.GetScaleOutAddress());
@@ -32,7 +33,7 @@ namespace kino.Tests.Cluster.Configuration
             Assert.False(task.Wait(TimeSpan.FromSeconds(3)));
         }
 
-        [Fact]
+        [Test]
         public void GetScaleOutAddressUnblocks_WhenActiveScaleOutAddressIsSet()
         {
             var asyncOp = TimeSpan.FromSeconds(4);
@@ -46,7 +47,7 @@ namespace kino.Tests.Cluster.Configuration
             Assert.True(task.Wait(asyncOp));
         }
 
-        [Fact]
+        [Test]
         public void IfSocketEndpointDoesntBelongToInitialAddressRange_SetActiveScaleOutAddressThrowsException()
         {
             Assert.Throws<Exception>(() => configManager.SetActiveScaleOutAddress(new SocketEndpoint("tcp://*:43")));

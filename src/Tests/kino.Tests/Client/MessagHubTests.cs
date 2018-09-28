@@ -15,7 +15,7 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Client
 {
@@ -24,21 +24,22 @@ namespace kino.Tests.Client
         private static readonly TimeSpan ReceiveMessageDelay = TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
-        private readonly MessageHubSocketFactory messageHubSocketFactory;
-        private readonly string localhost = "tcp://localhost:43";
-        private readonly Mock<ISocketFactory> socketFactory;
-        private readonly Mock<ILogger> logger;
-        private readonly Mock<ICallbackHandlerStack> callbackHandlerStack;
-        private readonly Mock<ISecurityProvider> securityProvider;
+        private MessageHubSocketFactory messageHubSocketFactory;
+        private string localhost = "tcp://localhost:43";
+        private Mock<ISocketFactory> socketFactory;
+        private Mock<ILogger> logger;
+        private Mock<ICallbackHandlerStack> callbackHandlerStack;
+        private Mock<ISecurityProvider> securityProvider;
         private MessageHub messageHub;
-        private readonly Mock<ILocalSocket<IMessage>> routerSocket;
-        private readonly Mock<ILocalSendingSocket<InternalRouteRegistration>> registrationSocket;
-        private readonly SocketEndpoint scaleOutAddress;
-        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private readonly Mock<ILocalSocketFactory> localSocketFactory;
-        private readonly Mock<ILocalSocket<IMessage>> receivingSocket;
+        private Mock<ILocalSocket<IMessage>> routerSocket;
+        private Mock<ILocalSendingSocket<InternalRouteRegistration>> registrationSocket;
+        private SocketEndpoint scaleOutAddress;
+        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private Mock<ILocalSocketFactory> localSocketFactory;
+        private Mock<ILocalSocket<IMessage>> receivingSocket;
 
-        public MessagHubTests()
+        [SetUp]
+        public void Setup()
         {
             callbackHandlerStack = new Mock<ICallbackHandlerStack>();
             logger = new Mock<ILogger>();
@@ -59,9 +60,9 @@ namespace kino.Tests.Client
             messageHub = CreateMessageHub();
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
         public void WhenMessageHubStarts_RegistrationMessageIsSentAsWithProperGlobalVisibility(bool keepRegistrationLocal)
         {
             try
@@ -82,7 +83,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Fact]
+        [Test]
         public void Send_RegistersMessageAndExceptionHandlers()
         {
             try
@@ -111,7 +112,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Fact]
+        [Test]
         public void NoExceptionIsThrownAndMessageIsSent_IfExceptionCallbackIsRegisteredExplicitly()
         {
             try
@@ -142,7 +143,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Fact]
+        [Test]
         public void Send_SendsMessageWithCallbackSetToThisMessageHub()
         {
             // arrange
@@ -167,7 +168,7 @@ namespace kino.Tests.Client
                 && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
         }
 
-        [Fact]
+        [Test]
         public void WhenMessageReceived_CorrespondingPromiseResultSet()
         {
             // arrange
@@ -182,7 +183,7 @@ namespace kino.Tests.Client
                 messageHub.Start();
                 var response = promise.GetResponse().Result;
                 // assert
-                Assert.Equal(message, response);
+                Assert.AreEqual(message, response);
             }
             finally
             {
@@ -190,7 +191,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Fact]
+        [Test]
         public void WhenResultMessageIsDelivered_PromiseIsDisposedAndItsCallbackIsRemoved()
         {
             // arrange
@@ -231,7 +232,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Fact]
+        [Test]
         public void WhenExceptionMessageReceived_PromiseThrowsException()
         {
             // arrange
@@ -259,11 +260,18 @@ namespace kino.Tests.Client
                 messageHub.Start();
                 ReceiveMessageCompletionDelay.Sleep();
                 // assert
-                var err = Record.Exception(() =>
-                                           {
-                                               var _ = promise.GetResponse().Result;
-                                           });
-                Assert.Equal(errorMessage, err.InnerException.Message);
+                Assert.Throws<AggregateException>(() =>
+                                         {
+                                             var _ = promise.GetResponse().Result;
+                                         });
+                try
+                {
+                    var _ = promise.GetResponse().Result;
+                }
+                catch (Exception err)
+                {
+                    Assert.AreEqual(errorMessage, err.InnerException.Message);
+                }
             }
             finally
             {
@@ -271,7 +279,7 @@ namespace kino.Tests.Client
             }
         }
 
-        [Fact]
+        [Test]
         public void WhenMessageReceivedAndNoHandlerRegistered_PromiseIsNotResolved()
         {
             // arrange

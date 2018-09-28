@@ -12,23 +12,24 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
     public class RouteDiscoveryTests
     {
-        private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(600);
-        private readonly Mock<IAutoDiscoverySender> autoDiscoverySender;
-        private readonly Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
-        private readonly Mock<ISecurityProvider> securityProvider;
-        private readonly Mock<ILogger> logger;
-        private readonly ClusterMembershipConfiguration config;
-        private readonly RouteDiscovery routeDiscovery;
-        private readonly SocketEndpoint scaleOutAddress;
-        private readonly string domain;
+        private TimeSpan AsyncOp = TimeSpan.FromMilliseconds(600);
+        private Mock<IAutoDiscoverySender> autoDiscoverySender;
+        private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
+        private Mock<ISecurityProvider> securityProvider;
+        private Mock<ILogger> logger;
+        private ClusterMembershipConfiguration config;
+        private RouteDiscovery routeDiscovery;
+        private SocketEndpoint scaleOutAddress;
+        private string domain;
 
-        public RouteDiscoveryTests()
+        [SetUp]
+        public void Setup()
         {
             autoDiscoverySender = new Mock<IAutoDiscoverySender>();
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
@@ -57,7 +58,7 @@ namespace kino.Tests.Cluster
                                                 logger.Object);
         }
 
-        [Fact]
+        [Test]
         public void IfSameMessageRouteRequestedMultipleTimes_MessageForThatRouteIsSentOnlyOnce()
         {
             var receiverIdentifier = ReceiverIdentities.CreateForActor();
@@ -81,15 +82,15 @@ namespace kino.Tests.Cluster
                                                           Assert.Null(payload.ReceiverIdentity);
                                                           Assert.True(Unsafe.ArraysEqual(payload.MessageContract.Identity, messageIdentifier.Identity));
                                                           Assert.True(Unsafe.ArraysEqual(payload.MessageContract.Partition, messageIdentifier.Partition));
-                                                          Assert.Equal(payload.MessageContract.Version, messageIdentifier.Version);
+                                                          Assert.AreEqual(payload.MessageContract.Version, messageIdentifier.Version);
                                                           Assert.True(Unsafe.ArraysEqual(payload.RequestorNodeIdentity, scaleOutAddress.Identity));
-                                                          Assert.Equal(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
+                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
                                                           return true;
                                                       };
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isDiscoveryMessage(msg))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void IfSameMessageRouteRequestedAfterOthersAreSentButBeforeSendingPeriodEnds_TheyAreDeletedAndNotSentAgain()
         {
             config.RouteDiscovery = new RouteDiscoveryConfiguration {MissingRoutesDiscoverySendingPeriod = TimeSpan.FromSeconds(1)};
@@ -123,15 +124,15 @@ namespace kino.Tests.Cluster
                                                           Assert.Null(payload.ReceiverIdentity);
                                                           Assert.True(Unsafe.ArraysEqual(payload.MessageContract.Identity, messageIdentifier.Identity));
                                                           Assert.True(Unsafe.ArraysEqual(payload.MessageContract.Partition, messageIdentifier.Partition));
-                                                          Assert.Equal(payload.MessageContract.Version, messageIdentifier.Version);
+                                                          Assert.AreEqual(payload.MessageContract.Version, messageIdentifier.Version);
                                                           Assert.True(Unsafe.ArraysEqual(payload.RequestorNodeIdentity, scaleOutAddress.Identity));
-                                                          Assert.Equal(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
+                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
                                                           return true;
                                                       };
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isDiscoveryMessage(msg))), Times.Once);
         }
 
-        [Fact]
+        [Test]
         public void MessageHubRouteDiscovery_IsSentForAllAllowedDomains()
         {
             var receiverIdentifier = ReceiverIdentities.CreateForMessageHub();
@@ -146,17 +147,17 @@ namespace kino.Tests.Cluster
             Func<IMessage, bool> isDiscoveryMessage = msg =>
                                                       {
                                                           var payload = msg.GetPayload<DiscoverMessageRouteMessage>();
-                                                          Assert.Contains(msg.Domain, allowedDomains);
+                                                          CollectionAssert.Contains(allowedDomains, msg.Domain);
                                                           Assert.True(Unsafe.ArraysEqual(receiverIdentifier.Identity, payload.ReceiverIdentity));
                                                           Assert.Null(payload.MessageContract);
                                                           Assert.True(Unsafe.ArraysEqual(payload.RequestorNodeIdentity, scaleOutAddress.Identity));
-                                                          Assert.Equal(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
+                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
                                                           return true;
                                                       };
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isDiscoveryMessage(msg))), Times.Exactly(allowedDomains.Count()));
         }
 
-        [Fact]
+        [Test]
         public void IfSecurityExceptionThrownForOneMessageRoute_OthersAreStillSent()
         {
             var messageHub = ReceiverIdentities.CreateForMessageHub();
@@ -177,11 +178,11 @@ namespace kino.Tests.Cluster
             Func<IMessage, bool> isDiscoveryMessage = msg =>
                                                       {
                                                           var payload = msg.GetPayload<DiscoverMessageRouteMessage>();
-                                                          Assert.Contains(msg.Domain, allowedDomains);
+                                                          CollectionAssert.Contains(allowedDomains, msg.Domain);
                                                           Assert.True(Unsafe.ArraysEqual(messageHub.Identity, payload.ReceiverIdentity));
                                                           Assert.Null(payload.MessageContract);
                                                           Assert.True(Unsafe.ArraysEqual(payload.RequestorNodeIdentity, scaleOutAddress.Identity));
-                                                          Assert.Equal(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
+                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
                                                           return true;
                                                       };
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isDiscoveryMessage(msg))), Times.Exactly(allowedDomains.Count()));

@@ -1,13 +1,13 @@
 ﻿using kino.Cluster;
 using kino.Core;
 using kino.Tests.Actors.Setup;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
     public class MessageRouteTests
     {
-        [Fact]
+        [Test]
         public void TwoMessageRoutesAreEqual_IfTheirMessageAndReceiverPropertiesAreEqual()
         {
             var receiver = ReceiverIdentities.CreateForActor();
@@ -22,14 +22,14 @@ namespace kino.Tests.Cluster
                              Receiver = receiver
                          };
             //
-            Assert.Equal(first, second);
+            Assert.AreEqual(first, second);
             Assert.True(first.Equals(second));
             Assert.True(first.Equals((object) second));
             Assert.True(first == second);
             Assert.False(first != second);
         }
 
-        [Fact]
+        [Test]
         public void TwoMessageRoutesAreNotEqual_IfTheirMessagePropertiesAreNotEqual()
         {
             var receiver = ReceiverIdentities.CreateForActor();
@@ -44,14 +44,14 @@ namespace kino.Tests.Cluster
                              Receiver = receiver
                          };
             //
-            Assert.NotEqual(first, second);
+            Assert.AreNotEqual(first, second);
             Assert.False(first.Equals(second));
             Assert.False(first.Equals((object) second));
             Assert.True(first != second);
             Assert.False(first == second);
         }
 
-        [Fact]
+        [Test]
         public void TwoMessageRoutesAreNotEqual_IfTheirReceiverPropertiesAreNotEqual()
         {
             var first = new MessageRoute
@@ -65,7 +65,7 @@ namespace kino.Tests.Cluster
                              Receiver = ReceiverIdentities.CreateForActor()
                          };
             //
-            Assert.NotEqual(first, second);
+            Assert.AreNotEqual(first, second);
             Assert.False(first.Equals(second));
             Assert.False(first.Equals((object) second));
             Assert.True(first != second);

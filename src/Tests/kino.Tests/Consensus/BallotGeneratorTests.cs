@@ -2,13 +2,13 @@
 using System.Threading;
 using kino.Consensus;
 using kino.Consensus.Configuration;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Consensus
 {
     public class BallotGeneratorTests
     {
-        [Fact(DisplayName = @"Extend k = (t; r; idp) to include an additional
+        [Test(Description = @"Extend k = (t; r; idp) to include an additional
 message number r that is used to distinguish the messages
 sent by a process within the same interval. r must only
 be unique within an interval.")]
@@ -24,8 +24,8 @@ be unique within an interval.")]
             Thread.Sleep((int) leaseConfig.ClockDrift.TotalMilliseconds / 10);
             var ballot2 = ballotGenerator.New(identity);
 
-            Assert.InRange(leaseConfig.ClockDrift, ballot2.Timestamp - ballot1.Timestamp, TimeSpan.MaxValue);
-            Assert.NotEqual(ballot1.MessageNumber, ballot2.MessageNumber);
+            Assert.That(leaseConfig.ClockDrift, Is.InRange(ballot2.Timestamp - ballot1.Timestamp, TimeSpan.MaxValue));
+            Assert.AreNotEqual(ballot1.MessageNumber, ballot2.MessageNumber);
         }
     }
 }

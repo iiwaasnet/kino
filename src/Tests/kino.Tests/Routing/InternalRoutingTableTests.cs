@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using FluentAssertions;
 using kino.Connectivity;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -10,18 +9,19 @@ using kino.Routing;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Routing
 {
     public class InternalRoutingTableTests
     {
-        private readonly InternalRoutingTable internalRoutingTable;
+        private InternalRoutingTable internalRoutingTable;
 
-        public InternalRoutingTableTests()
+        [SetUp]
+        public void Setup()
             => internalRoutingTable = new InternalRoutingTable(new RoundRobinDestinationList(new Mock<ILogger>().Object));
 
-        [Fact]
+        [Test]
         public void IfReceiverIdentifierNeitherMessageHubNorActor_AddMessageRouteThrowsException()
         {
             var receiverIdentity = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
@@ -35,7 +35,7 @@ namespace kino.Tests.Routing
             Assert.Throws<ArgumentException>(() => internalRoutingTable.AddMessageRoute(registration));
         }
 
-        [Fact]
+        [Test]
         public void AddMessageRoute_AddsMessageHubRoute()
         {
             var messageHub = ReceiverIdentities.CreateForMessageHub();
@@ -53,12 +53,12 @@ namespace kino.Tests.Routing
                                     ReceiverIdentity = messageHub
                                 };
             var socket = internalRoutingTable.FindRoutes(lookupRequest).First();
-            Assert.Equal(localSocket, socket);
+            Assert.AreEqual(localSocket, socket);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
         public void AddMessageRoute_AddsLocalOrExternalMessageHubRoute(bool keepLocal)
         {
             var messageHub = ReceiverIdentities.CreateForMessageHub();
@@ -73,11 +73,11 @@ namespace kino.Tests.Routing
             internalRoutingTable.AddMessageRoute(registration);
             //
             var route = internalRoutingTable.GetAllRoutes().MessageHubs.First();
-            Assert.Equal(keepLocal, route.LocalRegistration);
-            Assert.Equal(messageHub, route.MessageHub);
+            Assert.AreEqual(keepLocal, route.LocalRegistration);
+            Assert.AreEqual(messageHub, route.MessageHub);
         }
 
-        [Fact]
+        [Test]
         public void AddMessageRoute_AddsActorRoute()
         {
             var actor = ReceiverIdentities.CreateForActor();
@@ -98,12 +98,12 @@ namespace kino.Tests.Routing
                                     Message = messageIdentifier
                                 };
             var socket = internalRoutingTable.FindRoutes(lookupRequest).First();
-            Assert.Equal(localSocket, socket);
+            Assert.AreEqual(localSocket, socket);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
+        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
         public void AddMessageRoute_AddsLocalOrExternalActorRoute(bool keepLocal)
         {
             var actor = ReceiverIdentities.CreateForActor();
@@ -126,11 +126,11 @@ namespace kino.Tests.Routing
             internalRoutingTable.AddMessageRoute(registration);
             //
             var route = internalRoutingTable.GetAllRoutes().Actors.First().Actors.First();
-            Assert.Equal(keepLocal, route.LocalRegistration);
+            Assert.AreEqual(keepLocal, route.LocalRegistration);
             Assert.True(Unsafe.ArraysEqual(actor.Identity, route.Identity));
         }
 
-        [Fact]
+        [Test]
         public void FindRoutesByMessageHubReceiverIdentity_ReturnsMessageHubSocket()
         {
             var registrations = Randomizer.Int32(3, 6)
@@ -152,10 +152,10 @@ namespace kino.Tests.Routing
             var socket = internalRoutingTable.FindRoutes(lookupRequest)
                                              .First();
             //
-            Assert.Equal(localSocket, socket);
+            Assert.AreEqual(localSocket, socket);
         }
 
-        [Fact]
+        [Test]
         public void FindRoutesByActorReceiverIdentifier_ReturnsActorHostSocket()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
@@ -179,10 +179,10 @@ namespace kino.Tests.Routing
                                                          })
                                              .First();
             //
-            Assert.Equal(localSocket, socket);
+            Assert.AreEqual(localSocket, socket);
         }
 
-        [Fact]
+        [Test]
         public void IfSeveralActorsRegisteredToHandleTheMessage_TheAreFoundInRoundRobinManner()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
@@ -205,11 +205,11 @@ namespace kino.Tests.Routing
                                                  .First();
                 var localSocket = registration.DestinationSocket;
                 //
-                Assert.Equal(localSocket, socket);
+                Assert.AreEqual(localSocket, socket);
             }
         }
 
-        [Fact]
+        [Test]
         public void FindBroadcastMessage_ReturnsAllRegisteredActors()
         {
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>();
@@ -230,12 +230,10 @@ namespace kino.Tests.Routing
                                                           });
 
             //
-            registrations.Select(r => r.DestinationSocket)
-                         .Should()
-                         .BeEquivalentTo(sockets);
+            CollectionAssert.AreEquivalent(registrations.Select(r => r.DestinationSocket), sockets);
         }
 
-        [Fact]
+        [Test]
         public void IfMessageRouteIsNotRegistered_NoActorsReturned()
         {
             var registrations = Randomizer.Int32(6, 16)
@@ -253,10 +251,10 @@ namespace kino.Tests.Routing
                                                           });
 
             //
-            Assert.Empty(sockets);
+            CollectionAssert.IsEmpty(sockets);
         }
 
-        [Fact]
+        [Test]
         public void RemoveReceiverRoute_RemoveAllActorRegistrations()
         {
             var registration = new InternalRouteRegistration
@@ -275,13 +273,11 @@ namespace kino.Tests.Routing
             //
             var routes = internalRoutingTable.RemoveReceiverRoute(registration.DestinationSocket);
             //
-            registration.MessageContracts.Select(mc => mc.Message)
-                        .Should()
-                        .BeEquivalentTo(routes.Select(r => r.Message));
-            Assert.Empty(internalRoutingTable.GetAllRoutes().Actors);
+            CollectionAssert.AreEquivalent(registration.MessageContracts.Select(mc => mc.Message), routes.Select(r => r.Message));
+            CollectionAssert.IsEmpty(internalRoutingTable.GetAllRoutes().Actors);
         }
 
-        [Fact]
+        [Test]
         public void RemoveReceiverRoute_RemoveAllMessageHubRegistrations()
         {
             var registration = new InternalRouteRegistration
@@ -294,7 +290,7 @@ namespace kino.Tests.Routing
             var route = internalRoutingTable.RemoveReceiverRoute(registration.DestinationSocket)
                                             .First();
             //
-            Assert.Equal(registration.ReceiverIdentifier, route.Receiver);
+            Assert.AreEqual(registration.ReceiverIdentifier, route.Receiver);
         }
     }
 }

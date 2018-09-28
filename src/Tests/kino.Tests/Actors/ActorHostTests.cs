@@ -13,7 +13,7 @@ using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Actors
 {
@@ -21,17 +21,18 @@ namespace kino.Tests.Actors
     {
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
         private static readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
-        private readonly Mock<ILogger> logger;
-        private readonly ActorHandlerMap actorHandlersMap;
-        private readonly Mock<ISecurityProvider> securityProvider;
+        private Mock<ILogger> logger;
+        private ActorHandlerMap actorHandlersMap;
+        private Mock<ISecurityProvider> securityProvider;
         private ActorHost actorHost;
-        private readonly Mock<ILocalSocket<IMessage>> localRouterSocket;
-        private readonly Mock<ILocalSendingSocket<InternalRouteRegistration>> internalRegistrationSender;
-        private readonly Mock<ILocalSocketFactory> localSocketFactory;
-        private readonly Mock<ILocalSocket<IMessage>> receivingSocket;
-        private readonly Mock<IAsyncQueue<AsyncMessageContext>> asyncQueue;
+        private Mock<ILocalSocket<IMessage>> localRouterSocket;
+        private Mock<ILocalSendingSocket<InternalRouteRegistration>> internalRegistrationSender;
+        private Mock<ILocalSocketFactory> localSocketFactory;
+        private Mock<ILocalSocket<IMessage>> receivingSocket;
+        private Mock<IAsyncQueue<AsyncMessageContext>> asyncQueue;
 
-        public ActorHostTests()
+        [SetUp]
+        public void Setup()
         {
             logger = new Mock<ILogger>();
             actorHandlersMap = new ActorHandlerMap();
@@ -53,7 +54,7 @@ namespace kino.Tests.Actors
                                       logger.Object);
         }
 
-        [Fact]
+        [Test]
         public void AssignActor_SendsRegisterationMessage()
         {
             var partition = Guid.NewGuid().ToByteArray();
@@ -83,7 +84,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Fact]
+        [Test]
         public void SyncActorResponse_SendImmediately()
         {
             try
@@ -104,7 +105,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Fact]
+        [Test]
         public void ExceptionThrownFromActorHandler_DeliveredAsExceptionMessage()
         {
             var errorMessage = Guid.NewGuid().ToString();
@@ -128,7 +129,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Fact]
+        [Test]
         public void AsyncActorResult_IsEnqueuedForCompletion()
         {
             try
@@ -150,7 +151,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Fact]
+        [Test]
         public void AsyncActorException_IsSentAfterCompletionAsExceptionMessage()
         {
             try
@@ -176,7 +177,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Fact]
+        [Test]
         public void AsyncActorResult_IsAddedToMessageCompletionQueue()
         {
             try
@@ -201,9 +202,9 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Theory]
-        [InlineData(DistributionPattern.Broadcast, false)]
-        [InlineData(DistributionPattern.Unicast, true)]
+        [Test]
+        [TestCase(DistributionPattern.Broadcast, false)]
+        [TestCase(DistributionPattern.Unicast, true)]
         public void CallbackReceiverIdentities_AreCopiedFromIncomingMessageProcessedSyncOnlyForUnicastOutMessages(DistributionPattern distribution,
                                                                                                                   bool areCopied)
         {
@@ -238,7 +239,7 @@ namespace kino.Tests.Actors
 
                 bool AssertCallbackPropertiesNotCopied(Message messageOut)
                 {
-                    Assert.Empty(messageOut.CallbackPoint);
+                    CollectionAssert.IsEmpty(messageOut.CallbackPoint);
                     Assert.Null(messageOut.CallbackReceiverIdentity);
                     Assert.Null(messageOut.CallbackReceiverNodeIdentity);
 
@@ -251,9 +252,9 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Theory]
-        [InlineData(DistributionPattern.Broadcast, false)]
-        [InlineData(DistributionPattern.Unicast, true)]
+        [Test]
+        [TestCase(DistributionPattern.Broadcast, false)]
+        [TestCase(DistributionPattern.Unicast, true)]
         public void CallbackReceiverIdentities_AreCopiedFromIncomingMessageProcessedAsyncOnlyForUnicastOutMessages(DistributionPattern distribution,
                                                                                                                    bool areCopied)
         {
@@ -297,7 +298,7 @@ namespace kino.Tests.Actors
 
                 bool AssertCallbackPropertiesNotCopied(Message messageOut)
                 {
-                    Assert.Empty(messageOut.CallbackPoint);
+                    CollectionAssert.IsEmpty(messageOut.CallbackPoint);
                     Assert.Null(messageOut.CallbackReceiverIdentity);
                     Assert.Null(messageOut.CallbackReceiverNodeIdentity);
 
@@ -310,7 +311,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Fact]
+        [Test]
         public void IfCallbackIsRegistered_SyncExceptionMessageIsDeliveredToCallbackReceiver()
         {
             try
@@ -342,7 +343,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Fact]
+        [Test]
         public void IfCallbackIsRegistered_AsyncExceptionMessageIsDeliveredToCallbackReceiver()
         {
             try
@@ -382,7 +383,7 @@ namespace kino.Tests.Actors
             }
         }
 
-        [Fact]
+        [Test]
         public void ExceptionMessage_HasDomainSet()
         {
             var kinoDomain = Guid.NewGuid().ToString();

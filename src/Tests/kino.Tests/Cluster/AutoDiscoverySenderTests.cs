@@ -11,23 +11,24 @@ using kino.Messaging;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Cluster
 {
     public class AutoDiscoverySenderTests
     {
-        private readonly TimeSpan AsyncOp = TimeSpan.FromSeconds(1);
-        private readonly AutoDiscoverySender autoDiscoverSender;
-        private readonly Mock<IRendezvousCluster> rendezvousCluster;
-        private readonly Mock<ILogger> logger;
-        private readonly Mock<ISocketFactory> socketFactory;
-        private readonly Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
-        private readonly Mock<ISocket> socket;
-        private readonly RendezvousEndpoint rendezvousEndpoint;
-        private readonly ClusterMembershipConfiguration config;
+        private TimeSpan AsyncOp = TimeSpan.FromSeconds(1);
+        private AutoDiscoverySender autoDiscoverSender;
+        private Mock<IRendezvousCluster> rendezvousCluster;
+        private Mock<ILogger> logger;
+        private Mock<ISocketFactory> socketFactory;
+        private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
+        private Mock<ISocket> socket;
+        private RendezvousEndpoint rendezvousEndpoint;
+        private ClusterMembershipConfiguration config;
 
-        public AutoDiscoverySenderTests()
+        [SetUp]
+        public void Setup()
         {
             rendezvousCluster = new Mock<IRendezvousCluster>();
             rendezvousEndpoint = new RendezvousEndpoint("tcp://*:8080", "tcp://*:9009");
@@ -53,7 +54,7 @@ namespace kino.Tests.Cluster
                                                          logger.Object);
         }
 
-        [Fact]
+        [Test]
         public void StartBlockingSendMessages_SendsEnqueuedMessages()
         {
             var messages = Randomizer.Int32(2, 5)
@@ -68,7 +69,7 @@ namespace kino.Tests.Cluster
             socket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Exactly(messages.Count()));
         }
 
-        [Fact]
+        [Test]
         public void MessageIsNotEnqueued_IfQueueLengthIsGreaterThanMaxAutoDiscoverySenderQueueLength()
         {
             config.RouteDiscovery.MaxAutoDiscoverySenderQueueLength = Randomizer.Int32(10, 20);

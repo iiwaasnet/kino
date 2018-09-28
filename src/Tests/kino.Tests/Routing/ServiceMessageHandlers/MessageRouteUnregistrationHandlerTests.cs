@@ -12,22 +12,23 @@ using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
 using kino.Tests.Helpers;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 using MessageContract = kino.Messaging.Messages.MessageContract;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
     public class MessageRouteUnregistrationHandlerTests
     {
-        private readonly Mock<IClusterHealthMonitor> clusterHealthMonitor;
-        private readonly Mock<IExternalRoutingTable> externalRoutingTable;
-        private readonly Mock<ISecurityProvider> securityProvider;
-        private readonly Mock<ILogger> logger;
-        private readonly string domain;
-        private readonly Mock<ISocket> backEndSocket;
-        private readonly MessageRouteUnregistrationHandler handler;
+        private Mock<IClusterHealthMonitor> clusterHealthMonitor;
+        private Mock<IExternalRoutingTable> externalRoutingTable;
+        private Mock<ISecurityProvider> securityProvider;
+        private Mock<ILogger> logger;
+        private string domain;
+        private Mock<ISocket> backEndSocket;
+        private MessageRouteUnregistrationHandler handler;
 
-        public MessageRouteUnregistrationHandlerTests()
+        [SetUp]
+        public void Setup()
         {
             domain = Guid.NewGuid().ToString();
             clusterHealthMonitor = new Mock<IClusterHealthMonitor>();
@@ -42,7 +43,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
                                                             logger.Object);
         }
 
-        [Fact]
+        [Test]
         public void IfDomainIsNotAllowed_ExternalMessageRouteIsNotRemoved()
         {
             var message = Message.Create(new UnregisterMessageRouteMessage()).As<Message>();
@@ -53,7 +54,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             externalRoutingTable.Verify(m => m.AddMessageRoute(It.IsAny<ExternalRouteRegistration>()), Times.Never);
         }
 
-        [Fact]
+        [Test]
         public void EveryMessageRouteInTheReceivedMessage_IsRemoved()
         {
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
@@ -82,7 +83,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             externalRoutingTable.Verify(m => m.RemoveMessageRoute(It.Is<ExternalRouteRemoval>(rt => isRouteToRemove(rt))), Times.Exactly(callsCount));
         }
 
-        [Fact]
+        [Test]
         public void IfRouteReceiverIsMessageHub_MessageDominIsNotChecked()
         {
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(Guid.NewGuid().ToString);
@@ -112,7 +113,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             securityProvider.Verify(m => m.GetDomain(It.IsAny<byte[]>()), Times.Never());
         }
 
-        [Fact]
+        [Test]
         public void IfRouteReceiverIsActorAndMessageDomainIsNotEqualToUnregisterMessageRouteDomain_ExternalMessageRouteIsNotRemoved()
         {
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(Guid.NewGuid().ToString);
@@ -130,10 +131,10 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             securityProvider.Verify(m => m.GetDomain(It.IsAny<byte[]>()), Times.Exactly(callsCount));
         }
 
-        [Theory]
-        [InlineData(PeerConnectionAction.Disconnect)]
-        [InlineData(PeerConnectionAction.KeepConnection)]
-        [InlineData(PeerConnectionAction.NotFound)]
+        [Test]
+        [TestCase(PeerConnectionAction.Disconnect)]
+        [TestCase(PeerConnectionAction.KeepConnection)]
+        [TestCase(PeerConnectionAction.NotFound)]
         public void IfPeerRemovalConnectionActionIsDisconnect_ScaleOutBackendSocketIsDisconnectedFromPeer(PeerConnectionAction peerConnectionAction)
         {
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
@@ -154,10 +155,10 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             backEndSocket.Verify(m => m.Disconnect(peerRemoveResult.Uri), Times.Exactly(peerConnectionAction == PeerConnectionAction.Disconnect ? callsCount : 0));
         }
 
-        [Theory]
-        [InlineData(PeerConnectionAction.Disconnect)]
-        [InlineData(PeerConnectionAction.KeepConnection)]
-        [InlineData(PeerConnectionAction.NotFound)]
+        [Test]
+        [TestCase(PeerConnectionAction.Disconnect)]
+        [TestCase(PeerConnectionAction.KeepConnection)]
+        [TestCase(PeerConnectionAction.NotFound)]
         public void IfPeerRemovalConnectionActionNotEqualsKeepConnection_ClusterHealthMonitorDeletesPeer(PeerConnectionAction peerConnectionAction)
         {
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);

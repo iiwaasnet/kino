@@ -3,13 +3,13 @@ using kino.Core.Framework;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Tests.Actors.Setup;
 using Moq;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Routing.ServiceMessageHandlers
 {
     public class ServiceMessageHandlerRegistryTests
     {
-        [Fact]
+        [Test]
         public void IfThereAreTwoMessageHandlersForTheSameMessage_DuplicatedKeyExceptionIsThrown()
         {
             var serviceMessageHandler = new Mock<IServiceMessageHandler>();
@@ -19,7 +19,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             Assert.Throws<DuplicatedKeyException>(() => new ServiceMessageHandlerRegistry(serviceMessageHandlers));
         }
 
-        [Fact]
+        [Test]
         public void IfMessageHandlerIsNotRegistered_GetMessageHandlerReturnsNull()
         {
             var serviceMessageHandler = new Mock<IServiceMessageHandler>();
@@ -29,7 +29,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             Assert.Null(new ServiceMessageHandlerRegistry(serviceMessageHandlers).GetMessageHandler(MessageIdentifier.Create<AsyncMessage>()));
         }
 
-        [Fact]
+        [Test]
         public void GetMessageHandler_ReturnsReturnsRegisteredMessageHandler()
         {
             var serviceMessageHandler = new Mock<IServiceMessageHandler>();
@@ -37,7 +37,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             serviceMessageHandler.Setup(m => m.TargetMessage).Returns(messageIdentifier);
             var serviceMessageHandlers = new[] {serviceMessageHandler.Object};
             //
-            Assert.Equal(serviceMessageHandler.Object, new ServiceMessageHandlerRegistry(serviceMessageHandlers).GetMessageHandler(messageIdentifier));
+            Assert.AreEqual(serviceMessageHandler.Object, new ServiceMessageHandlerRegistry(serviceMessageHandlers).GetMessageHandler(messageIdentifier));
         }
     }
 }

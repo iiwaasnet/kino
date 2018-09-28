@@ -5,18 +5,19 @@ using kino.Core.Framework;
 using kino.Messaging.Messages;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
-using Xunit;
+using NUnit.Framework;
 
 namespace kino.Tests.Client
 {
     public class CallbackHandlerStackTests
     {
-        private readonly CallbackHandlerStack callbackHandlerStack;
+        private CallbackHandlerStack callbackHandlerStack;
 
-        public CallbackHandlerStackTests()
+        [SetUp]
+        public void Setup()
             => callbackHandlerStack = new CallbackHandlerStack();
 
-        [Fact]
+        [Test]
         public void PushCallbackWithSamePromiseTwice_ThrowsDuplicatedKeyException()
         {
             var promise = new Promise(Randomizer.Int64());
@@ -25,7 +26,7 @@ namespace kino.Tests.Client
             Assert.Throws<DuplicatedKeyException>(() => { callbackHandlerStack.Push(promise, Enumerable.Empty<MessageIdentifier>()); });
         }
 
-        [Fact]
+        [Test]
         public void PopCallBackHandlerForSpecificCallbackKey_RemovesAllOtherHandlersForThisCallbackKey()
         {
             var promise = new Promise(Randomizer.Int64());
