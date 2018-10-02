@@ -53,7 +53,7 @@ namespace kino.Cluster
             => multiplexingSocket.Send(Message.Create(new StartPeerMonitoringMessage
                                                       {
                                                           SocketIdentity = peer.SocketIdentity,
-                                                          Uri = peer.Uri.ToSocketAddress(),
+                                                          Uri = peer.Uri,
                                                           Health = new Messaging.Messages.Health
                                                                    {
                                                                        Uri = health.Uri,
@@ -63,12 +63,12 @@ namespace kino.Cluster
 
         public void AddPeer(Node peer, Health health)
         {
-            logger.Debug($"AddPeer {peer.SocketIdentity.GetAnyString()}@{peer.Uri.ToSocketAddress()}");
+            logger.Debug($"AddPeer {peer.SocketIdentity.GetAnyString()}@{peer.Uri}");
 
             multiplexingSocket.Send(Message.Create(new AddPeerMessage
                                                    {
                                                        SocketIdentity = peer.SocketIdentity,
-                                                       Uri = peer.Uri.ToSocketAddress(),
+                                                       Uri = peer.Uri,
                                                        Health = new Messaging.Messages.Health
                                                                 {
                                                                     Uri = health.Uri,
@@ -219,7 +219,7 @@ namespace kino.Cluster
                     logger.Debug($"Left {connectedPeerRegistry.Count()} nodes to monitor.");
                     if (meta.ConnectionEstablished)
                     {
-                        socket.Disconnect(new Uri(meta.HealthUri));
+                        socket.Disconnect(meta.HealthUri);
                         logger.Warn($"Stopped HeartBeat monitoring node {payload.NodeIdentity.GetAnyString()}@{meta.HealthUri}");
                     }
                 }
@@ -287,24 +287,23 @@ namespace kino.Cluster
             {
                 using (var socket = socketFactory.CreateRouterSocket())
                 {
-                    var uri = new Uri(meta.ScaleOutUri);
                     try
                     {
                         socket.SetMandatoryRouting();
-                        socket.Connect(uri, waitUntilConnected: true);
+                        socket.Connect(meta.ScaleOutUri, waitUntilConnected: true);
                         var message = Message.Create(new PingMessage())
                                              .As<Message>();
                         message.SetDomain(securityProvider.GetDomain(KinoMessages.Ping.Identity));
                         message.SetSocketIdentity(nodeIdentifier.Identity);
                         message.SignMessage(securityProvider);
                         socket.SendMessage(message);
-                        socket.Disconnect(uri);
+                        socket.Disconnect(meta.ScaleOutUri);
                         meta.LastKnownHeartBeat = DateTime.UtcNow;
                     }
                     catch (Exception err)
                     {
                         routerLocalSocket.Send(Message.Create(new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = nodeIdentifier.Identity}));
-                        logger.Warn($"Failed trying to check connectivity to node {nodeIdentifier}@{uri.ToSocketAddress()}. Peer deletion scheduled. {err}");
+                        logger.Warn($"Failed trying to check connectivity to node {nodeIdentifier}@{meta.ScaleOutUri}. Peer deletion scheduled. {err}");
                     }
                 }
             }
@@ -375,7 +374,7 @@ namespace kino.Cluster
                 meta.LastKnownHeartBeat = DateTime.UtcNow;
                 meta.ConnectionEstablished = true;
                 StartDeadPeersCheck(meta.HeartBeatInterval);
-                socket.Connect(new Uri(meta.HealthUri));
+                socket.Connect(meta.HealthUri);
 
                 logger.Debug($"Connected to node {payload.SocketIdentity.GetAnyString()}@{meta.HealthUri} for HeartBeat monitoring.");
             }
@@ -437,7 +436,7 @@ namespace kino.Cluster
                     logger.Warn($"HeartBeat came from unknown node {payload.SocketIdentity.GetAnyString()}. Will disconnect from HealthUri: {payload.HealthUri}");
                     try
                     {
-                        socket.Disconnect(new Uri(payload.HealthUri));
+                        socket.Disconnect(payload.HealthUri);
                     }
                     catch (Exception err)
                     {
@@ -452,7 +451,7 @@ namespace kino.Cluster
         private ISocket CreateSubscriberSocket()
         {
             var socket = socketFactory.CreateSubscriberSocket();
-            socket.Connect(config.IntercomEndpoint, waitUntilConnected: true);
+            socket.Connect(config.IntercomEndpoint.ToSocketAddress(), waitUntilConnected: true);
             socket.Subscribe();
 
             return socket;
@@ -461,7 +460,7 @@ namespace kino.Cluster
         private ISocket CreatePublisherSocket()
         {
             var socket = socketFactory.CreatePublisherSocket();
-            socket.Bind(config.IntercomEndpoint);
+            socket.Bind(config.IntercomEndpoint.ToSocketAddress());
 
             return socket;
         }

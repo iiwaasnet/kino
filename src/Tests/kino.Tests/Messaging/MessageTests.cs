@@ -14,10 +14,14 @@ namespace kino.Tests.Messaging
     public class MessageTests
     {
         private ISecurityProvider securityProvider;
+        private MessageWireFormatter messageWireFormatter;
 
         [SetUp]
         public void Setup()
-            => securityProvider = new SecurityProvider(HMACMD5.Create, new DomainScopeResolver(), new DomainPrivateKeyProvider());
+        {
+            messageWireFormatter = new MessageWireFormatter();
+            securityProvider = new SecurityProvider(() => HMACMD5.Create("HMACSHA256"), new DomainScopeResolver(), new DomainPrivateKeyProvider());
+        }
 
         [Test]
         public void FlowStartMessage_HasCorrelationIdSet()
@@ -120,18 +124,19 @@ namespace kino.Tests.Messaging
             message.TraceOptions = MessageTraceOptions.Routing;
             var socketEndpoints = new[]
                                   {
-                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
-                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray())
+                                      new SocketEndpoint(new Uri("tcp://localhost:41"), Guid.NewGuid().ToByteArray()),
+                                      new SocketEndpoint(new Uri("tcp://localhost:42"), Guid.NewGuid().ToByteArray())
                                   };
             foreach (var socketEndpoint in socketEndpoints)
             {
                 message.PushRouterAddress(socketEndpoint);
             }
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
-            CollectionAssert.AreEquivalent(socketEndpoints, message.GetMessageRouting());
+            var messageRouting = message.GetMessageRouting();
+            CollectionAssert.AreEquivalent(socketEndpoints, messageRouting);
         }
 
         [Test]
@@ -141,8 +146,8 @@ namespace kino.Tests.Messaging
             var correlationId = Guid.NewGuid().ToByteArray();
             message.SetCorrelationId(correlationId);
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.AreEqual(correlationId, message.CorrelationId);
         }
@@ -154,8 +159,9 @@ namespace kino.Tests.Messaging
             var receiverNode = ReceiverIdentifier.Create();
             message.SetReceiverNode(receiverNode);
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            ;
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.AreEqual(receiverNode.Identity, message.ReceiverNodeIdentity);
         }
@@ -166,8 +172,9 @@ namespace kino.Tests.Messaging
             var messageText = Guid.NewGuid().ToString();
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage {Content = messageText});
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            ;
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.AreEqual(messageText, message.GetPayload<SimpleMessage>().Content);
             Assert.True(message.Equals(MessageIdentifier.Create<SimpleMessage>()));
@@ -189,8 +196,8 @@ namespace kino.Tests.Messaging
                                           callbackMessageIdentifier,
                                           callbackKey);
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifier);
             Assert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
@@ -213,8 +220,8 @@ namespace kino.Tests.Messaging
                                           callbackMessageIdentifier,
                                           callbackKey);
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             CollectionAssert.Contains(message.CallbackPoint, callbackMessageIdentifier);
             Assert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
@@ -230,8 +237,8 @@ namespace kino.Tests.Messaging
         {
             var message = Message.Create(new SimpleMessage(), distributionPattern).As<Message>();
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.AreEqual(distributionPattern, message.Distribution);
         }
@@ -245,8 +252,8 @@ namespace kino.Tests.Messaging
                                                                    });
             var partition = message.Partition;
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.True(Unsafe.ArraysEqual(partition, message.Partition));
         }
@@ -259,8 +266,8 @@ namespace kino.Tests.Messaging
             message.AddHop();
             var hops = message.Hops;
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.AreEqual(hops, message.Hops);
         }
@@ -273,8 +280,8 @@ namespace kino.Tests.Messaging
             var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
             Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
         }
@@ -287,8 +294,8 @@ namespace kino.Tests.Messaging
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = routeOptions;
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.AreEqual(routeOptions, message.TraceOptions);
         }
@@ -300,8 +307,8 @@ namespace kino.Tests.Messaging
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TTL = ttl;
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.AreEqual(ttl, message.TTL);
         }
@@ -313,8 +320,8 @@ namespace kino.Tests.Messaging
             var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
             message.SetDomain(securityDomain);
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.AreEqual(securityDomain, message.Domain);
         }
@@ -329,8 +336,9 @@ namespace kino.Tests.Messaging
                                           Guid.NewGuid().ToByteArray(),
                                           callbackMessageIdentifier,
                                           callbackKey);
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             Assert.AreEqual(callbackKey, message.CallbackKey);
         }
@@ -344,14 +352,14 @@ namespace kino.Tests.Messaging
             message.SetDomain(securityDomain);
             message.SignMessage(securityProvider);
 
-            var multipart = new MultipartMessage(message);
-            message = Message.FromMultipartMessage(multipart);
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             message.VerifySignature(securityProvider);
         }
 
         [Test]
-        public void CallbackTriggeresForEveryMessageInCallbackPoint()
+        public void CallbackTriggersForEveryMessageInCallbackPoint()
         {
             var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
             var callbackReceiverNodeIdentity = Guid.NewGuid().ToByteArray();

@@ -4,7 +4,7 @@ namespace kino.Cluster.Configuration
 {
     public interface IHeartBeatSenderConfigurationProvider
     {
-        Uri GetHeartBeatAddress();
+        string GetHeartBeatAddress();
 
         TimeSpan GetHeartBeatInterval();
     }

@@ -28,15 +28,15 @@ namespace kino.Tests.Consensus
         [Test]
         public void NodeWithSameUriAsOneOfSynodMembers_BelongsToSynod()
         {
-            var node = new Uri(synodConfig.Members.Second()).BuildIpAddressUri();
+            var node = new Uri(synodConfig.Members.Second()).BuildIpAddressUri().ToSocketAddress();
             //
             Assert.True(synodConfigProvider.BelongsToSynod(node));
         }
 
         [Test]
-        public void NodeWithDifferentUri_DoesntBelongToSynod()
+        public void NodeWithDifferentUri_DoesNotBelongToSynod()
         {
-            var node = "tcp://127.0.0.2:8080".ParseAddress();
+            var node = "tcp://127.0.0.2:8080".ParseAddress().ToSocketAddress();
             //
             Assert.False(synodConfigProvider.BelongsToSynod(node));
         }

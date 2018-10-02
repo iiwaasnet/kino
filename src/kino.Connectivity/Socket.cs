@@ -12,21 +12,24 @@ namespace kino.Connectivity
     internal class Socket : ISocket
     {
         private readonly NetMQSocket socket;
+        private readonly IMessageWireFormatter messageWireFormatter;
         private readonly SocketConfiguration config;
 
-        internal Socket(NetMQSocket socket, SocketConfiguration config)
+        internal Socket(NetMQSocket socket,
+                        IMessageWireFormatter messageWireFormatter,
+                        SocketConfiguration config)
         {
             socket.Options.Linger = config.Linger;
             socket.Options.ReceiveHighWatermark = config.ReceivingHighWatermark;
             socket.Options.SendHighWatermark = config.SendingHighWatermark;
             this.socket = socket;
+            this.messageWireFormatter = messageWireFormatter;
             this.config = config;
         }
 
         public void SendMessage(IMessage message)
         {
-            var multipart = new MultipartMessage((Message) message);
-            var frames = (IList<byte[]>) multipart.Frames;
+            var frames = messageWireFormatter.Serialize((Message) message);
             var msg = new Msg();
             try
             {
@@ -69,7 +72,7 @@ namespace kino.Connectivity
                     if (frames.Count > 0)
                     {
                         ReceiveRate?.Increment();
-                        return Message.FromMultipartMessage(new MultipartMessage(frames));
+                        return messageWireFormatter.Deserialize(frames);
                     }
                 }
                 finally
@@ -81,23 +84,23 @@ namespace kino.Connectivity
             return null;
         }
 
-        public void Connect(Uri address, bool waitUntilConnected = false)
+        public void Connect(string address, bool waitUntilConnected = false)
         {
-            socket.Connect(address.ToSocketAddress());
+            socket.Connect(address);
             if (waitUntilConnected)
             {
                 config.ConnectionEstablishmentTime.Sleep();
             }
         }
 
-        public void Disconnect(Uri address)
-            => socket.Disconnect(address.ToSocketAddress());
+        public void Disconnect(string address)
+            => socket.Disconnect(address);
 
-        public void Bind(Uri address)
-            => socket.Bind(address.ToSocketAddress());
+        public void Bind(string address)
+            => socket.Bind(address);
 
-        public void Unbind(Uri address)
-            => socket.Unbind(address.ToSocketAddress());
+        public void Unbind(string address)
+            => socket.Unbind(address);
 
         public void Subscribe(string topic = "")
             => ((SubscriberSocket) socket).Subscribe(topic);

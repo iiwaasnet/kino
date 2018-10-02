@@ -85,7 +85,7 @@ namespace kino.Consensus
                 response = Message.Create(new LeaseNackWriteMessage
                                           {
                                               Ballot = payload.Ballot,
-                                              SenderUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
+                                              SenderUri = synodConfigProvider.LocalNode.Uri
                                           });
             }
             else
@@ -98,7 +98,7 @@ namespace kino.Consensus
                 response = Message.Create(new LeaseAckWriteMessage
                                           {
                                               Ballot = payload.Ballot,
-                                              SenderUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
+                                              SenderUri = synodConfigProvider.LocalNode.Uri
                                           });
             }
             intercomMessageHub.Send(response);
@@ -121,7 +121,7 @@ namespace kino.Consensus
                 response = Message.Create(new LeaseNackReadMessage
                                           {
                                               Ballot = payload.Ballot,
-                                              SenderUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
+                                              SenderUri = synodConfigProvider.LocalNode.Uri
                                           });
             }
             else
@@ -294,7 +294,7 @@ namespace kino.Consensus
                                                         OwnerPayload = lastKnownLease.OwnerPayload
                                                     }
                                                   : null,
-                                      SenderUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
+                                      SenderUri = synodConfigProvider.LocalNode.Uri
                                   });
         }
     }

@@ -8,7 +8,7 @@
             internal const int BodyDescription = 2;
             internal const int TTL = 3;
             internal const int CorrelationId = 4;
-            internal const int TraceOptionsDistributiomPattern = 5;
+            internal const int TraceOptionsDistributionPattern = 5;
             internal const int Identity = 6;
             internal const int Version = 7;
             internal const int Partition = 8;

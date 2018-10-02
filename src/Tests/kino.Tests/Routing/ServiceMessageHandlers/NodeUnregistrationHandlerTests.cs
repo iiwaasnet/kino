@@ -45,7 +45,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             handler.Handle(message, null);
             //
             externalRoutingTable.Verify(m => m.RemoveNodeRoute(It.IsAny<ReceiverIdentifier>()), Times.Never);
-            backendSocket.Verify(m => m.Disconnect(It.IsAny<Uri>()), Times.Never);
+            backendSocket.Verify(m => m.Disconnect(It.IsAny<string>()), Times.Never);
             clusterHealthMonitor.Verify(m => m.DeletePeer(It.IsAny<ReceiverIdentifier>()), Times.Never);
         }
 
@@ -62,7 +62,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var peerRemoveResult = new PeerRemoveResult
                                    {
                                        ConnectionAction = peerConnectionAction,
-                                       Uri = new Uri("tcp://127.0.0.1:4556")
+                                       Uri = "tcp://127.0.0.1:4556"
                                    };
             var receiverIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
             externalRoutingTable.Setup(m => m.RemoveNodeRoute(receiverIdentifier))

@@ -7,23 +7,29 @@ namespace kino.Core
     {
         private readonly int hashCode;
 
-        public SocketEndpoint(string uri)
+        private SocketEndpoint(string uri)
             : this(uri.ParseAddress(), ReceiverIdentifier.CreateIdentity())
         {
         }
 
-        public SocketEndpoint(string uri, byte[] identity)
+        private SocketEndpoint(string uri, byte[] identity)
             : this(uri.ParseAddress(), identity)
         {
         }
 
         public SocketEndpoint(Uri uri, byte[] identity)
         {
-            Uri = uri;
+            Uri = uri.ToSocketAddress();
             Identity = identity;
 
             hashCode = CalculateHashCode();
         }
+
+        public static SocketEndpoint Resolve(string uri)
+            => new SocketEndpoint(uri);
+
+        public static SocketEndpoint Resolve(string uri, byte[] identity)
+            => new SocketEndpoint(uri, identity);
 
         public override bool Equals(object obj)
         {
@@ -57,7 +63,7 @@ namespace kino.Core
 
         private bool StructuralCompare(SocketEndpoint other)
             => Unsafe.ArraysEqual(Identity, other.Identity)
-               && Uri.AbsoluteUri == other.Uri.AbsoluteUri;
+            && Uri == other.Uri;
 
         public override int GetHashCode()
             => hashCode;
@@ -70,7 +76,7 @@ namespace kino.Core
             }
         }
 
-        public Uri Uri { get; }
+        public string Uri { get; }
 
         public byte[] Identity { get; }
     }

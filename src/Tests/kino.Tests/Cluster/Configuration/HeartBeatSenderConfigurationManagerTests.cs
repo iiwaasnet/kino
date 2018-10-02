@@ -40,16 +40,16 @@ namespace kino.Tests.Cluster.Configuration
             Task.Factory.StartNew(() =>
                                   {
                                       asyncOp.DivideBy(2).Sleep();
-                                      configManager.SetActiveHeartBeatAddress(config.AddressRange.First());
+                                      configManager.SetActiveHeartBeatAddress(config.AddressRange.First().ToSocketAddress());
                                   });
             //
             Assert.True(task.Wait(asyncOp));
         }
 
         [Test]
-        public void IfSocketEndpointDoesntBelongToInitialAddressRange_SetActiveScaleOutAddressThrowsException()
+        public void IfSocketEndpointDoesNotBelongToInitialAddressRange_SetActiveScaleOutAddressThrowsException()
         {
-            Assert.Throws<Exception>(() => configManager.SetActiveHeartBeatAddress(new Uri("inproc://test")));
+            Assert.Throws<Exception>(() => configManager.SetActiveHeartBeatAddress("inproc://test"));
         }
     }
 }

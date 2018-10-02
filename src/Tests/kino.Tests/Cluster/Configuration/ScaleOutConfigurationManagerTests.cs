@@ -20,7 +20,7 @@ namespace kino.Tests.Cluster.Configuration
             config = new ScaleOutSocketConfiguration
                      {
                          AddressRange = Randomizer.Int32(3, 6)
-                                                  .Produce(i => new SocketEndpoint($"tcp://*:808{i}"))
+                                                  .Produce(i => SocketEndpoint.Resolve($"tcp://*:808{i}"))
                      };
             configManager = new ScaleOutConfigurationManager(config);
         }
@@ -50,7 +50,7 @@ namespace kino.Tests.Cluster.Configuration
         [Test]
         public void IfSocketEndpointDoesntBelongToInitialAddressRange_SetActiveScaleOutAddressThrowsException()
         {
-            Assert.Throws<Exception>(() => configManager.SetActiveScaleOutAddress(new SocketEndpoint("tcp://*:43")));
+            Assert.Throws<Exception>(() => configManager.SetActiveScaleOutAddress(SocketEndpoint.Resolve("tcp://*:43")));
         }
     }
 }

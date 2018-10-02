@@ -20,7 +20,7 @@ namespace kino.Tests.Cluster
 {
     public class AutoDiscoveryListenerTests
     {
-        private TimeSpan AsyncOp = TimeSpan.FromSeconds(1);
+        private readonly TimeSpan AsyncOp = TimeSpan.FromSeconds(1);
         private AutoDiscoveryListener autoDiscoveryListener;
         private ClusterMembershipConfiguration membershipConfiguration;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
@@ -54,7 +54,7 @@ namespace kino.Tests.Cluster
             subscriptionSocket = new Mock<ISocket>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(subscriptionSocket.Object);
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
-            scaleOutAddress = new SocketEndpoint("tcp://*:7878", Guid.NewGuid().ToByteArray());
+            scaleOutAddress = SocketEndpoint.Resolve("tcp://*:7878", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
             membershipConfiguration = new ClusterMembershipConfiguration
                                       {
@@ -77,13 +77,13 @@ namespace kino.Tests.Cluster
         }
 
         [Test]
-        public async Task IfHeartBeatDoesntArriveWithinHeartBeatSilenceBeforeRendezvousFailoverTime_ListenerRestartsConnectingToNextRendezvous()
+        public async Task IfHeartBeatDoesNotArriveWithinHeartBeatSilenceBeforeRendezvousFailoverTime_ListenerRestartsConnectingToNextRendezvous()
         {
             var numberOfTimeouts = 3;
-            var cancellatioSource = new CancellationTokenSource(membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover.MultiplyBy(numberOfTimeouts));
+            var cancellationTokenSource = new CancellationTokenSource(membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover.MultiplyBy(numberOfTimeouts));
             var previousRendezvous = GetCurrentRendezvous();
             //
-            await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellatioSource.Token, gateway));
+            await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellationTokenSource.Token, gateway));
             //
             var restartTimes = numberOfTimeouts - 1;
             restartRequestHandler.Verify(m => m(), Times.AtLeast(restartTimes));
@@ -96,11 +96,11 @@ namespace kino.Tests.Cluster
         public async Task IfHeartBeatArrivesWithinHeartBeatSilenceBeforeRendezvousFailoverTime_ListenerDoesntRestart()
         {
             var numberOfHeartBeats = 2;
-            var cancellatioSource = new CancellationTokenSource(membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover.MultiplyBy(numberOfHeartBeats));
+            var cancellationTokenSource = new CancellationTokenSource(membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover.MultiplyBy(numberOfHeartBeats));
             var heartBeatFrequency = membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover.DivideBy(2);
             subscriptionSocket.SetupPeriodicMessageReceived(Message.Create(new HeartBeatMessage()), heartBeatFrequency);
             //
-            await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellatioSource.Token, gateway));
+            await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellationTokenSource.Token, gateway));
             //
             restartRequestHandler.Verify(m => m(), Times.Never);
             rendezvousCluster.Verify(m => m.RotateRendezvousServers(), Times.Never);
@@ -110,7 +110,7 @@ namespace kino.Tests.Cluster
         public async Task IfRendezvousConfigurationChangedMessageArrives_RendezvousIsReconfiguredAndListenerRestartsConnectingToNewRendezvous()
         {
             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
-            var cancellatioSource = new CancellationTokenSource(AsyncOp);
+            var cancellationTokenSource = new CancellationTokenSource(AsyncOp);
             var payload = new RendezvousConfigurationChangedMessage
                           {
                               RendezvousNodes = Randomizer.Int32(5, 15)
@@ -122,9 +122,9 @@ namespace kino.Tests.Cluster
                                                           .ToList()
                           };
             var message = Message.Create(payload);
-            subscriptionSocket.SetupMessageReceived(message, cancellatioSource.Token);
+            subscriptionSocket.SetupMessageReceived(message, cancellationTokenSource.Token);
             //
-            await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellatioSource.Token, gateway));
+            await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellationTokenSource.Token, gateway));
             //
             restartRequestHandler.Verify(m => m(), Times.Once);
             Func<IEnumerable<RendezvousEndpoint>, bool> areNewNodes = nodes =>
@@ -135,7 +135,7 @@ namespace kino.Tests.Cluster
                                                                           return true;
                                                                       };
             rendezvousCluster.Verify(m => m.Reconfigure(It.Is<IEnumerable<RendezvousEndpoint>>(nodes => areNewNodes(nodes))), Times.Once);
-            Assert.AreEqual(GetCurrentRendezvous().BroadcastUri, new Uri(payload.RendezvousNodes.First().BroadcastUri));
+            Assert.AreEqual(GetCurrentRendezvous().BroadcastUri, payload.RendezvousNodes.First().BroadcastUri);
             restartRequestHandler.Verify(m => m(), Times.Once);
         }
 
@@ -143,26 +143,26 @@ namespace kino.Tests.Cluster
         public async Task IfRendezvousNotLeaderMessageArrives_ListenerRestartsConnectingToNewRendezvousLeader()
         {
             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(10);
-            var cancellatioSource = new CancellationTokenSource(AsyncOp);
+            var cancellationTokenSource = new CancellationTokenSource(AsyncOp);
             var rendezvousEndpoint = rendezvousEndpoints[currentRendezvousIndex + 1];
             var payload = new RendezvousNotLeaderMessage
                           {
                               NewLeader = new RendezvousNode
                                           {
-                                              BroadcastUri = rendezvousEndpoint.BroadcastUri.ToSocketAddress(),
-                                              UnicastUri = rendezvousEndpoint.UnicastUri.ToSocketAddress()
+                                              BroadcastUri = rendezvousEndpoint.BroadcastUri,
+                                              UnicastUri = rendezvousEndpoint.UnicastUri
                                           }
                           };
             var message = Message.Create(payload);
-            subscriptionSocket.SetupMessageReceived(message, cancellatioSource.Token);
+            subscriptionSocket.SetupMessageReceived(message, cancellationTokenSource.Token);
             //
-            await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellatioSource.Token, gateway));
+            await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellationTokenSource.Token, gateway));
             //
             restartRequestHandler.Verify(m => m(), Times.Once);
             Func<RendezvousEndpoint, bool> isNewLeader = rnd =>
                                                          {
-                                                             Assert.AreEqual(payload.NewLeader.BroadcastUri, rnd.BroadcastUri.ToSocketAddress());
-                                                             Assert.AreEqual(payload.NewLeader.UnicastUri, rnd.UnicastUri.ToSocketAddress());
+                                                             Assert.AreEqual(payload.NewLeader.BroadcastUri, rnd.BroadcastUri);
+                                                             Assert.AreEqual(payload.NewLeader.UnicastUri, rnd.UnicastUri);
                                                              return true;
                                                          };
             rendezvousCluster.Verify(m => m.SetCurrentRendezvousServer(It.Is<RendezvousEndpoint>(rnd => isNewLeader(rnd))), Times.Once);
@@ -181,11 +181,11 @@ namespace kino.Tests.Cluster
         private void TestRoutingControlMessagesAreForwardedToRouterSocket(IPayload payload)
         {
             membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover = TimeSpan.FromSeconds(100);
-            var cancellatioSource = new CancellationTokenSource(AsyncOp);
+            var cancellationTokenSource = new CancellationTokenSource(AsyncOp);
             var message = Message.Create(payload);
-            subscriptionSocket.SetupMessageReceived(message, cancellatioSource.Token);
+            subscriptionSocket.SetupMessageReceived(message, cancellationTokenSource.Token);
             //
-            var task = Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellatioSource.Token, gateway));
+            var task = Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellationTokenSource.Token, gateway));
             task.Wait();
             //
             localRouterSocket.Verify(m => m.Send(message), Times.Once);

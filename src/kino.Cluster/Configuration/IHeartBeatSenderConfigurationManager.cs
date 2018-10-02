@@ -5,8 +5,8 @@ namespace kino.Cluster.Configuration
 {
     public interface IHeartBeatSenderConfigurationManager : IHeartBeatSenderConfigurationProvider
     {
-        IEnumerable<Uri> GetHeartBeatAddressRange();
+        IEnumerable<string> GetHeartBeatAddressRange();
 
-        void SetActiveHeartBeatAddress(Uri activeAddress);
+        void SetActiveHeartBeatAddress(string activeAddress);
     }
 }

@@ -92,7 +92,7 @@ namespace kino.Cluster
                     var message = Message.Create(new DiscoverMessageRouteMessage
                                                  {
                                                      RequestorNodeIdentity = scaleOutAddress.Identity,
-                                                     RequestorUri = scaleOutAddress.Uri.ToSocketAddress(),
+                                                     RequestorUri = scaleOutAddress.Uri,
                                                      ReceiverIdentity = messageRoute.Receiver.IsMessageHub()
                                                                             ? messageRoute.Receiver.Identity
                                                                             : null,

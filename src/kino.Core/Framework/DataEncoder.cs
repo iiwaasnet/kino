@@ -12,41 +12,44 @@ namespace kino.Core.Framework
 
         public static ulong Combine(ushort v16, ushort v32)
             => v16
-               | ((ulong) v32 << 16) & (0xFFFFul << 16);
+             | ((ulong) v32 << 16) & (0xFFFFul << 16);
 
         public static ulong Combine(ushort v16, ushort v32, ushort v48)
             => v16
-               | ((ulong) v32 << 16) & (0xFFFFul << 16)
-               | ((ulong) v48 << 32) & (0xFFFFul << 32);
+             | ((ulong) v32 << 16) & (0xFFFFul << 16)
+             | ((ulong) v48 << 32) & (0xFFFFul << 32);
 
         public static ulong Combine(ushort v16, ushort v32, ushort v48, ushort v64)
             => v16
-               | ((ulong) v32 << 16) & (0xFFFFul << 16)
-               | ((ulong) v48 << 32) & (0xFFFFul << 32)
-               | ((ulong) v64 << 48) & (0xFFFFul << 48);
+             | ((ulong) v32 << 16) & (0xFFFFul << 16)
+             | ((ulong) v48 << 32) & (0xFFFFul << 32)
+             | ((ulong) v64 << 48) & (0xFFFFul << 48);
 
         public static ushort Split16(this ulong data)
             => (ushort) (data & 0xFFFF);
 
         public static (ushort v16, ushort v32) Split32(this ulong data)
             => (v16: (ushort) (data & 0xFFFF),
-                v32: (ushort) ((data >> 16) & 0xFFFF));
+                   v32: (ushort) ((data >> 16) & 0xFFFF));
 
         public static (ushort v16, ushort v32, ushort v48) Split48(this ulong data)
             => (v16: (ushort) (data & 0xFFFF),
-                v32: (ushort) ((data >> 16) & 0xFFFF),
-                v48: (ushort) ((data >> 32) & 0xFFFF));
+                   v32: (ushort) ((data >> 16) & 0xFFFF),
+                   v48: (ushort) ((data >> 32) & 0xFFFF));
 
         public static (ushort v16, ushort v32, ushort v48, ushort v64) Split64(this ulong data)
             => (v16: (ushort) (data & 0xFFFF),
-                v32: (ushort) ((data >> 16) & 0xFFFF),
-                v48: (ushort) ((data >> 32) & 0xFFFF),
-                v64: (ushort) ((data >> 48) & 0xFFFF));
+                   v32: (ushort) ((data >> 16) & 0xFFFF),
+                   v48: (ushort) ((data >> 32) & 0xFFFF),
+                   v64: (ushort) ((data >> 48) & 0xFFFF));
 
         public static string GetAnyString(this byte[] array)
             => array.GetString();
 
         public static string GetString(this byte[] array)
+            => Encoder.GetString(array);
+
+        public static string GetString(this Span<byte> array)
             => Encoder.GetString(array);
 
         public static byte[] GetBytes(this string str)
@@ -70,20 +73,53 @@ namespace kino.Core.Framework
         public static byte[] GetBytes(this DateTime utcDateTime)
             => BitConverter.GetBytes(utcDateTime.Ticks);
 
+        public static Span<byte> GetInt(this Span<byte> array, out int val)
+        {
+            val = BitConverter.ToInt32(array);
+            return array.Slice(sizeof(int));
+        }
+
         public static int GetInt(this byte[] array)
             => BitConverter.ToInt32(array, 0);
 
         public static long GetLong(this byte[] array)
             => BitConverter.ToInt64(array, 0);
 
+        public static Span<byte> GetLong(this Span<byte> array, out long val)
+        {
+            val = BitConverter.ToInt64(array);
+
+            return array.Slice(sizeof(long));
+        }
+
         public static ulong GetULong(this byte[] array)
             => BitConverter.ToUInt64(array, 0);
+
+        public static Span<byte> GetULong(this Span<byte> array, out ulong val)
+        {
+            val = BitConverter.ToUInt64(array);
+            return array.Slice(sizeof(ulong));
+        }
 
         public static ushort GetUShort(this byte[] array)
             => BitConverter.ToUInt16(array, 0);
 
+        public static Span<byte> GetUShort(this Span<byte> array, out ushort val)
+        {
+            val = BitConverter.ToUInt16(array);
+            return array.Slice(sizeof(ushort));
+        }
+
         public static TimeSpan GetTimeSpan(this byte[] array)
             => new TimeSpan(BitConverter.ToInt64(array, 0));
+
+        public static Span<byte> GetTimeSpan(this Span<byte> array, out TimeSpan val)
+        {
+            var slice = array.GetLong(out var int64);
+            val = new TimeSpan(int64);
+
+            return slice;
+        }
 
         public static DateTime GetUtcDateTime(this byte[] array)
             => new DateTime(BitConverter.ToInt64(array, 0), DateTimeKind.Utc);

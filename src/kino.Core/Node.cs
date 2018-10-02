@@ -9,7 +9,7 @@ namespace kino.Core
 
         public Node(Uri uri, byte[] socketIdentity)
         {
-            Uri = uri;
+            Uri = uri.ToSocketAddress();
             SocketIdentity = socketIdentity;
 
             hashCode = CalculateHashCode();
@@ -72,7 +72,7 @@ namespace kino.Core
 
         private bool StructuralCompare(Node other)
             => Unsafe.ArraysEqual(SocketIdentity, other.SocketIdentity)
-            && Uri.AbsoluteUri == other.Uri.AbsoluteUri;
+            && Uri == other.Uri;
 
         public override int GetHashCode()
             => hashCode;
@@ -86,9 +86,9 @@ namespace kino.Core
         }
 
         public override string ToString()
-            => $"{SocketIdentity.GetAnyString()}@{Uri.ToSocketAddress()}";
+            => $"{SocketIdentity.GetAnyString()}@{Uri}";
 
-        public Uri Uri { get; }
+        public string Uri { get; }
 
         public byte[] SocketIdentity { get; }
     }

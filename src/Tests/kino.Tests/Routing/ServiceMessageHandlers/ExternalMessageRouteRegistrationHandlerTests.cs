@@ -62,7 +62,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             //
             handler.Handle(message, socket.Object);
             //
-            Func<Node, bool> isThisPeer = p => p.Uri.ToSocketAddress() == payload.Uri
+            Func<Node, bool> isThisPeer = p => p.Uri == payload.Uri
                                                && Unsafe.ArraysEqual(p.SocketIdentity, payload.NodeIdentity);
             clusterHealthMonitor.Verify(m => m.AddPeer(It.Is<Node>(p => isThisPeer(p)), It.IsAny<kino.Cluster.Health>()), Times.Once);
         }

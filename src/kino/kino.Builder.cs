@@ -35,7 +35,8 @@ namespace kino
             var heartBeatSenderConfiguration = configurationProvider.GetHeartBeatSenderConfiguration();
             var socketConfiguration = configurationProvider.GetSocketConfiguration();
             var rendezvousEndpoints = configurationProvider.GetRendezvousEndpointsConfiguration();
-            var socketFactory = new SocketFactory(socketConfiguration);
+            var messageWireFormatter = resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatter();
+            var socketFactory = new SocketFactory(messageWireFormatter, socketConfiguration);
             var logger = resolver.Resolve<ILogger>();
             var roundRobinDestinationList = new RoundRobinDestinationList(logger);
             var internalRoutingTable = new InternalRoutingTable(roundRobinDestinationList);

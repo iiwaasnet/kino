@@ -44,7 +44,7 @@ namespace kino.Tests.Actors.Setup
             }
         }
 
-        public void Unbind(Uri address)
+        public void Unbind(string address)
         {
             Object.Unbind(address);
         }
@@ -64,19 +64,19 @@ namespace kino.Tests.Actors.Setup
             Object.Unsubscribe(topic);
         }
 
-        public void Connect(Uri address, bool waitUntilConnected = false)
+        public void Connect(string address, bool waitUntilConnected = false)
         {
             Object.Connect(address);
             connected = true;
         }
 
-        public void Disconnect(Uri address)
+        public void Disconnect(string address)
         {
             Object.Disconnect(address);
             connected = false;
         }
 
-        public void Bind(Uri address)
+        public void Bind(string address)
         {
             Object.Bind(address);
         }

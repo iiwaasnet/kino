@@ -59,7 +59,7 @@ namespace kino.Tests.Routing
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(scaleOutSocket.Object);
             logger = new Mock<ILogger>();
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
-            localNodeEndpoint = new SocketEndpoint("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray());
+            localNodeEndpoint = SocketEndpoint.Resolve("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(localNodeEndpoint);
             clusterServices = new Mock<IClusterServices>();
             serviceMessageHandlerRegistry = new Mock<IServiceMessageHandlerRegistry>();
@@ -403,7 +403,7 @@ namespace kino.Tests.Routing
             //
             internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message) && req.ReceiverNodeIdentity == otherNode)), Times.Once);
-            scaleOutSocket.Verify(m => m.Connect(It.Is<Uri>(uri => uri == peerConnection.Node.Uri), true), Times.Once);
+            scaleOutSocket.Verify(m => m.Connect(It.Is<string>(uri => uri == peerConnection.Node.Uri), true), Times.Once);
             scaleOutSocket.Verify(m => m.SendMessage(message));
         }
 
@@ -429,7 +429,7 @@ namespace kino.Tests.Routing
             messageRouter.Stop();
             //
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message) && req.ReceiverNodeIdentity == otherNodeIdentifier)), Times.Once);
-            scaleOutSocket.Verify(m => m.Connect(It.Is<Uri>(uri => uri == peerConnection.Node.Uri), true), Times.Once);
+            scaleOutSocket.Verify(m => m.Connect(It.Is<string>(uri => uri == peerConnection.Node.Uri), true), Times.Once);
             clusterHealthMonitor.Verify(m => m.StartPeerMonitoring(It.Is<Node>(node => node.Equals(otherNode)),
                                                                    It.Is<Health>(health => health == peerConnection.Health)),
                                         Times.Once);

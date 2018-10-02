@@ -25,7 +25,7 @@ namespace kino.Consensus
         {
             var messagePayload = payload(message);
 
-            return synodConfigProvider.BelongsToSynod(new Uri(messagePayload.SenderUri))
+            return synodConfigProvider.BelongsToSynod(messagePayload.SenderUri)
                    && Unsafe.ArraysEqual(messagePayload.Ballot.Identity, ballot.Identity)
                    && messagePayload.Ballot.Timestamp == ballot.Timestamp.Ticks
                    && messagePayload.Ballot.MessageNumber == ballot.MessageNumber;

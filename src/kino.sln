@@ -36,8 +36,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Client", "kino.Client\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Actors", "kino.Actors\kino.Actors.csproj", "{E936E3A8-F1BC-4788-B523-AC375CAEFB99}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Rendezvous.Service", "kino.Rendezvous.Service\kino.Rendezvous.Service.csproj", "{364E4A83-3327-4789-A10C-7695ABCC4FD3}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino", "kino\kino.csproj", "{09AF527E-95DC-4D37-8FC1-5CA943E9A4A4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autofac.kino.Rendezvous", "Integration\Autofac.kino.Rendezvous\Autofac.kino.Rendezvous.csproj", "{1300221D-0982-4027-BCAD-953BC564DAE4}"
@@ -96,10 +94,6 @@ Global
 		{E936E3A8-F1BC-4788-B523-AC375CAEFB99}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E936E3A8-F1BC-4788-B523-AC375CAEFB99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E936E3A8-F1BC-4788-B523-AC375CAEFB99}.Release|Any CPU.Build.0 = Release|Any CPU
-		{364E4A83-3327-4789-A10C-7695ABCC4FD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{364E4A83-3327-4789-A10C-7695ABCC4FD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{364E4A83-3327-4789-A10C-7695ABCC4FD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{364E4A83-3327-4789-A10C-7695ABCC4FD3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{09AF527E-95DC-4D37-8FC1-5CA943E9A4A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{09AF527E-95DC-4D37-8FC1-5CA943E9A4A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09AF527E-95DC-4D37-8FC1-5CA943E9A4A4}.Release|Any CPU.ActiveCfg = Release|Any CPU

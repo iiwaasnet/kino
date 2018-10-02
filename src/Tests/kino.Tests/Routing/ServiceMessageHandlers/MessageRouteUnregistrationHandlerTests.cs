@@ -146,7 +146,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var peerRemoveResult = new PeerRemoveResult
                                    {
                                        ConnectionAction = peerConnectionAction,
-                                       Uri = new Uri("tcp://127.0.0.1:9090")
+                                       Uri = "tcp://127.0.0.1:9090"
                                    };
             externalRoutingTable.Setup(m => m.RemoveMessageRoute(It.IsAny<ExternalRouteRemoval>())).Returns(peerRemoveResult);
             //
@@ -170,7 +170,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var peerRemoveResult = new PeerRemoveResult
                                    {
                                        ConnectionAction = peerConnectionAction,
-                                       Uri = new Uri("tcp://127.0.0.1:9090")
+                                       Uri = "tcp://127.0.0.1:9090"
                                    };
             externalRoutingTable.Setup(m => m.RemoveMessageRoute(It.IsAny<ExternalRouteRemoval>())).Returns(peerRemoveResult);
             //

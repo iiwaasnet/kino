@@ -11,13 +11,13 @@ namespace kino.Connectivity
 
         IMessage ReceiveMessage(CancellationToken cancellationToken);
 
-        void Connect(Uri address, bool waitUntilConnected = false);
+        void Connect(string address, bool waitUntilConnected = false);
 
-        void Bind(Uri address);
+        void Bind(string address);
 
-        void Disconnect(Uri address);
+        void Disconnect(string address);
 
-        void Unbind(Uri address);
+        void Unbind(string address);
 
         void SetIdentity(byte[] identity);
 
