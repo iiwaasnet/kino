@@ -9,7 +9,7 @@ namespace kino.Rendezvous.Configuration
         {
             HeartBeatInterval = config.HeartBeatInterval;
             BroadcastUri = config.BroadcastUri.ParseAddress().ToSocketAddress();
-            UnicastUri = config.UnicastUri.ParseAddress().ToString();
+            UnicastUri = config.UnicastUri.ParseAddress().ToSocketAddress();
         }
 
         public string BroadcastUri { get; }
