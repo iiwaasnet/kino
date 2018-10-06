@@ -9,7 +9,7 @@ namespace kino.Messaging
 {
     public class MessageWireFormatter : IMessageWireFormatter
     {
-        private static readonly ushort BodyFirstFrameIndex = 2;
+        private static readonly ushort BodyFirstFrameOffset = 1;
         private static readonly ushort BodyFrameCount = 1;
         private static readonly byte[] EmptyFrame = new byte[0];
 
@@ -52,7 +52,7 @@ namespace kino.Messaging
             AddByteArray(metaFrame, msg.CallbackReceiverIdentity);
             AddByteArray(metaFrame, msg.CorrelationId);
             metaFrame.Add(msg.TTL.GetBytes());
-            metaFrame.Add(DataEncoder.Combine(BodyFirstFrameIndex, BodyFrameCount).GetBytes());
+            metaFrame.Add(DataEncoder.Combine(BodyFirstFrameOffset, BodyFrameCount).GetBytes());
             AddByteArray(metaFrame, msg.Body);
 
             return Concatenate(metaFrame);
@@ -118,7 +118,8 @@ namespace kino.Messaging
 
         public IMessage Deserialize(IList<byte[]> frames)
         {
-            var metaFrame = new Span<byte>(frames.Last());
+            frames = frames.Reverse().ToList();
+            var metaFrame = new Span<byte>(frames.First());
 
             metaFrame = metaFrame.GetUShort(out var wireFormatVersion);
             metaFrame = GetByteArray(metaFrame, out var partition);
@@ -182,7 +183,7 @@ namespace kino.Messaging
             _ = metaFrame.GetULong(out tmp);
             var (firstBodyFrameOffset, bodyFrameCount) = tmp.Split32();
             // body
-            message.SetBody(Concatenate(frames.Skip(firstBodyFrameOffset).Take(bodyFrameCount)));
+            message.SetBody(Concatenate(frames.Skip(firstBodyFrameOffset).Take(bodyFrameCount).Reverse()));
 
             message.SetWireFormatVersion(wireFormatVersion);
             message.SetSocketIdentity(frames[0]);

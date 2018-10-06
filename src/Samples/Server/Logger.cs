@@ -8,7 +8,11 @@ namespace Server
         private readonly NLog.Logger logger;
 
         public Logger(string name)
-            => logger = LogManager.GetLogger(name);
+        {
+            var config = new NLog.Config.XmlLoggingConfiguration("config//NLog.config");
+            LogManager.Configuration = config;
+            logger = LogManager.GetLogger(name);
+        }
 
         public void Warn(object message)
             => logger.Warn(message);

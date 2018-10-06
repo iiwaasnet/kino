@@ -10,11 +10,11 @@ namespace Client
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<ConfigProvider>()
+            builder.Register(c => new ConfigProvider(c.Resolve<IConfigTargetProvider>(), "config"))
                    .As<IConfigProvider>()
                    .SingleInstance();
 
-            builder.RegisterType<AppConfigTargetProvider>()
+            builder.RegisterType<CoreAppConfigTargetProvider>()
                    .As<IConfigTargetProvider>()
                    .SingleInstance();
 

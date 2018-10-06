@@ -9,15 +9,15 @@ namespace kino.Rendezvous.Service
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<ConfigProvider>()
-                   .As<IConfigProvider>()
-                   .SingleInstance();
-
             builder.Register(c => new Logger("default"))
                    .As<ILogger>()
                    .SingleInstance();
 
-            builder.RegisterType<AppConfigTargetProvider>()
+            builder.Register(c => new ConfigProvider(c.Resolve<IConfigTargetProvider>(), "config"))
+                   .As<IConfigProvider>()
+                   .SingleInstance();
+
+            builder.RegisterType<CoreAppConfigTargetProvider>()
                    .As<IConfigTargetProvider>()
                    .SingleInstance();
 

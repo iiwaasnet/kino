@@ -23,11 +23,11 @@ namespace Autofac.kino
             RegisterConfigurations(builder);
             RegisterLocalSockets(builder);
             RegisterClusterServices(builder);
-#if NET47
+
             builder.RegisterType<InstanceNameResolver>()
                    .As<IInstanceNameResolver>()
                    .SingleInstance();
-#endif
+
             builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
                    .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
                    .SingleInstance();
@@ -133,7 +133,7 @@ namespace Autofac.kino
                                      IClusterHealthMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
                                                             c.Resolve<ClusterHealthMonitor>(),
                                                             c.Resolve<NullClusterHealthMonitor>())
-                                 .GetService())
+                                .GetService())
                    .As<IClusterHealthMonitor>()
                    .SingleInstance();
         }
@@ -153,7 +153,7 @@ namespace Autofac.kino
                                      IHeartBeatSender>(c.Resolve<ClusterMembershipConfiguration>(),
                                                        c.Resolve<HeartBeatSender>(),
                                                        c.Resolve<NullHeartBeatSender>())
-                                 .GetService())
+                                .GetService())
                    .As<IHeartBeatSender>()
                    .SingleInstance();
         }
@@ -173,7 +173,7 @@ namespace Autofac.kino
                                      IScaleOutListener>(c.Resolve<ClusterMembershipConfiguration>(),
                                                         c.Resolve<ScaleOutListener>(),
                                                         c.Resolve<NullScaleOutListener>())
-                                 .GetService())
+                                .GetService())
                    .As<IScaleOutListener>()
                    .SingleInstance();
         }
@@ -193,7 +193,7 @@ namespace Autofac.kino
                                      IClusterMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
                                                       c.Resolve<ClusterMonitor>(),
                                                       c.Resolve<NullClusterMonitor>())
-                                 .GetService())
+                                .GetService())
                    .As<IClusterMonitor>()
                    .SingleInstance();
         }
@@ -213,7 +213,7 @@ namespace Autofac.kino
                                      IScaleOutConfigurationManager>(c.Resolve<ClusterMembershipConfiguration>(),
                                                                     c.Resolve<ScaleOutConfigurationManager>(),
                                                                     c.Resolve<NullScaleOutConfigurationManager>())
-                                 .GetService())
+                                .GetService())
                    .As<IScaleOutConfigurationManager>()
                    .As<IScaleOutConfigurationProvider>()
                    .SingleInstance();

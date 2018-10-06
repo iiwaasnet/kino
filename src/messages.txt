@@ -7,8 +7,8 @@ frames)		bits
 0					SocketIdentity					            Identity of the receiving chosen, selected based on Route Selectors
 1					[0]									        Empty frame
 					...............
-2					Body Frame							        Message body frames
-..                                                              <= VERSIONING: new frames come here
+n-x					Body Frame							        Message body frames
+n-2                                                              <= VERSIONING: new frames come here
                     ...............
 n-1                 Meta Frame
 

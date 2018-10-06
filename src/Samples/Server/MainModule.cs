@@ -22,11 +22,11 @@ namespace Server
             builder.RegisterType<GroupCharsActor>()
                    .As<IActor>();
 
-            builder.RegisterType<ConfigProvider>()
+            builder.Register(c => new ConfigProvider(c.Resolve<IConfigTargetProvider>(), "config"))
                    .As<IConfigProvider>()
                    .SingleInstance();
 
-            builder.RegisterType<AppConfigTargetProvider>()
+            builder.RegisterType<CoreAppConfigTargetProvider>()
                    .As<IConfigTargetProvider>()
                    .SingleInstance();
 

@@ -44,13 +44,10 @@ namespace kino
             var localSocketFactory = new LocalSocketFactory();
             var routerLocalSocket = new LocalSocket<IMessage>();
             var internalRegistrationSocket = new LocalSocket<InternalRouteRegistration>();
-#if NET47
+
             var instanceNameResolver = resolver.Resolve<IInstanceNameResolver>() ?? new InstanceNameResolver();
             var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver,
                                                                                                    logger);
-#else
-            var performanceCounterManager = default(IPerformanceCounterManager<KinoPerformanceCounters>);
-#endif
 
             var hashCodeProvider = resolver.Resolve<Func<HMAC>>() ?? (() => HMAC.Create("HMACMD5"));
 

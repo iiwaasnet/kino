@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Messaging;
+using kino.Messaging.Messages;
 using kino.Security;
 using kino.Tests.Actors.Setup;
 using kino.Tests.Helpers;
@@ -85,17 +86,17 @@ namespace kino.Tests.Messaging
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = MessageTraceOptions.Routing;
-            var socketEnpoints = new[]
-                                 {
-                                     new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
-                                     new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray())
-                                 };
-            foreach (var socketEndpoint in socketEnpoints)
+            var socketEndpoints = new[]
+                                  {
+                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
+                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray())
+                                  };
+            foreach (var socketEndpoint in socketEndpoints)
             {
                 message.PushRouterAddress(socketEndpoint);
             }
 
-            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
+            CollectionAssert.AreEquivalent(socketEndpoints, message.GetMessageRouting());
         }
 
         [Test]
@@ -105,20 +106,20 @@ namespace kino.Tests.Messaging
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = traceOptions;
-            var socketEnpoints = new[]
-                                 {
-                                     new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
-                                     new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray())
-                                 };
-            foreach (var socketEndpoint in socketEnpoints)
+            var socketEndpoints = new[]
+                                  {
+                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
+                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray())
+                                  };
+            foreach (var socketEndpoint in socketEndpoints)
             {
                 message.PushRouterAddress(socketEndpoint);
             }
-            CollectionAssert.AreEquivalent(socketEnpoints, message.GetMessageRouting());
+            CollectionAssert.AreEquivalent(socketEndpoints, message.GetMessageRouting());
         }
 
         [Test]
-        public void MessageRouting_IsConsistentlyTransferredViaMultipartMessage()
+        public void MessageRouting_IsConsistentlyTransferredOverWires()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = MessageTraceOptions.Routing;
@@ -140,7 +141,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void CorrelationId_IsConsistentlyTransferredViaMultipartMessage()
+        public void CorrelationId_IsConsistentlyTransferredOverWires()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             var correlationId = Guid.NewGuid().ToByteArray();
@@ -153,7 +154,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void ReceiverNode_IsConsistentlyTransferredViaMultipartMessage()
+        public void ReceiverNode_IsConsistentlyTransferredOverWires()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
             var receiverNode = ReceiverIdentifier.Create();
@@ -167,7 +168,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void MessageContent_IsConsistentlyTransferredViaMultipartMessage()
+        public void MessageContent_IsConsistentlyTransferredOverWires()
         {
             var messageText = Guid.NewGuid().ToString();
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage {Content = messageText});
@@ -233,7 +234,7 @@ namespace kino.Tests.Messaging
         [Test]
         [TestCase(DistributionPattern.Broadcast)]
         [TestCase(DistributionPattern.Unicast)]
-        public void MessageDistribution_IsConsistentlyTransferredViaMultipartMessage(DistributionPattern distributionPattern)
+        public void MessageDistribution_IsConsistentlyTransferredOverWires(DistributionPattern distributionPattern)
         {
             var message = Message.Create(new SimpleMessage(), distributionPattern).As<Message>();
 
@@ -244,7 +245,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void MessagePartition_IsConsistentlyTransferredViaMultipartMessage()
+        public void MessagePartition_IsConsistentlyTransferredOverWires()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage
                                                                    {
@@ -259,7 +260,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void MessageHops_AreConsistentlyTransferredViaMultipartMessage()
+        public void MessageHops_AreConsistentlyTransferredOverWires()
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.AddHop();
@@ -273,7 +274,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void MessageWireFormatVersion_IsConsistentlyTransferredViaMultipartMessage()
+        public void MessageWireFormatVersion_IsConsistentlyTransferredOverWires()
         {
             const int wireMessageFormat = 5;
 
@@ -289,7 +290,7 @@ namespace kino.Tests.Messaging
         [Test]
         [TestCase(MessageTraceOptions.None)]
         [TestCase(MessageTraceOptions.Routing)]
-        public void MessageTraceOptions_IsConsistentlyTransferredViaMultipartMessage(MessageTraceOptions routeOptions)
+        public void MessageTraceOptions_IsConsistentlyTransferredOverWires(MessageTraceOptions routeOptions)
         {
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
             message.TraceOptions = routeOptions;
@@ -301,7 +302,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void MessageTTL_IsConsistentlyTransferredViaMultipartMessage()
+        public void MessageTTL_IsConsistentlyTransferredOverWires()
         {
             var ttl = TimeSpan.FromSeconds(Randomizer.Int32(2, 60));
             var message = (Message) Message.CreateFlowStartMessage(new SimpleMessage());
@@ -314,7 +315,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void SecurityDomain_IsConsistentlyTransferredViaMultipartMessage()
+        public void SecurityDomain_IsConsistentlyTransferredOverWires()
         {
             var securityDomain = Guid.NewGuid().ToString();
             var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
@@ -327,7 +328,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void CallbackKey_IsConsistentlyTransferredViaMultipartMessage()
+        public void CallbackKey_IsConsistentlyTransferredOverWires()
         {
             var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
             var callbackKey = Randomizer.Int32(1, Int32.MaxValue);
@@ -344,7 +345,7 @@ namespace kino.Tests.Messaging
         }
 
         [Test]
-        public void MessageSignature_IsConsistentlyTransferredViaMultipartMessage()
+        public void MessageSignature_IsConsistentlyTransferredOverWires()
         {
             var simpleMessage = new SimpleMessage();
             var securityDomain = securityProvider.GetDomain(simpleMessage.Identity);
@@ -356,6 +357,49 @@ namespace kino.Tests.Messaging
             message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
 
             message.VerifySignature(securityProvider);
+        }
+
+        [Test]
+        public void MessagePayload_IsConsistentlyTransferredOverWires()
+        {
+            // arrange
+            var registrationMessage = new RegisterExternalMessageRouteMessage
+                                      {
+                                          Uri = Guid.NewGuid().ToString(),
+                                          NodeIdentity = Guid.NewGuid().ToByteArray(),
+                                          Health = new Health
+                                                   {
+                                                       Uri = Guid.NewGuid().ToString(),
+                                                       HeartBeatInterval = TimeSpan.FromSeconds(Randomizer.Int32(1, 60))
+                                                   },
+                                          Routes = new[]
+                                                   {
+                                                       new RouteRegistration
+                                                       {
+                                                           ReceiverIdentity = Guid.NewGuid().ToByteArray(),
+                                                           MessageContracts = new[]
+                                                                              {
+                                                                                  new MessageContract
+                                                                                  {
+                                                                                      Partition = Guid.NewGuid().ToByteArray(),
+                                                                                      Identity = Guid.NewGuid().ToByteArray(),
+                                                                                      Version = Randomizer.UInt16()
+                                                                                  }
+                                                                              }
+                                                       }
+                                                   }
+                                      };
+            var securityDomain = securityProvider.GetDomain(registrationMessage.Identity);
+            var message = Message.CreateFlowStartMessage(registrationMessage).As<Message>();
+            message.SetDomain(securityDomain);
+            message.SignMessage(securityProvider);
+            // act
+            var wireFrames = messageWireFormatter.Serialize(message);
+            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
+            // assert
+            var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
+            Assert.IsTrue(Unsafe.ArraysEqual(registrationMessage.NodeIdentity, payload.NodeIdentity));
+            Assert.AreEqual(registrationMessage.Uri, payload.Uri);
         }
 
         [Test]

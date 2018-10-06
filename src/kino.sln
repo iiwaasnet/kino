@@ -48,6 +48,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Samples\Client\Cl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "Samples\Server\Server.csproj", "{E52CD781-EA8B-4D12-87E6-617F6B39711C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Rendezvous.Service", "kino.Rendezvous.Service\kino.Rendezvous.Service.csproj", "{C8204FAF-FF56-448D-8BED-160B4261F821}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -118,6 +120,10 @@ Global
 		{E52CD781-EA8B-4D12-87E6-617F6B39711C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E52CD781-EA8B-4D12-87E6-617F6B39711C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E52CD781-EA8B-4D12-87E6-617F6B39711C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8204FAF-FF56-448D-8BED-160B4261F821}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8204FAF-FF56-448D-8BED-160B4261F821}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8204FAF-FF56-448D-8BED-160B4261F821}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8204FAF-FF56-448D-8BED-160B4261F821}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

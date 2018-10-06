@@ -15,11 +15,11 @@ namespace Autofac.kino.Rendezvous
             builder.RegisterType<SocketFactory>()
                    .As<ISocketFactory>()
                    .SingleInstance();
-#if NET47
+
             builder.RegisterType<InstanceNameResolver>()
                    .As<IInstanceNameResolver>()
                    .SingleInstance();
-#endif
+
             builder.RegisterType<SynodConfigurationProvider>()
                    .As<ISynodConfigurationProvider>()
                    .SingleInstance();
