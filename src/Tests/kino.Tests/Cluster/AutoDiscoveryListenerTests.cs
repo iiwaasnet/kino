@@ -54,7 +54,7 @@ namespace kino.Tests.Cluster
             subscriptionSocket = new Mock<ISocket>();
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(subscriptionSocket.Object);
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
-            scaleOutAddress = SocketEndpoint.Resolve("tcp://*:7878", Guid.NewGuid().ToByteArray());
+            scaleOutAddress = SocketEndpoint.Parse("tcp://*:7878", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
             membershipConfiguration = new ClusterMembershipConfiguration
                                       {

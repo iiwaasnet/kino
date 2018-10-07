@@ -58,34 +58,6 @@ namespace kino.Messaging
             //TODO: Better implementation
             => Guid.NewGuid().ToString().GetBytes();
 
-        //internal static Message FromMultipartMessage(MultipartMessage multipartMessage)
-        //{
-        //    var (traceOptions, distributionPattern) = multipartMessage.GetTraceOptionsDistributionPattern();
-        //    var (routes, hops) = multipartMessage.GetMessageRouting();
-
-        //    return new Message(multipartMessage.GetMessageIdentity(),
-        //                       multipartMessage.GetMessageVersion().GetUShort(),
-        //                       multipartMessage.GetMessagePartition())
-        //           {
-        //               WireFormatVersion = multipartMessage.GetWireFormatVersion().GetInt(),
-        //               Body = multipartMessage.GetMessageBody(),
-        //               TTL = multipartMessage.GetMessageTTL(),
-        //               CorrelationId = multipartMessage.GetCorrelationId(),
-        //               Signature = multipartMessage.GetSignature(),
-        //               Domain = multipartMessage.GetDomain(),
-        //               TraceOptions = traceOptions,
-        //               Distribution = distributionPattern,
-        //               CallbackReceiverIdentity = multipartMessage.GetCallbackReceiverIdentity(),
-        //               CallbackReceiverNodeIdentity = multipartMessage.GetCallbackReceiverNodeIdentity(),
-        //               CallbackPoint = multipartMessage.GetCallbackPoints(),
-        //               CallbackKey = multipartMessage.GetCallbackKey(),
-        //               ReceiverNodeIdentity = multipartMessage.GetReceiverNodeIdentity(),
-        //               ReceiverIdentity = multipartMessage.GetReceiverIdentity(),
-        //               routing = routes,
-        //               Hops = hops
-        //           };
-        //}
-
         internal void RegisterCallbackPoint(byte[] callbackReceiverNodeIdentity,
                                             byte[] callbackReceiverIdentity,
                                             MessageIdentifier callbackMessageIdentifier,

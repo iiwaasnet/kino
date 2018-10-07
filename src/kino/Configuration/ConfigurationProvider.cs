@@ -26,7 +26,7 @@ namespace kino.Configuration
             return new ScaleOutSocketConfiguration
                    {
                        ScaleOutReceiveMessageQueueLength = Math.Max(appConfig.ScaleOutReceiveMessageQueueLength, 10000),
-                       AddressRange = uris.Select(uri => new SocketEndpoint(uri, socketIdentifier))
+                       AddressRange = uris.Select(uri => SocketEndpoint.Parse(uri.AbsoluteUri, socketIdentifier))
                                           .ToList()
                    };
         }

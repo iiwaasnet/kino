@@ -54,7 +54,7 @@ namespace kino.Tests.Client
             receivingSocket = new Mock<ILocalSocket<IMessage>>();
             receivingSocket.Setup(m => m.CanReceive()).Returns(new ManualResetEvent(false));
             localSocketFactory.Setup(m => m.Create<IMessage>()).Returns(receivingSocket.Object);
-            scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), Guid.NewGuid().ToByteArray());
+            scaleOutAddress = SocketEndpoint.Parse("tcp://127.0.0.1:5000", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
             messageHub = CreateMessageHub();

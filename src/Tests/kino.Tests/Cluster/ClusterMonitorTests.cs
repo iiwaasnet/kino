@@ -41,7 +41,7 @@ namespace kino.Tests.Cluster
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(domain);
             logger = new Mock<ILogger>();
             routeDiscovery = new Mock<IRouteDiscovery>();
-            scaleOutAddress = new SocketEndpoint(new Uri("tcp://127.0.0.1:5000"), Guid.NewGuid().ToByteArray());
+            scaleOutAddress = SocketEndpoint.Parse("tcp://127.0.0.1:5000", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
             autoDiscoverySender = new Mock<IAutoDiscoverySender>();

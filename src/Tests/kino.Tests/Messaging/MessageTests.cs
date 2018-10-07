@@ -88,8 +88,8 @@ namespace kino.Tests.Messaging
             message.TraceOptions = MessageTraceOptions.Routing;
             var socketEndpoints = new[]
                                   {
-                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
-                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray())
+                                      SocketEndpoint.Parse("tcp://localhost:40", Guid.NewGuid().ToByteArray()),
+                                      SocketEndpoint.Parse("tcp://localhost:40", Guid.NewGuid().ToByteArray())
                                   };
             foreach (var socketEndpoint in socketEndpoints)
             {
@@ -108,8 +108,8 @@ namespace kino.Tests.Messaging
             message.TraceOptions = traceOptions;
             var socketEndpoints = new[]
                                   {
-                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray()),
-                                      new SocketEndpoint(new Uri("tcp://localhost:40"), Guid.NewGuid().ToByteArray())
+                                      SocketEndpoint.Parse("tcp://localhost:40", Guid.NewGuid().ToByteArray()),
+                                      SocketEndpoint.Parse("tcp://localhost:40", Guid.NewGuid().ToByteArray())
                                   };
             foreach (var socketEndpoint in socketEndpoints)
             {
@@ -125,8 +125,8 @@ namespace kino.Tests.Messaging
             message.TraceOptions = MessageTraceOptions.Routing;
             var socketEndpoints = new[]
                                   {
-                                      new SocketEndpoint(new Uri("tcp://localhost:41"), Guid.NewGuid().ToByteArray()),
-                                      new SocketEndpoint(new Uri("tcp://localhost:42"), Guid.NewGuid().ToByteArray())
+                                      SocketEndpoint.Parse("tcp://localhost:41", Guid.NewGuid().ToByteArray()),
+                                      SocketEndpoint.Parse("tcp://localhost:42", Guid.NewGuid().ToByteArray())
                                   };
             foreach (var socketEndpoint in socketEndpoints)
             {

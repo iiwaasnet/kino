@@ -5,18 +5,15 @@ namespace kino.Security
 {
     public class AnyVersionMessageIdentifier : Identifier
     {
-        private readonly int hashCode;
+        private int? hashCode;
 
-        public AnyVersionMessageIdentifier(MessageIdentifier messageIdentifier)
+        public AnyVersionMessageIdentifier(IIdentifier messageIdentifier)
             : this(messageIdentifier.Identity)
         {
         }
 
         public AnyVersionMessageIdentifier(byte[] identity)
-        {
-            Identity = identity;
-            hashCode = CalculateHashCode();
-        }
+            => Identity = identity;
 
         public override bool Equals(IIdentifier other)
         {
@@ -38,7 +35,7 @@ namespace kino.Security
             => Identity.ComputeHash();
 
         public override int GetHashCode()
-            => hashCode;
+            => (hashCode ?? (hashCode = CalculateHashCode())).Value;
 
         public override string ToString()
             => $"{nameof(Identity)}[{Identity?.GetAnyString()}]";

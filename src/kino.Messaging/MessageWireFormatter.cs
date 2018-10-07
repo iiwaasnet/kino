@@ -9,7 +9,7 @@ namespace kino.Messaging
 {
     public class MessageWireFormatter : IMessageWireFormatter
     {
-        private static readonly ushort BodyFirstFrameOffset = 1;
+        private static readonly ushort BodyFirstFrameOffset = 2;
         private static readonly ushort BodyFrameCount = 1;
         private static readonly byte[] EmptyFrame = new byte[0];
 
@@ -29,7 +29,7 @@ namespace kino.Messaging
 
         private byte[] GetMetaFrame(Message msg)
         {
-            var metaFrame = new List<byte[]>();
+            var metaFrame = new List<byte[]>(50);
 
             metaFrame.Add(msg.WireFormatVersion.GetBytes());
             AddByteArray(metaFrame, msg.Partition);
@@ -37,16 +37,16 @@ namespace kino.Messaging
             AddByteArray(metaFrame, msg.Identity);
             AddByteArray(metaFrame, msg.ReceiverIdentity);
             AddByteArray(metaFrame, msg.ReceiverNodeIdentity);
-            metaFrame.Add(DataEncoder.Combine((ushort)msg.TraceOptions, (ushort)msg.Distribution).GetBytes());
+            metaFrame.Add(DataEncoder.Combine((ushort) msg.TraceOptions, (ushort) msg.Distribution).GetBytes());
             AddByteArray(metaFrame, msg.CallbackReceiverNodeIdentity);
             metaFrame.Add(msg.CallbackKey.GetBytes());
             AddString(metaFrame, msg.Domain);
             AddByteArray(metaFrame, msg.Signature);
             //
-            metaFrame.Add(DataEncoder.Combine((ushort)msg.GetMessageRouting().Count(), msg.Hops).GetBytes());
+            metaFrame.Add(DataEncoder.Combine((ushort) msg.GetMessageRouting().Count(), msg.Hops).GetBytes());
             AddRouting(metaFrame, msg);
             //
-            metaFrame.Add(((ushort)msg.CallbackPoint.Count()).GetBytes());
+            metaFrame.Add(((ushort) msg.CallbackPoint.Count()).GetBytes());
             AddCallbacks(metaFrame, msg);
             //
             AddByteArray(metaFrame, msg.CallbackReceiverIdentity);
@@ -68,7 +68,7 @@ namespace kino.Messaging
                 entryBuffer.Add(callback.Version.GetBytes());
                 AddByteArray(entryBuffer, callback.Identity);
 
-                metaFrame.Add(entryBuffer.Select(re => (int)re.Length).Sum().GetBytes());
+                metaFrame.Add(GetResultBufferSize(entryBuffer).GetBytes());
                 metaFrame.AddRange(entryBuffer);
             }
         }
@@ -82,7 +82,7 @@ namespace kino.Messaging
                 AddString(entryBuffer, socketEndpoint.Uri);
                 AddByteArray(entryBuffer, socketEndpoint.Identity);
 
-                metaFrame.Add(entryBuffer.Select(re => (int)re.Length).Sum().GetBytes());
+                metaFrame.Add(GetResultBufferSize(entryBuffer).GetBytes());
                 metaFrame.AddRange(entryBuffer);
             }
         }
@@ -91,7 +91,7 @@ namespace kino.Messaging
         private static void AddByteArray(ICollection<byte[]> metaFrame, byte[] bytes)
         {
             bytes = bytes ?? EmptyFrame;
-            metaFrame.Add(((int)bytes.Length).GetBytes());
+            metaFrame.Add(((int) bytes.Length).GetBytes());
             metaFrame.Add(bytes);
         }
 
@@ -99,13 +99,13 @@ namespace kino.Messaging
         private static void AddString(ICollection<byte[]> metaFrame, string str)
         {
             var bytes = str.GetBytes();
-            metaFrame.Add(((int)bytes.Length).GetBytes());
+            metaFrame.Add(((int) bytes.Length).GetBytes());
             metaFrame.Add(bytes);
         }
 
-        private static byte[] Concatenate(IEnumerable<byte[]> frames)
+        private static byte[] Concatenate(IList<byte[]> frames)
         {
-            var rv = new byte[frames.Sum(a => a.Length)];
+            var rv = new byte[GetResultBufferSize(frames)];
             var offset = 0;
             foreach (var array in frames)
             {
@@ -116,11 +116,20 @@ namespace kino.Messaging
             return rv;
         }
 
+        private static int GetResultBufferSize(IList<byte[]> frames)
+        {
+            var size = 0;
+            for (var i = 0; i < frames.Count; i++)
+            {
+                size += frames[i].Length;
+            }
+
+            return size;
+        }
+
         public IMessage Deserialize(IList<byte[]> frames)
         {
-            //frames = frames.Reverse().ToList();
-            //var metaFrame = new Span<byte>(frames.First());
-            var metaFrame = new Span<byte>(frames.Last());
+            var metaFrame = new Span<byte>(frames[frames.Count - 1]);
 
             metaFrame = metaFrame.GetUShort(out var wireFormatVersion);
             metaFrame = GetByteArray(metaFrame, out var partition);
@@ -133,8 +142,8 @@ namespace kino.Messaging
             message.SetReceiverNodeIdentity(receiverNodeIdentity);
             metaFrame = metaFrame.GetULong(out var tmp);
             var (traceOptions, distribution) = tmp.Split32();
-            message.TraceOptions = (MessageTraceOptions)traceOptions;
-            message.SetDistribution((DistributionPattern)distribution);
+            message.TraceOptions = (MessageTraceOptions) traceOptions;
+            message.SetDistribution((DistributionPattern) distribution);
             metaFrame = GetByteArray(metaFrame, out var callbackReceiverNodeIdentity);
             message.SetCallbackReceiverNodeIdentity(callbackReceiverNodeIdentity);
             metaFrame = metaFrame.GetLong(out var callbackKey);
@@ -154,7 +163,7 @@ namespace kino.Messaging
                 var identityFrame = GetString(metaFrame, out var uri);
                 var _ = GetByteArray(identityFrame, out var id);
 
-                socketEndpoints.Add(new SocketEndpoint(new Uri(uri), id));
+                socketEndpoints.Add(SocketEndpoint.FromTrustedSource(uri, id));
 
                 metaFrame = metaFrame.Slice(entrySize);
             }
@@ -184,8 +193,7 @@ namespace kino.Messaging
             _ = metaFrame.GetULong(out tmp);
             var (firstBodyFrameOffset, bodyFrameCount) = tmp.Split32();
             // body
-            //message.SetBody(Concatenate(frames.Skip(firstBodyFrameOffset).Take(bodyFrameCount).Reverse()));
-            message.SetBody(frames[frames.Count - 2]);
+            message.SetBody(frames[frames.Count - firstBodyFrameOffset]);
 
             message.SetWireFormatVersion(wireFormatVersion);
             message.SetSocketIdentity(frames[0]);

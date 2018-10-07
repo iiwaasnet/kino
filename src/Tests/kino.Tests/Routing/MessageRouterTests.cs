@@ -59,7 +59,7 @@ namespace kino.Tests.Routing
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(scaleOutSocket.Object);
             logger = new Mock<ILogger>();
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
-            localNodeEndpoint = SocketEndpoint.Resolve("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray());
+            localNodeEndpoint = SocketEndpoint.Parse("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(localNodeEndpoint);
             clusterServices = new Mock<IClusterServices>();
             serviceMessageHandlerRegistry = new Mock<IServiceMessageHandlerRegistry>();

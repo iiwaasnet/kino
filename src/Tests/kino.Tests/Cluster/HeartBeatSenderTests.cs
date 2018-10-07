@@ -35,7 +35,7 @@ namespace kino.Tests.Cluster
             socketFactory.Setup(m => m.CreatePublisherSocket()).Returns(socket.Object);
             config = new Mock<IHeartBeatSenderConfigurationManager>();
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
-            scaleOutAddress = SocketEndpoint.Resolve("tcp://127.0.0.1:8080");
+            scaleOutAddress = SocketEndpoint.Parse("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
             heartBeatInterval = TimeSpan.FromMilliseconds(800);
             config.Setup(m => m.GetHeartBeatInterval()).Returns(heartBeatInterval);

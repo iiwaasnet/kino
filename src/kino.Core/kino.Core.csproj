@@ -28,4 +28,8 @@
  <PropertyGroup Condition="'$(TargetFramework)'=='net47'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
  </PropertyGroup>
+
+ <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp2.1|AnyCPU'">
+   <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+ </PropertyGroup>
 </Project>

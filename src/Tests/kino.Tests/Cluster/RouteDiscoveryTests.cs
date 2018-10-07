@@ -33,7 +33,7 @@ namespace kino.Tests.Cluster
         {
             autoDiscoverySender = new Mock<IAutoDiscoverySender>();
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
-            scaleOutAddress = SocketEndpoint.Resolve("tcp://127.0.0.1:9090");
+            scaleOutAddress = SocketEndpoint.Parse("tcp://127.0.0.1:9090", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
             config = new ClusterMembershipConfiguration
                      {

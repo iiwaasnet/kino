@@ -5,31 +5,19 @@ namespace kino.Core
 {
     public class SocketEndpoint : IEquatable<SocketEndpoint>
     {
-        private readonly int hashCode;
-
-        private SocketEndpoint(string uri)
-            : this(uri.ParseAddress(), ReceiverIdentifier.CreateIdentity())
-        {
-        }
+        private int? hashCode;
 
         private SocketEndpoint(string uri, byte[] identity)
-            : this(uri.ParseAddress(), identity)
         {
-        }
-
-        public SocketEndpoint(Uri uri, byte[] identity)
-        {
-            Uri = uri.ToSocketAddress();
+            Uri = uri;
             Identity = identity;
-
-            hashCode = CalculateHashCode();
         }
 
-        public static SocketEndpoint Resolve(string uri)
-            => new SocketEndpoint(uri);
-
-        public static SocketEndpoint Resolve(string uri, byte[] identity)
+        public static SocketEndpoint FromTrustedSource(string uri, byte[] identity)
             => new SocketEndpoint(uri, identity);
+
+        public static SocketEndpoint Parse(string uri, byte[] identity)
+            => new SocketEndpoint(uri.ParseAddress().ToSocketAddress(), identity);
 
         public override bool Equals(object obj)
         {
@@ -66,7 +54,7 @@ namespace kino.Core
             && Uri == other.Uri;
 
         public override int GetHashCode()
-            => hashCode;
+            => (hashCode ?? (hashCode = CalculateHashCode())).Value;
 
         private int CalculateHashCode()
         {
