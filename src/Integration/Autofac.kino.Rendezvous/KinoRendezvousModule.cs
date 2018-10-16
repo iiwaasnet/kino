@@ -12,6 +12,10 @@ namespace Autofac.kino.Rendezvous
     {
         protected override void Load(ContainerBuilder builder)
         {
+            builder.RegisterType<MessageWireFormatterV6>()
+                   .As<IMessageWireFormatter>()
+                   .SingleInstance();
+
             builder.RegisterType<SocketFactory>()
                    .As<ISocketFactory>()
                    .SingleInstance();

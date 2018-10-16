@@ -40,6 +40,10 @@ namespace Autofac.kino
                    .As<IMessageRouter>()
                    .SingleInstance();
 
+            builder.RegisterType<MessageWireFormatterV6>()
+                   .As<IMessageWireFormatter>()
+                   .SingleInstance();
+
             builder.RegisterType<SocketFactory>()
                    .As<ISocketFactory>()
                    .SingleInstance();

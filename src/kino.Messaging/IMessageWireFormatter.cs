@@ -7,5 +7,7 @@ namespace kino.Messaging
         IList<byte[]> Serialize(IMessage message);
 
         IMessage Deserialize(IList<byte[]> frames);
+
+        bool CanDeserialize(IList<byte[]> frames);
     }
 }

@@ -131,6 +131,9 @@ namespace kino.Messaging
                              ? (GetLastFixedFrameIndex() + 1)
                              : 0);
 
+        public bool CanDeserialize(IList<byte[]> frames)
+            => frames[frames.Count - ReversedFramesV5.WireFormatVersion].GetUShort() == Versioning.WireFormatV5;
+
         public IMessage Deserialize(IList<byte[]> frames)
         {
             var wireFormatVersion = frames[frames.Count - ReversedFramesV5.WireFormatVersion].GetUShort();

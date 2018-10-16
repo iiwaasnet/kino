@@ -130,6 +130,14 @@ namespace kino.Messaging
             return size;
         }
 
+        public bool CanDeserialize(IList<byte[]> frames)
+        {
+            var metaFrame = new Span<byte>(frames[frames.Count - 1]);
+            metaFrame.GetUShort(out var wireFormatVersion);
+
+            return wireFormatVersion == Versioning.WireFormatV6;
+        }
+
         public IMessage Deserialize(IList<byte[]> frames)
         {
             var metaFrame = new Span<byte>(frames[frames.Count - 1]);
