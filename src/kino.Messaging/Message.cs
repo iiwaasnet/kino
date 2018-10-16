@@ -23,7 +23,6 @@ namespace kino.Messaging
             : base(identity, version, partition)
         {
             Domain = string.Empty;
-            WireFormatVersion = Versioning.CurrentWireFormatVersion;
             routing = new List<SocketEndpoint>();
             callbackPoint = new List<MessageIdentifier>();
             TTL = TimeSpan.Zero;
@@ -216,9 +215,6 @@ namespace kino.Messaging
         internal void SetHops(ushort hops)
             => Hops = hops;
 
-        internal void SetWireFormatVersion(ushort wireFormatVersion)
-            => WireFormatVersion = wireFormatVersion;
-
         internal void SetDomain(string domain)
             => Domain = domain ?? string.Empty;
 
@@ -244,7 +240,6 @@ namespace kino.Messaging
             => new Message(Identity, Version, Partition)
                {
                    Body = Body,
-                   WireFormatVersion = WireFormatVersion,
                    TTL = TTL,
                    CorrelationId = CorrelationId,
                    ReceiverIdentity = ReceiverIdentity,
@@ -301,8 +296,6 @@ namespace kino.Messaging
         public DistributionPattern Distribution { get; private set; }
 
         public ushort Hops { get; private set; }
-
-        public ushort WireFormatVersion { get; private set; }
 
         public string Domain { get; private set; }
     }

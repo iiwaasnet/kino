@@ -7,7 +7,7 @@ using kino.Core.Framework;
 
 namespace kino.Messaging
 {
-    public class MessageWireFormatter : IMessageWireFormatter
+    public class MessageWireFormatterV6 : IMessageWireFormatter
     {
         private static readonly ushort BodyFirstFrameOffset = 2;
         private static readonly ushort BodyFrameCount = 1;
@@ -31,7 +31,7 @@ namespace kino.Messaging
         {
             var metaFrame = new List<byte[]>(50);
 
-            metaFrame.Add(msg.WireFormatVersion.GetBytes());
+            metaFrame.Add(Versioning.WireFormatV6.GetBytes());
             AddByteArray(metaFrame, msg.Partition);
             metaFrame.Add(msg.Version.GetBytes());
             AddByteArray(metaFrame, msg.Identity);
@@ -43,11 +43,13 @@ namespace kino.Messaging
             AddString(metaFrame, msg.Domain);
             AddByteArray(metaFrame, msg.Signature);
             //
-            metaFrame.Add(DataEncoder.Combine((ushort) msg.GetMessageRouting().Count(), msg.Hops).GetBytes());
-            AddRouting(metaFrame, msg);
+            var messageRouting = msg.GetMessageRouting();
+            metaFrame.Add(DataEncoder.Combine((ushort) messageRouting.Count(), msg.Hops).GetBytes());
+            AddRouting(metaFrame, messageRouting);
             //
-            metaFrame.Add(((ushort) msg.CallbackPoint.Count()).GetBytes());
-            AddCallbacks(metaFrame, msg);
+            var callbackPoints = msg.CallbackPoint;
+            metaFrame.Add(((ushort) callbackPoints.Count()).GetBytes());
+            AddCallbacks(metaFrame, callbackPoints);
             //
             AddByteArray(metaFrame, msg.CallbackReceiverIdentity);
             AddByteArray(metaFrame, msg.CorrelationId);
@@ -58,9 +60,9 @@ namespace kino.Messaging
             return Concatenate(metaFrame);
         }
 
-        private static void AddCallbacks(List<byte[]> metaFrame, Message msg)
+        private static void AddCallbacks(List<byte[]> metaFrame, IEnumerable<MessageIdentifier> callbackPoints)
         {
-            foreach (var callback in msg.CallbackPoint)
+            foreach (var callback in callbackPoints)
             {
                 var entryBuffer = new List<byte[]>();
 
@@ -73,9 +75,9 @@ namespace kino.Messaging
             }
         }
 
-        private static void AddRouting(List<byte[]> metaFrame, Message msg)
+        private static void AddRouting(List<byte[]> metaFrame, IEnumerable<SocketEndpoint> messageRouting)
         {
-            foreach (var socketEndpoint in msg.GetMessageRouting())
+            foreach (var socketEndpoint in messageRouting)
             {
                 var entryBuffer = new List<byte[]>();
 
@@ -116,6 +118,7 @@ namespace kino.Messaging
             return rv;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int GetResultBufferSize(IList<byte[]> frames)
         {
             var size = 0;
@@ -195,7 +198,6 @@ namespace kino.Messaging
             // body
             message.SetBody(frames[frames.Count - firstBodyFrameOffset]);
 
-            message.SetWireFormatVersion(wireFormatVersion);
             message.SetSocketIdentity(frames[0]);
 
             return message;

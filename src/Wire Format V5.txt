@@ -1,0 +1,54 @@
+===================== MESSAGE WIRE FORMAT V5 ========================================
+FRAME				CONTENT							ROUTE       DESCRIPTION
+(of n                                              SELECTOR
+total 
+frames)		bits
+=====================================================================================
+0					SocketIdentity					            Identity of the receiving chosen, selected based on Route Selectors
+1					[0]									        Empty frame
+..
+					.... more ......
+					Body Frame							        Message body frames
+.. Body ..
+                    .... more ......
+                    ROUTER URI							        <= VERSIONING: new frames come on top
+                    ROUTER ID
+.. Message routing ..
+                    .... more ......
+                    Callback Partition					        <= VERSIONING: new frames come on top
+                    Callback Version
+                    Callback Message Identity
+.. Callbacks ..
+n-17                CallbackReceiverNodeIdentity                Value from this field will be copied to ReceiverNodeIdentity
+														        when Message Identity becomes equal to one of the Callback Points   
+n-16                CallbackKey                                 Callback key
+n-15                Domain                                      Security Domain, which Private Key is used to create Message Signature
+n-14                Signature                                   Message Authentication Signature (MAC)
+n-13		1-16	Routing Start Frame Offset			        Offset of the first message route frame
+			17-32	Routing Entry Count					        Number of routing entries
+			33-48	Routing Frame Divisor				        Number of frames per one routing entry
+			49-64	Message Hops						        Number of times a Message was sent away to another node
+			
+n-12		1-16	Callback Start Frame Offset     			        Offset of the first callback frame
+			17-32	Callback Entry Count				        Number of callback entries
+			33-48	Callback Frame Divisor				        Number of frames per one callback entry
+
+n-11				ReceiverIdentity                    *       Identity of Actor or MessageHub to which the message should be routed
+                                                                This value overrules data from RoutingTable, i.e. Receiver Socket ID frame
+                                                                Empty frame, for the non-specific receiver
+n-10				CallbackReceiverIdentity			        Value from this field will be copied to ReceiverIdentity
+														        when Message Identity becomes equal to one of the Callback Points
+n-9					ReceiverNodeIdentity                *       MessageRouter Identity (Scaleout FrontEnd Socket) to which the message should be routed
+n-8					Partition							*       Message Partition
+n-7					Version								*       Message Version
+n-6					Identity							*       Message Identity
+n-5			1-16	TraceOptions						        Type of the tracing info to be recorded, i.e. routing
+			17-32	Distribution				        *       One of the following distribution patterns {Unicast, Broadcast}
+														        Third distribution pattern, Direct, uses address in Receiver Node ID
+
+n-4					CorrelationId						        Unique identifier, copied onto all messages, spawned within the same flow, from the initial one
+n-3					TTL
+n-2			1-16    Body First Frame Offset				        Offset of the first message body frame
+			17-32	Body Frame Count					        Number of body frames
+
+n-1					WireFormatVersion					        Version of message wire format

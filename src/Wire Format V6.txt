@@ -1,4 +1,4 @@
-===================== MESSAGE WIRE FORMAT V4 ========================================
+===================== MESSAGE WIRE FORMAT V6 ========================================
 FRAME				CONTENT							            DESCRIPTION
 (of n                                              
 total 

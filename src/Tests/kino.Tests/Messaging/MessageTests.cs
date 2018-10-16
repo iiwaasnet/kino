@@ -11,15 +11,18 @@ using NUnit.Framework;
 
 namespace kino.Tests.Messaging
 {
-    public class MessageTests
+    [TestFixture(typeof(MessageWireFormatterV5))]
+    [TestFixture(typeof(MessageWireFormatterV6))]
+    public class MessageTests<T>
+        where T : IMessageWireFormatter, new()
     {
         private ISecurityProvider securityProvider;
-        private MessageWireFormatter messageWireFormatter;
+        private IMessageWireFormatter messageWireFormatter;
 
         [SetUp]
         public void Setup()
         {
-            messageWireFormatter = new MessageWireFormatter();
+            messageWireFormatter = new T();
             securityProvider = new SecurityProvider(() => HMACMD5.Create("HMACSHA256"),
                                                     new DomainScopeResolver(),
                                                     new DomainPrivateKeyProvider());
@@ -290,21 +293,6 @@ namespace kino.Tests.Messaging
             message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
             // assert
             Assert.AreEqual(hops, message.Hops);
-        }
-
-        [Test]
-        public void MessageWireFormatVersion_IsConsistentlyTransferredOverWires()
-        {
-            // arrange
-            const int wireMessageFormat = 5;
-
-            var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
-            Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
-            // act
-            var wireFrames = messageWireFormatter.Serialize(message);
-            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
-            // assert
-            Assert.AreEqual(wireMessageFormat, message.WireFormatVersion);
         }
 
         [Test]
