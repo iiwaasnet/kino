@@ -115,6 +115,24 @@ function Get-NuGetTargetPlatform([string]$fw)
     throw 'Framework is not supported: [' + $fw + ']'
 }
 
+
+function Get-BuildDirForTargetPlatform([string]$fw)
+{
+	if ($fw -eq 'netstandard2.0')
+    {
+        return 'netstandard2.0'
+    }
+    if ($fw -eq 'net47')
+    {
+        return 'net4.7'
+    }
+	
+	# add other FWs, i.e. core, net461, etc
+
+    throw 'Framework is not supported: [' + $fw + ']'
+}
+
+
 function Copy-ProjectNuGetAttributes([xml]$projectXml, [System.Xml.XmlNode]$meta, [System.Xml.XmlDocument]$doc)
 {
     foreach ($element in (Get-ProjectNuGetAttributesMap))

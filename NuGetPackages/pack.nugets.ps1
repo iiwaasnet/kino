@@ -1,9 +1,9 @@
 param(
     [string]$version,
-	[switch]$rebuild
+    [switch]$rebuild
 )
 
-$MsBuild = "C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\msbuild.exe"
+$MsBuild = (Get-ChildItem -Path "C:\Program Files (x86)\Microsoft Visual Studio\2017\*\MSBuild\15.0\Bin\msbuild.exe").FullName
 
 & ".\build.nuspecs.ps1" $version -NoNewWindow
 
@@ -24,6 +24,7 @@ foreach ($NugetSpec in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extensio
 	{
 		Start-Process @BuildArgs -NoNewWindow
 	}
+
 	#nuget pack $ProjectFile.FullName -BasePath $NugetSpec.DirectoryName -Build -Prop Configuration=Release -Prop FilePath=$MsBuild -NonInteractive -IncludeReferencedProjects
 	nuget pack $NugetSpec.FullName -BasePath $NugetSpec.DirectoryName -Prop Configuration=Release -NonInteractive -IncludeReferencedProjects
 }
