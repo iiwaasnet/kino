@@ -13,9 +13,7 @@ namespace kino.Cluster.Configuration
         private readonly SocketEndpoint localEndpoint;
 
         public NullScaleOutConfigurationManager()
-        {
-            localEndpoint = new SocketEndpoint(new Uri("tcp://localhost"), IdentityExtensions.Empty);
-        }
+            => localEndpoint = new SocketEndpoint(new Uri("tcp://localhost"), IdentityExtensions.Empty);
 
         public int GetScaleOutReceiveMessageQueueLength()
             => 0;

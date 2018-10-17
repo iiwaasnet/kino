@@ -64,10 +64,6 @@ namespace Autofac.kino
                    .As<IAutoDiscoveryListener>()
                    .SingleInstance();
 
-            builder.RegisterType<RouteDiscovery>()
-                   .As<IRouteDiscovery>()
-                   .SingleInstance();
-
             builder.RegisterType<RendezvousCluster>()
                    .As<IRendezvousCluster>()
                    .SingleInstance();
@@ -95,17 +91,13 @@ namespace Autofac.kino
             builder.RegisterType<NullSecurityProvider>()
                    .As<ISecurityProvider>()
                    .SingleInstance();
-
-            builder.RegisterType<ScaleOutConfigurationManager>()
-                   .As<IScaleOutConfigurationProvider>()
-                   .As<IScaleOutConfigurationManager>()
-                   .SingleInstance();
         }
 
         private static void RegisterClusterServices(ContainerBuilder builder)
         {
             RegisterScaleOutConfigurationManager(builder);
             RegisterClusterMonitor(builder);
+            RegisterRouteDiscovery(builder);
             RegisterScaleOutListener(builder);
             RegisterHeartBeatSender(builder);
             RegisterClusterHealthMonitor(builder);
@@ -128,11 +120,9 @@ namespace Autofac.kino
                    .AsSelf()
                    .SingleInstance();
 
-            builder.Register(c => new ServiceLocator<ClusterHealthMonitor,
-                                     NullClusterHealthMonitor,
-                                     IClusterHealthMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
-                                                            c.Resolve<ClusterHealthMonitor>(),
-                                                            c.Resolve<NullClusterHealthMonitor>())
+            builder.Register(c => new ServiceLocator<IClusterHealthMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                                            c.Resolve<ClusterHealthMonitor>,
+                                                                            c.Resolve<NullClusterHealthMonitor>)
                                  .GetService())
                    .As<IClusterHealthMonitor>()
                    .SingleInstance();
@@ -148,11 +138,9 @@ namespace Autofac.kino
                    .AsSelf()
                    .SingleInstance();
 
-            builder.Register(c => new ServiceLocator<HeartBeatSender,
-                                     NullHeartBeatSender,
-                                     IHeartBeatSender>(c.Resolve<ClusterMembershipConfiguration>(),
-                                                       c.Resolve<HeartBeatSender>(),
-                                                       c.Resolve<NullHeartBeatSender>())
+            builder.Register(c => new ServiceLocator<IHeartBeatSender>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                                       c.Resolve<HeartBeatSender>,
+                                                                       c.Resolve<NullHeartBeatSender>)
                                  .GetService())
                    .As<IHeartBeatSender>()
                    .SingleInstance();
@@ -168,11 +156,9 @@ namespace Autofac.kino
                    .AsSelf()
                    .SingleInstance();
 
-            builder.Register(c => new ServiceLocator<ScaleOutListener,
-                                     NullScaleOutListener,
-                                     IScaleOutListener>(c.Resolve<ClusterMembershipConfiguration>(),
-                                                        c.Resolve<ScaleOutListener>(),
-                                                        c.Resolve<NullScaleOutListener>())
+            builder.Register(c => new ServiceLocator<IScaleOutListener>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                                        c.Resolve<ScaleOutListener>,
+                                                                        c.Resolve<NullScaleOutListener>)
                                  .GetService())
                    .As<IScaleOutListener>()
                    .SingleInstance();
@@ -188,13 +174,29 @@ namespace Autofac.kino
                    .AsSelf()
                    .SingleInstance();
 
-            builder.Register(c => new ServiceLocator<ClusterMonitor,
-                                     NullClusterMonitor,
-                                     IClusterMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
-                                                      c.Resolve<ClusterMonitor>(),
-                                                      c.Resolve<NullClusterMonitor>())
+            builder.Register(c => new ServiceLocator<IClusterMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                                      c.Resolve<ClusterMonitor>,
+                                                                      c.Resolve<NullClusterMonitor>)
                                  .GetService())
                    .As<IClusterMonitor>()
+                   .SingleInstance();
+        }
+
+        private static void RegisterRouteDiscovery(ContainerBuilder builder)
+        {
+            builder.RegisterType<RouteDiscovery>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.RegisterType<NullRouteDiscovery>()
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.Register(c => new ServiceLocator<IRouteDiscovery>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                                      c.Resolve<RouteDiscovery>,
+                                                                      c.Resolve<NullRouteDiscovery>)
+                                 .GetService())
+                   .As<IRouteDiscovery>()
                    .SingleInstance();
         }
 
@@ -208,14 +210,12 @@ namespace Autofac.kino
                    .AsSelf()
                    .SingleInstance();
 
-            builder.Register(c => new ServiceLocator<ScaleOutConfigurationManager,
-                                     NullScaleOutConfigurationManager,
-                                     IScaleOutConfigurationManager>(c.Resolve<ClusterMembershipConfiguration>(),
-                                                                    c.Resolve<ScaleOutConfigurationManager>(),
-                                                                    c.Resolve<NullScaleOutConfigurationManager>())
+            builder.Register(c => new ServiceLocator<IScaleOutConfigurationManager>(c.Resolve<ClusterMembershipConfiguration>(),
+                                                                                    c.Resolve<ScaleOutConfigurationManager>,
+                                                                                    c.Resolve<NullScaleOutConfigurationManager>)
                                  .GetService())
-                   .As<IScaleOutConfigurationManager>()
                    .As<IScaleOutConfigurationProvider>()
+                   .As<IScaleOutConfigurationManager>()
                    .SingleInstance();
         }
 
