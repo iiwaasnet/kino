@@ -24,9 +24,6 @@ foreach ($NugetSpec in Get-ChildItem ..\src -Recurse | Where-Object {$_.Extensio
 	{
 		Start-Process @BuildArgs -NoNewWindow
 	}
-	Write-Host '<<'
-	Write-Host @BuildArgs
-	Write-Host '<<'
 
 	#nuget pack $ProjectFile.FullName -BasePath $NugetSpec.DirectoryName -Build -Prop Configuration=Release -Prop FilePath=$MsBuild -NonInteractive -IncludeReferencedProjects
 	nuget pack $NugetSpec.FullName -BasePath $NugetSpec.DirectoryName -Prop Configuration=Release -NonInteractive -IncludeReferencedProjects
