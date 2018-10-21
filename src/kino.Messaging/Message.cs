@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security;
 using kino.Core;
 using kino.Core.Framework;
@@ -110,6 +111,7 @@ namespace kino.Messaging
             ReceiverNodeIdentity = receiverNode;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void PushRouterAddress(SocketEndpoint scaleOutAddress)
             => routing.Add(scaleOutAddress);
 
@@ -164,9 +166,11 @@ namespace kino.Messaging
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AddHop()
             => Hops++;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal IEnumerable<SocketEndpoint> GetMessageRouting()
             => routing;
 
@@ -182,39 +186,51 @@ namespace kino.Messaging
             callbackPoint.AddRange(callbackPoints);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetCorrelationId(byte[] correlationId)
             => CorrelationId = correlationId;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetReceiverIdentity(byte[] receiverIdentity)
             => ReceiverIdentity = receiverIdentity;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetSocketIdentity(byte[] socketIdentity)
             => SocketIdentity = socketIdentity;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetReceiverNodeIdentity(byte[] receiverNodeIdentity)
             => ReceiverNodeIdentity = receiverNodeIdentity;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetSignature(byte[] signature)
             => Signature = signature;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetBody(byte[] body)
             => Body = body;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetCallbackKey(long callbackKey)
             => CallbackKey = callbackKey;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetCallbackReceiverIdentity(byte[] callbackReceiverIdentity)
             => CallbackReceiverIdentity = callbackReceiverIdentity;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetCallbackReceiverNodeIdentity(byte[] callbackReceiverNodeIdentity)
             => CallbackReceiverNodeIdentity = callbackReceiverNodeIdentity;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetDistribution(DistributionPattern distribution)
             => Distribution = distribution;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetHops(ushort hops)
             => Hops = hops;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetDomain(string domain)
             => Domain = domain ?? string.Empty;
 
