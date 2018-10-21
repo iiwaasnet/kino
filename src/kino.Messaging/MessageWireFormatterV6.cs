@@ -17,7 +17,7 @@ namespace kino.Messaging
         {
             var msg = message.Cast<Message>();
 
-            var frames = new List<byte[]>();
+            var frames = new List<byte[]>(5);
 
             frames.Add(msg.SocketIdentity ?? EmptyFrame);
             frames.Add(EmptyFrame);
