@@ -8,7 +8,6 @@ namespace kino.Core.Framework
     {
         private static readonly Encoding Encoder;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static DataEncoder()
             => Encoder = Encoding.UTF8;
 
