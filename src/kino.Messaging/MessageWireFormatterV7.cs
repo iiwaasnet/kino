@@ -30,8 +30,6 @@ namespace kino.Messaging
 
         private byte[] GetMetaFrame(Message msg)
         {
-            var metaFrame = new List<byte[]>(50);
-
             var buffer = new byte[CalculateMetaFrameSize(msg)];
             var pointer = new Span<byte>(buffer);
 
@@ -58,7 +56,7 @@ namespace kino.Messaging
             pointer = AddByteArray(pointer, msg.CallbackReceiverIdentity);
             pointer = AddByteArray(pointer, msg.CorrelationId);
             pointer = msg.TTL.GetBytes(pointer);
-            pointer = DataEncoder.Combine(BodyFirstFrameOffset, BodyFrameCount).GetBytes(pointer);
+            DataEncoder.Combine(BodyFirstFrameOffset, BodyFrameCount).GetBytes(pointer);
 
             return buffer;
         }
@@ -147,14 +145,6 @@ namespace kino.Messaging
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void AddByteArray(ICollection<byte[]> metaFrame, byte[] bytes)
-        {
-            bytes = bytes ?? EmptyFrame;
-            metaFrame.Add(((int) bytes.Length).GetBytes());
-            metaFrame.Add(bytes);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static int GetArraySize(ICollection bytes)
             => sizeof(int) + (bytes?.Count ?? 0);
 
@@ -178,43 +168,10 @@ namespace kino.Messaging
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void AddString(ICollection<byte[]> metaFrame, string str)
-        {
-            var bytes = str.GetBytes();
-            metaFrame.Add(((int) bytes.Length).GetBytes());
-            metaFrame.Add(bytes);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Span<byte> AddString(Span<byte> destination, string str)
         {
             destination = ((int) str.Length).GetBytes(destination);
             return str.GetBytes(destination);
-        }
-
-        private static byte[] Concatenate(IList<byte[]> frames)
-        {
-            var rv = new byte[GetResultBufferSize(frames)];
-            var offset = 0;
-            foreach (var array in frames)
-            {
-                Buffer.BlockCopy(array, 0, rv, offset, array.Length);
-                offset += array.Length;
-            }
-
-            return rv;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static int GetResultBufferSize(IList<byte[]> frames)
-        {
-            var size = 0;
-            for (var i = 0; i < frames.Count; i++)
-            {
-                size += frames[i].Length;
-            }
-
-            return size;
         }
 
         public bool CanDeserialize(IList<byte[]> frames)
