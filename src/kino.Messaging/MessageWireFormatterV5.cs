@@ -136,7 +136,7 @@ namespace kino.Messaging
 
         public IMessage Deserialize(IList<byte[]> frames)
         {
-            var wireFormatVersion = frames[frames.Count - ReversedFramesV5.WireFormatVersion].GetInt();
+            var wireFormatVersion = frames[frames.Count - ReversedFramesV5.WireFormatVersion].GetUShort();
             var (traceOptions, distributionPattern) = GetTraceOptionsDistributionPattern(frames);
             var (routes, hops) = GetMessageRouting(frames);
 

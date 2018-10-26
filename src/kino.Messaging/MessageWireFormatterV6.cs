@@ -55,7 +55,6 @@ namespace kino.Messaging
             AddByteArray(metaFrame, msg.CorrelationId);
             metaFrame.Add(msg.TTL.GetBytes());
             metaFrame.Add(DataEncoder.Combine(BodyFirstFrameOffset, BodyFrameCount).GetBytes());
-            AddByteArray(metaFrame, msg.Body);
 
             return Concatenate(metaFrame);
         }
