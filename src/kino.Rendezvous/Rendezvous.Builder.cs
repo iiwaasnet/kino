@@ -14,7 +14,7 @@ namespace kino.Rendezvous
         {
             var logger = resolver.Resolve<ILogger>();
             var applicationConfig = resolver.Resolve<RendezvousServiceConfiguration>();
-            var messageWireFormatter = resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6();
+            var messageWireFormatter = resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV7();
             var socketFactory = new SocketFactory(messageWireFormatter, applicationConfig.Socket);
             var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);
 

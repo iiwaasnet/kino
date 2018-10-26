@@ -68,16 +68,56 @@ namespace kino.Core.Framework
             => Encoder.GetBytes(str);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this string str, Span<byte> destination)
+        {
+            var size = Encoder.GetBytes(str, destination);
+
+            return destination.Slice(size);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this ushort val)
             => BitConverter.GetBytes(val);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this ushort val, Span<byte> destination)
+        {
+            BitConverter.TryWriteBytes(destination, val);
+
+            return destination.Slice(sizeof(ushort));
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this int val)
             => BitConverter.GetBytes(val);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this int val, Span<byte> destination)
+        {
+            BitConverter.TryWriteBytes(destination, val);
+
+            return destination.Slice(sizeof(int));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this long val)
             => BitConverter.GetBytes(val);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this long val, Span<byte> destination)
+        {
+            BitConverter.TryWriteBytes(destination, val);
+
+            return destination.Slice(sizeof(long));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this ulong val, Span<byte> destination)
+        {
+            BitConverter.TryWriteBytes(destination, val);
+
+            return destination.Slice(sizeof(ulong));
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this ulong val)
@@ -86,6 +126,10 @@ namespace kino.Core.Framework
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this TimeSpan val)
             => BitConverter.GetBytes(val.Ticks);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this TimeSpan val, Span<byte> destination)
+            => val.Ticks.GetBytes(destination);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this DateTime utcDateTime)
