@@ -65,7 +65,7 @@ namespace kino.Connectivity
                     {
                         if (socket.TryReceive(ref msg, config.ReceiveWaitTimeout))
                         {
-                            var buffered = msg.Size != msg.Data.Length;
+                            var buffered = msg.MsgType == MsgType.Pool;
                             var bytes = buffered
                                             ? new byte[msg.Size]
                                             : msg.Data;
