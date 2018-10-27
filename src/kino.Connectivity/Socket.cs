@@ -65,7 +65,16 @@ namespace kino.Connectivity
                     {
                         if (socket.TryReceive(ref msg, config.ReceiveWaitTimeout))
                         {
-                            frames.Add(msg.Data);
+                            var buffered = msg.Size != msg.Data.Length;
+                            var bytes = buffered
+                                            ? new byte[msg.Size]
+                                            : msg.Data;
+                            if (buffered)
+                            {
+                                Buffer.BlockCopy(msg.Data, 0, bytes, 0, msg.Size);
+                            }
+
+                            frames.Add(bytes);
                         }
                     } while (msg.HasMore);
 
