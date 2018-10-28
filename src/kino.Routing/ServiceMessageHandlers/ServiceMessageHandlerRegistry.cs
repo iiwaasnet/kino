@@ -9,9 +9,7 @@ namespace kino.Routing.ServiceMessageHandlers
         private readonly IDictionary<MessageIdentifier, IServiceMessageHandler> handlersMap;
 
         public ServiceMessageHandlerRegistry(IEnumerable<IServiceMessageHandler> serviceMessageHandlers)
-        {
-            handlersMap = CreateHandlersMap(serviceMessageHandlers);
-        }
+            => handlersMap = CreateHandlersMap(serviceMessageHandlers);
 
         private static IDictionary<MessageIdentifier, IServiceMessageHandler> CreateHandlersMap(IEnumerable<IServiceMessageHandler> serviceMessageHandlers)
         {
