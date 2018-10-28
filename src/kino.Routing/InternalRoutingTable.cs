@@ -112,7 +112,7 @@ namespace kino.Routing
         public Bcl.IEnumerable<ILocalSendingSocket<IMessage>> FindRoutes(InternalRouteLookupRequest lookupRequest)
         {
             HashedLinkedList<ReceiverIdentifier> actors;
-            var sockets = new Bcl.List<ILocalSendingSocket<IMessage>>();
+            var sockets = new Bcl.List<ILocalSendingSocket<IMessage>>(20);
             ILocalSendingSocket<IMessage> socket;
             if (lookupRequest.ReceiverIdentity.IsSet())
             {
