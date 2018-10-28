@@ -56,7 +56,7 @@ namespace kino.Connectivity
         {
             while (!cancellationToken.IsCancellationRequested)
             {
-                var frames = new List<byte[]>();
+                var frames = new List<byte[]>(50);
                 var msg = new Msg();
                 msg.InitEmpty();
                 try
