@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace kino.Core.Diagnostics.Performance
 {
@@ -56,6 +57,7 @@ namespace kino.Core.Diagnostics.Performance
         public CounterSample NextSample()
             => Invoke(c => c.NextSample());
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private TResult Invoke<TResult>(Func<PerformanceCounter, TResult> func)
         {
             if (perfCounter != null)
