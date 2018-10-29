@@ -67,13 +67,15 @@ namespace Client
                 }
 
                 var timeout = TimeSpan.FromMilliseconds(4000);
+                var responseReceived = false;
                 foreach (var promise in promises)
                 {
                     using (promise)
                     {
-                        if (promise.GetResponse().Wait(timeout))
+                        responseReceived = promise.GetResponse().Wait(timeout);
+                        if (responseReceived)
                         {
-                            //promise.GetResponse().Result.GetPayload<EhlloMessage>();
+                            promise.GetResponse().Result.GetPayload<EhlloMessage>();
                         }
                         else
                         {
@@ -89,11 +91,14 @@ namespace Client
 
                 timer.Stop();
 
-                var messagesPerTest = 2;
-                var performance = (timer.ElapsedMilliseconds > 0)
-                                      ? ((messagesPerTest * runs) / (double) timer.ElapsedMilliseconds * 1000).ToString("##.00")
-                                      : "Infinite";
-                WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} ms with {performance} msg/sec");
+                if (responseReceived)
+                {
+                    var messagesPerTest = 2;
+                    var performance = (timer.ElapsedMilliseconds > 0)
+                                          ? ((messagesPerTest * runs) / (double)timer.ElapsedMilliseconds * 1000).ToString("##.00")
+                                          : "Infinite";
+                    WriteLine($"Done {runs} times in {timer.ElapsedMilliseconds} ms with {performance} msg/sec");
+                }
 
                 //Thread.Sleep(TimeSpan.FromSeconds(2));
             }

@@ -7,6 +7,7 @@ using kino.Core.Framework;
 
 namespace kino.Messaging
 {
+#if NETCOREAPP2_1
     public class MessageWireFormatterV6 : IMessageWireFormatter
     {
         private static readonly ushort BodyFirstFrameOffset = 2;
@@ -228,4 +229,5 @@ namespace kino.Messaging
             return bytes.Slice(size);
         }
     }
+#endif
 }

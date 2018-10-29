@@ -6,15 +6,30 @@ using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous.Configuration;
 
+#if NETCOREAPP2_1
+using NetMQ;
+
+#endif
+
 namespace kino.Rendezvous
 {
     public partial class Rendezvous
     {
         private IRendezvousService Build()
         {
+#if NETCOREAPP2_1
+            BufferPool.SetCustomBufferPool(new CustomBufferPool());
+#endif
+
             var logger = resolver.Resolve<ILogger>();
             var applicationConfig = resolver.Resolve<RendezvousServiceConfiguration>();
-            var messageWireFormatter = resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV7();
+            var messageWireFormatter =
+#if NETCOREAPP2_1
+                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV7();
+#endif
+#if NET47
+                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV5();
+#endif
             var socketFactory = new SocketFactory(messageWireFormatter, applicationConfig.Socket);
             var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);
 

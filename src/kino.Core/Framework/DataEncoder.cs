@@ -60,64 +60,20 @@ namespace kino.Core.Framework
             => Encoder.GetString(array);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetString(this Span<byte> array)
-            => Encoder.GetString(array);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this string str)
             => Encoder.GetBytes(str);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetBytes(this string str, Span<byte> destination)
-        {
-            var size = Encoder.GetBytes(str, destination);
-
-            return destination.Slice(size);
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this ushort val)
             => BitConverter.GetBytes(val);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetBytes(this ushort val, Span<byte> destination)
-        {
-            BitConverter.TryWriteBytes(destination, val);
-
-            return destination.Slice(sizeof(ushort));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this int val)
             => BitConverter.GetBytes(val);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetBytes(this int val, Span<byte> destination)
-        {
-            BitConverter.TryWriteBytes(destination, val);
-
-            return destination.Slice(sizeof(int));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this long val)
             => BitConverter.GetBytes(val);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetBytes(this long val, Span<byte> destination)
-        {
-            BitConverter.TryWriteBytes(destination, val);
-
-            return destination.Slice(sizeof(long));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetBytes(this ulong val, Span<byte> destination)
-        {
-            BitConverter.TryWriteBytes(destination, val);
-
-            return destination.Slice(sizeof(ulong));
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this ulong val)
@@ -128,19 +84,8 @@ namespace kino.Core.Framework
             => BitConverter.GetBytes(val.Ticks);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetBytes(this TimeSpan val, Span<byte> destination)
-            => val.Ticks.GetBytes(destination);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] GetBytes(this DateTime utcDateTime)
             => BitConverter.GetBytes(utcDateTime.Ticks);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetInt(this Span<byte> array, out int val)
-        {
-            val = BitConverter.ToInt32(array);
-            return array.Slice(sizeof(int));
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int GetInt(this byte[] array)
@@ -151,47 +96,16 @@ namespace kino.Core.Framework
             => BitConverter.ToInt64(array, 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetLong(this Span<byte> array, out long val)
-        {
-            val = BitConverter.ToInt64(array);
-
-            return array.Slice(sizeof(long));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ulong GetULong(this byte[] array)
             => BitConverter.ToUInt64(array, 0);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetULong(this Span<byte> array, out ulong val)
-        {
-            val = BitConverter.ToUInt64(array);
-            return array.Slice(sizeof(ulong));
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ushort GetUShort(this byte[] array)
             => BitConverter.ToUInt16(array, 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetUShort(this Span<byte> array, out ushort val)
-        {
-            val = BitConverter.ToUInt16(array);
-            return array.Slice(sizeof(ushort));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TimeSpan GetTimeSpan(this byte[] array)
             => new TimeSpan(BitConverter.ToInt64(array, 0));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Span<byte> GetTimeSpan(this Span<byte> array, out TimeSpan val)
-        {
-            var slice = array.GetLong(out var int64);
-            val = new TimeSpan(int64);
-
-            return slice;
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DateTime GetUtcDateTime(this byte[] array)
@@ -223,5 +137,93 @@ namespace kino.Core.Framework
 
             throw new InvalidCastException($"Unable to cast {raw} to enum {typeof(TEnum)}");
         }
+#if NETCOREAPP2_1
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string GetString(this Span<byte> array)
+            => Encoder.GetString(array);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetTimeSpan(this Span<byte> array, out TimeSpan val)
+        {
+            var slice = array.GetLong(out var int64);
+            val = new TimeSpan(int64);
+
+            return slice;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetLong(this Span<byte> array, out long val)
+        {
+            val = BitConverter.ToInt64(array);
+
+            return array.Slice(sizeof(long));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetULong(this Span<byte> array, out ulong val)
+        {
+            val = BitConverter.ToUInt64(array);
+            return array.Slice(sizeof(ulong));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetUShort(this Span<byte> array, out ushort val)
+        {
+            val = BitConverter.ToUInt16(array);
+            return array.Slice(sizeof(ushort));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this TimeSpan val, Span<byte> destination)
+            => val.Ticks.GetBytes(destination);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this long val, Span<byte> destination)
+        {
+            BitConverter.TryWriteBytes(destination, val);
+
+            return destination.Slice(sizeof(long));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this ulong val, Span<byte> destination)
+        {
+            BitConverter.TryWriteBytes(destination, val);
+
+            return destination.Slice(sizeof(ulong));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetInt(this Span<byte> array, out int val)
+        {
+            val = BitConverter.ToInt32(array);
+            return array.Slice(sizeof(int));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this string str, Span<byte> destination)
+        {
+            var size = Encoder.GetBytes(str, destination);
+
+            return destination.Slice(size);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this ushort val, Span<byte> destination)
+        {
+            BitConverter.TryWriteBytes(destination, val);
+
+            return destination.Slice(sizeof(ushort));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> GetBytes(this int val, Span<byte> destination)
+        {
+            BitConverter.TryWriteBytes(destination, val);
+
+            return destination.Slice(sizeof(int));
+        }
+
+#endif
     }
 }

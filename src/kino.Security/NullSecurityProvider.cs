@@ -9,7 +9,7 @@ namespace kino.Security
     {
         private static readonly string[] allowedDomains;
 
-        static NullSecurityProvider() 
+        static NullSecurityProvider()
             => allowedDomains = new[] {string.Empty};
 
         public byte[] CreateSignature(string domain, byte[] buffer)

@@ -48,7 +48,14 @@ namespace kino.Tests.Consensus.Setup
             var logger = new Mock<ILogger>();
             var performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             var synodConfigProvider = new SynodConfigurationProvider(appConfig.Synod);
-            var intercomMessageHub = new IntercomMessageHub(new SocketFactory(new MessageWireFormatterV6(), socketConfig),
+            var messageWireFormatterV7 =
+#if NETCOREAPP2_1
+                new MessageWireFormatterV7();
+#endif
+#if NET47
+                new MessageWireFormatterV5();
+#endif
+            var intercomMessageHub = new IntercomMessageHub(new SocketFactory(messageWireFormatterV7, socketConfig),
                                                             synodConfigProvider,
                                                             performanceCounterManager.Object,
                                                             logger.Object);

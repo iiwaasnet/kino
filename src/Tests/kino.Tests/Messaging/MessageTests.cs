@@ -12,7 +12,10 @@ using NUnit.Framework;
 namespace kino.Tests.Messaging
 {
     [TestFixture(typeof(MessageWireFormatterV5))]
+#if NETCOREAPP2_1
     [TestFixture(typeof(MessageWireFormatterV6))]
+    [TestFixture(typeof(MessageWireFormatterV7))]
+#endif
     public class MessageTests<T>
         where T : IMessageWireFormatter, new()
     {
@@ -336,95 +339,6 @@ namespace kino.Tests.Messaging
             message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
             // assert
             Assert.AreEqual(securityDomain, message.Domain);
-        }
-
-        [Test]
-        public void CallbackKey_IsConsistentlyTransferredOverWires()
-        {
-            // arrange
-            var message = Message.CreateFlowStartMessage(new SimpleMessage()).As<Message>();
-            var callbackKey = Randomizer.Int32(1, Int32.MaxValue);
-            var callbackMessageIdentifier = MessageIdentifier.Create<SimpleMessage>();
-            message.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
-                                          Guid.NewGuid().ToByteArray(),
-                                          callbackMessageIdentifier,
-                                          callbackKey);
-            // act
-            var wireFrames = messageWireFormatter.Serialize(message);
-            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
-            // assert
-            Assert.AreEqual(callbackKey, message.CallbackKey);
-        }
-
-        [Test]
-        public void MessageSignature_IsConsistentlyTransferredOverWires()
-        {
-            // arrange
-            var simpleMessage = new SimpleMessage();
-            var securityDomain = securityProvider.GetDomain(simpleMessage.Identity);
-            var message = Message.CreateFlowStartMessage(simpleMessage).As<Message>();
-            message.SetDomain(securityDomain);
-            message.SignMessage(securityProvider);
-            // act
-            var wireFrames = messageWireFormatter.Serialize(message);
-            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
-            // assert
-            message.VerifySignature(securityProvider);
-        }
-
-        [Test]
-        public void MessagePayload_IsConsistentlyTransferredOverWires()
-        {
-            // arrange
-            var simpleMessage = new SimpleMessage
-                                {
-                                    Content = Guid.NewGuid().ToString()
-                                };
-            var securityDomain = securityProvider.GetDomain(simpleMessage.Identity);
-            var message = Message.CreateFlowStartMessage(simpleMessage).As<Message>();
-            message.SetDomain(securityDomain);
-            message.SignMessage(securityProvider);
-            // act
-            var wireFrames = messageWireFormatter.Serialize(message);
-            InsertNewSocketIdFrame();
-            message = messageWireFormatter.Deserialize(wireFrames).As<Message>();
-            // assert
-            var payload = message.GetPayload<SimpleMessage>();
-            Assert.AreEqual(simpleMessage.Content, payload.Content);
-
-            void InsertNewSocketIdFrame()
-                => wireFrames.Insert(0, Guid.NewGuid().ToByteArray());
-        }
-
-        [Test]
-        public void CallbackTriggersForEveryMessageInCallbackPoint()
-        {
-            // arrange
-            var callbackReceiverIdentity = Guid.NewGuid().ToByteArray();
-            var callbackReceiverNodeIdentity = Guid.NewGuid().ToByteArray();
-            var callbackMessageIdentifier = new[]
-                                            {
-                                                MessageIdentifier.Create<SimpleMessage>(),
-                                                MessageIdentifier.Create<AsyncExceptionMessage>(),
-                                                MessageIdentifier.Create<AsyncMessage>()
-                                            };
-            var messages = new[]
-                           {
-                               Message.Create(new SimpleMessage()),
-                               Message.Create(new AsyncExceptionMessage()),
-                               Message.Create(new AsyncMessage()),
-                           };
-
-            foreach (var message in messages.OfType<Message>())
-            {
-                // act
-                message.RegisterCallbackPoint(callbackReceiverNodeIdentity,
-                                              callbackReceiverIdentity,
-                                              callbackMessageIdentifier,
-                                              Randomizer.Int32());
-                // assert
-                Assert.AreEqual(callbackReceiverIdentity, message.CallbackReceiverIdentity);
-            }
         }
     }
 }

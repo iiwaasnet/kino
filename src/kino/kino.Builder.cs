@@ -13,6 +13,10 @@ using kino.Messaging;
 using kino.Routing;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
+#if NETCOREAPP2_1
+using NetMQ;
+
+#endif
 
 namespace kino
 {
@@ -28,6 +32,10 @@ namespace kino
         {
             AssertDependencyResolverSet();
 
+#if NETCOREAPP2_1
+            BufferPool.SetCustomBufferPool(new CustomBufferPool());
+#endif
+
             var configurationProvider = new ConfigurationProvider(resolver.Resolve<KinoConfiguration>());
             var scaleOutSocketConfiguration = configurationProvider.GetScaleOutConfiguration();
             var clusterMembershipConfiguration = configurationProvider.GetClusterMembershipConfiguration();
@@ -35,7 +43,13 @@ namespace kino
             var heartBeatSenderConfiguration = configurationProvider.GetHeartBeatSenderConfiguration();
             var socketConfiguration = configurationProvider.GetSocketConfiguration();
             var rendezvousEndpoints = configurationProvider.GetRendezvousEndpointsConfiguration();
-            var messageWireFormatter = resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV7();
+            var messageWireFormatter =
+#if NETCOREAPP2_1
+                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV7();
+#endif
+#if NET47
+                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV5();
+#endif
             var socketFactory = new SocketFactory(messageWireFormatter, socketConfiguration);
             var logger = resolver.Resolve<ILogger>();
             var roundRobinDestinationList = new RoundRobinDestinationList(logger);
