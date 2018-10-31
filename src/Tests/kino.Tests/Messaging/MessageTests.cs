@@ -14,7 +14,7 @@ namespace kino.Tests.Messaging
     [TestFixture(typeof(MessageWireFormatterV5))]
 #if NETCOREAPP2_1
     [TestFixture(typeof(MessageWireFormatterV6))]
-    [TestFixture(typeof(MessageWireFormatterV7))]
+    [TestFixture(typeof(MessageWireFormatterV6_1))]
 #endif
     public class MessageTests<T>
         where T : IMessageWireFormatter, new()

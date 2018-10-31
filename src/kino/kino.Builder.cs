@@ -45,7 +45,7 @@ namespace kino
             var rendezvousEndpoints = configurationProvider.GetRendezvousEndpointsConfiguration();
             var messageWireFormatter =
 #if NETCOREAPP2_1
-                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV7();
+                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6_1();
 #endif
 #if NET47
                 resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV5();

@@ -9,7 +9,7 @@ using kino.Core.Framework;
 namespace kino.Messaging
 {
 #if NETCOREAPP2_1
-    public class MessageWireFormatterV7 : IMessageWireFormatter
+    public class MessageWireFormatterV6_1 : IMessageWireFormatter
     {
         private static readonly ushort BodyFirstFrameOffset = 2;
         private static readonly ushort BodyFrameCount = 1;

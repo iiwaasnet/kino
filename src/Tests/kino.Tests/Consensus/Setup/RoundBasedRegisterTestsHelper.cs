@@ -50,7 +50,7 @@ namespace kino.Tests.Consensus.Setup
             var synodConfigProvider = new SynodConfigurationProvider(appConfig.Synod);
             var messageWireFormatterV7 =
 #if NETCOREAPP2_1
-                new MessageWireFormatterV7();
+                new MessageWireFormatterV6_1();
 #endif
 #if NET47
                 new MessageWireFormatterV5();
