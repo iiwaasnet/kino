@@ -38,7 +38,7 @@ namespace kino.Tests.Consensus
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(subscriberSocket.Object);
 
             synodConfigProvider = new Mock<ISynodConfigurationProvider>();
-            var synod = 3.Produce(i => new DynamicUri($"tcp://127.0.0.1:800{i}"));
+            var synod = 3.Produce(i => new DynamicUri($"tcp://*:800{i}"));
             synodConfigProvider.Setup(m => m.Synod).Returns(synod);
             synodConfigProvider.Setup(m => m.HeartBeatInterval).Returns(TimeSpan.FromSeconds(2));
             synodConfigProvider.Setup(m => m.MissingHeartBeatsBeforeReconnect).Returns(2);
