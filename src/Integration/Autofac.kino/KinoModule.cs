@@ -23,11 +23,11 @@ namespace Autofac.kino
             RegisterConfigurations(builder);
             RegisterLocalSockets(builder);
             RegisterClusterServices(builder);
-#if NET47
+
             builder.RegisterType<InstanceNameResolver>()
                    .As<IInstanceNameResolver>()
                    .SingleInstance();
-#endif
+
             builder.RegisterType<PerformanceCounterManager<KinoPerformanceCounters>>()
                    .As<IPerformanceCounterManager<KinoPerformanceCounters>>()
                    .SingleInstance();
@@ -39,7 +39,16 @@ namespace Autofac.kino
             builder.RegisterType<MessageRouter>()
                    .As<IMessageRouter>()
                    .SingleInstance();
-
+#if NETCOREAPP2_1
+            builder.RegisterType<MessageWireFormatterV6_1>()
+                   .As<IMessageWireFormatter>()
+                   .SingleInstance();
+#endif
+#if NET47
+            builder.RegisterType<MessageWireFormatterV5>()
+                   .As<IMessageWireFormatter>()
+                   .SingleInstance();
+#endif
             builder.RegisterType<SocketFactory>()
                    .As<ISocketFactory>()
                    .SingleInstance();

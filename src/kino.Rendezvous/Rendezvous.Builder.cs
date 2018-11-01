@@ -6,21 +6,35 @@ using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous.Configuration;
 
+#if NETCOREAPP2_1
+using NetMQ;
+
+#endif
+
 namespace kino.Rendezvous
 {
     public partial class Rendezvous
     {
         private IRendezvousService Build()
         {
+#if NETCOREAPP2_1
+            BufferPool.SetCustomBufferPool(new CustomBufferPool());
+#endif
+
             var logger = resolver.Resolve<ILogger>();
             var applicationConfig = resolver.Resolve<RendezvousServiceConfiguration>();
-            var socketFactory = new SocketFactory(applicationConfig.Socket);
-            var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);
-#if NET47
-            var instanceNameResolver = resolver.Resolve<IInstanceNameResolver>() ?? new InstanceNameResolver();
-#else
-            var instanceNameResolver = resolver.Resolve<IInstanceNameResolver>();
+            var messageWireFormatter =
+#if NETCOREAPP2_1
+                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6_1();
 #endif
+#if NET47
+                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV5();
+#endif
+            var socketFactory = new SocketFactory(messageWireFormatter, applicationConfig.Socket);
+            var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);
+
+            var instanceNameResolver = resolver.Resolve<IInstanceNameResolver>() ?? new InstanceNameResolver();
+
             var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver, logger);
             var intercomMessageHub = new IntercomMessageHub(socketFactory,
                                                             synodConfigProvider,

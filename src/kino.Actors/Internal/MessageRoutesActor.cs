@@ -84,7 +84,7 @@ namespace kino.Actors.Internal
                                Routes = routes.Select(r => new NodeExternalRegistration
                                                            {
                                                                NodeIdentity = r.Node.SocketIdentity,
-                                                               NodeUri = r.Node.Uri.ToSocketAddress(),
+                                                               NodeUri = r.Node.Uri,
                                                                MessageHubs = r.MessageHubs
                                                                               .Select(mh => mh.MessageHub.Identity)
                                                                               .ToList(),

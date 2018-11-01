@@ -54,7 +54,7 @@ namespace kino.Cluster
                                            {
                                                SocketIdentity = scaleOutConfigurationProvider.GetScaleOutAddress().Identity,
                                                HeartBeatInterval = config.GetHeartBeatInterval(),
-                                               HealthUri = config.GetHeartBeatAddress().ToSocketAddress()
+                                               HealthUri = config.GetHeartBeatAddress()
                                            };
                     while (!token.IsCancellationRequested)
                     {
@@ -92,13 +92,13 @@ namespace kino.Cluster
                     socket.Bind(uri);
                     config.SetActiveHeartBeatAddress(uri);
 
-                    logger.Info($"{GetType().Name} started at Uri:{uri.ToSocketAddress()}");
+                    logger.Info($"{GetType().Name} started at Uri:{uri}");
 
                     return socket;
                 }
                 catch (NetMQException)
                 {
-                    logger.Info($"{GetType().Name} failed to bind to {uri.ToSocketAddress()}, retrying with next endpoint...");
+                    logger.Info($"{GetType().Name} failed to bind to {uri}, retrying with next endpoint...");
                 }
             }
             socket?.Dispose();

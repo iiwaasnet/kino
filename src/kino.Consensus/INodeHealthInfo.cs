@@ -10,6 +10,6 @@ namespace kino.Consensus
 
         DateTime LastReconnectAttempt { get; }
 
-        Uri NodeUri { get; }
+        string NodeUri { get; }
     }
 }

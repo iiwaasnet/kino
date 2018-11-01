@@ -41,7 +41,7 @@ namespace kino.Tests.Routing.ServiceMessageHandlers
             var peerRemoveResult = new PeerRemoveResult
                                    {
                                        ConnectionAction = peerConnectionAction,
-                                       Uri = new Uri("tcp://127.0.0.1:9009")
+                                       Uri = "tcp://127.0.0.1:9009"
                                    };
             externalRoutingTable.Setup(m => m.RemoveNodeRoute(receiverNodeIdentifier)).Returns(peerRemoveResult);
             //

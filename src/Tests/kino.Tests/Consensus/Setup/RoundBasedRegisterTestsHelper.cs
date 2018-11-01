@@ -7,6 +7,7 @@ using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
+using kino.Messaging;
 using kino.Rendezvous.Configuration;
 using Moq;
 
@@ -47,7 +48,14 @@ namespace kino.Tests.Consensus.Setup
             var logger = new Mock<ILogger>();
             var performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             var synodConfigProvider = new SynodConfigurationProvider(appConfig.Synod);
-            var intercomMessageHub = new IntercomMessageHub(new SocketFactory(socketConfig),
+            var messageWireFormatterV7 =
+#if NETCOREAPP2_1
+                new MessageWireFormatterV6_1();
+#endif
+#if NET47
+                new MessageWireFormatterV5();
+#endif
+            var intercomMessageHub = new IntercomMessageHub(new SocketFactory(messageWireFormatterV7, socketConfig),
                                                             synodConfigProvider,
                                                             performanceCounterManager.Object,
                                                             logger.Object);

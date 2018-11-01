@@ -33,7 +33,7 @@ namespace kino.Tests.Cluster
         {
             autoDiscoverySender = new Mock<IAutoDiscoverySender>();
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
-            scaleOutAddress = new SocketEndpoint("tcp://127.0.0.1:9090");
+            scaleOutAddress = SocketEndpoint.Parse("tcp://127.0.0.1:9090", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
             config = new ClusterMembershipConfiguration
                      {
@@ -84,7 +84,7 @@ namespace kino.Tests.Cluster
                                                           Assert.True(Unsafe.ArraysEqual(payload.MessageContract.Partition, messageIdentifier.Partition));
                                                           Assert.AreEqual(payload.MessageContract.Version, messageIdentifier.Version);
                                                           Assert.True(Unsafe.ArraysEqual(payload.RequestorNodeIdentity, scaleOutAddress.Identity));
-                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
+                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri);
                                                           return true;
                                                       };
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isDiscoveryMessage(msg))), Times.Once);
@@ -126,7 +126,7 @@ namespace kino.Tests.Cluster
                                                           Assert.True(Unsafe.ArraysEqual(payload.MessageContract.Partition, messageIdentifier.Partition));
                                                           Assert.AreEqual(payload.MessageContract.Version, messageIdentifier.Version);
                                                           Assert.True(Unsafe.ArraysEqual(payload.RequestorNodeIdentity, scaleOutAddress.Identity));
-                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
+                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri);
                                                           return true;
                                                       };
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isDiscoveryMessage(msg))), Times.Once);
@@ -151,7 +151,7 @@ namespace kino.Tests.Cluster
                                                           Assert.True(Unsafe.ArraysEqual(receiverIdentifier.Identity, payload.ReceiverIdentity));
                                                           Assert.Null(payload.MessageContract);
                                                           Assert.True(Unsafe.ArraysEqual(payload.RequestorNodeIdentity, scaleOutAddress.Identity));
-                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
+                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri);
                                                           return true;
                                                       };
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isDiscoveryMessage(msg))), Times.Exactly(allowedDomains.Count()));
@@ -182,7 +182,7 @@ namespace kino.Tests.Cluster
                                                           Assert.True(Unsafe.ArraysEqual(messageHub.Identity, payload.ReceiverIdentity));
                                                           Assert.Null(payload.MessageContract);
                                                           Assert.True(Unsafe.ArraysEqual(payload.RequestorNodeIdentity, scaleOutAddress.Identity));
-                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri.ToSocketAddress());
+                                                          Assert.AreEqual(payload.RequestorUri, scaleOutAddress.Uri);
                                                           return true;
                                                       };
             autoDiscoverySender.Verify(m => m.EnqueueMessage(It.Is<IMessage>(msg => isDiscoveryMessage(msg))), Times.Exactly(allowedDomains.Count()));

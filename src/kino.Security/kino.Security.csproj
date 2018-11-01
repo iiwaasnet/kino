@@ -1,19 +1,19 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+      <TargetFrameworks>netcoreapp2.1;net47</TargetFrameworks>
   </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <LangVersion>7.2</LangVersion>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <LangVersion>7.2</LangVersion>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\kino.Core\kino.Core.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\kino.Core\kino.Core.csproj" />
+    </ItemGroup>
 
 </Project>

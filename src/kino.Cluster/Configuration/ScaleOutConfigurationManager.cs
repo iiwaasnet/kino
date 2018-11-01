@@ -36,7 +36,7 @@ namespace kino.Cluster.Configuration
             }
             else
             {
-                throw new Exception($"SocketEndpoint {activeAddress.Uri.ToSocketAddress()} is not configured!");
+                throw new Exception($"SocketEndpoint {activeAddress.Uri} is not configured!");
             }
         }
     }

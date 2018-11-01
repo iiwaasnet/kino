@@ -12,7 +12,7 @@ namespace kino.Cluster
             {
                 var hops = string.Join("|",
                                        message.GetMessageRouting()
-                                              .Select(h => $"{nameof(h.Uri)}:{h.Uri.ToSocketAddress()}/{h.Identity.GetAnyString()}"));
+                                              .Select(h => $"{nameof(h.Uri)}:{h.Uri}/{h.Identity.GetAnyString()}"));
 
                 logger.Trace($"Message: {message} received from other node via hops {hops}");
             }

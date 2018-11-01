@@ -76,8 +76,8 @@ namespace kino.Cluster.Configuration
             }
         }
 
-        public Uri BroadcastUri => broadcast.Uri;
+        public string BroadcastUri => broadcast.Uri;
 
-        public Uri UnicastUri => unicast.Uri;
+        public string UnicastUri => unicast.Uri;
     }
 }

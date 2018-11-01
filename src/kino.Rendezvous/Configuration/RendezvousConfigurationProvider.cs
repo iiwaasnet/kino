@@ -8,13 +8,13 @@ namespace kino.Rendezvous.Configuration
         public RendezvousConfigurationProvider(RendezvousConfiguration config)
         {
             HeartBeatInterval = config.HeartBeatInterval;
-            BroadcastUri = config.BroadcastUri.ParseAddress();
-            UnicastUri = config.UnicastUri.ParseAddress();
+            BroadcastUri = config.BroadcastUri.ParseAddress().ToSocketAddress();
+            UnicastUri = config.UnicastUri.ParseAddress().ToSocketAddress();
         }
 
-        public Uri BroadcastUri { get; }
+        public string BroadcastUri { get; }
 
-        public Uri UnicastUri { get; }
+        public string UnicastUri { get; }
 
         public TimeSpan HeartBeatInterval { get; }
     }

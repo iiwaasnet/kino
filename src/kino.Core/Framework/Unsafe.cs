@@ -5,7 +5,6 @@
         public static int ComputeHash(this byte[] data)
             => data?.Length ?? 0;
 
-#if NET47
         public static unsafe bool ArraysEqual(byte[] a1, byte[] a2)
         {
             if (a1 == a2)
@@ -18,7 +17,8 @@
             }
             fixed (byte* p1 = a1, p2 = a2)
             {
-                byte* x1 = p1, x2 = p2;
+                byte* x1 = p1,
+                      x2 = p2;
                 var l = a1.Length;
                 for (var i = 0; i < l / 8; i++, x1 += 8, x2 += 8)
                 {
@@ -55,30 +55,5 @@
                 return true;
             }
         }
-#else
-        public static bool ArraysEqual(byte[] a1, byte[] a2)
-        {
-            if (a1 == a2)
-            {
-                return true;
-            }
-            if ((a1 != null) && (a2 != null))
-            {
-                if (a1.Length != a2.Length)
-                {
-                    return false;
-                }
-                for (var i = 0; i < a1.Length; i++)
-                {
-                    if (a1[i] != a2[i])
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
-#endif
     }
 }

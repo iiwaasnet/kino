@@ -39,7 +39,7 @@ namespace kino.Core.Framework
             if (tmp.IsLoopback)
             {
                 throw new Exception($"Uri [{uri}] should not resolve to loopback [{tmp.AbsoluteUri}]! " +
-                                    $"Check that host file has no entry mapping name to a loopback address.");
+                                    $"Check if the hosts file has an entry mapping to a loopback address.");
             }
 
             return tmp;

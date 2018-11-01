@@ -125,7 +125,7 @@ namespace kino.Cluster
             {
                 case WaitHandle.WaitTimeout:
                     var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
-                    logger.Info($"HeartBeat timeout Rendezvous {rendezvousServer.BroadcastUri.AbsoluteUri}");
+                    logger.Info($"HeartBeat timeout Rendezvous {rendezvousServer.BroadcastUri}");
                     rendezvousCluster.RotateRendezvousServers();
                     return true;
                 case rendezvousConfigurationChanged:
@@ -147,7 +147,7 @@ namespace kino.Cluster
             socket.Connect(rendezvousServer.BroadcastUri, true);
             socket.Subscribe();
 
-            logger.Info($"Connected to Rendezvous {rendezvousServer.BroadcastUri.AbsoluteUri}");
+            logger.Info($"Connected to Rendezvous {rendezvousServer.BroadcastUri}");
 
             return socket;
         }
@@ -165,7 +165,7 @@ namespace kino.Cluster
             if (shouldHandle)
             {
                 var rendezvousServer = rendezvousCluster.GetCurrentRendezvousServer();
-                logger.Info($"New Rendezvous cluster configuration. Disconnecting {rendezvousServer.BroadcastUri.AbsoluteUri}");
+                logger.Info($"New Rendezvous cluster configuration. Disconnecting {rendezvousServer.BroadcastUri}");
 
                 var payload = message.GetPayload<RendezvousConfigurationChangedMessage>();
                 rendezvousCluster.Reconfigure(payload.RendezvousNodes.Select(rn => new RendezvousEndpoint(rn.UnicastUri, rn.BroadcastUri)));
@@ -185,13 +185,13 @@ namespace kino.Cluster
                 var currentLeader = rendezvousCluster.GetCurrentRendezvousServer();
                 if (!currentLeader.Equals(newLeader))
                 {
-                    logger.Info($"New Rendezvous leader: {newLeader.BroadcastUri.AbsoluteUri}. " +
-                                          $"Disconnecting {currentLeader.BroadcastUri.AbsoluteUri}");
+                    logger.Info($"New Rendezvous leader: {newLeader.BroadcastUri}. " +
+                                          $"Disconnecting {currentLeader.BroadcastUri}");
 
                     if (!rendezvousCluster.SetCurrentRendezvousServer(newLeader))
                     {
-                        logger.Error($"New Rendezvous leader {newLeader.BroadcastUri.AbsoluteUri} "
-                                     + $"was not found within configured Rendezvous cluster: [{string.Join(",", rendezvousCluster.Nodes.Select(n => n.BroadcastUri.AbsoluteUri))}]");
+                        logger.Error($"New Rendezvous leader {newLeader.BroadcastUri} "
+                                     + $"was not found within configured Rendezvous cluster: [{string.Join(",", rendezvousCluster.Nodes.Select(n => n.BroadcastUri))}]");
                     }
 
                     newRendezvousConfiguration.Set();

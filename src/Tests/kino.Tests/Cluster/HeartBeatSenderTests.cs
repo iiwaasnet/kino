@@ -24,7 +24,7 @@ namespace kino.Tests.Cluster
         private Mock<IHeartBeatSenderConfigurationManager> config;
         private SocketEndpoint scaleOutAddress;
         private TimeSpan heartBeatInterval;
-        private IEnumerable<Uri> heartBeatAddresses;
+        private IEnumerable<string> heartBeatAddresses;
         private Mock<ISocket> socket;
 
         [SetUp]
@@ -35,11 +35,11 @@ namespace kino.Tests.Cluster
             socketFactory.Setup(m => m.CreatePublisherSocket()).Returns(socket.Object);
             config = new Mock<IHeartBeatSenderConfigurationManager>();
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
-            scaleOutAddress = new SocketEndpoint("tcp://127.0.0.1:8080");
+            scaleOutAddress = SocketEndpoint.Parse("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
             heartBeatInterval = TimeSpan.FromMilliseconds(800);
             config.Setup(m => m.GetHeartBeatInterval()).Returns(heartBeatInterval);
-            heartBeatAddresses = new[] {new Uri("tcp://127.0.0.1:9090"), new Uri("tcp://127.0.0.2:9090")};
+            heartBeatAddresses = new[] {"tcp://127.0.0.1:9090", "tcp://127.0.0.2:9090"};
             config.Setup(m => m.GetHeartBeatAddressRange()).Returns(heartBeatAddresses);
             config.Setup(m => m.GetHeartBeatAddress()).Returns(heartBeatAddresses.First());
             logger = new Mock<ILogger>();
@@ -90,15 +90,15 @@ namespace kino.Tests.Cluster
         public void IfSocketFailsBindingToAllAddress_HeartBeatSenderDoesntSendMessages()
         {
             var asyncOp = TimeSpan.FromSeconds(1);
-            socket.Setup(m => m.Bind(It.IsAny<Uri>())).Throws<NetMQException>();
+            socket.Setup(m => m.Bind(It.IsAny<string>())).Throws<NetMQException>();
             //
             heartBeatSender.Start();
             asyncOp.Sleep();
             heartBeatSender.Stop();
             //
-            socket.Verify(m => m.Bind(It.IsAny<Uri>()), Times.Exactly(heartBeatAddresses.Count()));
+            socket.Verify(m => m.Bind(It.IsAny<string>()), Times.Exactly(heartBeatAddresses.Count()));
             socket.Verify(m => m.Dispose(), Times.Once);
-            config.Verify(m => m.SetActiveHeartBeatAddress(It.IsAny<Uri>()), Times.Never);
+            config.Verify(m => m.SetActiveHeartBeatAddress(It.IsAny<string>()), Times.Never);
             socket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Never);
             logger.Verify(m => m.Error(It.IsAny<Exception>()), Times.Once);
             logger.Verify(m => m.Warn(It.Is<object>(f => f.ToString() == "HeartBeating stopped.")), Times.Once);

@@ -29,7 +29,7 @@ namespace kino.Tests.Cluster
         private Mock<ISecurityProvider> securityProvider;
         private Mock<ISocket> frontEndSocket;
         private SocketEndpoint[] scaleOutAddresses;
-        private TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
+        private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
         private SocketConfiguration socketConfig;
         private CancellationTokenSource tokenSource;
 
@@ -50,8 +50,8 @@ namespace kino.Tests.Cluster
             scaleOutConfigurationManager = new Mock<IScaleOutConfigurationManager>();
             scaleOutAddresses = new[]
                                 {
-                                    new SocketEndpoint("tcp://127.0.0.1:8080"),
-                                    new SocketEndpoint("tcp://127.0.0.2:9090")
+                                    SocketEndpoint.Parse("tcp://127.0.0.1:8080", Guid.NewGuid().ToByteArray()),
+                                    SocketEndpoint.Parse("tcp://127.0.0.2:9090", Guid.NewGuid().ToByteArray())
                                 };
             scaleOutConfigurationManager.Setup(m => m.GetScaleOutAddressRange()).Returns(scaleOutAddresses);
             scaleOutConfigurationManager.Setup(m => m.GetScaleOutReceiveMessageQueueLength()).Returns(1000);
@@ -100,8 +100,8 @@ namespace kino.Tests.Cluster
                                           Guid.NewGuid().ToByteArray(),
                                           new[] {KinoMessages.Ping, KinoMessages.Pong},
                                           Randomizer.Int64());
-            message.PushRouterAddress(new SocketEndpoint("tcp://127.0.0.4:7878"));
-            message.PushRouterAddress(new SocketEndpoint("tcp://127.0.0.5:5464"));
+            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
+            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
             message.SetCorrelationId(Guid.NewGuid().ToByteArray());
             frontEndSocket.SetupMessageReceived(message, tokenSource.Token);
             localRouterSocket.Setup(m => m.Send(message)).Throws<Exception>();
@@ -138,8 +138,8 @@ namespace kino.Tests.Cluster
                                           Guid.NewGuid().ToByteArray(),
                                           new[] {KinoMessages.Ping, KinoMessages.Pong},
                                           Randomizer.Int64());
-            message.PushRouterAddress(new SocketEndpoint("tcp://127.0.0.4:7878"));
-            message.PushRouterAddress(new SocketEndpoint("tcp://127.0.0.5:5464"));
+            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
+            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
             message.SetCorrelationId(Guid.NewGuid().ToByteArray());
             frontEndSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Throws<Exception>();
             //
@@ -211,10 +211,10 @@ namespace kino.Tests.Cluster
             var message = Message.Create(new SimpleMessage()).As<Message>();
             message.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
                                           Guid.NewGuid().ToByteArray(),
-                                          new[] { KinoMessages.ReceiptConfirmation },
+                                          new[] {KinoMessages.ReceiptConfirmation},
                                           Randomizer.Int64());
-            message.PushRouterAddress(new SocketEndpoint("tcp://127.0.0.4:7878"));
-            message.PushRouterAddress(new SocketEndpoint("tcp://127.0.0.5:5464"));
+            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
+            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
             message.SetCorrelationId(Guid.NewGuid().ToByteArray());
             frontEndSocket.SetupMessageReceived(message, tokenSource.Token);
             //
@@ -224,21 +224,21 @@ namespace kino.Tests.Cluster
             scaleOutListener.Stop();
             //
             Func<IMessage, bool> isReceiptConfirmationOrInitalMessage = msg =>
-            {
-                if (message.Equals(msg))
-                {
-                    return true;
-                }
-                var receiptConfirmation = msg.As<Message>();
-                Assert.AreEqual(KinoMessages.ReceiptConfirmation, receiptConfirmation);
-                Assert.True(Unsafe.ArraysEqual(message.CallbackReceiverNodeIdentity, receiptConfirmation.CallbackReceiverNodeIdentity));
-                Assert.True(Unsafe.ArraysEqual(message.CallbackReceiverIdentity, receiptConfirmation.CallbackReceiverIdentity));
-                CollectionAssert.IsEmpty(message.CallbackPoint);
-                CollectionAssert.AreEquivalent(message.GetMessageRouting(), receiptConfirmation.GetMessageRouting());
-                Assert.AreEqual(message.CallbackKey, receiptConfirmation.CallbackKey);
-                Assert.True(Unsafe.ArraysEqual(message.CorrelationId, receiptConfirmation.CorrelationId));
-                return true;
-            };
+                                                                        {
+                                                                            if (message.Equals(msg))
+                                                                            {
+                                                                                return true;
+                                                                            }
+                                                                            var receiptConfirmation = msg.As<Message>();
+                                                                            Assert.AreEqual(KinoMessages.ReceiptConfirmation, receiptConfirmation);
+                                                                            Assert.True(Unsafe.ArraysEqual(message.CallbackReceiverNodeIdentity, receiptConfirmation.CallbackReceiverNodeIdentity));
+                                                                            Assert.True(Unsafe.ArraysEqual(message.CallbackReceiverIdentity, receiptConfirmation.CallbackReceiverIdentity));
+                                                                            CollectionAssert.IsEmpty(message.CallbackPoint);
+                                                                            CollectionAssert.AreEquivalent(message.GetMessageRouting(), receiptConfirmation.GetMessageRouting());
+                                                                            Assert.AreEqual(message.CallbackKey, receiptConfirmation.CallbackKey);
+                                                                            Assert.True(Unsafe.ArraysEqual(message.CorrelationId, receiptConfirmation.CorrelationId));
+                                                                            return true;
+                                                                        };
             localRouterSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isReceiptConfirmationOrInitalMessage(msg))), Times.Exactly(2));
         }
     }

@@ -156,14 +156,14 @@ namespace kino.Cluster
                     socket.Bind(scaleOutAddress.Uri);
                     scaleOutConfigurationManager.SetActiveScaleOutAddress(scaleOutAddress);
 
-                    logger.Info($"MessageRouter started at Uri:{scaleOutAddress.Uri.ToSocketAddress()} " +
+                    logger.Info($"MessageRouter started at Uri:{scaleOutAddress.Uri} " +
                                 $"Identity:{scaleOutAddress.Identity.GetAnyString()}");
 
                     return socket;
                 }
                 catch
                 {
-                    logger.Info($"Failed to bind to {scaleOutAddress.Uri.ToSocketAddress()}, retrying with next endpoint...");
+                    logger.Info($"Failed to bind to {scaleOutAddress.Uri}, retrying with next endpoint...");
                 }
             }
 

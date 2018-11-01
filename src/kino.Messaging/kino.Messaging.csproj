@@ -1,21 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+      <TargetFrameworks>netcoreapp2.1;net47</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="MultipartMessage.cs" />
+    <Compile Remove="MultipartMessage.Frames.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Newtonsoft.Json.Bson" Version="1.0.1" />
     <PackageReference Include="protobuf-net" Version="2.4.0" />
   </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <LangVersion>7.2</LangVersion>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <LangVersion>7.2</LangVersion>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
   <ItemGroup>

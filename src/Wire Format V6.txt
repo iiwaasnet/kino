@@ -1,0 +1,64 @@
+===================== MESSAGE WIRE FORMAT V6 ========================================
+FRAME				CONTENT							            DESCRIPTION
+(of n                                              
+total 
+frames)		bits
+=====================================================================================
+0					SocketIdentity					            Identity of the receiving chosen, selected based on Route Selectors
+1					[0]									        Empty frame
+					...............
+n-x					Body Frame							        Message body frames
+n-2                                                              <= VERSIONING: new frames come here
+                    ...............
+n-1                 Meta Frame
+
+==================== METAFRAME WIRE FORMAT V4 =======================================
+                    CONTENT							ROUTE       DESCRIPTION
+DATA                                              SELECTOR
+TYPE 
+    		bits
+=====================================================================================
+USHORT				WireFormatVersion					        Version of message wire format
+BYTE[]				Partition							*       Message Partition
+USHORT				Version								*       Message Version
+BYTE[]				Identity							*       Message Identity
+BYTE[]			    ReceiverIdentity                    *       Identity of Actor or MessageHub to which the message should be routed
+                                                                This value overrules data from RoutingTable, i.e. Receiver Socket ID frame
+                                                                Empty frame, for the non-specific receiver
+BYTE[]				ReceiverNodeIdentity                *       MessageRouter Identity (Scaleout FrontEnd Socket) to which the message should be routed
+ULONG		1-16	TraceOptions						        Type of the tracing info to be recorded, i.e. routing
+		    17-32	Distribution				        *       One of the following distribution patterns {Unicast, Broadcast}
+													            Third distribution pattern, Direct, uses address in Receiver Node ID
+            33-48	RESERVED
+			49-64   RESERVED
+BYTE[]              CallbackReceiverNodeIdentity                Value from this field will be copied to ReceiverNodeIdentity
+	    												        when Message Identity becomes equal to one of the Callback Points   
+LONG                CallbackKey                                 Callback key
+STRING              Domain                                      Security Domain, which Private Key is used to create Message Signature
+BYTE[]              Signature                                   Message Authentication Signature (MAC)
+ULONG		1-16	Routing Entry Count					        Number of routing entries
+		    17-32	Message Hops						        Number of times a Message was sent away to another node
+            33-48	RESERVED
+			49-64   RESERVED
+                    ...............
+INT                 Routing Entry Size                          Size of this routing entry in bytes
+                    ROUTER URI							        
+                    ROUTER ID
+                    ..                                          <= VERSIONING: new frames come here
+                    .... more ......		
+USHORT			    Callback Entry Count				        Number of callback entries
+                    ................
+INT                 Callback Entry Size                         Size of this callback entry in bytes
+                    Callback Partition					        
+                    Callback Version
+                    Callback Message Identity
+                    ..                                          <= VERSIONING: new frames come here
+                    .... more ......
+BYTE[]			    CallbackReceiverIdentity			        Value from this field will be copied to ReceiverIdentity
+													            when Message Identity becomes equal to one of the Callback Points
+BYTE[]				CorrelationId						        Unique identifier, copied onto all messages, spawned within the same flow, from the initial one
+LONG				TTL
+ULONG		1-16    Body First Frame Offset				        Offset of the first message body frame
+			17-32	Body Frame Count					        Number of body frames
+            33-48	RESERVED
+			49-64   RESERVED

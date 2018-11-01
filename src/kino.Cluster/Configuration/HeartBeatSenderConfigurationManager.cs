@@ -2,30 +2,35 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using kino.Core.Framework;
 
 namespace kino.Cluster.Configuration
 {
     public class HeartBeatSenderConfigurationManager : IHeartBeatSenderConfigurationManager
     {
-        private readonly HeartBeatSenderConfiguration config;
-        private readonly TaskCompletionSource<Uri> heartBeatAddressSource;
-        private Uri heartBeatAddress;
+        private readonly TimeSpan heartBeatInterval;
+        private readonly TaskCompletionSource<string> heartBeatAddressSource;
+        private string heartBeatAddress;
+        private readonly IEnumerable<string> addressRange;
 
         public HeartBeatSenderConfigurationManager(HeartBeatSenderConfiguration config)
         {
-            this.config = config;
-            heartBeatAddressSource = new TaskCompletionSource<Uri>();
+            heartBeatInterval = config.HeartBeatInterval;
+            addressRange = config.AddressRange
+                                 .Select(a => a.ToSocketAddress())
+                                 .ToList();
+            heartBeatAddressSource = new TaskCompletionSource<string>();
         }
 
-        public Uri GetHeartBeatAddress()
+        public string GetHeartBeatAddress()
             => heartBeatAddress ?? (heartBeatAddress = heartBeatAddressSource.Task.Result);
 
-        public IEnumerable<Uri> GetHeartBeatAddressRange()
-            => config.AddressRange;
+        public IEnumerable<string> GetHeartBeatAddressRange()
+            => addressRange;
 
-        public void SetActiveHeartBeatAddress(Uri activeAddress)
+        public void SetActiveHeartBeatAddress(string activeAddress)
         {
-            if (config.AddressRange.Contains(activeAddress))
+            if (addressRange.Contains(activeAddress))
             {
                 heartBeatAddressSource.SetResult(activeAddress);
             }
@@ -36,6 +41,6 @@ namespace kino.Cluster.Configuration
         }
 
         public TimeSpan GetHeartBeatInterval()
-            => config.HeartBeatInterval;
+            => heartBeatInterval;
     }
 }

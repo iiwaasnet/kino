@@ -109,6 +109,10 @@ function Get-NuGetTargetPlatform([string]$fw)
     {
         return '.NETFramework4.7'
     }
+    if ($fw -eq 'netcoreapp2.1')
+    {
+        return '.NETCore2.1'
+    }
 	
 	# add other FWs, i.e. core, net461, etc
 
@@ -122,9 +126,13 @@ function Get-BuildDirForTargetPlatform([string]$fw)
     {
         return 'netstandard2.0'
     }
-    if ($fw -eq 'net47')
+    if ($fw -eq 'net4.7')
     {
-        return 'net4.7'
+        return 'net47'
+    }
+    if ($fw -eq 'netcoreapp2.1')
+    {
+        return 'netcoreapp2.1'
     }
 	
 	# add other FWs, i.e. core, net461, etc

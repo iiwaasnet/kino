@@ -5,15 +5,13 @@ namespace kino.Core
 {
     public class MessageIdentifier : Identifier
     {
-        private readonly int hashCode;
+        private int? hashCode;
 
         public MessageIdentifier(byte[] identity, ushort version, byte[] partition)
         {
             Version = version;
             Identity = identity;
             Partition = partition ?? IdentityExtensions.Empty;
-
-            hashCode = CalculateHashCode();
         }
 
         public MessageIdentifier(IIdentifier messageIdentifier)
@@ -56,7 +54,7 @@ namespace kino.Core
         }
 
         public override int GetHashCode()
-            => hashCode;
+            => (hashCode ?? (hashCode = CalculateHashCode())).Value;
 
         public override bool Equals(IIdentifier other)
         {
@@ -68,12 +66,13 @@ namespace kino.Core
             {
                 return true;
             }
-            return StructuralCompare(other);
+
+            return GetHashCode() == other.GetHashCode() && StructuralCompare(other);
         }
 
         private bool StructuralCompare(IIdentifier other)
             => Unsafe.ArraysEqual(Identity, other.Identity)
-               && Version == other.Version
-               && Unsafe.ArraysEqual(Partition, other.Partition);
+            && Version == other.Version
+            && Unsafe.ArraysEqual(Partition, other.Partition);
     }
 }

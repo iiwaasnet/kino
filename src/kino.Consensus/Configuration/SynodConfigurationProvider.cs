@@ -18,10 +18,10 @@ namespace kino.Consensus.Configuration
                           .ToList();
             HeartBeatInterval = config.HeartBeatInterval;
             MissingHeartBeatsBeforeReconnect = config.MissingHeartBeatsBeforeReconnect;
-            IntercomEndpoint = new Uri(config.IntercomEndpoint);
+            IntercomEndpoint = new Uri(config.IntercomEndpoint).ToSocketAddress();
         }
 
-        public bool BelongsToSynod(Uri node)
+        public bool BelongsToSynod(string node)
             => synod.Any(n => n.Uri == node);
 
         public Node LocalNode { get; }
@@ -32,6 +32,6 @@ namespace kino.Consensus.Configuration
 
         public int MissingHeartBeatsBeforeReconnect { get; }
 
-        public Uri IntercomEndpoint { get; }
+        public string IntercomEndpoint { get; }
     }
 }

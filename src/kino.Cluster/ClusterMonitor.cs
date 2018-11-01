@@ -108,7 +108,7 @@ namespace kino.Cluster
                     var message = Message.Create(new RequestClusterMessageRoutesMessage
                                                  {
                                                      RequestorNodeIdentity = scaleOutAddress.Identity,
-                                                     RequestorUri = scaleOutAddress.Uri.ToSocketAddress()
+                                                     RequestorUri = scaleOutAddress.Uri
                                                  })
                                          .As<Message>();
                     message.SetDomain(domain);
@@ -132,7 +132,7 @@ namespace kino.Cluster
             {
                 var message = Message.Create(new UnregisterNodeMessage
                                              {
-                                                 Uri = scaleOutAddress.Uri.ToSocketAddress(),
+                                                 Uri = scaleOutAddress.Uri,
                                                  ReceiverNodeIdentity = scaleOutAddress.Identity,
                                              })
                                      .As<Message>();
@@ -172,12 +172,11 @@ namespace kino.Cluster
 
             var message = Message.Create(new RegisterExternalMessageRouteMessage
                                          {
-                                             Uri = scaleOutAddress.Uri.ToSocketAddress(),
+                                             Uri = scaleOutAddress.Uri,
                                              NodeIdentity = scaleOutAddress.Identity,
                                              Health = new Messaging.Messages.Health
                                                       {
-                                                          Uri = heartBeatConfigurationProvider.GetHeartBeatAddress()
-                                                                                              .ToSocketAddress(),
+                                                          Uri = heartBeatConfigurationProvider.GetHeartBeatAddress(),
                                                           HeartBeatInterval = heartBeatConfigurationProvider.GetHeartBeatInterval()
                                                       },
                                              Routes = receiverRoutes
@@ -210,7 +209,7 @@ namespace kino.Cluster
             {
                 var message = Message.Create(new UnregisterMessageRouteMessage
                                              {
-                                                 Uri = scaleOutAddress.Uri.ToSocketAddress(),
+                                                 Uri = scaleOutAddress.Uri,
                                                  ReceiverNodeIdentity = scaleOutAddress.Identity,
                                                  Routes = domainRoutes.MessageRoutes
                                                                       .Select(r => new RouteRegistration

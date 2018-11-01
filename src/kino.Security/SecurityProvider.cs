@@ -27,7 +27,7 @@ namespace kino.Security
             messageToDomainMap = CreateMessageMapping(nameToDomainMap, domainScopeResolver);
             mac = macImplFactory();
             unsignableDomains = domainPrivateKeyProvider.GetUnsignedDomains()
-                                ?? new Dictionary<string, HashSet<EquatableIdentity>>();
+                             ?? new Dictionary<string, HashSet<EquatableIdentity>>();
         }
 
         public byte[] CreateSignature(string domain, byte[] buffer)
@@ -106,8 +106,8 @@ namespace kino.Security
             if (unsignableDomains.TryGetValue(domain, out var messages))
             {
                 if (messages == null
-                    || !messages.Any()
-                    || messages.Contains(new EquatableIdentity(identity)))
+                 || !messages.Any()
+                 || messages.Contains(new EquatableIdentity(identity)))
                 {
                     return false;
                 }

@@ -6,7 +6,7 @@ namespace kino.Consensus.Configuration
 {
     public interface ISynodConfigurationProvider
     {
-        bool BelongsToSynod(Uri node);
+        bool BelongsToSynod(string node);
 
         Node LocalNode { get; }
 
@@ -16,6 +16,6 @@ namespace kino.Consensus.Configuration
 
         int MissingHeartBeatsBeforeReconnect { get; }
 
-        Uri IntercomEndpoint { get; }
+        string IntercomEndpoint { get; }
     }
 }

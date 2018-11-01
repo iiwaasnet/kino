@@ -55,7 +55,7 @@ namespace kino.Consensus
             }
         }
 
-        public Uri NodeUri => dynamicUri.Uri;
+        public string NodeUri => dynamicUri.Uri;
 
         public DateTime LastKnownHeartBeat
         {

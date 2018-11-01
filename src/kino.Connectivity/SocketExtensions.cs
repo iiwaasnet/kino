@@ -5,7 +5,7 @@ namespace kino.Connectivity
 {
     public static class SocketExtensions
     {
-        public static void SafeDisconnect(this ISocket socket, Uri uri)
+        public static void SafeDisconnect(this ISocket socket, string uri)
         {
             try
             {

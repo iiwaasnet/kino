@@ -48,8 +48,8 @@ namespace kino.Rendezvous
             pongMessage = Message.Create(new PongMessage());
             leaderPayload = serializer.Serialize(new RendezvousNode
                                                  {
-                                                     BroadcastUri = configProvider.BroadcastUri.ToSocketAddress(),
-                                                     UnicastUri = configProvider.UnicastUri.ToSocketAddress()
+                                                     BroadcastUri = configProvider.BroadcastUri,
+                                                     UnicastUri = configProvider.UnicastUri
                                                  });
         }
 
@@ -198,7 +198,7 @@ namespace kino.Rendezvous
             socket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousSocketReceiveRate);
             socket.Bind(configProvider.UnicastUri);
 
-            logger.Info($"Receiving cluster messages started on: {configProvider.UnicastUri.ToSocketAddress()}");
+            logger.Info($"Receiving cluster messages started on: {configProvider.UnicastUri}");
 
             return socket;
         }
@@ -209,7 +209,7 @@ namespace kino.Rendezvous
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousBroadcastSocketSendRate);
             socket.Bind(configProvider.BroadcastUri);
 
-            logger.Info($"Broadcasting cluster messages started on: {configProvider.BroadcastUri.ToSocketAddress()}");
+            logger.Info($"Broadcasting cluster messages started on: {configProvider.BroadcastUri}");
 
             return socket;
         }
@@ -220,7 +220,7 @@ namespace kino.Rendezvous
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousHeartBeatSocketSendRate);
             socket.Connect(configProvider.UnicastUri, true);
 
-            logger.Info($"HeartBeating started on: {configProvider.UnicastUri.ToSocketAddress()}");
+            logger.Info($"HeartBeating started on: {configProvider.UnicastUri}");
 
             return socket;
         }

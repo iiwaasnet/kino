@@ -5,9 +5,10 @@ VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6967D139-FAAB-470A-B108-859E29B28DFC}"
 	ProjectSection(SolutionItems) = preProject
-		messages.txt = messages.txt
 		Routing.txt = Routing.txt
 		TODOs.txt = TODOs.txt
+		Wire Format V5.txt = Wire Format V5.txt
+		Wire Format V6.txt = Wire Format V6.txt
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Samples", "Samples", "{B3967666-2296-4B28-BFD8-0ED4326E29C7}"
@@ -36,8 +37,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Client", "kino.Client\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Actors", "kino.Actors\kino.Actors.csproj", "{E936E3A8-F1BC-4788-B523-AC375CAEFB99}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Rendezvous.Service", "kino.Rendezvous.Service\kino.Rendezvous.Service.csproj", "{364E4A83-3327-4789-A10C-7695ABCC4FD3}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino", "kino\kino.csproj", "{09AF527E-95DC-4D37-8FC1-5CA943E9A4A4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autofac.kino.Rendezvous", "Integration\Autofac.kino.Rendezvous\Autofac.kino.Rendezvous.csproj", "{1300221D-0982-4027-BCAD-953BC564DAE4}"
@@ -49,6 +48,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Samples\Client\Client.csproj", "{E43E69E8-0C92-4694-9E95-F1277D34FFAD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "Samples\Server\Server.csproj", "{E52CD781-EA8B-4D12-87E6-617F6B39711C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Rendezvous.Service", "kino.Rendezvous.Service\kino.Rendezvous.Service.csproj", "{C8204FAF-FF56-448D-8BED-160B4261F821}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -96,10 +97,6 @@ Global
 		{E936E3A8-F1BC-4788-B523-AC375CAEFB99}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E936E3A8-F1BC-4788-B523-AC375CAEFB99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E936E3A8-F1BC-4788-B523-AC375CAEFB99}.Release|Any CPU.Build.0 = Release|Any CPU
-		{364E4A83-3327-4789-A10C-7695ABCC4FD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{364E4A83-3327-4789-A10C-7695ABCC4FD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{364E4A83-3327-4789-A10C-7695ABCC4FD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{364E4A83-3327-4789-A10C-7695ABCC4FD3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{09AF527E-95DC-4D37-8FC1-5CA943E9A4A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{09AF527E-95DC-4D37-8FC1-5CA943E9A4A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{09AF527E-95DC-4D37-8FC1-5CA943E9A4A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -124,6 +121,10 @@ Global
 		{E52CD781-EA8B-4D12-87E6-617F6B39711C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E52CD781-EA8B-4D12-87E6-617F6B39711C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E52CD781-EA8B-4D12-87E6-617F6B39711C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8204FAF-FF56-448D-8BED-160B4261F821}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8204FAF-FF56-448D-8BED-160B4261F821}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8204FAF-FF56-448D-8BED-160B4261F821}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8204FAF-FF56-448D-8BED-160B4261F821}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

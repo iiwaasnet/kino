@@ -176,13 +176,13 @@ namespace kino.Consensus
             if (shouldHandle)
             {
                 var payload = message.GetPayload<ReconnectClusterMemberMessage>();
-                var healthInfo = nodeHealthInfo.FirstOrDefault(hi => hi.NodeUri == new Uri(payload.NewUri));
+                var healthInfo = nodeHealthInfo.FirstOrDefault(hi => hi.NodeUri == payload.NewUri);
                 if (healthInfo != null)
                 {
                     healthInfo.UpdateLastReconnectTime();
 
-                    socket.SafeDisconnect(new Uri(payload.OldUri));
-                    socket.Connect(new Uri(payload.NewUri));
+                    socket.SafeDisconnect(payload.OldUri);
+                    socket.Connect(payload.NewUri);
 
                     logger.Info($"Reconnected to node from {payload.OldUri} to {payload.NewUri}");
                 }
@@ -201,7 +201,7 @@ namespace kino.Consensus
             if (shouldHandle)
             {
                 var payload = message.GetPayload<HeartBeatMessage>();
-                var healthInfo = nodeHealthInfo.FirstOrDefault(hi => hi.NodeUri == new Uri(payload.NodeUri));
+                var healthInfo = nodeHealthInfo.FirstOrDefault(hi => hi.NodeUri == payload.NodeUri);
                 if (healthInfo != null)
                 {
                     healthInfo.UpdateHeartBeat();
@@ -218,7 +218,7 @@ namespace kino.Consensus
             return shouldHandle;
 
             bool IsLocalNode(string nodeUri)
-                => new Uri(nodeUri) == synodConfigProvider.LocalNode.Uri;
+                => nodeUri == synodConfigProvider.LocalNode.Uri;
         }
 
         private void SendAndCheckHeartBeats()
@@ -256,12 +256,12 @@ namespace kino.Consensus
                                        (hi, location) => (HealthInfo: hi, Location: location));
         }
 
-        private void ScheduleReconnectSocket(Uri oldUri, Uri newUri)
+        private void ScheduleReconnectSocket(string oldUri, string newUri)
         {
             var message = Message.Create(new ReconnectClusterMemberMessage
                                          {
-                                             OldUri = oldUri.ToSocketAddress(),
-                                             NewUri = newUri.ToSocketAddress()
+                                             OldUri = oldUri,
+                                             NewUri = newUri
                                          }).As<Message>();
             intercomSocket.SendMessage(message);
         }
@@ -269,7 +269,7 @@ namespace kino.Consensus
         private void SendHeartBeat()
             => outMessageQueue.Add(Message.Create(new HeartBeatMessage
                                                   {
-                                                      NodeUri = synodConfigProvider.LocalNode.Uri.ToSocketAddress()
+                                                      NodeUri = synodConfigProvider.LocalNode.Uri
                                                   }));
 
         private ISocket CreateListeningSocket()
@@ -281,7 +281,7 @@ namespace kino.Consensus
             {
                 socket.Connect(node.Uri, true);
 
-                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.Uri.ToSocketAddress()}");
+                logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.Uri}");
             }
             if (ShouldDoHeartBeating())
             {
@@ -297,7 +297,7 @@ namespace kino.Consensus
             socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.IntercomSocketSendRate);
             socket.Bind(synodConfigProvider.LocalNode.Uri);
 
-            logger.Info($"{nameof(IntercomMessageHub)} bound to: {synodConfigProvider.LocalNode.Uri.ToSocketAddress()}");
+            logger.Info($"{nameof(IntercomMessageHub)} bound to: {synodConfigProvider.LocalNode.Uri}");
 
             return socket;
         }

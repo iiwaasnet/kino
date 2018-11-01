@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
       <OutputType>Exe</OutputType>
-    <TargetFramework>net47</TargetFramework>
+    <TargetFrameworks>netcoreapp2.1;net47</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,11 +13,11 @@
   </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-        <LangVersion>7.2</LangVersion>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-        <LangVersion>7.2</LangVersion>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
   <ItemGroup>
@@ -29,6 +29,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="config\NLog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

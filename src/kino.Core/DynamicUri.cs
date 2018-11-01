@@ -16,7 +16,7 @@ namespace kino.Core
 
         public void Refresh()
         {
-            Uri = originalUri.ParseAddress();
+            Uri = originalUri.ParseAddress().ToSocketAddress();
             hashCode = CalcHashCode();
         }
 
@@ -69,10 +69,8 @@ namespace kino.Core
             => hashCode;
 
         private int CalcHashCode()
-            => Uri != null
-                   ? Uri.GetHashCode()
-                   : 0;
+            => Uri?.GetHashCode() ?? 0;
 
-        public Uri Uri { get; private set; }
+        public string Uri { get; private set; }
     }
 }

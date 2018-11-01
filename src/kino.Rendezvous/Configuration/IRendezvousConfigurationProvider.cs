@@ -4,9 +4,9 @@ namespace kino.Rendezvous.Configuration
 {
     public interface IRendezvousConfigurationProvider
     {
-        Uri BroadcastUri { get; }
+        string BroadcastUri { get; }
 
-        Uri UnicastUri { get; }
+        string UnicastUri { get; }
 
         TimeSpan HeartBeatInterval { get; }
     }

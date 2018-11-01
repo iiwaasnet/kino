@@ -1,5 +1,4 @@
-Message wire format V4
-
+===================== MESSAGE WIRE FORMAT V5 ========================================
 FRAME				CONTENT							ROUTE       DESCRIPTION
 (of n                                              SELECTOR
 total 
