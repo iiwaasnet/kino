@@ -1,19 +1,18 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace kino.Cluster.Configuration
 {
     [ExcludeFromCodeCoverage]
-    public class ServiceLocator<TReal, TNull, TBase>
-        where TReal : TBase
-        where TNull : TBase
+    public class ServiceLocator<TBase>
     {
         private readonly ClusterMembershipConfiguration config;
-        private readonly TBase real;
-        private readonly TBase @null;
+        private readonly Func<TBase> real;
+        private readonly Func<TBase> @null;
 
         public ServiceLocator(ClusterMembershipConfiguration config,
-                              TReal real,
-                              TNull @null)
+                              Func<TBase> real,
+                              Func<TBase> @null)
         {
             this.config = config;
             this.real = real;
@@ -21,6 +20,6 @@ namespace kino.Cluster.Configuration
         }
 
         public TBase GetService()
-            => config.RunAsStandalone ? @null : real;
+            => config.RunAsStandalone ? @null() : real();
     }
 }
