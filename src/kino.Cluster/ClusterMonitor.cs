@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using C5;
 using kino.Cluster.Configuration;
 using kino.Core;
@@ -17,8 +16,8 @@ namespace kino.Cluster
     public class ClusterMonitor : IClusterMonitor
     {
         private CancellationTokenSource messageProcessingToken;
-        private Task sendingMessages;
-        private Task listeningMessages;
+        private Thread sendingMessages;
+        private Thread listeningMessages;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly IAutoDiscoverySender autoDiscoverySender;
         private readonly IAutoDiscoveryListener autoDiscoveryListener;
@@ -69,25 +68,17 @@ namespace kino.Cluster
             using (var gateway = new Barrier(participantCount))
             {
                 // 1. Start listening for messages
-                listeningMessages = Task.Factory
-                                        .StartNew(_ => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
-                                                  TaskCreationOptions.LongRunning)
-                                        .ContinueWith(task =>
-                                                      {
-                                                          logger.Error(task.Exception);
-                                                          messageProcessingToken.Cancel();
-                                                      },
-                                                      TaskContinuationOptions.OnlyOnFaulted);
+                listeningMessages = new Thread(() => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway))
+                                    {
+                                        IsBackground = true
+                                    };
+                listeningMessages.Start();
                 // 2. Start sending
-                sendingMessages = Task.Factory
-                                      .StartNew(_ => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
-                                                TaskCreationOptions.LongRunning)
-                                      .ContinueWith(task =>
-                                                    {
-                                                        logger.Error(task.Exception);
-                                                        messageProcessingToken.Cancel();
-                                                    },
-                                                    TaskContinuationOptions.OnlyOnFaulted);
+                sendingMessages = new Thread(() => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway))
+                                  {
+                                      IsBackground = true
+                                  };
+                sendingMessages.Start();
                 gateway.SignalAndWait(messageProcessingToken.Token);
 
                 routeDiscovery.Start();
@@ -101,8 +92,8 @@ namespace kino.Cluster
             clusterRoutesRequestTimer.Change(TimeSpan.FromMilliseconds(-1), TimeSpan.FromMilliseconds(-1));
             routeDiscovery.Stop();
             messageProcessingToken?.Cancel();
-            sendingMessages?.Wait();
-            listeningMessages?.Wait();
+            sendingMessages?.Join();
+            listeningMessages?.Join();
             messageProcessingToken?.Dispose();
         }
 

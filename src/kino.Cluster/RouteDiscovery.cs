@@ -1,7 +1,6 @@
 using System;
 using System.Security;
 using System.Threading;
-using System.Threading.Tasks;
 using kino.Cluster.Configuration;
 using kino.Core;
 using kino.Core.Diagnostics;
@@ -20,7 +19,7 @@ namespace kino.Cluster
         private readonly RouteDiscoveryConfiguration discoveryConfiguration;
         private readonly ILogger logger;
         private readonly HashedQueue<MessageRoute> requests;
-        private Task sendingMessages;
+        private Thread sendingMessages;
         private CancellationTokenSource cancellationTokenSource;
 
         public RouteDiscovery(IAutoDiscoverySender autoDiscoverySender,
@@ -42,14 +41,12 @@ namespace kino.Cluster
             using (var barrier = new Barrier(2))
             {
                 cancellationTokenSource = new CancellationTokenSource();
-                sendingMessages = Task.Factory
-                                      .StartNew(_ => ThrottleRouteDiscoveryRequests(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning)
-                                      .ContinueWith(task =>
-                                                    {
-                                                        logger.Error(task.Exception);
-                                                        cancellationTokenSource.Cancel();
-                                                    },
-                                                    TaskContinuationOptions.OnlyOnFaulted);
+                sendingMessages = new Thread(() => ThrottleRouteDiscoveryRequests(cancellationTokenSource.Token, barrier))
+                                  {
+                                      IsBackground = true
+                                  };
+                sendingMessages.Start();
+                
                 barrier.SignalAndWait(cancellationTokenSource.Token);
             }
         }
@@ -57,7 +54,7 @@ namespace kino.Cluster
         public void Stop()
         {
             cancellationTokenSource?.Cancel();
-            sendingMessages?.Wait();
+            sendingMessages?.Join();
         }
 
         private void ThrottleRouteDiscoveryRequests(CancellationToken token, Barrier barrier)

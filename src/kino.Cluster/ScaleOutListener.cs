@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using System.Threading.Tasks;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core.Diagnostics;
@@ -22,8 +21,8 @@ namespace kino.Cluster
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private BlockingCollection<Message> receiptConfirmationQueue;
         private readonly ILogger logger;
-        private Task listening;
-        private Task receiptConfirmation;
+        private Thread listening;
+        private Thread receiptConfirmation;
         private CancellationTokenSource cancellationTokenSource;
 
         public ScaleOutListener(ISocketFactory socketFactory,
@@ -48,22 +47,18 @@ namespace kino.Cluster
             cancellationTokenSource = new CancellationTokenSource();
             using (var barrier = new Barrier(3))
             {
-                listening = Task.Factory
-                                .StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning)
-                                .ContinueWith(task =>
-                                              {
-                                                  logger.Error(task.Exception);
-                                                  cancellationTokenSource.Cancel();
-                                              },
-                                              TaskContinuationOptions.OnlyOnFaulted);
-                receiptConfirmation = Task.Factory
-                                          .StartNew(_ => SendReceiptConfirmations(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning)
-                                          .ContinueWith(task =>
-                                                        {
-                                                            logger.Error(task.Exception);
-                                                            cancellationTokenSource.Cancel();
-                                                        },
-                                                        TaskContinuationOptions.OnlyOnFaulted);
+                listening = new Thread(() => RoutePeerMessages(cancellationTokenSource.Token, barrier))
+                            {
+                                IsBackground = true
+                            };
+                listening.Start();
+
+                receiptConfirmation = new Thread(() => SendReceiptConfirmations(cancellationTokenSource.Token, barrier))
+                                      {
+                                          IsBackground = true
+                                      };
+                receiptConfirmation.Start();
+
                 barrier.SignalAndWait(cancellationTokenSource.Token);
             }
         }
@@ -71,8 +66,8 @@ namespace kino.Cluster
         public void Stop()
         {
             cancellationTokenSource?.Cancel();
-            listening?.Wait();
-            receiptConfirmation?.Wait();
+            listening?.Join();
+            receiptConfirmation?.Join();
             cancellationTokenSource?.Dispose();
             receiptConfirmationQueue?.Dispose();
         }

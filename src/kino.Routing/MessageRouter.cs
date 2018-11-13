@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using kino.Cluster;
 using kino.Cluster.Configuration;
 using kino.Connectivity;
@@ -23,7 +22,7 @@ namespace kino.Routing
         private const int LocalRouterSocketId = 0;
         private const int InternalRegistrationsReceiverId = 1;
         private CancellationTokenSource cancellationTokenSource;
-        private Task localRouting;
+        private Thread localRouting;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly IExternalRoutingTable externalRoutingTable;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
@@ -80,15 +79,12 @@ namespace kino.Routing
                     //TODO: Decide on how to handle start timeout
                     cancellationTokenSource = new CancellationTokenSource();
                     clusterServices.StartClusterServices();
-                    localRouting = Task.Factory
-                                       .StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, barrier),
-                                                         TaskCreationOptions.LongRunning)
-                                       .ContinueWith(task =>
-                                                     {
-                                                         logger.Error(task.Exception);
-                                                         cancellationTokenSource.Cancel();
-                                                     },
-                                                     TaskContinuationOptions.OnlyOnFaulted);
+                    localRouting = new Thread(() => RouteLocalMessages(cancellationTokenSource.Token, barrier))
+                                   {
+                                       IsBackground = true
+                                   };
+                    localRouting.Start();
+
                     barrier.SignalAndWait(cancellationTokenSource.Token);
                     isStarted = true;
                 }
@@ -99,7 +95,7 @@ namespace kino.Routing
         {
             clusterServices.StopClusterServices();
             cancellationTokenSource?.Cancel();
-            localRouting?.Wait();
+            localRouting?.Join();
             cancellationTokenSource?.Dispose();
             isStarted = false;
         }
