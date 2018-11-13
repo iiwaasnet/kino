@@ -80,8 +80,15 @@ namespace kino.Routing
                     //TODO: Decide on how to handle start timeout
                     cancellationTokenSource = new CancellationTokenSource();
                     clusterServices.StartClusterServices();
-                    localRouting = Task.Factory.StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, barrier),
-                                                         TaskCreationOptions.LongRunning);
+                    localRouting = Task.Factory
+                                       .StartNew(_ => RouteLocalMessages(cancellationTokenSource.Token, barrier),
+                                                         TaskCreationOptions.LongRunning)
+                                       .ContinueWith(task =>
+                                                     {
+                                                         logger.Error(task.Exception);
+                                                         cancellationTokenSource.Cancel();
+                                                     },
+                                                     TaskContinuationOptions.OnlyOnFaulted);
                     barrier.SignalAndWait(cancellationTokenSource.Token);
                     isStarted = true;
                 }
@@ -126,9 +133,10 @@ namespace kino.Routing
                                 if (message != null)
                                 {
                                     var _ = TryHandleServiceMessage(message, scaleOutBackend)
-                                         || HandleOperationMessage(message, scaleOutBackend);
+                                            || HandleOperationMessage(message, scaleOutBackend);
                                 }
                             }
+
                             if (receiverId == InternalRegistrationsReceiverId)
                             {
                                 var registration = internalRegistrationsReceiver.TryReceive();
@@ -194,8 +202,8 @@ namespace kino.Routing
             {
                 handled = SendMessageLocally(internalRoutingTable.FindRoutes(lookupRequest), message);
                 handled = MessageCameFromLocalActor(message)
-                       && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
-                       || handled;
+                          && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
+                          || handled;
             }
             else
             {
@@ -213,6 +221,7 @@ namespace kino.Routing
                     {
                         handled = SendMessageLocally(localDestinations, message);
                     }
+
                     if (!handled)
                     {
                         handled = SendMessageAway(remoteDestinations, message, scaleOutBackend);
@@ -253,6 +262,7 @@ namespace kino.Routing
                     {
                         clusterServices.GetClusterMonitor().UnregisterSelf(removedRoutes);
                     }
+
                     logger.Error(err);
                 }
             }
@@ -314,6 +324,7 @@ namespace kino.Routing
             {
                 clusterServices.GetClusterMonitor().UnregisterSelf(messageRoute.ToEnumerable());
             }
+
             var route = message.As<Message>().GetMessageRouting().FirstOrDefault();
             logger.Warn($"Route not found for Message:{lookupRequest.Message} lookup by " +
                         $"[{nameof(lookupRequest.ReceiverNodeIdentity)}:{lookupRequest.ReceiverNodeIdentity}]-" +

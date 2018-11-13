@@ -69,11 +69,25 @@ namespace kino.Cluster
             using (var gateway = new Barrier(participantCount))
             {
                 // 1. Start listening for messages
-                listeningMessages = Task.Factory.StartNew(_ => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
-                                                          TaskCreationOptions.LongRunning);
+                listeningMessages = Task.Factory
+                                        .StartNew(_ => autoDiscoveryListener.StartBlockingListenMessages(RestartProcessingClusterMessages, messageProcessingToken.Token, gateway),
+                                                  TaskCreationOptions.LongRunning)
+                                        .ContinueWith(task =>
+                                                      {
+                                                          logger.Error(task.Exception);
+                                                          messageProcessingToken.Cancel();
+                                                      },
+                                                      TaskContinuationOptions.OnlyOnFaulted);
                 // 2. Start sending
-                sendingMessages = Task.Factory.StartNew(_ => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
-                                                        TaskCreationOptions.LongRunning);
+                sendingMessages = Task.Factory
+                                      .StartNew(_ => autoDiscoverySender.StartBlockingSendMessages(messageProcessingToken.Token, gateway),
+                                                TaskCreationOptions.LongRunning)
+                                      .ContinueWith(task =>
+                                                    {
+                                                        logger.Error(task.Exception);
+                                                        messageProcessingToken.Cancel();
+                                                    },
+                                                    TaskContinuationOptions.OnlyOnFaulted);
                 gateway.SignalAndWait(messageProcessingToken.Token);
 
                 routeDiscovery.Start();
@@ -133,7 +147,7 @@ namespace kino.Cluster
                 var message = Message.Create(new UnregisterNodeMessage
                                              {
                                                  Uri = scaleOutAddress.Uri,
-                                                 ReceiverNodeIdentity = scaleOutAddress.Identity,
+                                                 ReceiverNodeIdentity = scaleOutAddress.Identity
                                              })
                                      .As<Message>();
                 message.SetDomain(domain);

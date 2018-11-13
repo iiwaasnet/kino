@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,8 +39,19 @@ namespace kino.Cluster
 
         public void Start()
         {
-            cancellationTokenSource = new CancellationTokenSource();
-            sendingMessages = Task.Factory.StartNew(_ => ThrottleRouteDiscoveryRequests(cancellationTokenSource.Token), TaskCreationOptions.LongRunning);
+            using (var barrier = new Barrier(2))
+            {
+                cancellationTokenSource = new CancellationTokenSource();
+                sendingMessages = Task.Factory
+                                      .StartNew(_ => ThrottleRouteDiscoveryRequests(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning)
+                                      .ContinueWith(task =>
+                                                    {
+                                                        logger.Error(task.Exception);
+                                                        cancellationTokenSource.Cancel();
+                                                    },
+                                                    TaskContinuationOptions.OnlyOnFaulted);
+                barrier.SignalAndWait(cancellationTokenSource.Token);
+            }
         }
 
         public void Stop()
@@ -50,14 +60,15 @@ namespace kino.Cluster
             sendingMessages?.Wait();
         }
 
-        private void ThrottleRouteDiscoveryRequests(CancellationToken token)
+        private void ThrottleRouteDiscoveryRequests(CancellationToken token, Barrier barrier)
         {
+            barrier.SignalAndWait(token);
+
             while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    IList<MessageRoute> missingRoutes;
-                    if (requests.TryPeek(out missingRoutes, discoveryConfiguration.MissingRoutesDiscoveryRequestsPerSend))
+                    if (requests.TryPeek(out var missingRoutes, discoveryConfiguration.MissingRoutesDiscoveryRequestsPerSend))
                     {
                         foreach (var messageRoute in missingRoutes)
                         {

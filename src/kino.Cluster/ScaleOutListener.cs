@@ -46,17 +46,28 @@ namespace kino.Cluster
         {
             receiptConfirmationQueue = new BlockingCollection<Message>(new ConcurrentQueue<Message>());
             cancellationTokenSource = new CancellationTokenSource();
-            using (var barrier = new Barrier(2))
+            using (var barrier = new Barrier(3))
             {
-                listening = Task.Factory.StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, barrier),
-                                                  TaskCreationOptions.LongRunning);
-                receiptConfirmation = Task.Factory.StartNew(_ => SendReceiptConfirmations(cancellationTokenSource.Token),
-                                                  TaskCreationOptions.LongRunning);
+                listening = Task.Factory
+                                .StartNew(_ => RoutePeerMessages(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning)
+                                .ContinueWith(task =>
+                                              {
+                                                  logger.Error(task.Exception);
+                                                  cancellationTokenSource.Cancel();
+                                              },
+                                              TaskContinuationOptions.OnlyOnFaulted);
+                receiptConfirmation = Task.Factory
+                                          .StartNew(_ => SendReceiptConfirmations(cancellationTokenSource.Token, barrier), TaskCreationOptions.LongRunning)
+                                          .ContinueWith(task =>
+                                                        {
+                                                            logger.Error(task.Exception);
+                                                            cancellationTokenSource.Cancel();
+                                                        },
+                                                        TaskContinuationOptions.OnlyOnFaulted);
                 barrier.SignalAndWait(cancellationTokenSource.Token);
             }
         }
 
-        
         public void Stop()
         {
             cancellationTokenSource?.Cancel();
@@ -89,6 +100,7 @@ namespace kino.Cluster
                                 {
                                     receiptConfirmationQueue.Add(message, token);
                                 }
+
                                 localRouterSocket.Send(message);
 
                                 ReceivedFromOtherNode(message);
@@ -114,10 +126,12 @@ namespace kino.Cluster
             }
         }
 
-        private void SendReceiptConfirmations(CancellationToken token)
+        private void SendReceiptConfirmations(CancellationToken token, Barrier barrier)
         {
             try
             {
+                barrier.SignalAndWait(token);
+
                 foreach (var message in receiptConfirmationQueue.GetConsumingEnumerable(token))
                 {
                     try
@@ -136,10 +150,10 @@ namespace kino.Cluster
             catch (Exception err)
             {
                 logger.Error(err);
-            }            
+            }
+
             logger.Warn($"{nameof(SendReceiptConfirmations)} thread stopped!");
         }
-
 
         private ISocket CreateScaleOutFrontendSocket()
         {
