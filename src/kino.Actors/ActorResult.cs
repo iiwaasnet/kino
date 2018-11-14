@@ -6,7 +6,7 @@ namespace kino.Actors
 {
     public class ActorResult : IActorResult
     {
-        public static readonly IActorResult Empty = null;
+        internal static readonly IActorResult Empty = new ActorResult();
         public static readonly Task<IActorResult> NoWait = Task.FromResult(Empty);
 
         public ActorResult(params IMessage[] messages)
