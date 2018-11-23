@@ -2,6 +2,7 @@
 using System.Linq;
 using C5;
 using kino.Cluster.Configuration;
+using kino.Core.Diagnostics;
 
 namespace kino.Cluster
 {
@@ -42,8 +43,8 @@ namespace kino.Cluster
             lock (@lock)
             {
                 var oldCurrent = config.RemoveFirst();
-                oldCurrent.RefreshUri();
                 config.InsertLast(oldCurrent);
+                oldCurrent.RefreshUri();
             }
         }
 
