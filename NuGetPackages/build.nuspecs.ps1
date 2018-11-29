@@ -111,7 +111,7 @@ function Get-NuGetTargetPlatform([string]$fw)
     }
     if ($fw -eq 'netcoreapp2.1')
     {
-        return '.NETCore2.1'
+        return '.NETCoreApp2.1'
     }
 	
 	# add other FWs, i.e. core, net461, etc
