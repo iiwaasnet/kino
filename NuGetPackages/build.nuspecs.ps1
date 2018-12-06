@@ -251,8 +251,17 @@ function Add-FileDependencies([xml]$nuSpec, [xml]$projectXml, $projectRefs, $fra
             {				
                 # Configuration, i.e. Debug or Release can come with params to script
                 $fileName = [io.path]::GetFileNameWithoutExtension($ref.Name)
+				# add DLLs
                 $source = 'bin\Release\' + $fw + '\' + $fileName + '.dll'
                 $target = 'lib\' + $fw + '\' + $fileName + '.dll'
+                $file = $nuSpec.CreateElement('file', (Get-XmlNs))
+                $file.SetAttribute('src', $source)
+                $file.SetAttribute('target', $target)
+
+                $files.AppendChild($file)
+				# add PDB files
+				$source = 'bin\Release\' + $fw + '\' + $fileName + '.pdb'
+                $target = 'lib\' + $fw + '\' + $fileName + '.pdb'
                 $file = $nuSpec.CreateElement('file', (Get-XmlNs))
                 $file.SetAttribute('src', $source)
                 $file.SetAttribute('target', $target)
