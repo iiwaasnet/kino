@@ -404,7 +404,7 @@ namespace kino.Tests.Routing
             internalRoutingTable.Verify(m => m.FindRoutes(It.Is<InternalRouteLookupRequest>(req => req.Message.Equals(message))), Times.Never);
             externalRoutingTable.Verify(m => m.FindRoutes(It.Is<ExternalRouteLookupRequest>(req => req.Message.Equals(message) && req.ReceiverNodeIdentity == otherNode)), Times.Once);
             scaleOutSocket.Verify(m => m.Connect(It.Is<string>(uri => uri == peerConnection.Node.Uri), true), Times.Once);
-            scaleOutSocket.Verify(m => m.SendMessage(message));
+            scaleOutSocket.Verify(m => m.Send(message));
         }
 
         [Test]
@@ -446,7 +446,7 @@ namespace kino.Tests.Routing
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity)};
             externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] {peerConnection});
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
-            scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<TimeoutException>();
+            scaleOutSocket.Setup(m => m.Send(It.IsAny<IMessage>())).Throws<TimeoutException>();
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
@@ -465,7 +465,7 @@ namespace kino.Tests.Routing
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity)};
             externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] {peerConnection});
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
-            scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
+            scaleOutSocket.Setup(m => m.Send(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
             var unregPayload = new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = peerConnection.Node.SocketIdentity};
             var unregMessage = Message.Create(unregPayload);
             var serviceMessageHandler = new Mock<IServiceMessageHandler>();
@@ -484,7 +484,7 @@ namespace kino.Tests.Routing
         {
             var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
-            scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
+            scaleOutSocket.Setup(m => m.Send(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();
@@ -507,7 +507,7 @@ namespace kino.Tests.Routing
             ReceiveMessageCompletionDelay.Sleep();
             messageRouter.Stop();
             //
-            scaleOutSocket.Verify(m => m.SendMessage(message));
+            scaleOutSocket.Verify(m => m.Send(message));
         }
 
         [Test]
@@ -516,7 +516,7 @@ namespace kino.Tests.Routing
             var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
             message.AddHop();
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
-            scaleOutSocket.Setup(m => m.SendMessage(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
+            scaleOutSocket.Setup(m => m.Send(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
             //
             messageRouter.Start();
             ReceiveMessageCompletionDelay.Sleep();

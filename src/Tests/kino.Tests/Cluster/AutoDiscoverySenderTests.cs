@@ -66,7 +66,7 @@ namespace kino.Tests.Cluster
             //
             autoDiscoverSender.StartBlockingSendMessages(tokenSource.Token, barrier);
             //
-            socket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Exactly(messages.Count()));
+            socket.Verify(m => m.Send(It.IsAny<IMessage>()), Times.Exactly(messages.Count()));
         }
 
         [Test]
@@ -82,7 +82,7 @@ namespace kino.Tests.Cluster
             //
             autoDiscoverSender.StartBlockingSendMessages(tokenSource.Token, barrier);
             //
-            socket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Exactly(config.RouteDiscovery.MaxAutoDiscoverySenderQueueLength));
+            socket.Verify(m => m.Send(It.IsAny<IMessage>()), Times.Exactly(config.RouteDiscovery.MaxAutoDiscoverySenderQueueLength));
         }
     }
 }

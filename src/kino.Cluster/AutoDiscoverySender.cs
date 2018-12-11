@@ -43,10 +43,10 @@ namespace kino.Cluster
                     {
                         foreach (var messageOut in outgoingMessages.GetConsumingEnumerable(token))
                         {
-                            clusterMonitorSendingSocket.SendMessage(messageOut);
+                            clusterMonitorSendingSocket.Send(messageOut);
                             //TODO: Block immediately for the response
                             //Otherwise, consider the RS dead and switch to failover partner
-                            //sendingSocket.ReceiveMessage(token);
+                            //sendingSocket.Receive(token);
                         }
                     }
                     catch (OperationCanceledException)

@@ -12,7 +12,7 @@ namespace kino.Tests.Helpers
         internal static void SetupMessageReceived(this Mock<ISocket> mock, IMessage message, CancellationToken token)
         {
             var times = 0;
-            mock.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() =>
+            mock.Setup(m => m.Receive(It.IsAny<CancellationToken>())).Returns(() =>
                                                                                      {
                                                                                          if (times++ == 0)
                                                                                          {
@@ -24,7 +24,7 @@ namespace kino.Tests.Helpers
         }
 
         internal static void SetupPeriodicMessageReceived(this Mock<ISocket> mock, IMessage message, TimeSpan everyTimeSpan)
-            => mock.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Returns(() =>
+            => mock.Setup(m => m.Receive(It.IsAny<CancellationToken>())).Returns(() =>
                                                                                         {
                                                                                             everyTimeSpan.Sleep();
                                                                                             return message;

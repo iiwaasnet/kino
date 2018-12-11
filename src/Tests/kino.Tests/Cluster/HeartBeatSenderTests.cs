@@ -66,7 +66,7 @@ namespace kino.Tests.Cluster
                                                           Assert.AreEqual(heartBeatInterval, payload.HeartBeatInterval);
                                                           return true;
                                                       };
-            socket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => isHeartBeatMessage(msg))), Times.AtLeast(heartBeatsToSend));
+            socket.Verify(m => m.Send(It.Is<IMessage>(msg => isHeartBeatMessage(msg))), Times.AtLeast(heartBeatsToSend));
         }
 
         [Test]
@@ -82,7 +82,7 @@ namespace kino.Tests.Cluster
             var activeAddress = heartBeatAddresses.Second();
             socket.Verify(m => m.Bind(activeAddress), Times.Once());
             config.Verify(m => m.SetActiveHeartBeatAddress(activeAddress), Times.Once);
-            socket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.AtLeastOnce);
+            socket.Verify(m => m.Send(It.IsAny<IMessage>()), Times.AtLeastOnce);
             socket.Verify(m => m.Dispose(), Times.Once);
         }
 
@@ -99,7 +99,7 @@ namespace kino.Tests.Cluster
             socket.Verify(m => m.Bind(It.IsAny<string>()), Times.Exactly(heartBeatAddresses.Count()));
             socket.Verify(m => m.Dispose(), Times.Once);
             config.Verify(m => m.SetActiveHeartBeatAddress(It.IsAny<string>()), Times.Never);
-            socket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Never);
+            socket.Verify(m => m.Send(It.IsAny<IMessage>()), Times.Never);
             logger.Verify(m => m.Error(It.IsAny<Exception>()), Times.Once);
             logger.Verify(m => m.Warn(It.Is<object>(f => f.ToString() == "HeartBeating stopped.")), Times.Once);
         }

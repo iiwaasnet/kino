@@ -165,7 +165,7 @@ namespace kino.Tests.Cluster
             clusterHealthMonitor.Stop();
             //
             logger.Verify(m => m.Error(It.IsAny<object>()), Times.Never);
-            publisherSocket.Verify(m => m.SendMessage(message), Times.Once);
+            publisherSocket.Verify(m => m.Send(message), Times.Once);
         }
 
         [Test]
@@ -372,7 +372,7 @@ namespace kino.Tests.Cluster
             socketFactory.Verify(m => m.CreateRouterSocket(), Times.Once);
             routerSocket.Verify(m => m.SetMandatoryRouting(true), Times.Once);
             routerSocket.Verify(m => m.Connect(meta.ScaleOutUri, true), Times.Once);
-            routerSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(KinoMessages.Ping))), Times.Once);
+            routerSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.Ping))), Times.Once);
             routerSocket.Verify(m => m.Disconnect(meta.ScaleOutUri), Times.Once);
             Assert.That(DateTime.UtcNow - meta.LastKnownHeartBeat, Is.InRange(TimeSpan.MinValue, AsyncOp.MultiplyBy(3)));
         }
@@ -436,7 +436,7 @@ namespace kino.Tests.Cluster
             socketFactory.Verify(m => m.CreateRouterSocket(), callTimes);
             routerSocket.Verify(m => m.SetMandatoryRouting(true), callTimes);
             routerSocket.Verify(m => m.Connect(It.Is<string>(uri => isStalePeerUri(uri)), true), callTimes);
-            routerSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(KinoMessages.Ping))), callTimes);
+            routerSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(KinoMessages.Ping))), callTimes);
             routerSocket.Verify(m => m.Disconnect(It.Is<string>(uri => isStalePeerUri(uri))), callTimes);
         }
     }

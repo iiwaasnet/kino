@@ -74,7 +74,7 @@ namespace kino.Tests.Cluster
             tokenSource.Cancel();
             scaleOutListener.Stop();
             //
-            frontEndSocket.Verify(m => m.ReceiveMessage(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            frontEndSocket.Verify(m => m.Receive(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
             localRouterSocket.Verify(m => m.Send(It.IsAny<IMessage>()), Times.Never);
         }
 
@@ -141,7 +141,7 @@ namespace kino.Tests.Cluster
             message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
             message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
             message.SetCorrelationId(Guid.NewGuid().ToByteArray());
-            frontEndSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Throws<Exception>();
+            frontEndSocket.Setup(m => m.Receive(It.IsAny<CancellationToken>())).Throws<Exception>();
             //
             scaleOutListener.Start();
             AsyncOp.Sleep();

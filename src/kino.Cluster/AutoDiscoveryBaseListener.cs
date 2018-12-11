@@ -6,39 +6,35 @@ using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
-using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 
 namespace kino.Cluster
 {
-    public class AutoDiscoveryListener : IAutoDiscoveryListener
+    public class AutoDiscoveryBaseListener : IAutoDiscoveryListener
     {
         private readonly ILogger logger;
         private readonly IRendezvousCluster rendezvousCluster;
         private readonly ISocketFactory socketFactory;
-        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
+        private readonly TimeSpan heartBeatSilenceBeforeRendezvousFailover;
         private readonly ManualResetEvent heartBeatReceived;
         private readonly ManualResetEvent newRendezvousConfiguration;
-        private readonly ClusterMembershipConfiguration membershipConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
-        private readonly ILocalSocket<IMessage> localRouterSocket;
+        private readonly ISendingSocket<IMessage> forwardingSocket;
 
-        public AutoDiscoveryListener(IRendezvousCluster rendezvousCluster,
-                                     ISocketFactory socketFactory,
-                                     IScaleOutConfigurationProvider scaleOutConfigurationProvider,
-                                     ClusterMembershipConfiguration membershipConfiguration,
-                                     IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
-                                     ILocalSocket<IMessage> localRouterSocket,
-                                     ILogger logger)
+        public AutoDiscoveryBaseListener(IRendezvousCluster rendezvousCluster,
+                                         ISocketFactory socketFactory,
+                                         TimeSpan heartBeatSilenceBeforeRendezvousFailover,
+                                         IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
+                                         ISendingSocket<IMessage> forwardingSocket,
+                                         ILogger logger)
         {
             this.logger = logger;
-            this.membershipConfiguration = membershipConfiguration;
             this.performanceCounterManager = performanceCounterManager;
-            this.localRouterSocket = localRouterSocket;
+            this.forwardingSocket = forwardingSocket;
             this.rendezvousCluster = rendezvousCluster;
             this.socketFactory = socketFactory;
-            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
+            this.heartBeatSilenceBeforeRendezvousFailover = heartBeatSilenceBeforeRendezvousFailover;
             heartBeatReceived = new ManualResetEvent(false);
             newRendezvousConfiguration = new ManualResetEvent(false);
         }
@@ -120,7 +116,7 @@ namespace kino.Cluster
                                                 newRendezvousConfiguration,
                                                 token.WaitHandle
                                             },
-                                            membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover);
+                                            heartBeatSilenceBeforeRendezvousFailover);
             switch (result)
             {
                 case WaitHandle.WaitTimeout:
@@ -154,10 +150,10 @@ namespace kino.Cluster
 
         private bool ProcessIncomingMessage(IMessage message)
             => HeartBeat(message)
-               || Pong(message)
-               || RendezvousReconfiguration(message)
-               || RoutingControlMessage(message)
-               || RendezvousNotLeader(message);
+            || Pong(message)
+            || RendezvousReconfiguration(message)
+            || RoutingControlMessage(message)
+            || RendezvousNotLeader(message);
 
         private bool RendezvousReconfiguration(IMessage message)
         {
@@ -186,12 +182,12 @@ namespace kino.Cluster
                 if (!currentLeader.Equals(newLeader))
                 {
                     logger.Info($"New Rendezvous leader: {newLeader.BroadcastUri}. " +
-                                          $"Disconnecting {currentLeader.BroadcastUri}");
+                                $"Disconnecting {currentLeader.BroadcastUri}");
 
                     if (!rendezvousCluster.SetCurrentRendezvousServer(newLeader))
                     {
                         logger.Error($"New Rendezvous leader {newLeader.BroadcastUri} "
-                                     + $"was not found within configured Rendezvous cluster: [{string.Join(",", rendezvousCluster.Nodes.Select(n => n.BroadcastUri))}]");
+                                   + $"was not found within configured Rendezvous cluster: [{string.Join(",", rendezvousCluster.Nodes.Select(n => n.BroadcastUri))}]");
                     }
 
                     newRendezvousConfiguration.Set();
@@ -218,31 +214,37 @@ namespace kino.Cluster
         private bool RoutingControlMessage(IMessage message)
         {
             var shouldHandle = IsRequestClusterMessageRoutesMessage(message)
-                               || IsRequestNodeMessageRoutingMessage(message)
-                               || IsUnregisterMessageRoutingMessage(message)
-                               || IsRegisterExternalRoute(message)
-                               || IsUnregisterNodeMessage(message)
-                               || IsDiscoverMessageRouteMessage(message);
+                            || IsRequestNodeMessageRoutingMessage(message)
+                            || IsUnregisterMessageRoutingMessage(message)
+                            || IsRegisterExternalRoute(message)
+                            || IsUnregisterNodeMessage(message)
+                            || IsDiscoverMessageRouteMessage(message);
 
             if (shouldHandle)
             {
-                localRouterSocket.Send(message);
+                forwardingSocket.Send(message);
             }
 
             return shouldHandle;
         }
 
-        private bool IsDiscoverMessageRouteMessage(IMessage message)
-        {
-            if (message.Equals(KinoMessages.DiscoverMessageRoute))
-            {
-                var payload = message.GetPayload<DiscoverMessageRouteMessage>();
+        protected virtual bool IsDiscoverMessageRouteMessage(IMessage message)
+            => message.Equals(KinoMessages.DiscoverMessageRoute);
 
-                return !ThisNodeSocket(payload.RequestorNodeIdentity);
-            }
+        protected virtual bool IsRequestClusterMessageRoutesMessage(IMessage message)
+            => message.Equals(KinoMessages.RequestClusterMessageRoutes);
 
-            return false;
-        }
+        protected virtual bool IsRequestNodeMessageRoutingMessage(IMessage message)
+            => message.Equals(KinoMessages.RequestNodeMessageRoutes);
+
+        protected virtual bool IsUnregisterNodeMessage(IMessage message)
+            => message.Equals(KinoMessages.UnregisterNode);
+
+        protected virtual bool IsRegisterExternalRoute(IMessage message)
+            => message.Equals(KinoMessages.RegisterExternalMessageRoute);
+
+        protected virtual bool IsUnregisterMessageRoutingMessage(IMessage message)
+            => message.Equals(KinoMessages.UnregisterMessageRoute);
 
         private static bool IsHeartBeat(IMessage message)
             => message.Equals(KinoMessages.HeartBeat);
@@ -252,71 +254,5 @@ namespace kino.Cluster
 
         private static bool IsRendezvousReconfiguration(IMessage message)
             => message.Equals(KinoMessages.RendezvousConfigurationChanged);
-
-        private bool IsRequestClusterMessageRoutesMessage(IMessage message)
-        {
-            if (message.Equals(KinoMessages.RequestClusterMessageRoutes))
-            {
-                var payload = message.GetPayload<RequestClusterMessageRoutesMessage>();
-
-                return !ThisNodeSocket(payload.RequestorNodeIdentity);
-            }
-
-            return false;
-        }
-
-        private bool IsRequestNodeMessageRoutingMessage(IMessage message)
-        {
-            if (message.Equals(KinoMessages.RequestNodeMessageRoutes))
-            {
-                var payload = message.GetPayload<RequestNodeMessageRoutesMessage>();
-
-                return ThisNodeSocket(payload.TargetNodeIdentity);
-            }
-
-            return false;
-        }
-
-        private bool IsUnregisterNodeMessage(IMessage message)
-        {
-            if (message.Equals(KinoMessages.UnregisterNode))
-            {
-                var payload = message.GetPayload<UnregisterNodeMessage>();
-
-                return !ThisNodeSocket(payload.ReceiverNodeIdentity);
-            }
-
-            return message.Equals(KinoMessages.UnregisterUnreachableNode);
-        }
-
-        private bool IsRegisterExternalRoute(IMessage message)
-        {
-            if (message.Equals(KinoMessages.RegisterExternalMessageRoute))
-            {
-                var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
-
-                return !ThisNodeSocket(payload.NodeIdentity);
-            }
-
-            return false;
-        }
-
-        private bool IsUnregisterMessageRoutingMessage(IMessage message)
-        {
-            if (message.Equals(KinoMessages.UnregisterMessageRoute))
-            {
-                var payload = message.GetPayload<UnregisterMessageRouteMessage>();
-
-                return !ThisNodeSocket(payload.ReceiverNodeIdentity);
-            }
-
-            return false;
-        }
-
-        private bool ThisNodeSocket(byte[] socketIdentity)
-        {
-            var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
-            return Unsafe.ArraysEqual(scaleOutAddress.Identity, socketIdentity);
-        }
     }
 }

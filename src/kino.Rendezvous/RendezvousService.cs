@@ -99,7 +99,7 @@ namespace kino.Rendezvous
                                                   : CreateNotLeaderMessage();
                                 if (message != null)
                                 {
-                                    heartBeatSocket.SendMessage(message);
+                                    heartBeatSocket.Send(message);
                                 }
                                 wait.Wait(configProvider.HeartBeatInterval, token);
                             }
@@ -142,7 +142,7 @@ namespace kino.Rendezvous
                         {
                             try
                             {
-                                var message = unicastSocket.ReceiveMessage(token);
+                                var message = unicastSocket.Receive(token);
 
                                 message = NodeIsLeader()
                                               ? ProcessMessage(message)
@@ -150,7 +150,7 @@ namespace kino.Rendezvous
 
                                 if (message != null)
                                 {
-                                    broadcastSocket.SendMessage(message);
+                                    broadcastSocket.Send(message);
                                 }
                             }
                             catch (Exception err)

@@ -23,20 +23,20 @@ namespace kino.Tests.Actors.Setup
             Setup(m => m.GetIdentity()).Returns((byte[]) null);
         }
 
-        public void SendMessage(IMessage message)
+        public void Send(IMessage message)
         {
-            Setup(m => m.SendMessage(message));
-            Object.SendMessage(message);
+            Setup(m => m.Send(message));
+            Object.Send(message);
             sentMessages.Add(message);
         }
 
-        public IMessage ReceiveMessage(CancellationToken cancellationToken)
+        public IMessage Receive(CancellationToken cancellationToken)
         {
             try
             {
                 var message = receivedMessages.Take(cancellationToken);
-                Setup(m => m.ReceiveMessage(cancellationToken)).Returns(message);
-                return Object.ReceiveMessage(cancellationToken);
+                Setup(m => m.Receive(cancellationToken)).Returns(message);
+                return Object.Receive(cancellationToken);
             }
             catch (OperationCanceledException)
             {

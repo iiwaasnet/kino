@@ -286,7 +286,7 @@ namespace kino.Routing
 
                     message.SignMessage(securityProvider);
 
-                    scaleOutBackend.SendMessage(message);
+                    scaleOutBackend.Send(message);
 
                     ForwardedToOtherNode(message);
                 }

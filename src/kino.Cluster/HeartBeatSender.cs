@@ -60,7 +60,7 @@ namespace kino.Cluster
                     {
                         try
                         {
-                            socket.SendMessage(Message.Create(heartBeatMessage));
+                            socket.Send(Message.Create(heartBeatMessage));
                             //logger.Debug($"HeartBeat sent at {DateTime.UtcNow} UTC");
                             config.GetHeartBeatInterval().Sleep(token);
                             //await Task.Delay(config.GetHeartBeatInterval(), token);

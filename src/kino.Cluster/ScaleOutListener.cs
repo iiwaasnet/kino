@@ -85,7 +85,7 @@ namespace kino.Cluster
                         Message message = null;
                         try
                         {
-                            message = scaleOutFrontend.ReceiveMessage(token).As<Message>();
+                            message = scaleOutFrontend.Receive(token).As<Message>();
                             if (message != null)
                             {
                                 message.VerifySignature(securityProvider);

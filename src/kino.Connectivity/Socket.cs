@@ -27,7 +27,7 @@ namespace kino.Connectivity
             this.config = config;
         }
 
-        public void SendMessage(IMessage message)
+        public void Send(IMessage message)
         {
             var frames = messageWireFormatter.Serialize((Message) message);
             var msg = new Msg();
@@ -52,7 +52,7 @@ namespace kino.Connectivity
             }
         }
 
-        public IMessage ReceiveMessage(CancellationToken cancellationToken)
+        public IMessage Receive(CancellationToken cancellationToken)
         {
             while (!cancellationToken.IsCancellationRequested)
             {

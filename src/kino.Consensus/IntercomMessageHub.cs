@@ -131,7 +131,7 @@ namespace kino.Consensus
 
                 foreach (var message in outMessageQueue.GetConsumingEnumerable(token))
                 {
-                    socket.SendMessage(message);
+                    socket.Send(message);
                 }
             }
         }
@@ -146,7 +146,7 @@ namespace kino.Consensus
                 {
                     try
                     {
-                        var message = socket.ReceiveMessage(token);
+                        var message = socket.Receive(token);
                         if (message != null)
                         {
                             if (!ProcessServiceMessage(message, socket))
@@ -263,7 +263,7 @@ namespace kino.Consensus
                                              OldUri = oldUri,
                                              NewUri = newUri
                                          }).As<Message>();
-            intercomSocket.SendMessage(message);
+            intercomSocket.Send(message);
         }
 
         private void SendHeartBeat()
