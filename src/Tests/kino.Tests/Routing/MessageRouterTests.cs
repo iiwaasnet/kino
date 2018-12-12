@@ -252,7 +252,7 @@ namespace kino.Tests.Routing
         public void IfMessageIsNotProcessedByServiceMessageHandler_InternalRoutingTableIsLookedUp()
         {
             messageRouter = CreateMessageRouter(internalRoutingTable.Object);
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             serviceMessageHandlerRegistry.Setup(m => m.GetMessageHandler(message)).Returns((IServiceMessageHandler) null);
             //
@@ -291,7 +291,7 @@ namespace kino.Tests.Routing
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             message.AddHop();
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
@@ -310,7 +310,7 @@ namespace kino.Tests.Routing
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage(), DistributionPattern.Broadcast));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage(), DistributionPattern.Broadcast));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
             messageRouter.Start();
@@ -329,7 +329,7 @@ namespace kino.Tests.Routing
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage(), DistributionPattern.Broadcast));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage(), DistributionPattern.Broadcast));
             message.AddHop();
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
@@ -349,7 +349,7 @@ namespace kino.Tests.Routing
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             message.SetReceiverNode(new ReceiverIdentifier(localNodeEndpoint.Identity));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
@@ -370,7 +370,7 @@ namespace kino.Tests.Routing
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(new[] {localSocket.Object});
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", new ReceiverIdentifier(Guid.NewGuid().ToByteArray()).Identity)};
             externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] {peerConnection});
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             //
             messageRouter.Start();
@@ -390,7 +390,7 @@ namespace kino.Tests.Routing
             localSocket.Setup(m => m.GetIdentity()).Returns(ReceiverIdentities.CreateForActor);
             var routes = new[] {localSocket.Object};
             internalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<InternalRouteLookupRequest>())).Returns(routes);
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             message.SetReceiverNode(otherNode);
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity)};
@@ -411,7 +411,7 @@ namespace kino.Tests.Routing
         public void IfScaleOutSocketWasNotConnectedToRemoteNode_ConnectionIsEstablished()
         {
             messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             var otherNodeIdentifier = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             var otherNode = new Node("tcp://127.0.0.1:9009", otherNodeIdentifier.Identity);
             var peerConnection = new PeerConnection
@@ -440,7 +440,7 @@ namespace kino.Tests.Routing
         public void IfScaleOutBackendSocketSendMessageThrowsTimeoutException_ConnectivityCheckIsScheduled()
         {
             messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             message.SetReceiverNode(otherNode);
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity)};
@@ -459,7 +459,7 @@ namespace kino.Tests.Routing
         public void IfScaleOutBackendSocketSendMessageThrowsHostUnreachableException_UnreachableNodeIsUnregistered()
         {
             messageRouter = CreateMessageRouter(null, externalRoutingTable.Object);
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             message.SetReceiverNode(otherNode);
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity)};
@@ -482,7 +482,7 @@ namespace kino.Tests.Routing
         [Test]
         public void IfMessageIsUnhandled_RequestToDiscoverUnhandledMessageRouteIsSent()
         {
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             scaleOutSocket.Setup(m => m.Send(It.IsAny<IMessage>())).Throws<HostUnreachableException>();
             //
@@ -497,7 +497,7 @@ namespace kino.Tests.Routing
         public void IfMessageIsNotHandledLocaly_ItIsForwardedAway()
         {
             messageRouter = CreateMessageRouter(externalRoutingTable: externalRoutingTable.Object);
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             var otherNode = new ReceiverIdentifier(Guid.NewGuid().ToByteArray());
             var peerConnection = new PeerConnection {Node = new Node("tcp://127.0.0.1:9009", otherNode.Identity)};
             externalRoutingTable.Setup(m => m.FindRoutes(It.IsAny<ExternalRouteLookupRequest>())).Returns(new[] {peerConnection});
@@ -513,7 +513,7 @@ namespace kino.Tests.Routing
         [Test]
         public void IfMessageFromRemoteActorIsUnhandled_NodeUnregistersSelfFromHandlingThisMesssage()
         {
-            var message = SyntacticSugar.As<Message>(Message.Create(new SimpleMessage()));
+            var message = SyntaxSugar.As<Message>(Message.Create(new SimpleMessage()));
             message.AddHop();
             localRouterSocket.SetupMessageReceived(message, ReceiveMessageDelay);
             scaleOutSocket.Setup(m => m.Send(It.IsAny<IMessage>())).Throws<HostUnreachableException>();

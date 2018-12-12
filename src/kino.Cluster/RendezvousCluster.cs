@@ -2,7 +2,6 @@
 using System.Linq;
 using C5;
 using kino.Cluster.Configuration;
-using kino.Core.Diagnostics;
 
 namespace kino.Cluster
 {

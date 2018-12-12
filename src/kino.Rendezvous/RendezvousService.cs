@@ -101,6 +101,7 @@ namespace kino.Rendezvous
                                 {
                                     heartBeatSocket.Send(message);
                                 }
+
                                 wait.Wait(configProvider.HeartBeatInterval, token);
                             }
                             catch (OperationCanceledException)
@@ -133,29 +134,33 @@ namespace kino.Rendezvous
         {
             try
             {
-                using (var broadcastSocket = CreateBroadcastSocket())
+                using (var partnerBroadcastSocket = CreatePartnerBroadcastSocket())
                 {
-                    using (var unicastSocket = CreateUnicastSocket())
+                    using (var broadcastSocket = CreateBroadcastSocket())
                     {
-                        gateway.SignalAndWait(token);
-                        while (!token.IsCancellationRequested)
+                        using (var unicastSocket = CreateUnicastSocket())
                         {
-                            try
+                            gateway.SignalAndWait(token);
+                            while (!token.IsCancellationRequested)
                             {
-                                var message = unicastSocket.Receive(token);
-
-                                message = NodeIsLeader()
-                                              ? ProcessMessage(message)
-                                              : CreateNotLeaderMessage();
-
-                                if (message != null)
+                                try
                                 {
-                                    broadcastSocket.Send(message);
+                                    var message = unicastSocket.Receive(token);
+
+                                    message = NodeIsLeader()
+                                                  ? ProcessMessage(message)
+                                                  : CreateNotLeaderMessage();
+
+                                    if (message != null)
+                                    {
+                                        SyntaxSugar.SafeExecute(() => broadcastSocket.Send(message), logger);
+                                        SyntaxSugar.SafeExecute(() => partnerBroadcastSocket.Send(message), logger);
+                                    }
                                 }
-                            }
-                            catch (Exception err)
-                            {
-                                logger.Error(err);
+                                catch (Exception err)
+                                {
+                                    logger.Error(err);
+                                }
                             }
                         }
                     }
@@ -210,6 +215,17 @@ namespace kino.Rendezvous
             socket.Bind(configProvider.BroadcastUri);
 
             logger.Info($"Broadcasting cluster messages started on: {configProvider.BroadcastUri}");
+
+            return socket;
+        }
+
+        private ISocket CreatePartnerBroadcastSocket()
+        {
+            var socket = socketFactory.CreatePublisherSocket();
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousBroadcastSocketSendRate);
+            socket.Bind(configProvider.PartnerBroadcastUri);
+
+            logger.Info($"Broadcasting cluster messages started on: {configProvider.PartnerBroadcastUri}");
 
             return socket;
         }

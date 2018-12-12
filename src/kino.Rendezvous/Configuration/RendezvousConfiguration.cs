@@ -6,6 +6,8 @@ namespace kino.Rendezvous.Configuration
     {
         public string BroadcastUri { get; set; }
 
+        public string PartnerBroadcastUri { get; set; }
+
         public string UnicastUri { get; set; }
 
         public TimeSpan HeartBeatInterval { get; set; }

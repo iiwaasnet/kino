@@ -23,6 +23,7 @@
     </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\kino.Cluster\kino.Cluster.csproj" />
     <ProjectReference Include="..\kino.Consensus\kino.Consensus.csproj" />
   </ItemGroup>
 

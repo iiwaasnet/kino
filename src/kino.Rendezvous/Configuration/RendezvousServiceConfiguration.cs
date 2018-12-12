@@ -12,5 +12,7 @@ namespace kino.Rendezvous.Configuration
         public LeaseConfiguration Lease { get; set; }
 
         public SocketConfiguration Socket { get; set; }
+
+        public PartnerNetworksConfiguration Partners { get; set; }
     }
 }

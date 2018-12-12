@@ -75,13 +75,13 @@ namespace kino.Actors
             using (var barrier = new Barrier(2))
             {
                 cancellationTokenSource = new CancellationTokenSource();
-                registrationsProcessing = Task.Factory.StartNew(_ => SafeExecute(() => RegisterActors(cancellationTokenSource.Token)),
+                registrationsProcessing = Task.Factory.StartNew(_ => SyntaxSugar.SafeExecuteUntilCanceled(() => RegisterActors(cancellationTokenSource.Token), logger),
                                                                 cancellationTokenSource.Token,
                                                                 TaskCreationOptions.LongRunning);
-                syncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessRequests(cancellationTokenSource.Token, barrier)),
+                syncProcessing = Task.Factory.StartNew(_ => SyntaxSugar.SafeExecuteUntilCanceled(() => ProcessRequests(cancellationTokenSource.Token, barrier), logger),
                                                        cancellationTokenSource.Token,
                                                        TaskCreationOptions.LongRunning);
-                asyncProcessing = Task.Factory.StartNew(_ => SafeExecute(() => ProcessAsyncResponses(cancellationTokenSource.Token)),
+                asyncProcessing = Task.Factory.StartNew(_ => SyntaxSugar.SafeExecuteUntilCanceled(() => ProcessAsyncResponses(cancellationTokenSource.Token), logger),
                                                         cancellationTokenSource.Token,
                                                         TaskCreationOptions.LongRunning);
 
@@ -195,6 +195,7 @@ namespace kino.Actors
             {
                 logger.Error(err);
             }
+
             logger.Warn($"{GetType().Name} requests processing stopped.");
         }
 
@@ -216,6 +217,7 @@ namespace kino.Actors
                                                                  messageContext.CallbackPoint,
                                                                  messageContext.CallbackKey);
                             }
+
                             messageOut.SetCorrelationId(messageContext.CorrelationId);
                             messageOut.CopyMessageRouting(messageContext.MessageHops);
                             messageOut.TraceOptions |= messageContext.TraceOptions;
@@ -257,6 +259,7 @@ namespace kino.Actors
                                                              messageIn.CallbackPoint,
                                                              messageIn.CallbackKey);
                         }
+
                         messageOut.SetCorrelationId(messageIn.CorrelationId);
                         messageOut.CopyMessageRouting(messageIn.GetMessageRouting());
                         messageOut.TraceOptions |= messageIn.TraceOptions;
@@ -268,7 +271,7 @@ namespace kino.Actors
                 }
                 else
                 {
-                    task.ContinueWith(completed => SafeExecute(() => EnqueueTaskForCompletion(token, completed, messageIn)), token)
+                    task.ContinueWith(completed => SyntaxSugar.SafeExecuteUntilCanceled(() => EnqueueTaskForCompletion(token, completed, messageIn), logger), token)
                         .ConfigureAwait(false);
                 }
             }
@@ -322,6 +325,7 @@ namespace kino.Actors
                 message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
                 return new ActorResult(message);
             }
+
             if (task.IsFaulted)
             {
                 var err = task.Exception?.InnerException ?? task.Exception;
@@ -337,21 +341,6 @@ namespace kino.Actors
             }
 
             return task.Result ?? ActorResult.Empty;
-        }
-
-        private void SafeExecute(Action wrappedMethod)
-        {
-            try
-            {
-                wrappedMethod();
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception err)
-            {
-                logger.Error(err);
-            }
         }
     }
 }
