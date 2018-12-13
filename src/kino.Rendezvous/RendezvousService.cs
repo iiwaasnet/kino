@@ -33,6 +33,7 @@ namespace kino.Rendezvous
                                  ISynodConfigurationProvider synodConfigProvider,
                                  ISocketFactory socketFactory,
                                  IMessageSerializer serializer,
+                                 ILocalSocketFactory localSocketFactory,
                                  IRendezvousConfigurationProvider configProvider,
                                  IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                  ILogger logger)
@@ -51,6 +52,9 @@ namespace kino.Rendezvous
                                                      BroadcastUri = configProvider.BroadcastUri,
                                                      UnicastUri = configProvider.UnicastUri
                                                  });
+            // TODO: Get named local socket for incoming partner messages and
+            // local socket to forward unicast messages.
+            // Read all messages from both sockets and send them to either broadcast or partner broadcast socket
         }
 
         public bool Start(TimeSpan startTimeout)
