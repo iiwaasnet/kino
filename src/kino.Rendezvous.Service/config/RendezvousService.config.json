@@ -31,7 +31,8 @@
         },
         "partners": [
             {
-                "allowedDomains": ["*"],
+                "network": "network_id", 
+                "allowedDomains": [ "*" ],
                 "cluster": [
                     "tcp://rendezvous1.bwin.dev:8001"
                 ]

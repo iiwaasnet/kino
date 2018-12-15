@@ -34,7 +34,6 @@ namespace kino.Cluster
         public ClusterHealthMonitor(ISocketFactory socketFactory,
                                     ILocalSocketFactory localSocketFactory,
                                     ISecurityProvider securityProvider,
-                                    ILocalSendingSocket<IMessage> routerLocalSocket,
                                     IConnectedPeerRegistry connectedPeerRegistry,
                                     ClusterHealthMonitorConfiguration config,
                                     ILogger logger)
@@ -44,7 +43,7 @@ namespace kino.Cluster
             this.securityProvider = securityProvider;
             multiplexingSocket = localSocketFactory.Create<IMessage>();
             this.config = config;
-            this.routerLocalSocket = routerLocalSocket;
+            routerLocalSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket);            
             this.connectedPeerRegistry = connectedPeerRegistry;
             this.logger = logger;
         }

@@ -22,12 +22,15 @@ namespace kino.Rendezvous
         private readonly Node localNode;
         private Task messageProcessing;
         private Task heartBeating;
+        private Task unicastMessageReceiving;
         private readonly IRendezvousConfigurationProvider configProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly IMessageSerializer serializer;
         private readonly ILogger logger;
         private readonly byte[] leaderPayload;
         private readonly IMessage pongMessage;
+        private readonly ILocalReceivingSocket<IMessage> partnerClusterSocket;
+        private readonly ILocalSocket<IMessage> unicastForwardingSocket;
 
         public RendezvousService(ILeaseProvider leaseProvider,
                                  ISynodConfigurationProvider synodConfigProvider,
@@ -52,19 +55,21 @@ namespace kino.Rendezvous
                                                      BroadcastUri = configProvider.BroadcastUri,
                                                      UnicastUri = configProvider.UnicastUri
                                                  });
-            // TODO: Get named local socket for incoming partner messages and
-            // local socket to forward unicast messages.
-            // Read all messages from both sockets and send them to either broadcast or partner broadcast socket
+            partnerClusterSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.PartnerClusterSocket);
+            unicastForwardingSocket = localSocketFactory.Create<IMessage>();
         }
 
         public bool Start(TimeSpan startTimeout)
         {
-            const int participantCount = 3;
+            const int participantCount = 4;
             using (var gateway = new Barrier(participantCount))
             {
                 messageProcessing = Task.Factory.StartNew(_ => ProcessMessages(cancellationTokenSource.Token, gateway),
                                                           cancellationTokenSource.Token,
                                                           TaskCreationOptions.LongRunning);
+                unicastMessageReceiving = Task.Factory.StartNew(_ => ReceiveUnicastMessages(cancellationTokenSource.Token, gateway),
+                                                                cancellationTokenSource.Token,
+                                                                TaskCreationOptions.LongRunning);
                 heartBeating = Task.Factory.StartNew(_ => SendHeartBeat(cancellationTokenSource.Token, gateway),
                                                      cancellationTokenSource.Token,
                                                      TaskCreationOptions.LongRunning);
@@ -77,6 +82,7 @@ namespace kino.Rendezvous
         {
             cancellationTokenSource.Cancel();
             messageProcessing?.Wait();
+            unicastMessageReceiving?.Wait();
             heartBeating?.Wait();
             leaseProvider.Dispose();
         }
@@ -134,37 +140,70 @@ namespace kino.Rendezvous
             return lease != null && Unsafe.ArraysEqual(lease.OwnerIdentity, localNode.SocketIdentity);
         }
 
-        private void ProcessMessages(CancellationToken token, Barrier gateway)
+        private void ReceiveUnicastMessages(CancellationToken token, Barrier gateway)
         {
             try
             {
+                using (var unicastSocket = CreateUnicastSocket())
+                {
+                    gateway.SignalAndWait(token);
+                    while (!token.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            var message = unicastSocket.Receive(token);
+                            if (message != null)
+                            {
+                                unicastForwardingSocket.Send(message);
+                            }
+                        }
+                        catch (Exception err)
+                        {
+                            logger.Error(err);
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
+        }
+
+        private void ProcessMessages(CancellationToken token, Barrier gateway)
+        {
+            const int cancellationToken = 2;
+            try
+            {
+                var waitHandles = new[]
+                                  {
+                                      unicastForwardingSocket.CanReceive(),
+                                      partnerClusterSocket.CanReceive(),
+                                      token.WaitHandle
+                                  };
+
                 using (var partnerBroadcastSocket = CreatePartnerBroadcastSocket())
                 {
                     using (var broadcastSocket = CreateBroadcastSocket())
                     {
-                        using (var unicastSocket = CreateUnicastSocket())
+                        gateway.SignalAndWait(token);
+                        while (!token.IsCancellationRequested)
                         {
-                            gateway.SignalAndWait(token);
-                            while (!token.IsCancellationRequested)
+                            try
                             {
-                                try
+                                var receiverId = WaitHandle.WaitAny(waitHandles);
+                                if (receiverId != cancellationToken)
                                 {
-                                    var message = unicastSocket.Receive(token);
-
-                                    message = NodeIsLeader()
-                                                  ? ProcessMessage(message)
-                                                  : CreateNotLeaderMessage();
-
-                                    if (message != null)
-                                    {
-                                        SyntaxSugar.SafeExecute(() => broadcastSocket.Send(message), logger);
-                                        SyntaxSugar.SafeExecute(() => partnerBroadcastSocket.Send(message), logger);
-                                    }
+                                    TryProcessMessage(unicastForwardingSocket, broadcastSocket, partnerBroadcastSocket);
+                                    TryProcessMessage(partnerClusterSocket, broadcastSocket);
                                 }
-                                catch (Exception err)
-                                {
-                                    logger.Error(err);
-                                }
+                            }
+                            catch (Exception err)
+                            {
+                                logger.Error(err);
                             }
                         }
                     }
@@ -176,6 +215,22 @@ namespace kino.Rendezvous
             catch (Exception err)
             {
                 logger.Error(err);
+            }
+
+            void TryProcessMessage(ILocalReceivingSocket<IMessage> receivingSocket, params ISocket[] sockets)
+            {
+                var message = receivingSocket.TryReceive();
+                if (message != null)
+                {
+                    message = NodeIsLeader()
+                                  ? ProcessMessage(message)
+                                  : CreateNotLeaderMessage();
+
+                    foreach (var sendingSocket in sockets)
+                    {
+                        SyntaxSugar.SafeExecute(() => sendingSocket.Send(message), logger);
+                    }
+                }
             }
         }
 

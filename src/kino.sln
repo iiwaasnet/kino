@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28315.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6967D139-FAAB-470A-B108-859E29B28DFC}"
 	ProjectSection(SolutionItems) = preProject
@@ -42,8 +42,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autofac.kino.Rendezvous", "Integration\Autofac.kino.Rendezvous\Autofac.kino.Rendezvous.csproj", "{1300221D-0982-4027-BCAD-953BC564DAE4}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Autofac.kino", "Integration\Autofac.kino\Autofac.kino.csproj", "{DACFA410-FC1E-4EFB-9574-575DCEC69306}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Tests", "Tests\kino.Tests\kino.Tests.csproj", "{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Samples\Client\Client.csproj", "{E43E69E8-0C92-4694-9E95-F1277D34FFAD}"
 EndProject
@@ -109,10 +107,6 @@ Global
 		{DACFA410-FC1E-4EFB-9574-575DCEC69306}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DACFA410-FC1E-4EFB-9574-575DCEC69306}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DACFA410-FC1E-4EFB-9574-575DCEC69306}.Release|Any CPU.Build.0 = Release|Any CPU
-		{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E43E69E8-0C92-4694-9E95-F1277D34FFAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E43E69E8-0C92-4694-9E95-F1277D34FFAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E43E69E8-0C92-4694-9E95-F1277D34FFAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -132,7 +126,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{1300221D-0982-4027-BCAD-953BC564DAE4} = {6F259B2B-7164-4427-A89C-12254AE91EF3}
 		{DACFA410-FC1E-4EFB-9574-575DCEC69306} = {6F259B2B-7164-4427-A89C-12254AE91EF3}
-		{88BCEAFD-D2EB-48FD-B6A0-085579E15E8C} = {0C6B7BAF-6F77-4352-92C7-A8F3F0337896}
 		{E43E69E8-0C92-4694-9E95-F1277D34FFAD} = {B3967666-2296-4B28-BFD8-0ED4326E29C7}
 		{E52CD781-EA8B-4D12-87E6-617F6B39711C} = {B3967666-2296-4B28-BFD8-0ED4326E29C7}
 	EndGlobalSection

@@ -19,8 +19,6 @@ namespace kino.Routing
 {
     public partial class MessageRouter : IMessageRouter
     {
-        private const int LocalRouterSocketId = 0;
-        private const int InternalRegistrationsReceiverId = 1;
         private CancellationTokenSource cancellationTokenSource;
         private Thread localRouting;
         private readonly IInternalRoutingTable internalRoutingTable;
@@ -40,6 +38,7 @@ namespace kino.Routing
         private bool isStarted;
 
         public MessageRouter(ISocketFactory socketFactory,
+                             ILocalSocketFactory localSocketFactory,
                              IInternalRoutingTable internalRoutingTable,
                              IExternalRoutingTable externalRoutingTable,
                              IScaleOutConfigurationProvider scaleOutConfigurationProvider,
@@ -47,8 +46,6 @@ namespace kino.Routing
                              IServiceMessageHandlerRegistry serviceMessageHandlerRegistry,
                              IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                              ISecurityProvider securityProvider,
-                             ILocalSocket<IMessage> localRouterSocket,
-                             ILocalReceivingSocket<InternalRouteRegistration> internalRegistrationsReceiver,
                              IInternalMessageRouteRegistrationHandler internalRegistrationHandler,
                              IRoundRobinDestinationList roundRobinDestinationList,
                              ILogger logger)
@@ -62,10 +59,10 @@ namespace kino.Routing
             this.serviceMessageHandlerRegistry = serviceMessageHandlerRegistry;
             this.performanceCounterManager = performanceCounterManager;
             this.securityProvider = securityProvider;
-            this.localRouterSocket = localRouterSocket;
+            localRouterSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket);
+            internalRegistrationsReceiver = localSocketFactory.CreateNamed<InternalRouteRegistration>(NamedSockets.InternalRegistrationSocket);
             this.localRouterSocket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterLocalSocketSendRate);
             this.localRouterSocket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterLocalSocketReceiveRate);
-            this.internalRegistrationsReceiver = internalRegistrationsReceiver;
             this.internalRegistrationHandler = internalRegistrationHandler;
             this.roundRobinDestinationList = roundRobinDestinationList;
         }
@@ -105,6 +102,7 @@ namespace kino.Routing
 
         private void RouteLocalMessages(CancellationToken token, Barrier barrier)
         {
+            const int cancellationToken = 2;
             try
             {
                 thisNodeIdentity = GetBlockingReceiverNodeIdentity();
@@ -123,18 +121,15 @@ namespace kino.Routing
                         try
                         {
                             var receiverId = WaitHandle.WaitAny(waitHandles);
-                            if (receiverId == LocalRouterSocketId)
+                            if (receiverId != cancellationToken)
                             {
                                 var message = localRouterSocket.TryReceive().As<Message>();
                                 if (message != null)
                                 {
                                     var _ = TryHandleServiceMessage(message, scaleOutBackend)
-                                            || HandleOperationMessage(message, scaleOutBackend);
+                                         || HandleOperationMessage(message, scaleOutBackend);
                                 }
-                            }
 
-                            if (receiverId == InternalRegistrationsReceiverId)
-                            {
                                 var registration = internalRegistrationsReceiver.TryReceive();
                                 if (registration != null)
                                 {
@@ -198,8 +193,8 @@ namespace kino.Routing
             {
                 handled = SendMessageLocally(internalRoutingTable.FindRoutes(lookupRequest), message);
                 handled = MessageCameFromLocalActor(message)
-                          && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
-                          || handled;
+                       && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
+                       || handled;
             }
             else
             {

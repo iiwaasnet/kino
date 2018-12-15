@@ -36,9 +36,7 @@ namespace kino.Client
         private byte[] callbackReceiverNodeIdentity;
         private bool isStarted;
 
-        public MessageHub(ICallbackHandlerStack callbackHandlers,
-                          ILocalSocket<IMessage> localRouterSocket,
-                          ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
+        public MessageHub(ICallbackHandlerStack callbackHandlers,                          
                           ILocalSocketFactory localSocketFactory,
                           IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                           ISecurityProvider securityProvider,
@@ -46,8 +44,8 @@ namespace kino.Client
                           bool keepRegistrationLocal = false)
         {
             this.logger = logger;
-            this.localRouterSocket = localRouterSocket;
-            this.internalRegistrationsSender = internalRegistrationsSender;
+            localRouterSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket);
+            internalRegistrationsSender = localSocketFactory.CreateNamed<InternalRouteRegistration>(NamedSockets.InternalRegistrationSocket);
             this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.securityProvider = securityProvider;
             this.keepRegistrationLocal = keepRegistrationLocal;

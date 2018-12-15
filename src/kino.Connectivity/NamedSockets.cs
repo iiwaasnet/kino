@@ -4,5 +4,6 @@
     {
         public const string RouterLocalSocket = "RouterLocalSocket";
         public const string InternalRegistrationSocket = "InternalRegistrationSocket";
+        public const string PartnerClusterSocket = "PartnerClusterSocket";
     }
 }

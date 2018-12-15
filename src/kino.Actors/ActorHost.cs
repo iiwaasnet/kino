@@ -34,16 +34,14 @@ namespace kino.Actors
                          IAsyncQueue<AsyncMessageContext> asyncQueue,
                          IAsyncQueue<ActorRegistration> actorRegistrationsQueue,
                          ISecurityProvider securityProvider,
-                         ILocalSocket<IMessage> localRouterSocket,
-                         ILocalSendingSocket<InternalRouteRegistration> internalRegistrationsSender,
                          ILocalSocketFactory localSocketFactory,
                          ILogger logger)
         {
             this.logger = logger;
             this.actorHandlerMap = actorHandlerMap;
             this.securityProvider = securityProvider;
-            this.localRouterSocket = localRouterSocket;
-            this.internalRegistrationsSender = internalRegistrationsSender;
+            localRouterSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket);
+            internalRegistrationsSender = localSocketFactory.CreateNamed<InternalRouteRegistration>(NamedSockets.InternalRegistrationSocket);
             this.asyncQueue = asyncQueue;
             this.actorRegistrationsQueue = actorRegistrationsQueue;
             receivingSocket = localSocketFactory.Create<IMessage>();
