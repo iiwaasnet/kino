@@ -69,8 +69,8 @@ namespace kino
                                                         resolver.Resolve<IDomainScopeResolver>(),
                                                         resolver.Resolve<IDomainPrivateKeyProvider>());
             var heartBeatSenderConfigurationManager = new HeartBeatSenderConfigurationManager(heartBeatSenderConfiguration);
-            var configurationStorage = resolver.Resolve<IConfigurationStorage<RendezvousClusterConfiguration>>()
-                                    ?? new RendezvousClusterConfigurationReadonlyStorage(rendezvousEndpoints);
+            var configurationStorage = resolver.Resolve<IUpdateableConfiguration<RendezvousClusterConfiguration>>()
+                                    ?? new RendezvousClusterConfigurationProvider(rendezvousEndpoints);
             var rendezvousCluster = new RendezvousCluster(configurationStorage);
 
             var scaleoutConfigurationProvider = new ServiceLocator<IScaleOutConfigurationManager>(clusterMembershipConfiguration,

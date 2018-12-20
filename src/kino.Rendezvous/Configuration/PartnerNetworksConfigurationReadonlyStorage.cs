@@ -6,8 +6,8 @@ using kino.Core.Framework;
 
 namespace kino.Rendezvous.Configuration
 {
-    public class PartnerNetworksConfigurationReadonlyStorage : IConfigurationStorage<RendezvousClusterConfiguration>,
-                                                               IConfigurationStorage<PartnerClusterConfiguration>
+    public class PartnerNetworksConfigurationReadonlyStorage : IUpdateableConfiguration<RendezvousClusterConfiguration>,
+                                                               IUpdateableConfiguration<PartnerClusterConfiguration>
     {
         private volatile PartnerClusterConfiguration config;
 
@@ -20,7 +20,7 @@ namespace kino.Rendezvous.Configuration
         public void Update(RendezvousClusterConfiguration newConfig)
             => throw new NotImplementedException();
 
-        PartnerClusterConfiguration IConfigurationStorage<PartnerClusterConfiguration>.Read()
+        PartnerClusterConfiguration IUpdateableConfiguration<PartnerClusterConfiguration>.Read()
             => config;
 
         public void Update(PartnerClusterConfiguration newConfig)

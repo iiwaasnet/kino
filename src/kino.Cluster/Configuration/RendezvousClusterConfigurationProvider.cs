@@ -1,27 +1,26 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using C5;
-using kino.Cluster.Configuration;
 using kino.Core.Framework;
 
-namespace kino.Cluster
+namespace kino.Cluster.Configuration
 {
-    public class RendezvousCluster : IRendezvousCluster
+    public class RendezvousClusterConfigurationProvider : IRendezvousClusterConfigurationProvider
     {
         private volatile HashedLinkedList<RendezvousEndpoint> config;
         private readonly object @lock = new object();
 
-        public RendezvousCluster(IEnumerable<RendezvousEndpoint> initialConfiguration)
+        public RendezvousClusterConfigurationProvider(IEnumerable<RendezvousEndpoint> initialConfiguration)
         {
             config = new HashedLinkedList<RendezvousEndpoint>();
 
             config.AddAll(SelectEndpointsDistinct(initialConfiguration));
         }
 
-        public void Reconfigure(IEnumerable<RendezvousEndpoint> newConfiguration)
+        public void Update(RendezvousClusterConfiguration newConfig)
         {
             var tmp = new HashedLinkedList<RendezvousEndpoint>();
-            tmp.AddAll(SelectEndpointsDistinct(newConfiguration));
+            tmp.AddAll(SelectEndpointsDistinct(newConfig.Cluster));
 
             lock (@lock)
             {
@@ -82,15 +81,6 @@ namespace kino.Cluster
             return tmp;
         }
 
-        public IEnumerable<RendezvousEndpoint> Nodes
-        {
-            get
-            {
-                lock (@lock)
-                {
-                    return config.ToList();
-                }
-            }
-        }
+        public IEnumerable<RendezvousEndpoint> Nodes => config;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using kino.Cluster.Configuration;
 
 namespace kino.Rendezvous.Configuration
@@ -6,6 +7,8 @@ namespace kino.Rendezvous.Configuration
     public class PartnerClusterConfiguration
     {
         public string NetworkId { get; set; }
+
+        public TimeSpan HeartBeatSilenceBeforeRendezvousFailover { get; set; }
 
         public IEnumerable<string> AllowedDomains { get; set; }
 

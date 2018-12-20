@@ -1,9 +1,7 @@
 ﻿namespace kino.Cluster.Configuration
 {
-    public interface IConfigurationStorage<T>
+    public interface IUpdateableConfiguration<T>
     {
-        T Read();
-
         void Update(T newConfig);
     }
 }

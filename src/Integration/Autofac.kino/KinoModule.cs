@@ -92,8 +92,8 @@ namespace Autofac.kino
                    .As<IActorHostFactory>()
                    .SingleInstance();
 
-            builder.RegisterType<RendezvousClusterConfigurationReadonlyStorage>()
-                   .As<IConfigurationStorage<RendezvousClusterConfiguration>>()
+            builder.RegisterType<RendezvousClusterConfigurationProvider>()
+                   .As<IUpdateableConfiguration<RendezvousClusterConfiguration>>()
                    .SingleInstance();
 
             builder.RegisterType<NullSecurityProvider>()

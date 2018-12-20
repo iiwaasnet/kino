@@ -31,7 +31,8 @@
         },
         "partners": [
             {
-                "network": "network_id", 
+                "network": "network_id",
+                "heartBeatSilenceBeforeRendezvousFailover": "00:00:05",
                 "allowedDomains": [ "*" ],
                 "cluster": [
                     "tcp://rendezvous1.bwin.dev:8001"
