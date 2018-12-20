@@ -24,6 +24,7 @@ namespace kino.Rendezvous
         private Task heartBeating;
         private Task unicastMessageReceiving;
         private readonly IRendezvousConfigurationProvider configProvider;
+        private readonly IPartnerNetworkConnectorManager partnerNetworkConnectorManager;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly IMessageSerializer serializer;
         private readonly ILogger logger;
@@ -38,6 +39,7 @@ namespace kino.Rendezvous
                                  IMessageSerializer serializer,
                                  ILocalSocketFactory localSocketFactory,
                                  IRendezvousConfigurationProvider configProvider,
+                                 IPartnerNetworkConnectorManager partnerNetworkConnectorManager,
                                  IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                  ILogger logger)
         {
@@ -47,6 +49,7 @@ namespace kino.Rendezvous
             localNode = synodConfigProvider.LocalNode;
             this.leaseProvider = leaseProvider;
             this.configProvider = configProvider;
+            this.partnerNetworkConnectorManager = partnerNetworkConnectorManager;
             this.performanceCounterManager = performanceCounterManager;
             cancellationTokenSource = new CancellationTokenSource();
             pongMessage = Message.Create(new PongMessage());
@@ -73,13 +76,14 @@ namespace kino.Rendezvous
                 heartBeating = Task.Factory.StartNew(_ => SendHeartBeat(cancellationTokenSource.Token, gateway),
                                                      cancellationTokenSource.Token,
                                                      TaskCreationOptions.LongRunning);
-
+                partnerNetworkConnectorManager.StartConnectors();
                 return gateway.SignalAndWait(startTimeout, cancellationTokenSource.Token);
             }
         }
 
         public void Stop()
         {
+            partnerNetworkConnectorManager.StopConnectors();
             cancellationTokenSource.Cancel();
             messageProcessing?.Wait();
             unicastMessageReceiving?.Wait();

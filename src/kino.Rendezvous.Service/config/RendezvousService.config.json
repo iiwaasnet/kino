@@ -3,7 +3,8 @@
         "rendezvous": {
             "broadcastUri": "tcp://*:8001",
             "unicastUri": "tcp://*:8011",
-            "heartBeatInterval": "00:00:05"
+            "heartBeatInterval": "00:00:05",
+            "partnerBroadcastUri": "tcp://*:8111"
         },
         "synod": {
             "localNode": "tcp://*:7001",
@@ -31,7 +32,7 @@
         },
         "partners": [
             {
-                "network": "network_id",
+                "networkId": "network_id",
                 "heartBeatSilenceBeforeRendezvousFailover": "00:00:05",
                 "allowedDomains": [ "*" ],
                 "cluster": [

@@ -6,6 +6,7 @@ using kino.Core.Framework;
 
 namespace kino.Cluster
 {
+    //TODO: review locking
     public class RendezvousCluster : IRendezvousCluster
     {
         private volatile HashedLinkedList<RendezvousEndpoint> config;

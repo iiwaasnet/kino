@@ -4,7 +4,7 @@ namespace kino.Rendezvous.Configuration
 {
     public interface IPartnerNetworksConfigurationProvider
     {
-        void Update(PartnerNetworksConfiguration newPartnerNetworks);
+        void Update(IEnumerable<PartnerNetworkConfiguration> partners);
 
         IEnumerable<PartnerClusterConfiguration> PartnerNetworks { get; }
     }

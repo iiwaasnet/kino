@@ -11,21 +11,26 @@ namespace kino.Rendezvous.Configuration
     {
         private CoreLib.IDictionary<string, PartnerClusterConfiguration> partnerClusters;
 
-        public PartnerNetworksConfigurationProvider(PartnerNetworksConfiguration config)
-            => partnerClusters = AddConfiguration(config);
+        public PartnerNetworksConfigurationProvider(CoreLib.IEnumerable<PartnerNetworkConfiguration> partners)
+            => partnerClusters = AddConfiguration(partners);
 
-        public void Update(PartnerNetworksConfiguration newPartnerNetworks)
-            => partnerClusters = AddConfiguration(newPartnerNetworks);
+        //TODO: Declare Event in IPartnerNetworksConfigurationProvider to fire when configuration is updated
+        public void Update(CoreLib.IEnumerable<PartnerNetworkConfiguration> partners)
+            => partnerClusters = AddConfiguration(partners);
 
-        private CoreLib.IDictionary<string, PartnerClusterConfiguration> AddConfiguration(PartnerNetworksConfiguration config)
+        private CoreLib.IDictionary<string, PartnerClusterConfiguration> AddConfiguration(CoreLib.IEnumerable<PartnerNetworkConfiguration> partners)
         {
-            AssertNetworksAreUnique(config);
+            AssertNetworksAreUnique(partners);
 
             var tmp = new CoreLib.Dictionary<string, PartnerClusterConfiguration>();
 
-            foreach (var networkConfiguration in config.Partners)
+            foreach (var networkConfiguration in partners)
             {
-                if (!tmp.TryAdd(networkConfiguration.NetworkId, GetConfiguration(networkConfiguration)))
+                if (!tmp.ContainsKey(networkConfiguration.NetworkId))
+                {
+                    tmp.Add(networkConfiguration.NetworkId, GetConfiguration(networkConfiguration));
+                }
+                else
                 {
                     throw new DuplicatedKeyException(networkConfiguration.NetworkId);
                 }
@@ -53,11 +58,10 @@ namespace kino.Rendezvous.Configuration
                    };
         }
 
-        private static void AssertNetworksAreUnique(PartnerNetworksConfiguration config)
+        private static void AssertNetworksAreUnique(CoreLib.IEnumerable<PartnerNetworkConfiguration> partners)
         {
-            var distinctNetworks = config.Partners
-                                         .GroupBy(cfg => cfg.NetworkId);
-            if (distinctNetworks.Count() != config.Partners.Count())
+            var distinctNetworks = partners.GroupBy(cfg => cfg.NetworkId);
+            if (distinctNetworks.Count() != partners.Count())
             {
                 throw new Exception($"Configuration for Network(s) with Id(s): [{string.Join(",", distinctNetworks.Select(n => n.Key))}] is duplicated!");
             }

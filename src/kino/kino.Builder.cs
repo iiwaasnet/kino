@@ -69,11 +69,9 @@ namespace kino
                                                         resolver.Resolve<IDomainScopeResolver>(),
                                                         resolver.Resolve<IDomainPrivateKeyProvider>());
             var heartBeatSenderConfigurationManager = new HeartBeatSenderConfigurationManager(heartBeatSenderConfiguration);
-            var configurationStorage = resolver.Resolve<IUpdateableConfiguration<RendezvousClusterConfiguration>>()
-                                    ?? new RendezvousClusterConfigurationProvider(rendezvousEndpoints);
-            var rendezvousCluster = new RendezvousCluster(configurationStorage);
+            var rendezvousCluster = new RendezvousCluster(rendezvousEndpoints);
 
-            var scaleoutConfigurationProvider = new ServiceLocator<IScaleOutConfigurationManager>(clusterMembershipConfiguration,
+            var scaleOutConfigurationProvider = new ServiceLocator<IScaleOutConfigurationManager>(clusterMembershipConfiguration,
                                                                                                   () => new ScaleOutConfigurationManager(scaleOutSocketConfiguration),
                                                                                                   () => new NullScaleOutConfigurationManager())
                .GetService();
@@ -91,14 +89,14 @@ namespace kino
             var heartBeatSender = new ServiceLocator<IHeartBeatSender>(clusterMembershipConfiguration,
                                                                        () => new HeartBeatSender(socketFactory,
                                                                                                  heartBeatSenderConfigurationManager,
-                                                                                                 scaleoutConfigurationProvider,
+                                                                                                 scaleOutConfigurationProvider,
                                                                                                  logger),
                                                                        () => new NullHeartBeatSender())
                .GetService();
             var scaleOutListener = new ServiceLocator<IScaleOutListener>(clusterMembershipConfiguration,
                                                                          () => new ScaleOutListener(socketFactory,
                                                                                                     localSocketFactory,
-                                                                                                    scaleoutConfigurationProvider,
+                                                                                                    scaleOutConfigurationProvider,
                                                                                                     securityProvider,
                                                                                                     performanceCounterManager,
                                                                                                     logger),
@@ -112,21 +110,21 @@ namespace kino
             var autoDiscoveryListener = new AutoDiscoveryListener(rendezvousCluster,
                                                                   socketFactory,
                                                                   localSocketFactory,
-                                                                  scaleoutConfigurationProvider,
+                                                                  scaleOutConfigurationProvider,
                                                                   clusterMembershipConfiguration,
                                                                   performanceCounterManager,
                                                                   logger);
 
             var routeDiscovery = new ServiceLocator<IRouteDiscovery>(clusterMembershipConfiguration,
                                                                      () => new RouteDiscovery(autoDiscoverSender,
-                                                                                              scaleoutConfigurationProvider,
+                                                                                              scaleOutConfigurationProvider,
                                                                                               clusterMembershipConfiguration,
                                                                                               securityProvider,
                                                                                               logger),
                                                                      () => new NullRouteDiscovery())
                .GetService();
             var clusterMonitor = new ServiceLocator<IClusterMonitor>(clusterMembershipConfiguration,
-                                                                     () => new ClusterMonitor(scaleoutConfigurationProvider,
+                                                                     () => new ClusterMonitor(scaleOutConfigurationProvider,
                                                                                               autoDiscoverSender,
                                                                                               autoDiscoveryListener,
                                                                                               heartBeatSenderConfigurationManager,
@@ -176,7 +174,7 @@ namespace kino
                                               localSocketFactory,
                                               internalRoutingTable,
                                               externalRoutingTable,
-                                              scaleoutConfigurationProvider,
+                                              scaleOutConfigurationProvider,
                                               clusterServices,
                                               serviceMessageHandlerRegistry,
                                               performanceCounterManager,
@@ -190,7 +188,7 @@ namespace kino
             var callbackHandlerStack = new CallbackHandlerStack();
             createMessageHub = keepLocal => new MessageHub(callbackHandlerStack,
                                                            localSocketFactory,
-                                                           scaleoutConfigurationProvider,
+                                                           scaleOutConfigurationProvider,
                                                            securityProvider,
                                                            logger,
                                                            keepLocal);
@@ -199,7 +197,7 @@ namespace kino
             actorHostManager = new ActorHostManager(actorHostFactory, logger);
 
             internalActorHostManager = new ActorHostManager(actorHostFactory, logger);
-            var internalActor = new MessageRoutesActor(externalRoutingTable, internalRoutingTable, scaleoutConfigurationProvider);
+            var internalActor = new MessageRoutesActor(externalRoutingTable, internalRoutingTable, scaleOutConfigurationProvider);
             internalActorHostManager.AssignActor(internalActor);
             //
             isBuilt = true;

@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using kino.Cluster;
-using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
@@ -19,7 +17,6 @@ namespace kino.Rendezvous
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> perfCountersManager;
         private readonly ILogger logger;
         private readonly IPartnerNetworksConfigurationProvider configProvider;
-        private CancellationTokenSource mainCancellationTokenSource;
         private readonly ConcurrentDictionary<Thread, CancellationTokenSource> partnerConnectorsThreads;
 
         public PartnerNetworkConnectorManager(ISocketFactory socketFactory,
@@ -38,8 +35,6 @@ namespace kino.Rendezvous
 
         public void StartConnectors()
         {
-            mainCancellationTokenSource = new CancellationTokenSource();
-
             foreach (var partnerNetwork in configProvider.PartnerNetworks)
             {
                 CreatePartnerNetworkConnector(partnerNetwork);
@@ -48,8 +43,7 @@ namespace kino.Rendezvous
 
         private void CreatePartnerNetworkConnector(PartnerClusterConfiguration partnerNetwork)
         {
-            var storage = new PartnerNetworksConfigurationReadonlyStorage(partnerNetwork);
-            var rndCluster = new RendezvousCluster(storage.As<IUpdateableConfiguration<RendezvousClusterConfiguration>>());
+            var rndCluster = new RendezvousCluster(partnerNetwork.Cluster);
             var connector = new PartnerNetworkConnector(rndCluster,
                                                         partnerNetwork.AllowedDomains,
                                                         socketFactory,
@@ -59,22 +53,26 @@ namespace kino.Rendezvous
                                                         logger);
             var cancellationTokenSource = new CancellationTokenSource();
 
-            var thread = default(Thread);
-            thread = new Thread(() => connector.StartBlockingListenMessages(() => RestartConnector(thread, partnerNetwork), cancellationTokenSource.Token, null))
-                     {
-                         IsBackground = true
-                     };
-            if(partnerConnectorsThreads.TryAdd(thread, cancellationTokenSource))
+            using (var gateway = new Barrier(2))
             {
-                thread.Start();
-            }
-            else
-            {
-                throw new DuplicatedKeyException($"Thread with {nameof(thread.ManagedThreadId)}:{thread.ManagedThreadId} already exists!");
+                var thread = default(Thread);
+                thread = new Thread(() => connector.StartBlockingListenMessages(() => RestartConnector(thread, partnerNetwork), cancellationTokenSource.Token, gateway))
+                         {
+                             IsBackground = true
+                         };
+                if (partnerConnectorsThreads.TryAdd(thread, cancellationTokenSource))
+                {
+                    thread.Start();
+                }
+                else
+                {
+                    throw new DuplicatedKeyException($"Thread with {nameof(thread.ManagedThreadId)}:{thread.ManagedThreadId} already exists!");
+                }
+                gateway.SignalAndWait();
             }
         }
 
-        private void RestartConnector(Thread thread, PartnerNetworkConfiguration partnerNetwork)
+        private void RestartConnector(Thread thread, PartnerClusterConfiguration partnerNetwork)
         {
             if (partnerConnectorsThreads.TryRemove(thread, out var tokenSource))
             {

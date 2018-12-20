@@ -5,7 +5,6 @@ using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous.Configuration;
-
 #if NETCOREAPP2_1
 using NetMQ;
 
@@ -55,12 +54,19 @@ namespace kino.Rendezvous
             var serializer = new ProtobufMessageSerializer();
             var configProvider = new RendezvousConfigurationProvider(applicationConfig.Rendezvous);
             var localSocketFactory = new LocalSocketFactory();
+            var partnerNetworksConfigProvider = new PartnerNetworksConfigurationProvider(applicationConfig.Partners);
+            var partnerNetworkConnectorManager = new PartnerNetworkConnectorManager(socketFactory,
+                                                                                    localSocketFactory,
+                                                                                    performanceCounterManager,
+                                                                                    logger,
+                                                                                    partnerNetworksConfigProvider);
             var service = new RendezvousService(leaseProvider,
                                                 synodConfigProvider,
                                                 socketFactory,
                                                 serializer,
                                                 localSocketFactory,
                                                 configProvider,
+                                                partnerNetworkConnectorManager,
                                                 performanceCounterManager,
                                                 logger);
 
