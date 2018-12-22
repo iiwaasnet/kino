@@ -56,7 +56,8 @@ namespace kino.Rendezvous
             leaderPayload = serializer.Serialize(new RendezvousNode
                                                  {
                                                      BroadcastUri = configProvider.BroadcastUri,
-                                                     UnicastUri = configProvider.UnicastUri
+                                                     UnicastUri = configProvider.UnicastUri,
+                                                     PartnerBroadcastUri = configProvider.PartnerBroadcastUri
                                                  });
             partnerClusterSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.PartnerClusterSocket);
             unicastForwardingSocket = localSocketFactory.Create<IMessage>();

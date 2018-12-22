@@ -12,7 +12,7 @@
             "missingHeartBeatsBeforeReconnect": "3",
             "intercomEndpoint": "inproc://health",
             "members": [
-                "tcp://rendezvous1.bwin.dev:7001"
+                "tcp://rendezvous1.dev:7001"
             ]
 
         },
@@ -36,7 +36,7 @@
                 "heartBeatSilenceBeforeRendezvousFailover": "00:00:05",
                 "allowedDomains": [ "*" ],
                 "cluster": [
-                    "tcp://rendezvous1.bwin.dev:8001"
+                    "tcp://rendezvous1.dev:8222"
                 ]
             }
         ]

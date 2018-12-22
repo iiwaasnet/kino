@@ -10,5 +10,8 @@ namespace kino.Messaging.Messages
 
         [ProtoMember(2)]
         public string UnicastUri { get; set; }
+
+        [ProtoMember(3)]
+        public string PartnerBroadcastUri { get; set; }
     }
 }

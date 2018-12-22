@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using C5;
-using kino.Cluster.Configuration;
 using kino.Core.Framework;
 using CoreLib = System.Collections.Generic;
 
@@ -41,8 +40,8 @@ namespace kino.Rendezvous.Configuration
 
         private PartnerClusterConfiguration GetConfiguration(PartnerNetworkConfiguration networkConfiguration)
         {
-            var tmp = new HashedLinkedList<RendezvousEndpoint>();
-            tmp.AddAll(networkConfiguration.Cluster.Select(ep => new RendezvousEndpoint("tcp://*:1", ep)));
+            var tmp = new HashedLinkedList<PartnerRendezvousEndpoint>();
+            tmp.AddAll(networkConfiguration.Cluster.Select(ep => new PartnerRendezvousEndpoint(ep)));
 
             if (tmp.Count < networkConfiguration.Cluster.Count())
             {

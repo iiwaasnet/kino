@@ -1,10 +1,13 @@
-﻿using kino.Connectivity;
+﻿using System;
+using System.Security.Cryptography;
+using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous.Configuration;
+using kino.Security;
 #if NETCOREAPP2_1
 using NetMQ;
 
@@ -55,8 +58,14 @@ namespace kino.Rendezvous
             var configProvider = new RendezvousConfigurationProvider(applicationConfig.Rendezvous);
             var localSocketFactory = new LocalSocketFactory();
             var partnerNetworksConfigProvider = new PartnerNetworksConfigurationProvider(applicationConfig.Partners);
+            var hashCodeProvider = resolver.Resolve<Func<HMAC>>() ?? (() => HMAC.Create("HMACMD5"));
+            var securityProvider = resolver.Resolve<ISecurityProvider>()
+                                ?? new SecurityProvider(hashCodeProvider,
+                                                        resolver.Resolve<IDomainScopeResolver>(),
+                                                        resolver.Resolve<IDomainPrivateKeyProvider>());
             var partnerNetworkConnectorManager = new PartnerNetworkConnectorManager(socketFactory,
                                                                                     localSocketFactory,
+                                                                                    securityProvider,
                                                                                     performanceCounterManager,
                                                                                     logger,
                                                                                     partnerNetworksConfigProvider);
