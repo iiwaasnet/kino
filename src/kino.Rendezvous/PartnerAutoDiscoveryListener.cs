@@ -26,8 +26,7 @@ namespace kino.Rendezvous
         private readonly ManualResetEvent newRendezvousConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ISendingSocket<IMessage> forwardingSocket;
-        private Task monitoringTask;
-        private Task listeningTask;
+        private Task task;
         private CancellationTokenSource tokenSource;
 
         public PartnerAutoDiscoveryListener(IPartnerRendezvousCluster rendezvousCluster,
@@ -58,19 +57,57 @@ namespace kino.Rendezvous
             heartBeatReceived.Reset();
             newRendezvousConfiguration.Reset();
 
-            monitoringTask = Task.Factory.StartNew(_ => RendezvousConnectionMonitor(tokenSource.Token),
-                                                   TaskCreationOptions.LongRunning,
-                                                   tokenSource.Token);
-            listeningTask = Task.Factory.StartNew(_ => StartListenMessages(tokenSource.Token),
-                                                  TaskCreationOptions.LongRunning,
-                                                  tokenSource.Token);
+            task = Task.Factory.StartNew(_ => RunListener(tokenSource.Token),
+                                         TaskCreationOptions.LongRunning,
+                                         tokenSource.Token);
         }
 
         public void Stop()
         {
             tokenSource.Cancel();
-            monitoringTask.Wait();
-            listeningTask.Wait();
+            task.Wait();
+        }
+
+        private void RunListener(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                try
+                {
+                    using (var tokenSource = new CancellationTokenSource())
+                    {
+                        using (var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token, tokenSource.Token))
+                        {
+                            var (monitoring, listening) = StartAutoDiscovery(linkedTokenSource.Token);
+                            monitoring.Wait(linkedTokenSource.Token);
+                            linkedTokenSource.Cancel();
+                            listening.Wait(token);
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                catch (Exception err)
+                {
+                    logger.Error(err);
+                }
+            }
+        }
+
+        private (Task Montoring, Task Listening) StartAutoDiscovery(CancellationToken token)
+        {
+            heartBeatReceived.Reset();
+            newRendezvousConfiguration.Reset();
+
+            var monitoringTask = Task.Factory.StartNew(_ => RendezvousConnectionMonitor(token),
+                                                       TaskCreationOptions.LongRunning,
+                                                       token);
+            var listeningTask = Task.Factory.StartNew(_ => StartListenMessages(token),
+                                                      TaskCreationOptions.LongRunning,
+                                                      token);
+
+            return (monitoringTask, listeningTask);
         }
 
         private void StartListenMessages(CancellationToken token)
@@ -107,23 +144,19 @@ namespace kino.Rendezvous
 
         private void RendezvousConnectionMonitor(CancellationToken token)
         {
-            while (!token.IsCancellationRequested)
+            try
             {
-                try
+                while (!token.IsCancellationRequested && !HeartBeatSilence(token))
                 {
-                    if (HeartBeatSilence(token))
-                    {
-                        Stop();
-                        Start();
-                    }
+                    ;
                 }
-                catch (OperationCanceledException)
-                {
-                }
-                catch (Exception err)
-                {
-                    logger.Error(err);
-                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
             }
         }
 
@@ -254,31 +287,31 @@ namespace kino.Rendezvous
             => allowedDomains.Contains(AllowAll)
             || securityProvider.DomainIsAllowed(message.Domain);
 
-        protected virtual bool IsDiscoverMessageRouteMessage(IMessage message)
+        private bool IsDiscoverMessageRouteMessage(IMessage message)
             => message.Equals(KinoMessages.DiscoverMessageRoute);
 
-        protected virtual bool IsRequestClusterMessageRoutesMessage(IMessage message)
+        private bool IsRequestClusterMessageRoutesMessage(IMessage message)
             => message.Equals(KinoMessages.RequestClusterMessageRoutes);
 
-        protected virtual bool IsRequestNodeMessageRoutingMessage(IMessage message)
+        private bool IsRequestNodeMessageRoutingMessage(IMessage message)
             => message.Equals(KinoMessages.RequestNodeMessageRoutes);
 
-        protected virtual bool IsUnregisterNodeMessage(IMessage message)
+        private bool IsUnregisterNodeMessage(IMessage message)
             => message.Equals(KinoMessages.UnregisterNode);
 
-        protected virtual bool IsRegisterExternalRoute(IMessage message)
+        private bool IsRegisterExternalRoute(IMessage message)
             => message.Equals(KinoMessages.RegisterExternalMessageRoute);
 
-        protected virtual bool IsUnregisterMessageRoutingMessage(IMessage message)
+        private bool IsUnregisterMessageRoutingMessage(IMessage message)
             => message.Equals(KinoMessages.UnregisterMessageRoute);
 
-        private static bool IsHeartBeat(IMessage message)
+        private bool IsHeartBeat(IMessage message)
             => message.Equals(KinoMessages.HeartBeat);
 
-        private static bool IsRendezvousNotLeader(IMessage message)
+        private bool IsRendezvousNotLeader(IMessage message)
             => message.Equals(KinoMessages.RendezvousNotLeader);
 
-        private static bool IsRendezvousReconfiguration(IMessage message)
+        private bool IsRendezvousReconfiguration(IMessage message)
             => message.Equals(KinoMessages.RendezvousConfigurationChanged);
     }
 }

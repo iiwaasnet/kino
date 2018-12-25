@@ -33,7 +33,7 @@
         "partners": [
             {
                 "networkId": "network_id",
-                "heartBeatSilenceBeforeRendezvousFailover": "00:00:05",
+                "heartBeatSilenceBeforeRendezvousFailover": "00:00:15",
                 "allowedDomains": [ "*" ],
                 "cluster": [
                     "tcp://rendezvous1.dev:8222"

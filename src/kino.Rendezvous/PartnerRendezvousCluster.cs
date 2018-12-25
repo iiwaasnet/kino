@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using C5;
 using kino.Core.Framework;
@@ -33,7 +32,12 @@ namespace kino.Rendezvous
         }
 
         public PartnerRendezvousEndpoint GetCurrentRendezvousServer()
-            => throw new NotImplementedException();
+        {
+            lock (@lock)
+            {
+                return config.First;
+            }
+        }
 
         public bool SetCurrentRendezvousServer(PartnerRendezvousEndpoint newRendezvousServer)
         {
