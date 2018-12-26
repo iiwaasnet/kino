@@ -3,7 +3,7 @@ using NetMQ;
 
 namespace kino.Connectivity
 {
-#if NETCOREAPP2_1
+#if !NET47
     public class CustomBufferPool : IBufferPool
     {
         public byte[] Take(int size)

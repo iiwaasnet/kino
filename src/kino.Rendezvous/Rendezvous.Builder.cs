@@ -8,9 +8,8 @@ using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous.Configuration;
 using kino.Security;
-#if NETCOREAPP2_1
+#if !NET47
 using NetMQ;
-
 #endif
 
 namespace kino.Rendezvous
@@ -19,18 +18,17 @@ namespace kino.Rendezvous
     {
         private IRendezvousService Build()
         {
-#if NETCOREAPP2_1
+#if !NET47
             BufferPool.SetCustomBufferPool(new CustomBufferPool());
 #endif
 
             var logger = resolver.Resolve<ILogger>();
             var applicationConfig = resolver.Resolve<RendezvousServiceConfiguration>();
             var messageWireFormatter =
-#if NETCOREAPP2_1
-                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6_1();
-#endif
 #if NET47
                 resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV5();
+#else
+                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6_1(); 
 #endif
             var socketFactory = new SocketFactory(messageWireFormatter, applicationConfig.Socket);
             var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);

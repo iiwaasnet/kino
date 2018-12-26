@@ -38,13 +38,12 @@ namespace Autofac.kino
             builder.RegisterType<MessageRouter>()
                    .As<IMessageRouter>()
                    .SingleInstance();
-#if NETCOREAPP2_1
-            builder.RegisterType<MessageWireFormatterV6_1>()
-                   .As<IMessageWireFormatter>()
-                   .SingleInstance();
-#endif
 #if NET47
             builder.RegisterType<MessageWireFormatterV5>()
+                   .As<IMessageWireFormatter>()
+                   .SingleInstance();
+#else
+            builder.RegisterType<MessageWireFormatterV6_1>()
                    .As<IMessageWireFormatter>()
                    .SingleInstance();
 #endif
