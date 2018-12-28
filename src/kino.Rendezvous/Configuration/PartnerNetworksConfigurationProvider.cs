@@ -11,7 +11,7 @@ namespace kino.Rendezvous.Configuration
         private CoreLib.IDictionary<string, PartnerClusterConfiguration> partnerClusters;
 
         public PartnerNetworksConfigurationProvider(CoreLib.IEnumerable<PartnerNetworkConfiguration> partners)
-            => partnerClusters = AddConfiguration(partners);
+            => partnerClusters = AddConfiguration(partners ?? Enumerable.Empty<PartnerNetworkConfiguration>());
 
         //TODO: Declare Event in IPartnerNetworksConfigurationProvider to fire when configuration is updated
         public void Update(CoreLib.IEnumerable<PartnerNetworkConfiguration> partners)
