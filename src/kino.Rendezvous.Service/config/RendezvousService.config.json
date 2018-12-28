@@ -36,7 +36,7 @@
                 "heartBeatSilenceBeforeRendezvousFailover": "00:00:15",
                 "allowedDomains": [ "*" ],
                 "cluster": [
-                    "tcp://rendezvous1.dev:8222"
+                    "tcp://rendezvous1.dev:9111"
                 ]
             }
         ]
