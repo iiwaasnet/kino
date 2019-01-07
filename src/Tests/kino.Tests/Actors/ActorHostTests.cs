@@ -43,19 +43,21 @@ namespace kino.Tests.Actors
             localSocketFactory = new Mock<ILocalSocketFactory>();
             receivingSocket = new Mock<ILocalSocket<IMessage>>();
             localSocketFactory.Setup(m => m.Create<IMessage>()).Returns(receivingSocket.Object);
+            localSocketFactory.Setup(m => m.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket))
+                              .Returns(localRouterSocket.Object);
+            localSocketFactory.Setup(m => m.CreateNamed<InternalRouteRegistration>(NamedSockets.InternalRegistrationSocket))
+                              .Returns((ILocalSocket<InternalRouteRegistration>) internalRegistrationSender.Object);
             asyncQueue = new Mock<IAsyncQueue<AsyncMessageContext>>();
             actorHost = new ActorHost(actorHandlersMap,
                                       asyncQueue.Object,
                                       new AsyncQueue<ActorRegistration>(),
                                       securityProvider.Object,
-                                      localRouterSocket.Object,
-                                      internalRegistrationSender.Object,
                                       localSocketFactory.Object,
                                       logger.Object);
         }
 
         [Test]
-        public void AssignActor_SendsRegisterationMessage()
+        public void AssignActor_SendsRegistrationMessage()
         {
             var partition = Guid.NewGuid().ToByteArray();
             var messageIdentifier = MessageIdentifier.Create<SimpleMessage>(partition);
@@ -265,8 +267,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<ActorRegistration>(),
                                           securityProvider.Object,
-                                          localRouterSocket.Object,
-                                          internalRegistrationSender.Object,
                                           localSocketFactory.Object,
                                           logger.Object);
                 actorHost.AssignActor(new EchoActor());
@@ -352,8 +352,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<ActorRegistration>(),
                                           securityProvider.Object,
-                                          localRouterSocket.Object,
-                                          internalRegistrationSender.Object,
                                           localSocketFactory.Object,
                                           logger.Object);
                 actorHost.AssignActor(new ExceptionActor());
@@ -394,8 +392,6 @@ namespace kino.Tests.Actors
                                           new AsyncQueue<AsyncMessageContext>(),
                                           new AsyncQueue<ActorRegistration>(),
                                           securityProvider.Object,
-                                          localRouterSocket.Object,
-                                          internalRegistrationSender.Object,
                                           localSocketFactory.Object,
                                           logger.Object);
                 actorHost.AssignActor(new ExceptionActor());

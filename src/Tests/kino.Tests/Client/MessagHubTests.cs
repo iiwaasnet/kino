@@ -25,7 +25,6 @@ namespace kino.Tests.Client
         private static readonly TimeSpan ReceiveMessageCompletionDelay = ReceiveMessageDelay + TimeSpan.FromMilliseconds(1000);
         private static readonly TimeSpan AsyncOpCompletionDelay = TimeSpan.FromSeconds(1);
         private MessageHubSocketFactory messageHubSocketFactory;
-        private string localhost = "tcp://localhost:43";
         private Mock<ISocketFactory> socketFactory;
         private Mock<ILogger> logger;
         private Mock<ICallbackHandlerStack> callbackHandlerStack;
@@ -57,6 +56,11 @@ namespace kino.Tests.Client
             scaleOutAddress = SocketEndpoint.Parse("tcp://127.0.0.1:5000", Guid.NewGuid().ToByteArray());
             scaleOutConfigurationProvider = new Mock<IScaleOutConfigurationProvider>();
             scaleOutConfigurationProvider.Setup(m => m.GetScaleOutAddress()).Returns(scaleOutAddress);
+            localSocketFactory.Setup(m => m.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket))
+                              .Returns(routerSocket.Object);
+            localSocketFactory.Setup(m => m.CreateNamed<InternalRouteRegistration>(NamedSockets.InternalRegistrationSocket))
+                              .Returns((ILocalSocket<InternalRouteRegistration>) registrationSocket.Object);
+
             messageHub = CreateMessageHub();
         }
 
@@ -197,8 +201,6 @@ namespace kino.Tests.Client
             // arrange
             var callbackHandlerStack = new CallbackHandlerStack();
             var messageHub = new MessageHub(callbackHandlerStack,
-                                            routerSocket.Object,
-                                            registrationSocket.Object,
                                             localSocketFactory.Object,
                                             scaleOutConfigurationProvider.Object,
                                             securityProvider.Object,
@@ -238,8 +240,6 @@ namespace kino.Tests.Client
             // arrange
             var callbackHandlerStack = new CallbackHandlerStack();
             var messageHub = new MessageHub(callbackHandlerStack,
-                                            routerSocket.Object,
-                                            registrationSocket.Object,
                                             localSocketFactory.Object,
                                             scaleOutConfigurationProvider.Object,
                                             securityProvider.Object,
@@ -261,9 +261,9 @@ namespace kino.Tests.Client
                 ReceiveMessageCompletionDelay.Sleep();
                 // assert
                 Assert.Throws<AggregateException>(() =>
-                                         {
-                                             var _ = promise.GetResponse().Result;
-                                         });
+                                                  {
+                                                      var _ = promise.GetResponse().Result;
+                                                  });
                 try
                 {
                     var _ = promise.GetResponse().Result;
@@ -285,8 +285,6 @@ namespace kino.Tests.Client
             // arrange
             var callbackHandlerStack = new CallbackHandlerStack();
             var messageHub = new MessageHub(callbackHandlerStack,
-                                            routerSocket.Object,
-                                            registrationSocket.Object,
                                             localSocketFactory.Object,
                                             scaleOutConfigurationProvider.Object,
                                             securityProvider.Object,
@@ -317,8 +315,6 @@ namespace kino.Tests.Client
 
         private MessageHub CreateMessageHub(bool keepRegistrationLocal = false)
             => new MessageHub(callbackHandlerStack.Object,
-                              routerSocket.Object,
-                              registrationSocket.Object,
                               localSocketFactory.Object,
                               scaleOutConfigurationProvider.Object,
                               securityProvider.Object,

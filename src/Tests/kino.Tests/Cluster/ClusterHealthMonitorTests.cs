@@ -37,6 +37,7 @@ namespace kino.Tests.Cluster
         private Mock<ILogger> logger;
         private Mock<IConnectedPeerRegistry> connectedPeerRegistry;
         private CancellationTokenSource tokenSource;
+        private Mock<ILocalSocket<IMessage>> localRouterSocket;
 
         [SetUp]
         public void Setup()
@@ -45,7 +46,7 @@ namespace kino.Tests.Cluster
             socketFactory = new Mock<ISocketFactory>();
             publisherSocket = new Mock<ISocket>();
             subscriberSocket = new Mock<ISocket>();
-            routerSocket = new Mock<ISocket>();
+            localRouterSocket = new Mock<ILocalSocket<IMessage>>();
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(routerSocket.Object);
             socketFactory.Setup(m => m.CreatePublisherSocket()).Returns(publisherSocket.Object);
             socketFactory.Setup(m => m.CreateSubscriberSocket()).Returns(subscriberSocket.Object);
@@ -65,11 +66,14 @@ namespace kino.Tests.Cluster
                      };
             logger = new Mock<ILogger>();
             connectedPeerRegistry = new Mock<IConnectedPeerRegistry>();
-            connectedPeerRegistry.Setup(m => m.GetPeersWithExpiredHeartBeat()).Returns(Enumerable.Empty<KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>>());
+            connectedPeerRegistry.Setup(m => m.GetPeersWithExpiredHeartBeat())
+                                 .Returns(Enumerable.Empty<KeyValuePair<ReceiverIdentifier, ClusterMemberMeta>>());
+            localSocketFactory.Setup(m => m.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket))
+                              .Returns(localRouterSocket.Object);
+
             clusterHealthMonitor = new ClusterHealthMonitor(socketFactory.Object,
                                                             localSocketFactory.Object,
                                                             securityProvider.Object,
-                                                            routerLocalSocket.Object,
                                                             connectedPeerRegistry.Object,
                                                             config,
                                                             logger.Object);
@@ -319,8 +323,8 @@ namespace kino.Tests.Cluster
             //
             Func<ClusterMemberMeta, bool> isPeerMetadata = meta =>
                                                                payload.Health.Uri == meta.HealthUri
-                                                               && payload.Health.HeartBeatInterval == meta.HeartBeatInterval
-                                                               && payload.Uri == meta.ScaleOutUri;
+                                                            && payload.Health.HeartBeatInterval == meta.HeartBeatInterval
+                                                            && payload.Uri == meta.ScaleOutUri;
             connectedPeerRegistry.Verify(m => m.FindOrAdd(peerIdentifier, It.Is<ClusterMemberMeta>(meta => isPeerMetadata(meta))), Times.Once);
         }
 
@@ -346,7 +350,10 @@ namespace kino.Tests.Cluster
             clusterHealthMonitor.Stop();
             //
             connectedPeerRegistry.Verify(m => m.Remove(peerIdentifier), Times.Once);
-            subscriberSocket.Verify(m => m.Disconnect(meta.HealthUri), Times.Exactly(connectionEstablished ? 1 : 0));
+            subscriberSocket.Verify(m => m.Disconnect(meta.HealthUri),
+                                    Times.Exactly(connectionEstablished
+                                                      ? 1
+                                                      : 0));
         }
 
         [Test]
@@ -427,10 +434,10 @@ namespace kino.Tests.Cluster
             clusterHealthMonitor.Stop();
             //
             Func<string, bool> isStalePeerUri = uri =>
-                                             {
-                                                 CollectionAssert.Contains(stalePeers.Select(kv => kv.Value.ScaleOutUri), uri);
-                                                 return true;
-                                             };
+                                                {
+                                                    CollectionAssert.Contains(stalePeers.Select(kv => kv.Value.ScaleOutUri), uri);
+                                                    return true;
+                                                };
 
             var callTimes = Times.Exactly(stalePeers.Count);
             socketFactory.Verify(m => m.CreateRouterSocket(), callTimes);

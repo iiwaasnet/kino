@@ -13,7 +13,6 @@ namespace kino.Rendezvous
     {
         private readonly ISocketFactory socketFactory;
         private readonly ILocalSocketFactory localSocketFactory;
-        private readonly ISecurityProvider securityProvider;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> perfCountersManager;
         private readonly ILogger logger;
         private readonly IPartnerNetworksConfigurationProvider configProvider;
@@ -21,14 +20,12 @@ namespace kino.Rendezvous
 
         public PartnerNetworkConnectorManager(ISocketFactory socketFactory,
                                               ILocalSocketFactory localSocketFactory,
-                                              ISecurityProvider securityProvider,
                                               IPerformanceCounterManager<KinoPerformanceCounters> perfCountersManager,
                                               ILogger logger,
                                               IPartnerNetworksConfigurationProvider configProvider)
         {
             this.socketFactory = socketFactory;
             this.localSocketFactory = localSocketFactory;
-            this.securityProvider = securityProvider;
             this.perfCountersManager = perfCountersManager;
             this.logger = logger;
             this.configProvider = configProvider;
@@ -48,7 +45,6 @@ namespace kino.Rendezvous
                                                 localSocketFactory,
                                                 partnerNetwork.HeartBeatSilenceBeforeRendezvousFailover,
                                                 partnerNetwork.AllowedDomains,
-                                                securityProvider,
                                                 perfCountersManager,
                                                 logger);
 

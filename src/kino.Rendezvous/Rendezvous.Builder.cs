@@ -1,15 +1,13 @@
-﻿using System;
-using System.Security.Cryptography;
-using kino.Connectivity;
+﻿using kino.Connectivity;
 using kino.Consensus;
 using kino.Consensus.Configuration;
 using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous.Configuration;
-using kino.Security;
 #if !NET47
 using NetMQ;
+
 #endif
 
 namespace kino.Rendezvous
@@ -28,7 +26,7 @@ namespace kino.Rendezvous
 #if NET47
                 resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV5();
 #else
-                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6_1(); 
+                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6_1();
 #endif
             var socketFactory = new SocketFactory(messageWireFormatter, applicationConfig.Socket);
             var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);
@@ -56,14 +54,9 @@ namespace kino.Rendezvous
             var configProvider = new RendezvousConfigurationProvider(applicationConfig.Rendezvous);
             var localSocketFactory = new LocalSocketFactory();
             var partnerNetworksConfigProvider = new PartnerNetworksConfigurationProvider(applicationConfig.Partners);
-            var hashCodeProvider = resolver.Resolve<Func<HMAC>>() ?? (() => HMAC.Create("HMACMD5"));
-            var securityProvider = resolver.Resolve<ISecurityProvider>()
-                                ?? new SecurityProvider(hashCodeProvider,
-                                                        resolver.Resolve<IDomainScopeResolver>(),
-                                                        resolver.Resolve<IDomainPrivateKeyProvider>());
+
             var partnerNetworkConnectorManager = new PartnerNetworkConnectorManager(socketFactory,
                                                                                     localSocketFactory,
-                                                                                    securityProvider,
                                                                                     performanceCounterManager,
                                                                                     logger,
                                                                                     partnerNetworksConfigProvider);

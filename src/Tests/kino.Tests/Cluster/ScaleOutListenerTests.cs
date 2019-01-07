@@ -32,6 +32,7 @@ namespace kino.Tests.Cluster
         private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
         private SocketConfiguration socketConfig;
         private CancellationTokenSource tokenSource;
+        private Mock<ILocalSocketFactory> localSocketFactory;
 
         [SetUp]
         public void Setup()
@@ -56,8 +57,12 @@ namespace kino.Tests.Cluster
             scaleOutConfigurationManager.Setup(m => m.GetScaleOutAddressRange()).Returns(scaleOutAddresses);
             scaleOutConfigurationManager.Setup(m => m.GetScaleOutReceiveMessageQueueLength()).Returns(1000);
             securityProvider = new Mock<ISecurityProvider>();
+            localSocketFactory = new Mock<ILocalSocketFactory>();
+            localSocketFactory.Setup(m => m.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket))
+                              .Returns((ILocalSocket<IMessage>) localRouterSocket.Object);
+
             scaleOutListener = new ScaleOutListener(socketFactory.Object,
-                                                    localRouterSocket.Object,
+                                                    localSocketFactory.Object,
                                                     scaleOutConfigurationManager.Object,
                                                     securityProvider.Object,
                                                     performanceCounterManager.Object,

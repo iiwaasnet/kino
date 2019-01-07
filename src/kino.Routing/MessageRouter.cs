@@ -61,8 +61,8 @@ namespace kino.Routing
             this.securityProvider = securityProvider;
             localRouterSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket);
             internalRegistrationsReceiver = localSocketFactory.CreateNamed<InternalRouteRegistration>(NamedSockets.InternalRegistrationSocket);
-            this.localRouterSocket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterLocalSocketSendRate);
-            this.localRouterSocket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterLocalSocketReceiveRate);
+            localRouterSocket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterLocalSocketSendRate);
+            localRouterSocket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterLocalSocketReceiveRate);
             this.internalRegistrationHandler = internalRegistrationHandler;
             this.roundRobinDestinationList = roundRobinDestinationList;
         }

@@ -49,6 +49,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Server", "Samples\Server\Se
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Rendezvous.Service", "kino.Rendezvous.Service\kino.Rendezvous.Service.csproj", "{C8204FAF-FF56-448D-8BED-160B4261F821}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "kino.Tests", "Tests\kino.Tests\kino.Tests.csproj", "{7B2914B2-CFCA-42A7-A858-3CCE3227CAFB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -119,6 +121,10 @@ Global
 		{C8204FAF-FF56-448D-8BED-160B4261F821}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C8204FAF-FF56-448D-8BED-160B4261F821}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C8204FAF-FF56-448D-8BED-160B4261F821}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7B2914B2-CFCA-42A7-A858-3CCE3227CAFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7B2914B2-CFCA-42A7-A858-3CCE3227CAFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7B2914B2-CFCA-42A7-A858-3CCE3227CAFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7B2914B2-CFCA-42A7-A858-3CCE3227CAFB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -128,6 +134,7 @@ Global
 		{DACFA410-FC1E-4EFB-9574-575DCEC69306} = {6F259B2B-7164-4427-A89C-12254AE91EF3}
 		{E43E69E8-0C92-4694-9E95-F1277D34FFAD} = {B3967666-2296-4B28-BFD8-0ED4326E29C7}
 		{E52CD781-EA8B-4D12-87E6-617F6B39711C} = {B3967666-2296-4B28-BFD8-0ED4326E29C7}
+		{7B2914B2-CFCA-42A7-A858-3CCE3227CAFB} = {0C6B7BAF-6F77-4352-92C7-A8F3F0337896}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5FDFCACD-F42D-4815-B433-157C7483E51E}

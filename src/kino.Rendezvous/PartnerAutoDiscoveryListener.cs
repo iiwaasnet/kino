@@ -20,8 +20,7 @@ namespace kino.Rendezvous
         private readonly IPartnerRendezvousCluster rendezvousCluster;
         private readonly ISocketFactory socketFactory;
         private readonly TimeSpan heartBeatSilenceBeforeRendezvousFailover;
-        private readonly IEnumerable<string> allowedDomains;
-        private readonly ISecurityProvider securityProvider;
+        private readonly HashSet<string> allowedDomains;
         private readonly ManualResetEvent heartBeatReceived;
         private readonly ManualResetEvent newRendezvousConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
@@ -34,7 +33,6 @@ namespace kino.Rendezvous
                                             ILocalSocketFactory localSocketFactory,
                                             TimeSpan heartBeatSilenceBeforeRendezvousFailover,
                                             IEnumerable<string> allowedDomains,
-                                            ISecurityProvider securityProvider,
                                             IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                             ILogger logger)
         {
@@ -44,8 +42,7 @@ namespace kino.Rendezvous
             this.rendezvousCluster = rendezvousCluster;
             this.socketFactory = socketFactory;
             this.heartBeatSilenceBeforeRendezvousFailover = heartBeatSilenceBeforeRendezvousFailover;
-            this.allowedDomains = allowedDomains;
-            this.securityProvider = securityProvider;
+            this.allowedDomains = new HashSet<string>(allowedDomains);
             heartBeatReceived = new ManualResetEvent(false);
             newRendezvousConfiguration = new ManualResetEvent(false);
         }
@@ -285,7 +282,7 @@ namespace kino.Rendezvous
 
         private bool DomainIsAllowed(IMessage message)
             => allowedDomains.Contains(AllowAll)
-            || securityProvider.DomainIsAllowed(message.Domain);
+            || allowedDomains.Contains(message.Domain);
 
         private bool IsDiscoverMessageRouteMessage(IMessage message)
             => message.Equals(KinoMessages.DiscoverMessageRoute);

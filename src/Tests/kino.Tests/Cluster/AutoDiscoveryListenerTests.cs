@@ -35,6 +35,7 @@ namespace kino.Tests.Cluster
         private RendezvousEndpoint[] rendezvousEndpoints;
         private int currentRendezvousIndex;
         private SocketEndpoint scaleOutAddress;
+        private Mock<ILocalSocketFactory> localSocketFactory;
 
         [SetUp]
         public void Setup()
@@ -67,12 +68,16 @@ namespace kino.Tests.Cluster
             logger = new Mock<ILogger>();
             restartRequestHandler = new Mock<Action>();
             gateway = new Barrier(1);
+            localSocketFactory = new Mock<ILocalSocketFactory>();
+            localSocketFactory.Setup(m => m.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket))
+                              .Returns(localRouterSocket.Object);
+
             autoDiscoveryListener = new AutoDiscoveryListener(rendezvousCluster.Object,
                                                               socketFactory.Object,
+                                                              localSocketFactory.Object,
                                                               scaleOutConfigurationProvider.Object,
                                                               membershipConfiguration,
                                                               performanceCounterManager.Object,
-                                                              localRouterSocket.Object,
                                                               logger.Object);
         }
 
