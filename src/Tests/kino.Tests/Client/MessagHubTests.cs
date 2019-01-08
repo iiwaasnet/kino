@@ -31,7 +31,7 @@ namespace kino.Tests.Client
         private Mock<ISecurityProvider> securityProvider;
         private MessageHub messageHub;
         private Mock<ILocalSocket<IMessage>> routerSocket;
-        private Mock<ILocalSendingSocket<InternalRouteRegistration>> registrationSocket;
+        private Mock<ILocalSocket<InternalRouteRegistration>> registrationSocket;
         private SocketEndpoint scaleOutAddress;
         private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
         private Mock<ILocalSocketFactory> localSocketFactory;
@@ -48,7 +48,7 @@ namespace kino.Tests.Client
             securityProvider = new Mock<ISecurityProvider>();
             securityProvider.Setup(m => m.DomainIsAllowed(It.IsAny<string>())).Returns(true);
             routerSocket = new Mock<ILocalSocket<IMessage>>();
-            registrationSocket = new Mock<ILocalSendingSocket<InternalRouteRegistration>>();
+            registrationSocket = new Mock<ILocalSocket<InternalRouteRegistration>>();
             localSocketFactory = new Mock<ILocalSocketFactory>();
             receivingSocket = new Mock<ILocalSocket<IMessage>>();
             receivingSocket.Setup(m => m.CanReceive()).Returns(new ManualResetEvent(false));
@@ -59,7 +59,7 @@ namespace kino.Tests.Client
             localSocketFactory.Setup(m => m.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket))
                               .Returns(routerSocket.Object);
             localSocketFactory.Setup(m => m.CreateNamed<InternalRouteRegistration>(NamedSockets.InternalRegistrationSocket))
-                              .Returns((ILocalSocket<InternalRouteRegistration>) registrationSocket.Object);
+                              .Returns(registrationSocket.Object);
 
             messageHub = CreateMessageHub();
         }

@@ -24,7 +24,7 @@ namespace kino.Tests.Cluster
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private Mock<ILogger> logger;
         private Mock<ISocketFactory> socketFactory;
-        private Mock<ILocalSendingSocket<IMessage>> localRouterSocket;
+        private Mock<ILocalSocket<IMessage>> localRouterSocket;
         private Mock<IScaleOutConfigurationManager> scaleOutConfigurationManager;
         private Mock<ISecurityProvider> securityProvider;
         private Mock<ISocket> frontEndSocket;
@@ -47,7 +47,7 @@ namespace kino.Tests.Cluster
             var perfCounter = new Mock<IPerformanceCounter>();
             performanceCounterManager.Setup(m => m.GetCounter(It.IsAny<KinoPerformanceCounters>())).Returns(perfCounter.Object);
             logger = new Mock<ILogger>();
-            localRouterSocket = new Mock<ILocalSendingSocket<IMessage>>();
+            localRouterSocket = new Mock<ILocalSocket<IMessage>>();
             scaleOutConfigurationManager = new Mock<IScaleOutConfigurationManager>();
             scaleOutAddresses = new[]
                                 {
@@ -59,7 +59,7 @@ namespace kino.Tests.Cluster
             securityProvider = new Mock<ISecurityProvider>();
             localSocketFactory = new Mock<ILocalSocketFactory>();
             localSocketFactory.Setup(m => m.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket))
-                              .Returns((ILocalSocket<IMessage>) localRouterSocket.Object);
+                              .Returns(localRouterSocket.Object);
 
             scaleOutListener = new ScaleOutListener(socketFactory.Object,
                                                     localSocketFactory.Object,

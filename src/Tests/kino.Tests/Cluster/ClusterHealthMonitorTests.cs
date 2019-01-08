@@ -32,7 +32,6 @@ namespace kino.Tests.Cluster
         private Mock<ILocalSocketFactory> localSocketFactory;
         private Mock<ILocalSocket<IMessage>> multiplexingSocket;
         private Mock<ISecurityProvider> securityProvider;
-        private Mock<ILocalSendingSocket<IMessage>> routerLocalSocket;
         private ClusterHealthMonitorConfiguration config;
         private Mock<ILogger> logger;
         private Mock<IConnectedPeerRegistry> connectedPeerRegistry;
@@ -46,6 +45,7 @@ namespace kino.Tests.Cluster
             socketFactory = new Mock<ISocketFactory>();
             publisherSocket = new Mock<ISocket>();
             subscriberSocket = new Mock<ISocket>();
+            routerSocket = new Mock<ISocket>();
             localRouterSocket = new Mock<ILocalSocket<IMessage>>();
             socketFactory.Setup(m => m.CreateRouterSocket()).Returns(routerSocket.Object);
             socketFactory.Setup(m => m.CreatePublisherSocket()).Returns(publisherSocket.Object);
@@ -58,7 +58,6 @@ namespace kino.Tests.Cluster
             securityProvider = new Mock<ISecurityProvider>();
             var pingDomain = Guid.NewGuid().ToString();
             securityProvider.Setup(m => m.GetDomain(It.IsAny<byte[]>())).Returns(pingDomain);
-            routerLocalSocket = new Mock<ILocalSendingSocket<IMessage>>();
             config = new ClusterHealthMonitorConfiguration
                      {
                          IntercomEndpoint = new Uri("tcp://127.0.0.1:8087"),
@@ -410,7 +409,7 @@ namespace kino.Tests.Cluster
 
                                                                return false;
                                                            };
-            routerLocalSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isUnregisterNodeMessage(msg))), Times.Exactly(deadPeers.Count));
+            localRouterSocket.Verify(m => m.Send(It.Is<IMessage>(msg => isUnregisterNodeMessage(msg))), Times.Exactly(deadPeers.Count));
         }
 
         [Test]

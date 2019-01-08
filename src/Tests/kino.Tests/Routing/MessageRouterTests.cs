@@ -32,7 +32,7 @@ namespace kino.Tests.Routing
         private Mock<ILogger> logger;
         private Mock<IClusterHealthMonitor> clusterHealthMonitor;
         private Mock<IInternalMessageRouteRegistrationHandler> internalRegistrationHandler;
-        private Mock<ILocalReceivingSocket<InternalRouteRegistration>> internalRegistrationsReceiver;
+        private Mock<ILocalSocket<InternalRouteRegistration>> internalRegistrationsReceiver;
         private Mock<IScaleOutConfigurationProvider> scaleOutConfigurationProvider;
         private Mock<IClusterServices> clusterServices;
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> perfCounterManager;
@@ -68,7 +68,7 @@ namespace kino.Tests.Routing
             securityProvider = new Mock<ISecurityProvider>();
             localRouterSocket = new Mock<ILocalSocket<IMessage>>();
             localRouterSocket.Setup(m => m.CanReceive()).Returns(new ManualResetEventSlim(false).WaitHandle);
-            internalRegistrationsReceiver = new Mock<ILocalReceivingSocket<InternalRouteRegistration>>();
+            internalRegistrationsReceiver = new Mock<ILocalSocket<InternalRouteRegistration>>();
             internalRegistrationsReceiver.Setup(m => m.CanReceive()).Returns(new ManualResetEventSlim(false).WaitHandle);
             internalRegistrationHandler = new Mock<IInternalMessageRouteRegistrationHandler>();
             clusterHealthMonitor = new Mock<IClusterHealthMonitor>();
@@ -82,7 +82,7 @@ namespace kino.Tests.Routing
             localSocketFactory.Setup(m => m.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket))
                               .Returns(localRouterSocket.Object);
             localSocketFactory.Setup(m => m.CreateNamed<InternalRouteRegistration>(NamedSockets.InternalRegistrationSocket))
-                              .Returns((ILocalSocket<InternalRouteRegistration>) internalRegistrationsReceiver.Object);
+                              .Returns(internalRegistrationsReceiver.Object);
 
             messageRouter = CreateMessageRouter();
         }
@@ -117,7 +117,7 @@ namespace kino.Tests.Routing
         }
 
         [Test]
-        public void IfLocalRouterSocketIsReadyToReceive_ItsTryReceiveMethodIsCalled()
+        public void IfLocalRouterSocketIsReadyToReceive_ItsAsWellAsInternalRegistrationsSocketTryReceiveMethodIsCalled()
         {
             internalRegistrationsReceiver.Setup(m => m.CanReceive())
                                          .Returns(new ManualResetEventSlim(false).WaitHandle);
@@ -138,11 +138,11 @@ namespace kino.Tests.Routing
             messageRouter.Stop();
             //
             localRouterSocket.Verify(m => m.TryReceive(), Times.Once);
-            internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Never);
+            internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Once);
         }
 
         [Test]
-        public void IfInternalRegistrationsReceiverIsReadyToReceive_ItsTryReceiveMethodIsCalled()
+        public void IfInternalRegistrationsReceiverIsReadyToReceive_ItsAsWellAsLocalRouterSocketTryReceiveMethodIsCalled()
         {
             var canReceiveWait = new ManualResetEventSlim(true);
             var tryReceiveWait = new ManualResetEventSlim(false);
@@ -161,7 +161,7 @@ namespace kino.Tests.Routing
             messageRouter.Stop();
             //
             internalRegistrationsReceiver.Verify(m => m.TryReceive(), Times.Once);
-            localRouterSocket.Verify(m => m.TryReceive(), Times.Never);
+            localRouterSocket.Verify(m => m.TryReceive(), Times.Once);
         }
 
         [Test]
