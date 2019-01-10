@@ -64,14 +64,14 @@ namespace kino.Consensus
             {
                 heartBeating = StartHeartBeating();
 
-                receiving = Task.Factory.StartNew(_ => SafeExecute(() => ReceiveMessages(cancellationTokenSource.Token, gateway)),
+                receiving = Task.Factory.StartNew(_ => SyntaxSugar.SafeExecuteUntilCanceled(() => ReceiveMessages(cancellationTokenSource.Token, gateway), logger),
                                                   cancellationTokenSource.Token,
                                                   TaskCreationOptions.LongRunning);
 
-                sending = Task.Factory.StartNew(_ => SafeExecute(() => SendMessages(cancellationTokenSource.Token, gateway)),
+                sending = Task.Factory.StartNew(_ => SyntaxSugar.SafeExecuteUntilCanceled(() => SendMessages(cancellationTokenSource.Token, gateway), logger),
                                                 cancellationTokenSource.Token,
                                                 TaskCreationOptions.LongRunning);
-                notifyListeners = Task.Factory.StartNew(_ => SafeExecute(() => ForwardIncomingMessages(cancellationTokenSource.Token, gateway)),
+                notifyListeners = Task.Factory.StartNew(_ => SyntaxSugar.SafeExecuteUntilCanceled(() => ForwardIncomingMessages(cancellationTokenSource.Token, gateway), logger),
                                                         cancellationTokenSource.Token,
                                                         TaskCreationOptions.LongRunning);
                 return gateway.SignalAndWait(startTimeout, cancellationTokenSource.Token);
@@ -131,7 +131,7 @@ namespace kino.Consensus
 
                 foreach (var message in outMessageQueue.GetConsumingEnumerable(token))
                 {
-                    socket.SendMessage(message);
+                    socket.Send(message);
                 }
             }
         }
@@ -146,7 +146,7 @@ namespace kino.Consensus
                 {
                     try
                     {
-                        var message = socket.ReceiveMessage(token);
+                        var message = socket.Receive(token);
                         if (message != null)
                         {
                             if (!ProcessServiceMessage(message, socket))
@@ -263,7 +263,7 @@ namespace kino.Consensus
                                              OldUri = oldUri,
                                              NewUri = newUri
                                          }).As<Message>();
-            intercomSocket.SendMessage(message);
+            intercomSocket.Send(message);
         }
 
         private void SendHeartBeat()
@@ -283,6 +283,7 @@ namespace kino.Consensus
 
                 logger.Info($"{nameof(IntercomMessageHub)} connected to: {node.Uri}");
             }
+
             if (ShouldDoHeartBeating())
             {
                 socket.Connect(synodConfigProvider.IntercomEndpoint, true);
@@ -330,24 +331,9 @@ namespace kino.Consensus
         }
 
         private void Unsubscribe(Listener listener)
-            => subscriptions.TryRemove(listener, out var _);
+            => subscriptions.TryRemove(listener, out _);
 
         private bool ShouldDoHeartBeating()
             => synodConfigProvider.Synod.Count() > 1;
-
-        private void SafeExecute(Action wrappedMethod)
-        {
-            try
-            {
-                wrappedMethod();
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception err)
-            {
-                logger.Error(err);
-            }
-        }
     }
 }

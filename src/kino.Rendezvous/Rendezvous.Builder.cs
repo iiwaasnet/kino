@@ -5,8 +5,7 @@ using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous.Configuration;
-
-#if NETCOREAPP2_1
+#if !NET47
 using NetMQ;
 
 #endif
@@ -17,18 +16,17 @@ namespace kino.Rendezvous
     {
         private IRendezvousService Build()
         {
-#if NETCOREAPP2_1
+#if !NET47
             BufferPool.SetCustomBufferPool(new CustomBufferPool());
 #endif
 
             var logger = resolver.Resolve<ILogger>();
             var applicationConfig = resolver.Resolve<RendezvousServiceConfiguration>();
             var messageWireFormatter =
-#if NETCOREAPP2_1
-                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6_1();
-#endif
 #if NET47
                 resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV5();
+#else
+                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6_1();
 #endif
             var socketFactory = new SocketFactory(messageWireFormatter, applicationConfig.Socket);
             var synodConfigProvider = new SynodConfigurationProvider(applicationConfig.Synod);
@@ -54,11 +52,21 @@ namespace kino.Rendezvous
 
             var serializer = new ProtobufMessageSerializer();
             var configProvider = new RendezvousConfigurationProvider(applicationConfig.Rendezvous);
+            var localSocketFactory = new LocalSocketFactory();
+            var partnerNetworksConfigProvider = new PartnerNetworksConfigurationProvider(applicationConfig.Partners);
+
+            var partnerNetworkConnectorManager = new PartnerNetworkConnectorManager(socketFactory,
+                                                                                    localSocketFactory,
+                                                                                    performanceCounterManager,
+                                                                                    logger,
+                                                                                    partnerNetworksConfigProvider);
             var service = new RendezvousService(leaseProvider,
                                                 synodConfigProvider,
                                                 socketFactory,
                                                 serializer,
+                                                localSocketFactory,
                                                 configProvider,
+                                                partnerNetworkConnectorManager,
                                                 performanceCounterManager,
                                                 logger);
 

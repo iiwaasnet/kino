@@ -3,7 +3,8 @@
         "rendezvous": {
             "broadcastUri": "tcp://*:8001",
             "unicastUri": "tcp://*:8011",
-            "heartBeatInterval": "00:00:05"
+            "heartBeatInterval": "00:00:05",
+            "partnerBroadcastUri": "tcp://*:8111"
         },
         "synod": {
             "localNode": "tcp://*:7001",
@@ -11,7 +12,7 @@
             "missingHeartBeatsBeforeReconnect": "3",
             "intercomEndpoint": "inproc://health",
             "members": [
-                "tcp://rendezvous1.bwin.dev:7001"
+                "tcp://rendezvous1.dev:7001"
             ]
 
         },
@@ -28,6 +29,16 @@
             "clockDrift": "00:00:00.100",
             "messageRoundtrip": "00:00:00.400",
             "nodeResponseTimeout": "00:00:00.200"
-        }
+        },
+        "partners": [
+            {
+                "networkId": "network_id",
+                "heartBeatSilenceBeforeRendezvousFailover": "00:00:15",
+                "allowedDomains": [ "*" ],
+                "cluster": [
+                    "tcp://rendezvous1.dev:9111"
+                ]
+            }
+        ]
     }
 }

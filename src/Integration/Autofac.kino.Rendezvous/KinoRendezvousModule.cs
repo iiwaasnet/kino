@@ -12,13 +12,12 @@ namespace Autofac.kino.Rendezvous
     {
         protected override void Load(ContainerBuilder builder)
         {
-#if NETCOREAPP2_1
-            builder.RegisterType<MessageWireFormatterV6_1>()
-                   .As<IMessageWireFormatter>()
-                   .SingleInstance();
-#endif
 #if NET47
             builder.RegisterType<MessageWireFormatterV5>()
+                   .As<IMessageWireFormatter>()
+                   .SingleInstance();
+#else
+            builder.RegisterType<MessageWireFormatterV6_1>()
                    .As<IMessageWireFormatter>()
                    .SingleInstance();
 #endif

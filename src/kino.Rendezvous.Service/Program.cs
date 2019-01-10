@@ -11,6 +11,7 @@ namespace kino.Rendezvous.Service
         {
             var builder = new ContainerBuilder();
             builder.RegisterModule<MainModule>();
+            builder.RegisterModule<SecurityModule>();
             var container = builder.Build();
 
             var rendezvousService = container.Resolve<IRendezvousService>();

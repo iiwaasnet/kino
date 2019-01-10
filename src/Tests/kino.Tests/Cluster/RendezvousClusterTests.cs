@@ -10,21 +10,18 @@ namespace kino.Tests.Cluster
 {
     public class RendezvousClusterTests
     {
-        private Mock<IConfigurationStorage<RendezvousClusterConfiguration>> configurationStorage;
         private RendezvousCluster rendezvousCluster;
         private RendezvousClusterConfiguration cluster;
 
         [SetUp]
         public void Setup()
         {
-            configurationStorage = new Mock<IConfigurationStorage<RendezvousClusterConfiguration>>();
             cluster = new RendezvousClusterConfiguration
                       {
                           Cluster = Randomizer.Int32(3, 6)
                                               .Produce(i => new RendezvousEndpoint($"tcp://*:808{i}", $"tcp://*:909{i}"))
                       };
-            configurationStorage.Setup(m => m.Read()).Returns(cluster);
-            rendezvousCluster = new RendezvousCluster(configurationStorage.Object);
+            rendezvousCluster = new RendezvousCluster(cluster.Cluster);
         }
 
         [Test]
@@ -46,7 +43,6 @@ namespace kino.Tests.Cluster
                                                      .Produce(i => new RendezvousEndpoint($"tcp://*:8{i}8".ParseAddress().ToSocketAddress(),
                                                                                           $"tcp://*:9{i}9".ParseAddress().ToSocketAddress()))
                              };
-            configurationStorage.Setup(m => m.Read()).Returns(newCluster);
             //
             rendezvousCluster.Reconfigure(newCluster.Cluster);
             //

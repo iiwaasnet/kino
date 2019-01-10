@@ -10,6 +10,6 @@ namespace kino.Cluster.Configuration
 
         public RouteDiscoveryConfiguration RouteDiscovery { get; set; }
 
-        public bool RunAsStandalone { get; set; }        
+        public bool RunAsStandalone { get; set; }
     }
 }

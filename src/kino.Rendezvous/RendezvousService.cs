@@ -22,18 +22,24 @@ namespace kino.Rendezvous
         private readonly Node localNode;
         private Task messageProcessing;
         private Task heartBeating;
+        private Task unicastMessageReceiving;
         private readonly IRendezvousConfigurationProvider configProvider;
+        private readonly IPartnerNetworkConnectorManager partnerNetworkConnectorManager;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly IMessageSerializer serializer;
         private readonly ILogger logger;
         private readonly byte[] leaderPayload;
         private readonly IMessage pongMessage;
+        private readonly ILocalReceivingSocket<IMessage> partnerClusterSocket;
+        private readonly ILocalSocket<IMessage> unicastForwardingSocket;
 
         public RendezvousService(ILeaseProvider leaseProvider,
                                  ISynodConfigurationProvider synodConfigProvider,
                                  ISocketFactory socketFactory,
                                  IMessageSerializer serializer,
+                                 ILocalSocketFactory localSocketFactory,
                                  IRendezvousConfigurationProvider configProvider,
+                                 IPartnerNetworkConnectorManager partnerNetworkConnectorManager,
                                  IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                  ILogger logger)
         {
@@ -43,36 +49,45 @@ namespace kino.Rendezvous
             localNode = synodConfigProvider.LocalNode;
             this.leaseProvider = leaseProvider;
             this.configProvider = configProvider;
+            this.partnerNetworkConnectorManager = partnerNetworkConnectorManager;
             this.performanceCounterManager = performanceCounterManager;
             cancellationTokenSource = new CancellationTokenSource();
             pongMessage = Message.Create(new PongMessage());
             leaderPayload = serializer.Serialize(new RendezvousNode
                                                  {
                                                      BroadcastUri = configProvider.BroadcastUri,
-                                                     UnicastUri = configProvider.UnicastUri
+                                                     UnicastUri = configProvider.UnicastUri,
+                                                     PartnerBroadcastUri = configProvider.PartnerBroadcastUri
                                                  });
+            partnerClusterSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.PartnerClusterSocket);
+            unicastForwardingSocket = localSocketFactory.Create<IMessage>();
         }
 
         public bool Start(TimeSpan startTimeout)
         {
-            const int participantCount = 3;
+            const int participantCount = 4;
             using (var gateway = new Barrier(participantCount))
             {
                 messageProcessing = Task.Factory.StartNew(_ => ProcessMessages(cancellationTokenSource.Token, gateway),
                                                           cancellationTokenSource.Token,
                                                           TaskCreationOptions.LongRunning);
+                unicastMessageReceiving = Task.Factory.StartNew(_ => ReceiveUnicastMessages(cancellationTokenSource.Token, gateway),
+                                                                cancellationTokenSource.Token,
+                                                                TaskCreationOptions.LongRunning);
                 heartBeating = Task.Factory.StartNew(_ => SendHeartBeat(cancellationTokenSource.Token, gateway),
                                                      cancellationTokenSource.Token,
                                                      TaskCreationOptions.LongRunning);
-
+                partnerNetworkConnectorManager.StartConnectors();
                 return gateway.SignalAndWait(startTimeout, cancellationTokenSource.Token);
             }
         }
 
         public void Stop()
         {
+            partnerNetworkConnectorManager.StopConnectors();
             cancellationTokenSource.Cancel();
             messageProcessing?.Wait();
+            unicastMessageReceiving?.Wait();
             heartBeating?.Wait();
             leaseProvider.Dispose();
         }
@@ -99,8 +114,9 @@ namespace kino.Rendezvous
                                                   : CreateNotLeaderMessage();
                                 if (message != null)
                                 {
-                                    heartBeatSocket.SendMessage(message);
+                                    heartBeatSocket.Send(message);
                                 }
+
                                 wait.Wait(configProvider.HeartBeatInterval, token);
                             }
                             catch (OperationCanceledException)
@@ -129,28 +145,65 @@ namespace kino.Rendezvous
             return lease != null && Unsafe.ArraysEqual(lease.OwnerIdentity, localNode.SocketIdentity);
         }
 
-        private void ProcessMessages(CancellationToken token, Barrier gateway)
+        private void ReceiveUnicastMessages(CancellationToken token, Barrier gateway)
         {
             try
             {
-                using (var broadcastSocket = CreateBroadcastSocket())
+                using (var unicastSocket = CreateUnicastSocket())
                 {
-                    using (var unicastSocket = CreateUnicastSocket())
+                    gateway.SignalAndWait(token);
+                    while (!token.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            var message = unicastSocket.Receive(token);
+                            if (message != null)
+                            {
+                                unicastForwardingSocket.Send(message);
+                            }
+                        }
+                        catch (Exception err)
+                        {
+                            logger.Error(err);
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception err)
+            {
+                logger.Error(err);
+            }
+        }
+
+        private void ProcessMessages(CancellationToken token, Barrier gateway)
+        {
+            const int cancellationToken = 2;
+            try
+            {
+                var waitHandles = new[]
+                                  {
+                                      unicastForwardingSocket.CanReceive(),
+                                      partnerClusterSocket.CanReceive(),
+                                      token.WaitHandle
+                                  };
+
+                using (var partnerBroadcastSocket = CreatePartnerBroadcastSocket())
+                {
+                    using (var broadcastSocket = CreateBroadcastSocket())
                     {
                         gateway.SignalAndWait(token);
                         while (!token.IsCancellationRequested)
                         {
                             try
                             {
-                                var message = unicastSocket.ReceiveMessage(token);
-
-                                message = NodeIsLeader()
-                                              ? ProcessMessage(message)
-                                              : CreateNotLeaderMessage();
-
-                                if (message != null)
+                                var receiverId = WaitHandle.WaitAny(waitHandles);
+                                if (receiverId != cancellationToken)
                                 {
-                                    broadcastSocket.SendMessage(message);
+                                    TryProcessMessage(unicastForwardingSocket, broadcastSocket, partnerBroadcastSocket);
+                                    TryProcessMessage(partnerClusterSocket, broadcastSocket);
                                 }
                             }
                             catch (Exception err)
@@ -167,6 +220,22 @@ namespace kino.Rendezvous
             catch (Exception err)
             {
                 logger.Error(err);
+            }
+
+            void TryProcessMessage(ILocalReceivingSocket<IMessage> receivingSocket, params ISocket[] sockets)
+            {
+                var message = receivingSocket.TryReceive();
+                if (message != null)
+                {
+                    message = NodeIsLeader()
+                                  ? ProcessMessage(message)
+                                  : CreateNotLeaderMessage();
+
+                    foreach (var sendingSocket in sockets)
+                    {
+                        SyntaxSugar.SafeExecute(() => sendingSocket.Send(message), logger);
+                    }
+                }
             }
         }
 
@@ -210,6 +279,17 @@ namespace kino.Rendezvous
             socket.Bind(configProvider.BroadcastUri);
 
             logger.Info($"Broadcasting cluster messages started on: {configProvider.BroadcastUri}");
+
+            return socket;
+        }
+
+        private ISocket CreatePartnerBroadcastSocket()
+        {
+            var socket = socketFactory.CreatePublisherSocket();
+            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.RendezvousBroadcastSocketSendRate);
+            socket.Bind(configProvider.PartnerBroadcastUri);
+
+            logger.Info($"Broadcasting cluster messages started on: {configProvider.PartnerBroadcastUri}");
 
             return socket;
         }

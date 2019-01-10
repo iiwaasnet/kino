@@ -4,10 +4,8 @@ using kino.Core.Diagnostics.Performance;
 
 namespace kino.Connectivity
 {
-    public interface ILocalSendingSocket<T> : IEquatable<ILocalSendingSocket<T>>, IDestination
+    public interface ILocalSendingSocket<T> : ISendingSocket<T>, IEquatable<ILocalSendingSocket<T>>, IDestination
     {
-        void Send(T message);
-
         IPerformanceCounter SendRate { get; set; }
     }
 }

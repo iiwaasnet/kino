@@ -24,7 +24,7 @@ namespace kino.Tests.Cluster
         private Mock<IPerformanceCounterManager<KinoPerformanceCounters>> performanceCounterManager;
         private Mock<ILogger> logger;
         private Mock<ISocketFactory> socketFactory;
-        private Mock<ILocalSendingSocket<IMessage>> localRouterSocket;
+        private Mock<ILocalSocket<IMessage>> localRouterSocket;
         private Mock<IScaleOutConfigurationManager> scaleOutConfigurationManager;
         private Mock<ISecurityProvider> securityProvider;
         private Mock<ISocket> frontEndSocket;
@@ -32,6 +32,7 @@ namespace kino.Tests.Cluster
         private readonly TimeSpan AsyncOp = TimeSpan.FromMilliseconds(500);
         private SocketConfiguration socketConfig;
         private CancellationTokenSource tokenSource;
+        private Mock<ILocalSocketFactory> localSocketFactory;
 
         [SetUp]
         public void Setup()
@@ -46,7 +47,7 @@ namespace kino.Tests.Cluster
             var perfCounter = new Mock<IPerformanceCounter>();
             performanceCounterManager.Setup(m => m.GetCounter(It.IsAny<KinoPerformanceCounters>())).Returns(perfCounter.Object);
             logger = new Mock<ILogger>();
-            localRouterSocket = new Mock<ILocalSendingSocket<IMessage>>();
+            localRouterSocket = new Mock<ILocalSocket<IMessage>>();
             scaleOutConfigurationManager = new Mock<IScaleOutConfigurationManager>();
             scaleOutAddresses = new[]
                                 {
@@ -56,8 +57,12 @@ namespace kino.Tests.Cluster
             scaleOutConfigurationManager.Setup(m => m.GetScaleOutAddressRange()).Returns(scaleOutAddresses);
             scaleOutConfigurationManager.Setup(m => m.GetScaleOutReceiveMessageQueueLength()).Returns(1000);
             securityProvider = new Mock<ISecurityProvider>();
+            localSocketFactory = new Mock<ILocalSocketFactory>();
+            localSocketFactory.Setup(m => m.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket))
+                              .Returns(localRouterSocket.Object);
+
             scaleOutListener = new ScaleOutListener(socketFactory.Object,
-                                                    localRouterSocket.Object,
+                                                    localSocketFactory.Object,
                                                     scaleOutConfigurationManager.Object,
                                                     securityProvider.Object,
                                                     performanceCounterManager.Object,
@@ -74,7 +79,7 @@ namespace kino.Tests.Cluster
             tokenSource.Cancel();
             scaleOutListener.Stop();
             //
-            frontEndSocket.Verify(m => m.ReceiveMessage(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
+            frontEndSocket.Verify(m => m.Receive(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
             localRouterSocket.Verify(m => m.Send(It.IsAny<IMessage>()), Times.Never);
         }
 
@@ -141,7 +146,7 @@ namespace kino.Tests.Cluster
             message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
             message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
             message.SetCorrelationId(Guid.NewGuid().ToByteArray());
-            frontEndSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>())).Throws<Exception>();
+            frontEndSocket.Setup(m => m.Receive(It.IsAny<CancellationToken>())).Throws<Exception>();
             //
             scaleOutListener.Start();
             AsyncOp.Sleep();

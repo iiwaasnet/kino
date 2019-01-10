@@ -5,11 +5,9 @@ using kino.Messaging;
 
 namespace kino.Connectivity
 {
-    public interface ISocket : IDisposable
+    public interface ISocket : ISendingSocket<IMessage>, IDisposable
     {
-        void SendMessage(IMessage message);
-
-        IMessage ReceiveMessage(CancellationToken cancellationToken);
+        IMessage Receive(CancellationToken cancellationToken);
 
         void Connect(string address, bool waitUntilConnected = false);
 

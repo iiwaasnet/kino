@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace kino.Cluster.Configuration
 {
+    [ExcludeFromCodeCoverage]
     public class ClusterHealthMonitorConfiguration
     {
         public Uri IntercomEndpoint { get; set; }

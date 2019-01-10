@@ -34,7 +34,6 @@ namespace kino.Cluster
         public ClusterHealthMonitor(ISocketFactory socketFactory,
                                     ILocalSocketFactory localSocketFactory,
                                     ISecurityProvider securityProvider,
-                                    ILocalSendingSocket<IMessage> routerLocalSocket,
                                     IConnectedPeerRegistry connectedPeerRegistry,
                                     ClusterHealthMonitorConfiguration config,
                                     ILogger logger)
@@ -44,7 +43,7 @@ namespace kino.Cluster
             this.securityProvider = securityProvider;
             multiplexingSocket = localSocketFactory.Create<IMessage>();
             this.config = config;
-            this.routerLocalSocket = routerLocalSocket;
+            routerLocalSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket);            
             this.connectedPeerRegistry = connectedPeerRegistry;
             this.logger = logger;
         }
@@ -128,7 +127,7 @@ namespace kino.Cluster
                                 var message = multiplexingSocket.TryReceive();
                                 if (message != null)
                                 {
-                                    publisherSocket.SendMessage(message);
+                                    publisherSocket.Send(message);
                                 }
                             }
                         }
@@ -168,7 +167,7 @@ namespace kino.Cluster
                     {
                         try
                         {
-                            var message = socket.ReceiveMessage(token);
+                            var message = socket.Receive(token);
                             if (message != null)
                             {
                                 //logger.Debug($"{GetType().Name} received {message.Identity.GetAnyString()} message");
@@ -296,7 +295,7 @@ namespace kino.Cluster
                         message.SetDomain(securityProvider.GetDomain(KinoMessages.Ping.Identity));
                         message.SetSocketIdentity(nodeIdentifier.Identity);
                         message.SignMessage(securityProvider);
-                        socket.SendMessage(message);
+                        socket.Send(message);
                         socket.Disconnect(meta.ScaleOutUri);
                         meta.LastKnownHeartBeat = DateTime.UtcNow;
                     }

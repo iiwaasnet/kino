@@ -137,7 +137,7 @@ namespace kino.Core.Framework
 
             throw new InvalidCastException($"Unable to cast {raw} to enum {typeof(TEnum)}");
         }
-#if NETCOREAPP2_1
+#if !NET47
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetString(this Span<byte> array)
             => Encoder.GetString(array);

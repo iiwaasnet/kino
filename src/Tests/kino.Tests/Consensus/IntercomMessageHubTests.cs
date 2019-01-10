@@ -64,7 +64,7 @@ namespace kino.Tests.Consensus
             messageHub.Stop();
             //
             Assert.That(synodConfigProvider.Object.Synod.Count(), Is.InRange(2, Int32.MaxValue));
-            publisherSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(MessageIdentifier.Create<HeartBeatMessage>()))), Times.AtLeast(1));
+            publisherSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(MessageIdentifier.Create<HeartBeatMessage>()))), Times.AtLeast(1));
         }
 
         [Test]
@@ -84,7 +84,7 @@ namespace kino.Tests.Consensus
             messageHub.Stop();
             //
             Assert.AreEqual(1, synodConfigProvider.Object.Synod.Count());
-            publisherSocket.Verify(m => m.SendMessage(It.IsAny<IMessage>()), Times.Never);
+            publisherSocket.Verify(m => m.Send(It.IsAny<IMessage>()), Times.Never);
         }
 
         [Test]
@@ -96,7 +96,7 @@ namespace kino.Tests.Consensus
             //
             var clusterHealthInfo = messageHub.GetClusterHealthInfo();
             Assert.True(clusterHealthInfo.All(hi => !hi.IsHealthy()));
-            publisherSocket.Verify(m => m.SendMessage(It.Is<IMessage>(msg => msg.Equals(MessageIdentifier.Create<ReconnectClusterMemberMessage>()))),
+            publisherSocket.Verify(m => m.Send(It.Is<IMessage>(msg => msg.Equals(MessageIdentifier.Create<ReconnectClusterMemberMessage>()))),
                                    Times.AtLeast(clusterHealthInfo.Count()));
         }
 
@@ -110,7 +110,7 @@ namespace kino.Tests.Consensus
                                              OldUri = deadNode.NodeUri,
                                              NewUri = deadNode.NodeUri
                                          });
-            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>()))
+            subscriberSocket.Setup(m => m.Receive(It.IsAny<CancellationToken>()))
                             .Returns(() => messageCount-- > 0
                                                ? message
                                                : null);
@@ -143,7 +143,7 @@ namespace kino.Tests.Consensus
             var messageCount = 1;
             var deadNode = messageHub.GetClusterHealthInfo().First();
             var message = Message.Create(new HeartBeatMessage {NodeUri = deadNode.NodeUri});
-            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>()))
+            subscriberSocket.Setup(m => m.Receive(It.IsAny<CancellationToken>()))
                             .Returns(() => messageCount-- > 0
                                                ? message
                                                : null);
@@ -169,7 +169,7 @@ namespace kino.Tests.Consensus
         {
             var messageCount = 1;
             var message = Message.Create(new SimpleMessage());
-            subscriberSocket.Setup(m => m.ReceiveMessage(It.IsAny<CancellationToken>()))
+            subscriberSocket.Setup(m => m.Receive(It.IsAny<CancellationToken>()))
                             .Returns(() => messageCount-- > 0
                                                ? message
                                                : null);
@@ -194,7 +194,7 @@ namespace kino.Tests.Consensus
             timeout.Sleep();
             messageHub.Stop();
             //
-            publisherSocket.Verify(m => m.SendMessage(message), Times.Once);
+            publisherSocket.Verify(m => m.Send(message), Times.Once);
         }
     }
 }

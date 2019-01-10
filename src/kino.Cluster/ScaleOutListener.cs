@@ -26,14 +26,14 @@ namespace kino.Cluster
         private CancellationTokenSource cancellationTokenSource;
 
         public ScaleOutListener(ISocketFactory socketFactory,
-                                ILocalSendingSocket<IMessage> localRouterSocket,
+                                ILocalSocketFactory localSocketFactory,
                                 IScaleOutConfigurationManager scaleOutConfigurationManager,
                                 ISecurityProvider securityProvider,
                                 IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                 ILogger logger)
         {
             this.socketFactory = socketFactory;
-            this.localRouterSocket = localRouterSocket;
+            localRouterSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket);
             this.scaleOutConfigurationManager = scaleOutConfigurationManager;
             this.securityProvider = securityProvider;
             this.performanceCounterManager = performanceCounterManager;
@@ -85,7 +85,7 @@ namespace kino.Cluster
                         Message message = null;
                         try
                         {
-                            message = scaleOutFrontend.ReceiveMessage(token).As<Message>();
+                            message = scaleOutFrontend.Receive(token).As<Message>();
                             if (message != null)
                             {
                                 message.VerifySignature(securityProvider);

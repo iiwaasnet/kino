@@ -21,7 +21,6 @@ namespace Autofac.kino
             RegisterServiceMessageHandlers(builder);
             RegisterFrameworkActors(builder);
             RegisterConfigurations(builder);
-            RegisterLocalSockets(builder);
             RegisterClusterServices(builder);
 
             builder.RegisterType<InstanceNameResolver>()
@@ -39,13 +38,12 @@ namespace Autofac.kino
             builder.RegisterType<MessageRouter>()
                    .As<IMessageRouter>()
                    .SingleInstance();
-#if NETCOREAPP2_1
-            builder.RegisterType<MessageWireFormatterV6_1>()
-                   .As<IMessageWireFormatter>()
-                   .SingleInstance();
-#endif
 #if NET47
             builder.RegisterType<MessageWireFormatterV5>()
+                   .As<IMessageWireFormatter>()
+                   .SingleInstance();
+#else
+            builder.RegisterType<MessageWireFormatterV6_1>()
                    .As<IMessageWireFormatter>()
                    .SingleInstance();
 #endif
@@ -93,10 +91,6 @@ namespace Autofac.kino
                    .As<IActorHostFactory>()
                    .SingleInstance();
 
-            builder.RegisterType<RendezvousClusterConfigurationReadonlyStorage>()
-                   .As<IConfigurationStorage<RendezvousClusterConfiguration>>()
-                   .SingleInstance();
-
             builder.RegisterType<NullSecurityProvider>()
                    .As<ISecurityProvider>()
                    .SingleInstance();
@@ -132,7 +126,7 @@ namespace Autofac.kino
             builder.Register(c => new ServiceLocator<IClusterHealthMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
                                                                             c.Resolve<ClusterHealthMonitor>,
                                                                             c.Resolve<NullClusterHealthMonitor>)
-                                 .GetService())
+                                .GetService())
                    .As<IClusterHealthMonitor>()
                    .SingleInstance();
         }
@@ -150,7 +144,7 @@ namespace Autofac.kino
             builder.Register(c => new ServiceLocator<IHeartBeatSender>(c.Resolve<ClusterMembershipConfiguration>(),
                                                                        c.Resolve<HeartBeatSender>,
                                                                        c.Resolve<NullHeartBeatSender>)
-                                 .GetService())
+                                .GetService())
                    .As<IHeartBeatSender>()
                    .SingleInstance();
         }
@@ -168,7 +162,7 @@ namespace Autofac.kino
             builder.Register(c => new ServiceLocator<IScaleOutListener>(c.Resolve<ClusterMembershipConfiguration>(),
                                                                         c.Resolve<ScaleOutListener>,
                                                                         c.Resolve<NullScaleOutListener>)
-                                 .GetService())
+                                .GetService())
                    .As<IScaleOutListener>()
                    .SingleInstance();
         }
@@ -186,7 +180,7 @@ namespace Autofac.kino
             builder.Register(c => new ServiceLocator<IClusterMonitor>(c.Resolve<ClusterMembershipConfiguration>(),
                                                                       c.Resolve<ClusterMonitor>,
                                                                       c.Resolve<NullClusterMonitor>)
-                                 .GetService())
+                                .GetService())
                    .As<IClusterMonitor>()
                    .SingleInstance();
         }
@@ -204,7 +198,7 @@ namespace Autofac.kino
             builder.Register(c => new ServiceLocator<IRouteDiscovery>(c.Resolve<ClusterMembershipConfiguration>(),
                                                                       c.Resolve<RouteDiscovery>,
                                                                       c.Resolve<NullRouteDiscovery>)
-                                 .GetService())
+                                .GetService())
                    .As<IRouteDiscovery>()
                    .SingleInstance();
         }
@@ -222,22 +216,9 @@ namespace Autofac.kino
             builder.Register(c => new ServiceLocator<IScaleOutConfigurationManager>(c.Resolve<ClusterMembershipConfiguration>(),
                                                                                     c.Resolve<ScaleOutConfigurationManager>,
                                                                                     c.Resolve<NullScaleOutConfigurationManager>)
-                                 .GetService())
+                                .GetService())
                    .As<IScaleOutConfigurationProvider>()
                    .As<IScaleOutConfigurationManager>()
-                   .SingleInstance();
-        }
-
-        private static void RegisterLocalSockets(ContainerBuilder builder)
-        {
-            builder.RegisterType<LocalSocket<IMessage>>()
-                   .As<ILocalSocket<IMessage>>()
-                   .As<ILocalSendingSocket<IMessage>>()
-                   .SingleInstance();
-
-            builder.RegisterType<LocalSocket<InternalRouteRegistration>>()
-                   .As<ILocalSendingSocket<InternalRouteRegistration>>()
-                   .As<ILocalReceivingSocket<InternalRouteRegistration>>()
                    .SingleInstance();
         }
 

@@ -2,31 +2,31 @@
 using System.Linq;
 using C5;
 using kino.Cluster.Configuration;
-using kino.Core.Diagnostics;
+using kino.Core.Framework;
 
 namespace kino.Cluster
 {
+    //TODO: review locking
     public class RendezvousCluster : IRendezvousCluster
     {
-        private readonly HashedLinkedList<RendezvousEndpoint> config;
-        private readonly IConfigurationStorage<RendezvousClusterConfiguration> configurationStorage;
+        private volatile HashedLinkedList<RendezvousEndpoint> config;
         private readonly object @lock = new object();
 
-        public RendezvousCluster(IConfigurationStorage<RendezvousClusterConfiguration> configurationStorage)
+        public RendezvousCluster(IEnumerable<RendezvousEndpoint> initialConfiguration)
         {
-            this.configurationStorage = configurationStorage;
-
             config = new HashedLinkedList<RendezvousEndpoint>();
-            config.AddAll(configurationStorage.Read().Cluster);
+
+            config.AddAll(SelectEndpointsDistinct(initialConfiguration));
         }
 
         public void Reconfigure(IEnumerable<RendezvousEndpoint> newConfiguration)
         {
-            configurationStorage.Update(new RendezvousClusterConfiguration {Cluster = newConfiguration});
+            var tmp = new HashedLinkedList<RendezvousEndpoint>();
+            tmp.AddAll(SelectEndpointsDistinct(newConfiguration));
+
             lock (@lock)
             {
-                config.Clear();
-                config.AddAll(configurationStorage.Read().Cluster);
+                config = tmp;
             }
         }
 
@@ -68,6 +68,19 @@ namespace kino.Cluster
 
                 return false;
             }
+        }
+
+        private static IEnumerable<RendezvousEndpoint> SelectEndpointsDistinct(IEnumerable<RendezvousEndpoint> initialConfiguration)
+        {
+            var tmp = new HashedLinkedList<RendezvousEndpoint>();
+            tmp.AddAll(initialConfiguration);
+
+            if (tmp.Count < initialConfiguration.Count())
+            {
+                throw new DuplicatedKeyException("Initial Rendezvous configuration contains duplicated endpoints!");
+            }
+
+            return tmp;
         }
 
         public IEnumerable<RendezvousEndpoint> Nodes

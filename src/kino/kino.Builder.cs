@@ -13,9 +13,8 @@ using kino.Messaging;
 using kino.Routing;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
-#if NETCOREAPP2_1
+#if !NET47
 using NetMQ;
-
 #endif
 
 namespace kino
@@ -32,7 +31,7 @@ namespace kino
         {
             AssertDependencyResolverSet();
 
-#if NETCOREAPP2_1
+#if !NET47
             BufferPool.SetCustomBufferPool(new CustomBufferPool());
 #endif
 
@@ -44,11 +43,10 @@ namespace kino
             var socketConfiguration = configurationProvider.GetSocketConfiguration();
             var rendezvousEndpoints = configurationProvider.GetRendezvousEndpointsConfiguration();
             var messageWireFormatter =
-#if NETCOREAPP2_1
-                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6_1();
-#endif
 #if NET47
-                resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV5();
+            resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV5();    
+#else
+            resolver.Resolve<IMessageWireFormatter>() ?? new MessageWireFormatterV6_1();
 #endif
             var socketFactory = new SocketFactory(messageWireFormatter, socketConfiguration);
             var logger = resolver.Resolve<ILogger>();
@@ -56,8 +54,6 @@ namespace kino
             var internalRoutingTable = new InternalRoutingTable(roundRobinDestinationList);
             var externalRoutingTable = new ExternalRoutingTable(roundRobinDestinationList, logger);
             var localSocketFactory = new LocalSocketFactory();
-            var routerLocalSocket = new LocalSocket<IMessage>();
-            var internalRegistrationSocket = new LocalSocket<InternalRouteRegistration>();
 
             var instanceNameResolver = resolver.Resolve<IInstanceNameResolver>() ?? new InstanceNameResolver();
             var performanceCounterManager = new PerformanceCounterManager<KinoPerformanceCounters>(instanceNameResolver,
@@ -66,46 +62,43 @@ namespace kino
             var hashCodeProvider = resolver.Resolve<Func<HMAC>>() ?? (() => HMAC.Create("HMACMD5"));
 
             var securityProvider = resolver.Resolve<ISecurityProvider>()
-                                   ?? new SecurityProvider(hashCodeProvider,
-                                                           resolver.Resolve<IDomainScopeResolver>(),
-                                                           resolver.Resolve<IDomainPrivateKeyProvider>());
+                                ?? new SecurityProvider(hashCodeProvider,
+                                                        resolver.Resolve<IDomainScopeResolver>(),
+                                                        resolver.Resolve<IDomainPrivateKeyProvider>());
             var heartBeatSenderConfigurationManager = new HeartBeatSenderConfigurationManager(heartBeatSenderConfiguration);
-            var configurationStorage = resolver.Resolve<IConfigurationStorage<RendezvousClusterConfiguration>>()
-                                       ?? new RendezvousClusterConfigurationReadonlyStorage(rendezvousEndpoints);
-            var rendezvousCluster = new RendezvousCluster(configurationStorage);
+            var rendezvousCluster = new RendezvousCluster(rendezvousEndpoints);
 
-            var scaleoutConfigurationProvider = new ServiceLocator<IScaleOutConfigurationManager>(clusterMembershipConfiguration,
+            var scaleOutConfigurationProvider = new ServiceLocator<IScaleOutConfigurationManager>(clusterMembershipConfiguration,
                                                                                                   () => new ScaleOutConfigurationManager(scaleOutSocketConfiguration),
                                                                                                   () => new NullScaleOutConfigurationManager())
-                .GetService();
+               .GetService();
             var connectedPeerRegistry = new ConnectedPeerRegistry(clusterHealthMonitorConfiguration);
             var clusterHealthMonitor = new ServiceLocator<IClusterHealthMonitor>(clusterMembershipConfiguration,
                                                                                  () => new ClusterHealthMonitor(socketFactory,
                                                                                                                 localSocketFactory,
                                                                                                                 securityProvider,
-                                                                                                                routerLocalSocket,
                                                                                                                 connectedPeerRegistry,
                                                                                                                 clusterHealthMonitorConfiguration,
                                                                                                                 logger),
                                                                                  () => new NullClusterHealthMonitor())
-                .GetService();
+               .GetService();
 
             var heartBeatSender = new ServiceLocator<IHeartBeatSender>(clusterMembershipConfiguration,
                                                                        () => new HeartBeatSender(socketFactory,
                                                                                                  heartBeatSenderConfigurationManager,
-                                                                                                 scaleoutConfigurationProvider,
+                                                                                                 scaleOutConfigurationProvider,
                                                                                                  logger),
                                                                        () => new NullHeartBeatSender())
-                .GetService();
+               .GetService();
             var scaleOutListener = new ServiceLocator<IScaleOutListener>(clusterMembershipConfiguration,
                                                                          () => new ScaleOutListener(socketFactory,
-                                                                                                    routerLocalSocket,
-                                                                                                    scaleoutConfigurationProvider,
+                                                                                                    localSocketFactory,
+                                                                                                    scaleOutConfigurationProvider,
                                                                                                     securityProvider,
                                                                                                     performanceCounterManager,
                                                                                                     logger),
                                                                          () => new NullScaleOutListener())
-                .GetService();
+               .GetService();
             var autoDiscoverSender = new AutoDiscoverySender(rendezvousCluster,
                                                              socketFactory,
                                                              clusterMembershipConfiguration,
@@ -113,22 +106,22 @@ namespace kino
                                                              logger);
             var autoDiscoveryListener = new AutoDiscoveryListener(rendezvousCluster,
                                                                   socketFactory,
-                                                                  scaleoutConfigurationProvider,
+                                                                  localSocketFactory,
+                                                                  scaleOutConfigurationProvider,
                                                                   clusterMembershipConfiguration,
                                                                   performanceCounterManager,
-                                                                  routerLocalSocket,
                                                                   logger);
 
             var routeDiscovery = new ServiceLocator<IRouteDiscovery>(clusterMembershipConfiguration,
                                                                      () => new RouteDiscovery(autoDiscoverSender,
-                                                                                              scaleoutConfigurationProvider,
+                                                                                              scaleOutConfigurationProvider,
                                                                                               clusterMembershipConfiguration,
                                                                                               securityProvider,
                                                                                               logger),
                                                                      () => new NullRouteDiscovery())
-                .GetService();
+               .GetService();
             var clusterMonitor = new ServiceLocator<IClusterMonitor>(clusterMembershipConfiguration,
-                                                                     () => new ClusterMonitor(scaleoutConfigurationProvider,
+                                                                     () => new ClusterMonitor(scaleOutConfigurationProvider,
                                                                                               autoDiscoverSender,
                                                                                               autoDiscoveryListener,
                                                                                               heartBeatSenderConfigurationManager,
@@ -137,7 +130,7 @@ namespace kino
                                                                                               clusterMembershipConfiguration,
                                                                                               logger),
                                                                      () => new NullClusterMonitor())
-                .GetService();
+               .GetService();
             var clusterServices = new ClusterServices(clusterMonitor,
                                                       scaleOutListener,
                                                       heartBeatSender,
@@ -175,29 +168,24 @@ namespace kino
                                          };
             var serviceMessageHandlerRegistry = new ServiceMessageHandlerRegistry(serviceMessageHandlers);
             messageRouter = new MessageRouter(socketFactory,
+                                              localSocketFactory,
                                               internalRoutingTable,
                                               externalRoutingTable,
-                                              scaleoutConfigurationProvider,
+                                              scaleOutConfigurationProvider,
                                               clusterServices,
                                               serviceMessageHandlerRegistry,
                                               performanceCounterManager,
                                               securityProvider,
-                                              routerLocalSocket,
-                                              internalRegistrationSocket,
                                               internalMessageRouteRegistrationHandler,
                                               roundRobinDestinationList,
                                               logger);
             var actorHostFactory = new ActorHostFactory(securityProvider,
-                                                        routerLocalSocket,
-                                                        internalRegistrationSocket,
                                                         localSocketFactory,
                                                         logger);
             var callbackHandlerStack = new CallbackHandlerStack();
             createMessageHub = keepLocal => new MessageHub(callbackHandlerStack,
-                                                           routerLocalSocket,
-                                                           internalRegistrationSocket,
                                                            localSocketFactory,
-                                                           scaleoutConfigurationProvider,
+                                                           scaleOutConfigurationProvider,
                                                            securityProvider,
                                                            logger,
                                                            keepLocal);
@@ -206,7 +194,7 @@ namespace kino
             actorHostManager = new ActorHostManager(actorHostFactory, logger);
 
             internalActorHostManager = new ActorHostManager(actorHostFactory, logger);
-            var internalActor = new MessageRoutesActor(externalRoutingTable, internalRoutingTable, scaleoutConfigurationProvider);
+            var internalActor = new MessageRoutesActor(externalRoutingTable, internalRoutingTable, scaleOutConfigurationProvider);
             internalActorHostManager.AssignActor(internalActor);
             //
             isBuilt = true;
