@@ -5,6 +5,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Messaging;
 using kino.Rendezvous;
 using kino.Rendezvous.Configuration;
+using kino.Security;
 
 namespace Autofac.kino.Rendezvous
 {
@@ -24,6 +25,10 @@ namespace Autofac.kino.Rendezvous
 
             builder.RegisterType<SocketFactory>()
                    .As<ISocketFactory>()
+                   .SingleInstance();
+
+            builder.RegisterType<LocalSocketFactory>()
+                   .As<ILocalSocketFactory>()
                    .SingleInstance();
 
             builder.RegisterType<InstanceNameResolver>()
@@ -47,6 +52,10 @@ namespace Autofac.kino.Rendezvous
                    .SingleInstance();
 
             builder.Register(c => c.Resolve<RendezvousServiceConfiguration>().Socket)
+                   .AsSelf()
+                   .SingleInstance();
+
+            builder.Register(c => c.Resolve<RendezvousServiceConfiguration>().Partners)
                    .AsSelf()
                    .SingleInstance();
 
@@ -76,6 +85,18 @@ namespace Autofac.kino.Rendezvous
 
             builder.RegisterType<RendezvousConfigurationProvider>()
                    .As<IRendezvousConfigurationProvider>()
+                   .SingleInstance();
+
+            builder.RegisterType<NullSecurityProvider>()
+                   .As<ISecurityProvider>()
+                   .SingleInstance();
+
+            builder.RegisterType<PartnerNetworkConnectorManager>()
+                   .As<IPartnerNetworkConnectorManager>()
+                   .SingleInstance();
+
+            builder.RegisterType<PartnerNetworksConfigurationProvider>()
+                   .As<IPartnerNetworksConfigurationProvider>()
                    .SingleInstance();
 
             builder.RegisterType<RendezvousService>()

@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\kino.Client\kino.Client.csproj" />
     <ProjectReference Include="..\..\kino.Connectivity\kino.Connectivity.csproj" />
     <ProjectReference Include="..\..\kino.Core\kino.Core.csproj" />
+    <ProjectReference Include="..\..\kino.Rendezvous\kino.Rendezvous.csproj" />
     <ProjectReference Include="..\..\kino.Routing\kino.Routing.csproj" />
     <ProjectReference Include="..\..\kino\kino.csproj" />
   </ItemGroup>
