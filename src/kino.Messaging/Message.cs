@@ -7,6 +7,7 @@ using System.Security;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Security;
+using Unsafe = kino.Core.Framework.Unsafe;
 
 namespace kino.Messaging
 {
