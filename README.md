@@ -11,7 +11,11 @@ Kino
 
 Unicast, multicast and direct message addressing, delivery-to-node confirmation, callbacks (routing response message to the *resumption* actor). Rendezvous service provides actors auto-discovery and reduces amount of required configuration. Actors can be single- or multithreaded.
 
-Supported Platforms: .NET 4.7, .NET Core 2.0
+Supported Platforms: .NET 4.7, .NET Core 2.1
+
+What's new
+------------------------
+Partner Rendezvous clusters can be configured to access actors from other networks.
 
 It is simple!
 -------------------------------------
