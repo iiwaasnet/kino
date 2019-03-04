@@ -9,6 +9,7 @@ using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Rendezvous.Configuration;
+using kino.Tests.Helpers;
 using Moq;
 
 namespace kino.Tests.Consensus.Setup
@@ -16,8 +17,7 @@ namespace kino.Tests.Consensus.Setup
     public static class RoundBasedRegisterTestsHelper
     {
         private static readonly TimeSpan WaitTime = TimeSpan.FromMilliseconds(500);
-        private static int portNumber = 100;
-
+        
         internal static RoundBasedRegisterTestSetup CreateRoundBasedRegister(IEnumerable<string> synod, string localNodeUri)
         {
             var appConfig = new RendezvousServiceConfiguration
@@ -87,6 +87,7 @@ namespace kino.Tests.Consensus.Setup
 
         internal static IEnumerable<string> GetSynodMembers()
         {
+            var portNumber = Randomizer.Int32(100, 300);
             return GetSynodMembers().ToList();
 
             IEnumerable<string> GetSynodMembers()

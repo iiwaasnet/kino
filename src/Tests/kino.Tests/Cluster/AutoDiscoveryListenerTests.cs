@@ -163,15 +163,15 @@ namespace kino.Tests.Cluster
             //
             await Start(() => autoDiscoveryListener.StartBlockingListenMessages(restartRequestHandler.Object, cancellationTokenSource.Token, gateway));
             //
-            restartRequestHandler.Verify(m => m(), Times.Once);
+            restartRequestHandler.Verify(m => m(), Times.AtLeastOnce);
             Func<RendezvousEndpoint, bool> isNewLeader = rnd =>
                                                          {
                                                              Assert.AreEqual(payload.NewLeader.BroadcastUri, rnd.BroadcastUri);
                                                              Assert.AreEqual(payload.NewLeader.UnicastUri, rnd.UnicastUri);
                                                              return true;
                                                          };
-            rendezvousCluster.Verify(m => m.SetCurrentRendezvousServer(It.Is<RendezvousEndpoint>(rnd => isNewLeader(rnd))), Times.Once);
-            restartRequestHandler.Verify(m => m(), Times.Once);
+            rendezvousCluster.Verify(m => m.SetCurrentRendezvousServer(It.Is<RendezvousEndpoint>(rnd => isNewLeader(rnd))), Times.AtLeastOnce);
+            restartRequestHandler.Verify(m => m(), Times.AtLeastOnce);
         }
 
         [Test]
