@@ -225,12 +225,12 @@ namespace kino.Rendezvous
             void TryProcessMessage(ILocalReceivingSocket<IMessage> receivingSocket, params ISocket[] sockets)
             {
                 var message = receivingSocket.TryReceive();
+                message = NodeIsLeader()
+                              ? ProcessMessage(message)
+                              : CreateNotLeaderMessage();
+
                 if (message != null)
                 {
-                    message = NodeIsLeader()
-                                  ? ProcessMessage(message)
-                                  : CreateNotLeaderMessage();
-
                     foreach (var sendingSocket in sockets)
                     {
                         SyntaxSugar.SafeExecute(() => sendingSocket.Send(message), logger);
