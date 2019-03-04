@@ -170,7 +170,7 @@ namespace kino.Consensus
                     var lease = awaitableAckFilter
                         .MessageStream
                         .Select(m => m.GetPayload<LeaseAckReadMessage>())
-                        .Max(p => CreateLastWrittenLease(p))
+                        .Max(CreateLastWrittenLease)
                         .Lease;
 
                     return new LeaseTxResult
