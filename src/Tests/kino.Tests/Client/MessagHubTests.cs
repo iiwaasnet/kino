@@ -78,7 +78,7 @@ namespace kino.Tests.Client
                 messageHub.Start();
                 // assert
                 Func<InternalRouteRegistration, bool> globalRegistration = msg => msg.KeepRegistrationLocal == keepRegistrationLocal
-                                                                               && msg.DestinationSocket.Equals(receivingSocket.Object);
+                                                                                  && msg.DestinationSocket.Equals(receivingSocket.Object);
                 registrationSocket.Verify(m => m.Send(It.Is<InternalRouteRegistration>(msg => globalRegistration(msg))));
             }
             finally
@@ -100,11 +100,11 @@ namespace kino.Tests.Client
                 messageHub.Send(message, callback);
                 AsyncOpCompletionDelay.Sleep();
                 // assert
-                Func<IEnumerable<MessageIdentifier>, bool> hasAllRegistrations = (registrations) =>
+                Func<IEnumerable<MessageIdentifier>, bool> hasAllRegistrations = registrations =>
                                                                                  {
                                                                                      return registrations.Any(h => Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
-                                                                                         && registrations.Any(h => Equals(h.Version, KinoMessages.Exception.Version))
-                                                                                         && registrations.Any(h => Equals(h.Partition, KinoMessages.Exception.Partition));
+                                                                                            && registrations.Any(h => Equals(h.Version, KinoMessages.Exception.Version))
+                                                                                            && registrations.Any(h => Equals(h.Partition, KinoMessages.Exception.Partition));
                                                                                  };
                 callbackHandlerStack.Verify(m => m.Push(It.IsAny<IPromise>(),
                                                         It.Is<IEnumerable<MessageIdentifier>>(en => hasAllRegistrations(en))),
@@ -129,11 +129,11 @@ namespace kino.Tests.Client
                 messageHub.Send(message, callback);
                 AsyncOpCompletionDelay.Sleep();
                 // assert
-                Func<IEnumerable<MessageIdentifier>, bool> hasAllRegistrations = (registrations) =>
+                Func<IEnumerable<MessageIdentifier>, bool> hasAllRegistrations = registrations =>
                                                                                  {
                                                                                      return registrations.Any(h => Equals(h.Identity, MessageIdentifier.Create<SimpleMessage>().Identity))
-                                                                                         && registrations.Any(h => Equals(h.Version, KinoMessages.Exception.Version))
-                                                                                         && registrations.Any(h => Equals(h.Partition, KinoMessages.Exception.Partition));
+                                                                                            && registrations.Any(h => Equals(h.Version, KinoMessages.Exception.Version))
+                                                                                            && registrations.Any(h => Equals(h.Partition, KinoMessages.Exception.Partition));
                                                                                  };
                 callbackHandlerStack.Verify(m => m.Push(It.IsAny<IPromise>(),
                                                         It.Is<IEnumerable<MessageIdentifier>>(en => hasAllRegistrations(en))),
@@ -169,7 +169,7 @@ namespace kino.Tests.Client
 
             bool RouterSocketIsReceiver(IMessage msg)
                 => Unsafe.ArraysEqual(msg.As<Message>().ReceiverNodeIdentity, scaleOutAddress.Identity)
-                && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
+                   && Unsafe.ArraysEqual(msg.As<Message>().ReceiverIdentity, messageHub.ReceiverIdentifier.Identity);
         }
 
         [Test]
@@ -250,7 +250,13 @@ namespace kino.Tests.Client
                 var callback = CallbackPoint.Create<NullMessage>();
                 var promise = messageHub.Send(message, callback);
                 var errorMessage = Guid.NewGuid().ToString();
-                var exception = Message.Create(new ExceptionMessage {Exception = new Exception(errorMessage)}).As<Message>();
+                var exc = new Exception(errorMessage);
+                var exception = Message.Create(new ExceptionMessage
+                                               {
+                                                   Message = exc.Message,
+                                                   ExceptionType = exc.GetType().ToString(),
+                                                   StackTrace = exc.StackTrace
+                                               }).As<Message>();
                 exception.RegisterCallbackPoint(Guid.NewGuid().ToByteArray(),
                                                 Guid.NewGuid().ToByteArray(),
                                                 callback.MessageIdentifiers,

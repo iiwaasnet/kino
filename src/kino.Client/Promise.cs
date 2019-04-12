@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 
@@ -34,8 +35,8 @@ namespace kino.Client
 
             if (message.Equals(KinoMessages.Exception))
             {
-                var error = message.GetPayload<ExceptionMessage>().Exception;
-                result.TrySetException(error);
+                var error = message.GetPayload<ExceptionMessage>();
+                result.TrySetException(new KinoException(error.Message, error.ExceptionType, error.StackTrace));
             }
             else
             {

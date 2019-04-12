@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using kino.Core.Diagnostics;
+using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 
@@ -17,7 +18,7 @@ namespace kino.Actors.Diagnostics
         {
             var payload = message.GetPayload<ExceptionMessage>();
 
-            logger.Error(payload.Exception);
+            logger.Error(new KinoException(payload.Message, payload.ExceptionType, payload.StackTrace));
 
             return null;
         }

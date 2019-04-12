@@ -123,7 +123,7 @@ namespace kino.Tests.Actors
                 localRouterSocket.WaitUntilMessageSent(IsExceptionMessage);
 
                 bool IsExceptionMessage(IMessage message)
-                    => message.GetPayload<ExceptionMessage>().Exception.Message == errorMessage;
+                    => message.GetPayload<ExceptionMessage>().Message == errorMessage;
             }
             finally
             {

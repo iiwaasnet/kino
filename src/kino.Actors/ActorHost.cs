@@ -279,7 +279,8 @@ namespace kino.Actors
         {
             var messageOut = Message.Create(new ExceptionMessage
                                             {
-                                                Exception = err,
+                                                Message = err.Message,
+                                                ExceptionType = err.GetType().ToString(),
                                                 StackTrace = err.StackTrace
                                             })
                                     .As<Message>();
@@ -315,9 +316,12 @@ namespace kino.Actors
         {
             if (task.IsCanceled)
             {
+                var err = new OperationCanceledException();
                 var message = Message.Create(new ExceptionMessage
                                              {
-                                                 Exception = new OperationCanceledException()
+                                                 Message = err.Message,
+                                                 ExceptionType = err.GetType().ToString(),
+                                                 StackTrace = err.StackTrace
                                              })
                                      .As<Message>();
                 message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
@@ -326,12 +330,15 @@ namespace kino.Actors
 
             if (task.IsFaulted)
             {
-                var err = task.Exception?.InnerException ?? task.Exception;
+                var err = task.Exception?.InnerException
+                          ?? task.Exception
+                          ?? new Exception("Task failed for an unknown reason!");
 
                 var message = Message.Create(new ExceptionMessage
                                              {
-                                                 Exception = err,
-                                                 StackTrace = err?.StackTrace
+                                                 Message = err.Message,
+                                                 ExceptionType = err.GetType().ToString(),
+                                                 StackTrace = err.StackTrace
                                              })
                                      .As<Message>();
                 message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));

@@ -215,7 +215,8 @@ namespace kino.Cluster
         {
             var messageOut = Message.Create(new ExceptionMessage
                                             {
-                                                Exception = err,
+                                                Message = err.Message,
+                                                ExceptionType = err.GetType().ToString(),
                                                 StackTrace = err.StackTrace
                                             })
                                     .As<Message>();
