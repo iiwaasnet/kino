@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+      <TargetFrameworks>netcoreapp2.1;net47</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\kino.Connectivity.Kafka\kino.Connectivity.Kafka.csproj" />
+    <ProjectReference Include="..\kino.Routing\kino.Routing.csproj" />
+  </ItemGroup>
+
+</Project>
