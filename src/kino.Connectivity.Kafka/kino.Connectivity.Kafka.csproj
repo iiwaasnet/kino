@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\kino.Connectivity\kino.Connectivity.csproj" />
+    <ProjectReference Include="..\kino.Messaging.Kafka\kino.Messaging.Kafka.csproj" />
   </ItemGroup>
 
 </Project>

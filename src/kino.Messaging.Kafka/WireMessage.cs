@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using kino.Core;
-using kino.Messaging;
 
-namespace kino.Connectivity.Kafka
+namespace kino.Messaging.Kafka
 {
     public class WireMessage
     {
@@ -35,14 +33,14 @@ namespace kino.Connectivity.Kafka
 
         public byte[] SocketIdentity { get; set; }
 
-        public MessageTraceOptions TraceOptions { get; set; }
+        public short TraceOptions { get; set; }
 
-        public DistributionPattern Distribution { get; set; }
+        public short Distribution { get; set; }
 
         public ushort Hops { get; set; }
 
         public string Domain { get; set; }
 
-        private List<SocketEndpoint> Routing { get; set; }
+        public IEnumerable<SocketEndpoint> Routing { get; set; }
     }
 }
