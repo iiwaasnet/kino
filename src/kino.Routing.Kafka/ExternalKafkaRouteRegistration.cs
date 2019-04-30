@@ -1,5 +1,5 @@
 ﻿using kino.Core;
-using kino.Messaging.Kafka.Messages;
+using kino.Cluster.Kafka;
 
 namespace kino.Routing.Kafka
 {
@@ -7,7 +7,7 @@ namespace kino.Routing.Kafka
     {
         public MessageRoute Route { get; set; }
 
-        public Node Peer { get; set; }
+        public KafkaNode Node { get; set; }
 
         public Health Health { get; set; }
     }

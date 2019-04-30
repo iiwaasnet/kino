@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\kino.Cluster.Kafka\kino.Cluster.Kafka.csproj" />
     <ProjectReference Include="..\kino.Connectivity.Kafka\kino.Connectivity.Kafka.csproj" />
     <ProjectReference Include="..\kino.Routing\kino.Routing.csproj" />
   </ItemGroup>

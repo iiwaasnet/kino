@@ -90,6 +90,7 @@ namespace kino.Core
 
         public string Uri { get; }
 
+        //TODO: Rename to NodeIdentity similar to KafkaNode
         public byte[] SocketIdentity { get; }
     }
 }
