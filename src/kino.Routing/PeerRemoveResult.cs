@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace kino.Routing
+﻿namespace kino.Routing
 {
     public class PeerRemoveResult
     {

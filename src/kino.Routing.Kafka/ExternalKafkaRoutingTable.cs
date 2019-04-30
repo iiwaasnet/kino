@@ -10,7 +10,8 @@ using Bcl = System.Collections.Generic;
 
 namespace kino.Routing.Kafka
 {
-    public class ExternalKafkaRoutingTable : IExternalRoutingTable
+    //TODO: Create interface
+    public class ExternalKafkaRoutingTable /*: IExternalRoutingTable*/
     {
         private readonly Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<ReceiverIdentifier>> nodeMessageHubs;
         private readonly Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<ReceiverIdentifier>> nodeActors;
@@ -163,9 +164,9 @@ namespace kino.Routing.Kafka
             }
         }
 
-        public Bcl.IEnumerable<PeerConnection> FindRoutes(ExternalRouteLookupRequest lookupRequest)
+        public Bcl.IEnumerable<KafkaPeerConnection> FindRoutes(ExternalRouteLookupRequest lookupRequest)
         {
-            var peers = new Bcl.List<PeerConnection>(20);
+            var peers = new Bcl.List<KafkaPeerConnection>(20);
             if (lookupRequest.ReceiverNodeIdentity.IsSet())
             {
                 if (nodeToConnectionMap.TryGetValue(lookupRequest.ReceiverNodeIdentity, out var peerConnection))
@@ -232,7 +233,7 @@ namespace kino.Routing.Kafka
                     }
                 }
 
-                logger.Debug($"External route removed Uri:{connection.Node.Uri} "
+                logger.Debug($"External route removed Uri:{connection.Node} "
                              + $"Node:{nodeIdentifier.Identity.GetAnyString()}");
             }
 
@@ -243,23 +244,28 @@ namespace kino.Routing.Kafka
                    };
         }
 
-        private PeerConnectionAction RemovePeerNode(PeerConnection connection)
+        private PeerConnectionAction RemovePeerNode(KafkaPeerConnection connection)
         {
-            var uri = connection.Node.Uri;
-            if (clusterToNodeMap.TryGetValue(uri, out var nodes))
+            var cluster = new KafkaAppCluster
+                          {
+                              BrokerUri = connection.Node.BrokerUri,
+                              Topic = connection.Node.Topic,
+                              Queue = connection.Node.Queue
+                          };
+            if (clusterToNodeMap.TryGetValue(cluster, out var nodes))
             {
-                if (nodes.Remove(new ReceiverIdentifier(connection.Node.SocketIdentity)))
+                if (nodes.Remove(new ReceiverIdentifier(connection.Node.NodeIdentity)))
                 {
                     if (!nodes.Any())
                     {
-                        clusterToNodeMap.Remove(uri);
+                        clusterToNodeMap.Remove(cluster);
 
-                        logger.Debug($"Zero nodes left registered at {uri}. Endpoint will be disconnected.");
+                        logger.Debug($"Zero nodes left registered at {cluster}. Endpoint will be disconnected.");
 
                         return PeerConnectionAction.Disconnect;
                     }
 
-                    logger.Debug($"[{nodes.Count}] node(s) left at {uri}.");
+                    logger.Debug($"[{nodes.Count}] node(s) left at {cluster}.");
 
                     return PeerConnectionAction.KeepConnection;
                 }
@@ -268,12 +274,14 @@ namespace kino.Routing.Kafka
             return PeerConnectionAction.NotFound;
         }
 
-        public PeerRemoveResult RemoveMessageRoute(ExternalRouteRemoval routeRemoval)
+        public KafkaAppClusterRemoveResult RemoveMessageRoute(ExternalRouteRemoval routeRemoval)
         {
             var connectionAction = PeerConnectionAction.NotFound;
 
             var nodeIdentifier = new ReceiverIdentifier(routeRemoval.NodeIdentifier);
-            if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out var connection))
+            var connection = default(KafkaPeerConnection);
+
+            if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out connection))
             {
                 connectionAction = PeerConnectionAction.KeepConnection;
 
@@ -299,14 +307,21 @@ namespace kino.Routing.Kafka
                     connectionAction = RemovePeerNode(connection);
                     roundRobinList.Remove(connection.Node);
 
-                    logger.Debug($"External route removed Uri:{connection?.Node.Uri} Node:{nodeIdentifier}");
+                    logger.Debug($"External route removed Uri:{connection.Node} Node:{nodeIdentifier}");
                 }
             }
 
-            return new PeerRemoveResult
+            return new KafkaAppClusterRemoveResult
                    {
                        ConnectionAction = connectionAction,
-                       Uri = connection?.Node.Uri
+                       AppCluster = connection != null
+                                        ? new KafkaAppCluster
+                                          {
+                                              BrokerUri = connection.Node.BrokerUri,
+                                              Topic = connection.Node.Topic,
+                                              Queue = connection.Node.Queue
+                                          }
+                                        : null
                    };
         }
 
