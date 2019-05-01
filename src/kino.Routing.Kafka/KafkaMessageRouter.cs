@@ -23,7 +23,7 @@ namespace kino.Routing.Kafka
         private CancellationTokenSource cancellationTokenSource;
         private Thread localRouting;
         private readonly IInternalRoutingTable internalRoutingTable;
-        private readonly IExternalRoutingTable externalRoutingTable;
+        private readonly IExternalKafkaRoutingTable externalRoutingTable;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly IClusterServices clusterServices;
         private readonly IServiceMessageHandlerRegistry serviceMessageHandlerRegistry;
@@ -41,7 +41,7 @@ namespace kino.Routing.Kafka
         public KafkaMessageRouter(IKafkaConnectionFactory connectionFactory,
                                   ILocalSocketFactory localSocketFactory,
                                   IInternalRoutingTable internalRoutingTable,
-                                  IExternalRoutingTable externalRoutingTable,
+                                  IExternalKafkaRoutingTable externalRoutingTable,
                                   IScaleOutConfigurationProvider scaleOutConfigurationProvider,
                                   IClusterServices clusterServices,
                                   IServiceMessageHandlerRegistry serviceMessageHandlerRegistry,
@@ -127,7 +127,7 @@ namespace kino.Routing.Kafka
                             if (message != null)
                             {
                                 var _ = TryHandleServiceMessage(message)
-                                        || HandleOperationMessage(message);
+                                     || HandleOperationMessage(message);
                             }
 
                             var registration = internalRegistrationsReceiver.TryReceive();
@@ -192,8 +192,8 @@ namespace kino.Routing.Kafka
             {
                 handled = SendMessageLocally(internalRoutingTable.FindRoutes(lookupRequest), message);
                 handled = MessageCameFromLocalActor(message)
-                          && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
-                          || handled;
+                       && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
+                       || handled;
             }
             else
             {

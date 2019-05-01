@@ -11,7 +11,8 @@ using Bcl = System.Collections.Generic;
 namespace kino.Routing.Kafka
 {
     //TODO: Create interface
-    public class ExternalKafkaRoutingTable /*: IExternalRoutingTable*/
+
+    public class ExternalKafkaRoutingTable : IExternalKafkaRoutingTable
     {
         private readonly Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<ReceiverIdentifier>> nodeMessageHubs;
         private readonly Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<ReceiverIdentifier>> nodeActors;
@@ -45,12 +46,12 @@ namespace kino.Routing.Kafka
                 MapActorToNode(routeRegistration, nodeIdentifier);
 
                 logger.Debug("External route added "
-                             + $"BrokerUri:{routeRegistration.Node.BrokerUri} "
-                             + $"Topic:{routeRegistration.Node.Topic} "
-                             + $"Queue:{routeRegistration.Node.Queue} "
-                             + $"Node:{nodeIdentifier} "
-                             + $"Actor:{routeRegistration.Route.Receiver}"
-                             + $"Message:{routeRegistration.Route.Message}");
+                           + $"BrokerUri:{routeRegistration.Node.BrokerUri} "
+                           + $"Topic:{routeRegistration.Node.Topic} "
+                           + $"Queue:{routeRegistration.Node.Queue} "
+                           + $"Node:{nodeIdentifier} "
+                           + $"Actor:{routeRegistration.Route.Receiver}"
+                           + $"Message:{routeRegistration.Route.Message}");
             }
             else
             {
@@ -59,11 +60,11 @@ namespace kino.Routing.Kafka
                     MapMessageHubToNode(routeRegistration, nodeIdentifier);
 
                     logger.Debug("External route added "
-                                 + $"BrokerUri:{routeRegistration.Node.BrokerUri} "
-                                 + $"Topic:{routeRegistration.Node.Topic} "
-                                 + $"Queue:{routeRegistration.Node.Queue} "
-                                 + $"Node:{nodeIdentifier} "
-                                 + $"MessageHub:{routeRegistration.Route.Receiver}");
+                               + $"BrokerUri:{routeRegistration.Node.BrokerUri} "
+                               + $"Topic:{routeRegistration.Node.Topic} "
+                               + $"Queue:{routeRegistration.Node.Queue} "
+                               + $"Node:{nodeIdentifier} "
+                               + $"MessageHub:{routeRegistration.Route.Receiver}");
                 }
                 else
                 {
@@ -198,14 +199,14 @@ namespace kino.Routing.Kafka
             return peers;
         }
 
-        public PeerRemoveResult RemoveNodeRoute(ReceiverIdentifier nodeIdentifier)
+        public KafkaAppClusterRemoveResult RemoveNodeRoute(ReceiverIdentifier nodeIdentifier)
         {
-            var peerConnectionAction = PeerConnectionAction.NotFound;
+            var connectionAction = PeerConnectionAction.NotFound;
 
             if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out var connection))
             {
                 nodeToConnectionMap.Remove(nodeIdentifier);
-                peerConnectionAction = RemovePeerNode(connection);
+                connectionAction = RemovePeerNode(connection);
                 roundRobinList.Remove(connection.Node);
                 nodeMessageHubs.Remove(nodeIdentifier);
                 if (nodeActors.TryGetValue(nodeIdentifier, out var actors))
@@ -234,13 +235,20 @@ namespace kino.Routing.Kafka
                 }
 
                 logger.Debug($"External route removed Uri:{connection.Node} "
-                             + $"Node:{nodeIdentifier.Identity.GetAnyString()}");
+                           + $"Node:{nodeIdentifier.Identity.GetAnyString()}");
             }
 
-            return new PeerRemoveResult
+            return new KafkaAppClusterRemoveResult
                    {
-                       Uri = connection?.Node.Uri,
-                       ConnectionAction = peerConnectionAction
+                       ConnectionAction = connectionAction,
+                       AppCluster = connection != null
+                                        ? new KafkaAppCluster
+                                          {
+                                              BrokerUri = connection.Node.BrokerUri,
+                                              Topic = connection.Node.Topic,
+                                              Queue = connection.Node.Queue
+                                          }
+                                        : null
                    };
         }
 
@@ -279,9 +287,8 @@ namespace kino.Routing.Kafka
             var connectionAction = PeerConnectionAction.NotFound;
 
             var nodeIdentifier = new ReceiverIdentifier(routeRemoval.NodeIdentifier);
-            var connection = default(KafkaPeerConnection);
 
-            if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out connection))
+            if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out var connection))
             {
                 connectionAction = PeerConnectionAction.KeepConnection;
 
@@ -338,7 +345,7 @@ namespace kino.Routing.Kafka
                                           {
                                               NodeIdentifier = node,
                                               Actors = actorToMessageMap.Where(kv => actors.Contains(kv.Key)
-                                                                                     && kv.Value.Contains(messageIdentifier))
+                                                                                  && kv.Value.Contains(messageIdentifier))
                                                                         .Select(kv => kv.Key)
                                                                         .ToList()
                                           });
@@ -405,8 +412,8 @@ namespace kino.Routing.Kafka
                 }
 
                 logger.Debug("External message route removed "
-                             + $"Node:[{nodeIdentifier}] "
-                             + $"Message:[{routeRemoval.Route.Message}]");
+                           + $"Node:[{nodeIdentifier}] "
+                           + $"Message:[{routeRemoval.Route.Message}]");
             }
         }
 
@@ -451,17 +458,20 @@ namespace kino.Routing.Kafka
                     }
 
                     logger.Debug("External MessageHub removed "
-                                 + $"Node:[{nodeIdentifier}] "
-                                 + $"Identity:[{routeRemoval.Route.Receiver}]");
+                               + $"Node:[{nodeIdentifier}] "
+                               + $"Identity:[{routeRemoval.Route.Receiver}]");
                 }
             }
         }
 
-        public Bcl.IEnumerable<ExternalRoute> GetAllRoutes()
-            => clusterToNodeMap.SelectMany(uriNodes => uriNodes.Value.Select(node => (Identitifier: node, Uri: uriNodes.Key)))
-                               .Select(node => new ExternalRoute
+        public Bcl.IEnumerable<ExternalKafkaRoute> GetAllRoutes()
+            => clusterToNodeMap.SelectMany(uriNodes => uriNodes.Value.Select(node => (Identitifier: node, AppCluster: uriNodes.Key)))
+                               .Select(node => new ExternalKafkaRoute
                                                {
-                                                   Node = new Node(node.Uri, node.Identitifier.Identity),
+                                                   Node = new KafkaNode(node.AppCluster.BrokerUri,
+                                                                        node.AppCluster.Topic,
+                                                                        node.AppCluster.Queue,
+                                                                        node.Identitifier.Identity),
                                                    MessageRoutes = GetNodeActors(node.Identitifier),
                                                    MessageHubs = GetMessageNodeHubs(node.Identitifier)
                                                })
@@ -480,14 +490,14 @@ namespace kino.Routing.Kafka
         private Bcl.IEnumerable<MessageActorRoute> GetNodeActors(ReceiverIdentifier node)
         {
             return GetNodeMessageToActorsMap()
-                   .Select(ma => new MessageActorRoute
-                                 {
-                                     Message = ma.Key,
-                                     Actors = ma.Value
-                                                .Select(a => new ReceiverIdentifierRegistration(a, false))
-                                                .ToList()
-                                 })
-                   .ToList();
+                  .Select(ma => new MessageActorRoute
+                                {
+                                    Message = ma.Key,
+                                    Actors = ma.Value
+                                               .Select(a => new ReceiverIdentifierRegistration(a, false))
+                                               .ToList()
+                                })
+                  .ToList();
 
             Bcl.IDictionary<MessageIdentifier, Bcl.HashSet<ReceiverIdentifier>> GetNodeMessageToActorsMap()
             {
