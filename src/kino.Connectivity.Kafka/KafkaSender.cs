@@ -16,6 +16,7 @@ namespace kino.Connectivity.Kafka
         private static readonly IMessageSerializer DefaultSerializer = new ProtobufMessageSerializer();
         private readonly IProducer<Null, byte[]> sender;
         private ReceiverIdentifier socketIdentity;
+        private static readonly TimeSpan DefaultFlushTimeout = TimeSpan.FromMilliseconds(500);
 
         public KafkaSender(KafkaSenderConfiguration config)
         {
@@ -76,6 +77,11 @@ namespace kino.Connectivity.Kafka
                                              }
                                };
             sender.Produce(destination, kafkaMessage);
+        }
+
+        public void Dispose()
+        {
+            sender.Flush(DefaultFlushTimeout);
         }
     }
 }

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using kino.Cluster;
 using kino.Cluster.Configuration;
+using kino.Cluster.Kafka;
 using kino.Connectivity;
 using kino.Connectivity.Kafka;
 using kino.Core;
@@ -25,7 +25,7 @@ namespace kino.Routing.Kafka
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly IExternalKafkaRoutingTable externalRoutingTable;
         private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
-        private readonly IClusterServices clusterServices;
+        private readonly IKafkaClusterServices clusterServices;
         private readonly IServiceMessageHandlerRegistry serviceMessageHandlerRegistry;
         private readonly IKafkaConnectionFactory connectionFactory;
         private readonly ILogger logger;
@@ -43,7 +43,7 @@ namespace kino.Routing.Kafka
                                   IInternalRoutingTable internalRoutingTable,
                                   IExternalKafkaRoutingTable externalRoutingTable,
                                   IScaleOutConfigurationProvider scaleOutConfigurationProvider,
-                                  IClusterServices clusterServices,
+                                  IKafkaClusterServices clusterServices,
                                   IServiceMessageHandlerRegistry serviceMessageHandlerRegistry,
                                   IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                   ISecurityProvider securityProvider,
@@ -260,28 +260,29 @@ namespace kino.Routing.Kafka
             return destinations.Any();
         }
 
-        private bool SendMessageAway(IEnumerable<PeerConnection> routes, Message message)
+        private bool SendMessageAway(IEnumerable<KafkaPeerConnection> routes, Message message)
         {
             foreach (var route in routes)
             {
                 try
                 {
-                    var sender = connectionFactory.GetSender()
+                    var sender = connectionFactory.GetSender(route.Node);
                     if (!route.Connected)
                     {
-                        scaleOutBackend.Connect(route.Node.Uri, waitUntilConnected: true);
+                        //scaleOutBackend.Connect(route.Node.Uri, waitUntilConnected: true);
                         route.Connected = true;
                         clusterServices.GetClusterHealthMonitor()
-                                       .StartPeerMonitoring(new Node(route.Node.Uri, route.Node.SocketIdentity), route.Health);
+                                       .StartPeerMonitoring(route.Node, route.Health);
                     }
 
-                    message.SetSocketIdentity(route.Node.SocketIdentity);
+                    message.SetSocketIdentity(route.Node.NodeIdentity);
                     message.AddHop();
                     message.PushRouterAddress(scaleOutConfigurationProvider.GetScaleOutAddress());
 
                     message.SignMessage(securityProvider);
 
-                    scaleOutBackend.Send(message);
+                    var destination = GetDestination(route.Node, message);
+                    sender.Send(destination, message);
 
                     ForwardedToOtherNode(message);
                 }
@@ -301,6 +302,11 @@ namespace kino.Routing.Kafka
 
             return routes.Any();
         }
+
+        private static string GetDestination(KafkaNode node, Message message)
+            => message.ReceiverNodeIdentity.IsSet() || message.Distribution == DistributionPattern.Broadcast
+                   ? node.Topic
+                   : node.Queue;
 
         private bool ProcessUnhandledMessage(IMessage message, ExternalRouteLookupRequest lookupRequest)
         {
