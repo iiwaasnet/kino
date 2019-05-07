@@ -277,6 +277,8 @@ namespace kino.Routing.Kafka
 
                     message.SetSocketIdentity(route.Node.NodeIdentity);
                     message.AddHop();
+                    // TODO: check how the GetScaleOutAddress is used and if it is needed here except to push the Router address,
+                    // TODO: which is BrokerUri+Topic+Queue
                     message.PushRouterAddress(scaleOutConfigurationProvider.GetScaleOutAddress());
 
                     message.SignMessage(securityProvider);

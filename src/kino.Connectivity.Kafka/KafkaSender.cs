@@ -53,7 +53,7 @@ namespace kino.Connectivity.Kafka
                                   Signature = msg.Signature,
                                   Hops = msg.Hops,
                                   Routing = msg.GetMessageRouting()
-                                               .Select(r => new SocketEndpoint())
+                                               .Select(r => new SocketEndpoint {BrokerUri = r.Uri, Identity = r.Identity})
                                                .ToList(),
                                   CallbackPoint = msg.CallbackPoint
                                                      .Select(cp => new MessageIdentifier

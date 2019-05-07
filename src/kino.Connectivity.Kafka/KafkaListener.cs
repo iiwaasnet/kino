@@ -71,7 +71,7 @@ namespace kino.Connectivity.Kafka
             message.SetDomain(msg.Domain);
             message.SetSignature(msg.Signature);
             message.SetHops(msg.Hops);
-            message.CopyMessageRouting(msg.Routing.Select(r => new Core.SocketEndpoint()));
+            message.CopyMessageRouting(msg.Routing.Select(r => Core.SocketEndpoint.FromTrustedSource(r.BrokerUri, r.Identity)));
             message.CopyCallbackPoint(msg.CallbackPoint.Select(cb => new Core.MessageIdentifier(cb.Identity, cb.Version, cb.Partition)));
             message.SetCallbackReceiverIdentity(msg.CallbackReceiverIdentity);
             message.SetCorrelationId(msg.CorrelationId);

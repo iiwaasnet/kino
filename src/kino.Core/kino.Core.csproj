@@ -17,6 +17,12 @@
     <Reference Include="System.Management" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Diagnostics\Performance\PerformanceCounterInstaller.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
