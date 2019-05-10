@@ -7,5 +7,7 @@ namespace kino.Connectivity.Kafka
     public interface IListener : IDisposable
     {
         IMessage Receive(CancellationToken token);
+
+        void Subscribe(string topic);
     }
 }

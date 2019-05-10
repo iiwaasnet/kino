@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\kino.Cluster\kino.Cluster.csproj" />
+    <ProjectReference Include="..\kino.Connectivity.Kafka\kino.Connectivity.Kafka.csproj" />
   </ItemGroup>
 
 </Project>

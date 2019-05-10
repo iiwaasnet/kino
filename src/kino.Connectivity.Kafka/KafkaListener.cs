@@ -18,8 +18,7 @@ namespace kino.Connectivity.Kafka
         private readonly ReceiverIdentifier socketIdentity;
 
         public KafkaListener(KafkaListenerConfiguration config,
-                             string groupId,
-                             string topic)
+                             string groupId)
         {
             socketIdentity = ReceiverIdentifier.Create();
             var consumerConfig = new ConsumerConfig
@@ -40,8 +39,10 @@ namespace kino.Connectivity.Kafka
                                      ApiVersionRequest = true
                                  };
             consumer = new ConsumerBuilder<Null, byte[]>(consumerConfig).Build();
-            consumer.Subscribe(topic);
         }
+
+        public void Subscribe(string topic)
+            => consumer.Subscribe(topic);
 
         public IMessage Receive(CancellationToken token)
         {

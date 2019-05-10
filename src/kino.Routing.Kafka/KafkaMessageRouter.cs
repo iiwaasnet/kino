@@ -192,7 +192,7 @@ namespace kino.Routing.Kafka
             {
                 handled = SendMessageLocally(internalRoutingTable.FindRoutes(lookupRequest), message);
                 handled = MessageCameFromLocalActor(message)
-                       && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
+                       && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message)
                        || handled;
             }
             else
@@ -214,7 +214,7 @@ namespace kino.Routing.Kafka
 
                     if (!handled)
                     {
-                        handled = SendMessageAway(remoteDestinations, message, scaleOutBackend);
+                        handled = SendMessageAway(remoteDestinations, message);
                     }
                 }
             }

@@ -7,5 +7,9 @@ namespace kino.Connectivity.Kafka
         IListener GetListener(string uri, string groupId, string topic);
 
         ISender GetSender(KafkaNode node);
+
+        ISender CreateSender(KafkaSenderConfiguration config);
+
+        IListener CreateListener(KafkaListenerConfiguration config);
     }
 }
