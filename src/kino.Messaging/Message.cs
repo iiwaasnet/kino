@@ -7,7 +7,6 @@ using System.Security;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Security;
-using Unsafe = kino.Core.Framework.Unsafe;
 
 namespace kino.Messaging
 {
@@ -17,7 +16,7 @@ namespace kino.Messaging
         public static readonly string KinoMessageNamespace = "KINO";
 
         private object payload;
-        private List<SocketEndpoint> routing;
+        private List<NodeAddress> routing;
         private List<MessageIdentifier> callbackPoint;
         private static readonly byte[] EmptyCorrelationId = Guid.Empty.ToString().GetBytes();
 
@@ -25,7 +24,7 @@ namespace kino.Messaging
             : base(identity, version, partition)
         {
             Domain = string.Empty;
-            routing = new List<SocketEndpoint>();
+            routing = new List<NodeAddress>();
             callbackPoint = new List<MessageIdentifier>();
             TTL = TimeSpan.Zero;
             Hops = 0;
@@ -87,8 +86,8 @@ namespace kino.Messaging
         private void MatchMessageAgainstCallbackPoint()
         {
             if (CallbackPoint.Any(identifier => Unsafe.ArraysEqual(Identity, identifier.Identity)
-                                             && Version == identifier.Version
-                                             && Unsafe.ArraysEqual(Partition, identifier.Partition)))
+                                                && Version == identifier.Version
+                                                && Unsafe.ArraysEqual(Partition, identifier.Partition)))
             {
                 ReceiverIdentity = CallbackReceiverIdentity;
                 ReceiverNodeIdentity = CallbackReceiverNodeIdentity;
@@ -113,8 +112,8 @@ namespace kino.Messaging
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void PushRouterAddress(SocketEndpoint scaleOutAddress)
-            => routing.Add(scaleOutAddress);
+        internal void PushNodeAddress(NodeAddress nodeAddress)
+            => routing.Add(nodeAddress);
 
         internal void SignMessage(ISignatureProvider signatureProvider)
         {
@@ -152,10 +151,10 @@ namespace kino.Messaging
             var version = Version.GetBytes();
             var callbackReceiverIdentity = CallbackReceiverIdentity ?? IdentityExtensions.Empty;
             var capacity = Identity.Length
-                         + version.Length
-                         + Partition.Length
-                         + Body.Length
-                         + callbackReceiverIdentity.Length;
+                           + version.Length
+                           + Partition.Length
+                           + Body.Length
+                           + callbackReceiverIdentity.Length;
             using (var stream = new MemoryStream(capacity))
             {
                 stream.Write(Identity, 0, Identity.Length);
@@ -172,10 +171,10 @@ namespace kino.Messaging
             => Hops++;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal IEnumerable<SocketEndpoint> GetMessageRouting()
+        internal IEnumerable<NodeAddress> GetMessageRouting()
             => routing;
 
-        internal void CopyMessageRouting(IEnumerable<SocketEndpoint> messageRouting)
+        internal void CopyMessageRouting(IEnumerable<NodeAddress> messageRouting)
         {
             routing.Clear();
             routing.AddRange(messageRouting);
@@ -272,7 +271,7 @@ namespace kino.Messaging
                    Distribution = Distribution,
                    Hops = Hops,
                    Domain = Domain,
-                   routing = new List<SocketEndpoint>(routing)
+                   routing = new List<NodeAddress>(routing)
                };
 
         public override string ToString()

@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using kino.Core.Framework;
 
 namespace kino.Core
@@ -8,21 +7,18 @@ namespace kino.Core
     {
         private readonly int hashCode;
 
-        public KafkaNode(string brokerUri,
+        public KafkaNode(string brokerName,
                          string topic,
                          string queue,
-                         byte[] nodeIdentity)
+                         byte[] identity)
         {
-            BrokerUri = Normalize(brokerUri);
-            NodeIdentity = nodeIdentity;
+            BrokerName = brokerName;
+            Identity = identity;
             Topic = topic;
             Queue = queue;
 
             hashCode = CalculateHashCode();
         }
-
-        private string Normalize(string brokerUri)
-            => string.Join(",", brokerUri.Split(',').OrderBy(_ => _));
 
         public override bool Equals(object obj)
         {
@@ -80,8 +76,8 @@ namespace kino.Core
         }
 
         private bool StructuralCompare(KafkaNode other)
-            => Unsafe.ArraysEqual(NodeIdentity, other.NodeIdentity)
-               && Topic == other.Topic;
+            => Unsafe.ArraysEqual(Identity, other.Identity)
+               && BrokerName == other.BrokerName;
 
         public override int GetHashCode()
             => hashCode;
@@ -90,16 +86,16 @@ namespace kino.Core
         {
             unchecked
             {
-                return (Topic.GetHashCode() * 397) ^ NodeIdentity.ComputeHash();
+                return (BrokerName.GetHashCode() * 397) ^ Identity.ComputeHash();
             }
         }
 
         public override string ToString()
-            => $"{Topic}:{NodeIdentity.GetAnyString()}";
+            => $"{BrokerName}:{Identity.GetAnyString()}";
 
-        public string BrokerUri { get; }
+        public string BrokerName { get; }
 
-        public byte[] NodeIdentity { get; }
+        public byte[] Identity { get; }
 
         public string Topic { get; }
 

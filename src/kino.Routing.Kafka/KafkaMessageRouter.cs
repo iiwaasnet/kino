@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using kino.Cluster.Configuration;
 using kino.Cluster.Kafka;
+using kino.Cluster.Kafka.Configuration;
 using kino.Connectivity;
 using kino.Connectivity.Kafka;
 using kino.Core;
@@ -11,10 +11,8 @@ using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
-using kino.Messaging.Messages;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
-using NetMQ;
 
 namespace kino.Routing.Kafka
 {
@@ -24,7 +22,7 @@ namespace kino.Routing.Kafka
         private Thread localRouting;
         private readonly IInternalRoutingTable internalRoutingTable;
         private readonly IExternalKafkaRoutingTable externalRoutingTable;
-        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
+        private readonly INodeIdentityProvider nodeIdentityProvider;
         private readonly IKafkaClusterServices clusterServices;
         private readonly IServiceMessageHandlerRegistry serviceMessageHandlerRegistry;
         private readonly IKafkaConnectionFactory connectionFactory;
@@ -42,7 +40,7 @@ namespace kino.Routing.Kafka
                                   ILocalSocketFactory localSocketFactory,
                                   IInternalRoutingTable internalRoutingTable,
                                   IExternalKafkaRoutingTable externalRoutingTable,
-                                  IScaleOutConfigurationProvider scaleOutConfigurationProvider,
+                                  INodeIdentityProvider nodeIdentityProvider,
                                   IKafkaClusterServices clusterServices,
                                   IServiceMessageHandlerRegistry serviceMessageHandlerRegistry,
                                   IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
@@ -55,7 +53,7 @@ namespace kino.Routing.Kafka
             this.logger = logger;
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
-            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
+            this.nodeIdentityProvider = nodeIdentityProvider;
             this.clusterServices = clusterServices;
             this.serviceMessageHandlerRegistry = serviceMessageHandlerRegistry;
             this.performanceCounterManager = performanceCounterManager;
@@ -98,15 +96,15 @@ namespace kino.Routing.Kafka
             isStarted = false;
         }
 
-        private byte[] GetBlockingReceiverNodeIdentity()
-            => scaleOutConfigurationProvider.GetScaleOutAddress().Identity;
+        private byte[] GetLocalNodeIdentity()
+            => nodeIdentityProvider.GetNodeIdentity().Identity;
 
         private void RouteLocalMessages(CancellationToken token, Barrier barrier)
         {
             const int cancellationToken = 2;
             try
             {
-                thisNodeIdentity = GetBlockingReceiverNodeIdentity();
+                thisNodeIdentity = GetLocalNodeIdentity();
 
                 var waitHandles = new[]
                                   {
@@ -127,7 +125,7 @@ namespace kino.Routing.Kafka
                             if (message != null)
                             {
                                 var _ = TryHandleServiceMessage(message)
-                                     || HandleOperationMessage(message);
+                                        || HandleOperationMessage(message);
                             }
 
                             var registration = internalRegistrationsReceiver.TryReceive();
@@ -136,12 +134,6 @@ namespace kino.Routing.Kafka
                                 internalRegistrationHandler.Handle(registration);
                             }
                         }
-                    }
-                    catch (NetMQException err)
-                    {
-                        logger.Error($"{nameof(err.ErrorCode)}:{err.ErrorCode} " +
-                                     $"{nameof(err.Message)}:{err.Message} " +
-                                     $"Exception:{err}");
                     }
                     catch (Exception err)
                     {
@@ -192,8 +184,8 @@ namespace kino.Routing.Kafka
             {
                 handled = SendMessageLocally(internalRoutingTable.FindRoutes(lookupRequest), message);
                 handled = MessageCameFromLocalActor(message)
-                       && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message)
-                       || handled;
+                          && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message)
+                          || handled;
             }
             else
             {
@@ -236,23 +228,8 @@ namespace kino.Routing.Kafka
                     destination.Send(message);
                     RoutedToLocalActor(message);
                 }
-                catch (HostUnreachableException err)
+                catch (Exception err)
                 {
-                    //TODO: HostUnreachableException will never happen here, hence NetMQ sockets are not used
-                    // ILocalSocketShould throw similar exception, if no one is reading messages from the socket,
-                    // which should be a trigger for deletion of the ActorHost
-                    // When change is done, cover with unitests
-                    var removedRoutes = internalRoutingTable.RemoveReceiverRoute(destination)
-                                                            .Select(rr => new Cluster.MessageRoute
-                                                                          {
-                                                                              Receiver = rr.Receiver,
-                                                                              Message = rr.Message
-                                                                          });
-                    if (removedRoutes.Any())
-                    {
-                        clusterServices.GetClusterMonitor().UnregisterSelf(removedRoutes);
-                    }
-
                     logger.Error(err);
                 }
             }
@@ -269,17 +246,19 @@ namespace kino.Routing.Kafka
                     var sender = connectionFactory.GetSender(route.Node);
                     if (!route.Connected)
                     {
-                        //scaleOutBackend.Connect(route.Node.Uri, waitUntilConnected: true);
                         route.Connected = true;
                         clusterServices.GetClusterHealthMonitor()
                                        .StartPeerMonitoring(route.Node, route.Health);
                     }
 
-                    message.SetSocketIdentity(route.Node.NodeIdentity);
+                    message.SetSocketIdentity(route.Node.Identity);
                     message.AddHop();
-                    // TODO: check how the GetScaleOutAddress is used and if it is needed here except to push the Router address,
-                    // TODO: which is BrokerUri+Topic+Queue
-                    message.PushRouterAddress(scaleOutConfigurationProvider.GetScaleOutAddress());
+                    var node = nodeIdentityProvider.GetNodeIdentity();
+                    message.PushNodeAddress(new NodeAddress
+                                            {
+                                                Address = node.BrokerName,
+                                                Identity = node.Identity
+                                            });
 
                     message.SignMessage(securityProvider);
 
@@ -288,16 +267,8 @@ namespace kino.Routing.Kafka
 
                     ForwardedToOtherNode(message);
                 }
-                catch (TimeoutException err)
+                catch (Exception err)
                 {
-                    clusterServices.GetClusterHealthMonitor()
-                                   .ScheduleConnectivityCheck(new ReceiverIdentifier(route.Node.SocketIdentity));
-                    logger.Error(err);
-                }
-                catch (HostUnreachableException err)
-                {
-                    var unregMessage = new UnregisterUnreachableNodeMessage {ReceiverNodeIdentity = route.Node.SocketIdentity};
-                    TryHandleServiceMessage(Message.Create(unregMessage).As<Message>(), scaleOutBackend);
                     logger.Error(err);
                 }
             }
@@ -340,13 +311,6 @@ namespace kino.Routing.Kafka
         private static bool MessageCameFromOtherNode(IMessage message)
             => !MessageCameFromLocalActor(message);
 
-        private ISocket CreateScaleOutBackendSocket()
-        {
-            socket.SendRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterScaleoutBackendSocketSendRate);
-
-            return socket;
-        }
-
         private bool TryHandleServiceMessage(Message message, ISocket scaleOutBackend)
         {
             var serviceMessageHandler = serviceMessageHandlerRegistry.GetMessageHandler(message);
@@ -354,6 +318,24 @@ namespace kino.Routing.Kafka
             serviceMessageHandler?.Handle(message, scaleOutBackend);
 
             return serviceMessageHandler != null;
+        }
+
+        private void RoutedToLocalActor(Message message)
+        {
+            if ((message.TraceOptions & MessageTraceOptions.Routing) == MessageTraceOptions.Routing)
+            {
+                logger.Trace($"Message: {message} " +
+                             $"routed to {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetAnyString()}");
+            }
+        }
+
+        private void ForwardedToOtherNode(Message message)
+        {
+            if ((message.TraceOptions & MessageTraceOptions.Routing) == MessageTraceOptions.Routing)
+            {
+                logger.Trace($"Message: {message} " +
+                             $"forwarded to other node {nameof(message.SocketIdentity)}:{message.SocketIdentity.GetAnyString()}");
+            }
         }
     }
 }

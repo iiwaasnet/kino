@@ -37,7 +37,7 @@ namespace kino.Routing.Kafka
 
         public KafkaPeerConnection AddMessageRoute(ExternalKafkaRouteRegistration routeRegistration)
         {
-            var nodeIdentifier = new ReceiverIdentifier(routeRegistration.Node.NodeIdentity);
+            var nodeIdentifier = new ReceiverIdentifier(routeRegistration.Node.Identity);
 
             if (routeRegistration.Route.Receiver.IsActor())
             {
@@ -46,7 +46,7 @@ namespace kino.Routing.Kafka
                 MapActorToNode(routeRegistration, nodeIdentifier);
 
                 logger.Debug("External route added "
-                           + $"BrokerUri:{routeRegistration.Node.BrokerUri} "
+                           + $"BrokerUri:{routeRegistration.Node.BrokerName} "
                            + $"Topic:{routeRegistration.Node.Topic} "
                            + $"Queue:{routeRegistration.Node.Queue} "
                            + $"Node:{nodeIdentifier} "
@@ -60,7 +60,7 @@ namespace kino.Routing.Kafka
                     MapMessageHubToNode(routeRegistration, nodeIdentifier);
 
                     logger.Debug("External route added "
-                               + $"BrokerUri:{routeRegistration.Node.BrokerUri} "
+                               + $"BrokerUri:{routeRegistration.Node.BrokerName} "
                                + $"Topic:{routeRegistration.Node.Topic} "
                                + $"Queue:{routeRegistration.Node.Queue} "
                                + $"Node:{nodeIdentifier} "
@@ -83,7 +83,7 @@ namespace kino.Routing.Kafka
         {
             var cluster = new KafkaAppCluster
                           {
-                              BrokerUri = connection.Node.BrokerUri,
+                              BrokerUri = connection.Node.BrokerName,
                               Topic = connection.Node.Topic,
                               Queue = connection.Node.Queue
                           };
@@ -93,7 +93,7 @@ namespace kino.Routing.Kafka
                 clusterToNodeMap[cluster] = nodes;
             }
 
-            nodes.Add(new ReceiverIdentifier(connection.Node.NodeIdentity));
+            nodes.Add(new ReceiverIdentifier(connection.Node.Identity));
 
             logger.Debug($"[{nodes.Count}] node(s) registered at {cluster}.");
         }
@@ -244,7 +244,7 @@ namespace kino.Routing.Kafka
                        AppCluster = connection != null
                                         ? new KafkaAppCluster
                                           {
-                                              BrokerUri = connection.Node.BrokerUri,
+                                              BrokerUri = connection.Node.BrokerName,
                                               Topic = connection.Node.Topic,
                                               Queue = connection.Node.Queue
                                           }
@@ -256,13 +256,13 @@ namespace kino.Routing.Kafka
         {
             var cluster = new KafkaAppCluster
                           {
-                              BrokerUri = connection.Node.BrokerUri,
+                              BrokerUri = connection.Node.BrokerName,
                               Topic = connection.Node.Topic,
                               Queue = connection.Node.Queue
                           };
             if (clusterToNodeMap.TryGetValue(cluster, out var nodes))
             {
-                if (nodes.Remove(new ReceiverIdentifier(connection.Node.NodeIdentity)))
+                if (nodes.Remove(new ReceiverIdentifier(connection.Node.Identity)))
                 {
                     if (!nodes.Any())
                     {
@@ -324,7 +324,7 @@ namespace kino.Routing.Kafka
                        AppCluster = connection != null
                                         ? new KafkaAppCluster
                                           {
-                                              BrokerUri = connection.Node.BrokerUri,
+                                              BrokerUri = connection.Node.BrokerName,
                                               Topic = connection.Node.Topic,
                                               Queue = connection.Node.Queue
                                           }

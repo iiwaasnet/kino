@@ -109,7 +109,7 @@ namespace kino.Tests.Messaging
             // act
             foreach (var socketEndpoint in socketEndpoints)
             {
-                message.PushRouterAddress(socketEndpoint);
+                message.PushNodeAddress(socketEndpoint);
             }
             // assert
             CollectionAssert.AreEquivalent(socketEndpoints, message.GetMessageRouting());
@@ -131,7 +131,7 @@ namespace kino.Tests.Messaging
             // act
             foreach (var socketEndpoint in socketEndpoints)
             {
-                message.PushRouterAddress(socketEndpoint);
+                message.PushNodeAddress(socketEndpoint);
             }
             // assert
             CollectionAssert.AreEquivalent(socketEndpoints, message.GetMessageRouting());
@@ -150,7 +150,7 @@ namespace kino.Tests.Messaging
                                   };
             foreach (var socketEndpoint in socketEndpoints)
             {
-                message.PushRouterAddress(socketEndpoint);
+                message.PushNodeAddress(socketEndpoint);
             }
             // act
             var wireFrames = messageWireFormatter.Serialize(message);

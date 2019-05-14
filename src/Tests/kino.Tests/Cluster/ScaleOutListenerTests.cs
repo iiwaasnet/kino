@@ -105,8 +105,8 @@ namespace kino.Tests.Cluster
                                           Guid.NewGuid().ToByteArray(),
                                           new[] {KinoMessages.Ping, KinoMessages.Pong},
                                           Randomizer.Int64());
-            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
-            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
+            message.PushNodeAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
+            message.PushNodeAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
             message.SetCorrelationId(Guid.NewGuid().ToByteArray());
             frontEndSocket.SetupMessageReceived(message, tokenSource.Token);
             localRouterSocket.Setup(m => m.Send(message)).Throws<Exception>();
@@ -143,8 +143,8 @@ namespace kino.Tests.Cluster
                                           Guid.NewGuid().ToByteArray(),
                                           new[] {KinoMessages.Ping, KinoMessages.Pong},
                                           Randomizer.Int64());
-            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
-            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
+            message.PushNodeAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
+            message.PushNodeAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
             message.SetCorrelationId(Guid.NewGuid().ToByteArray());
             frontEndSocket.Setup(m => m.Receive(It.IsAny<CancellationToken>())).Throws<Exception>();
             //
@@ -218,8 +218,8 @@ namespace kino.Tests.Cluster
                                           Guid.NewGuid().ToByteArray(),
                                           new[] {KinoMessages.ReceiptConfirmation},
                                           Randomizer.Int64());
-            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
-            message.PushRouterAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
+            message.PushNodeAddress(SocketEndpoint.Parse("tcp://127.0.0.4:7878", Guid.NewGuid().ToByteArray()));
+            message.PushNodeAddress(SocketEndpoint.Parse("tcp://127.0.0.5:5464", Guid.NewGuid().ToByteArray()));
             message.SetCorrelationId(Guid.NewGuid().ToByteArray());
             frontEndSocket.SetupMessageReceived(message, tokenSource.Token);
             //

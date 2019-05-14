@@ -127,7 +127,7 @@ namespace kino.Routing
                                 if (message != null)
                                 {
                                     var _ = TryHandleServiceMessage(message, scaleOutBackend)
-                                         || HandleOperationMessage(message, scaleOutBackend);
+                                            || HandleOperationMessage(message, scaleOutBackend);
                                 }
 
                                 var registration = internalRegistrationsReceiver.TryReceive();
@@ -193,8 +193,8 @@ namespace kino.Routing
             {
                 handled = SendMessageLocally(internalRoutingTable.FindRoutes(lookupRequest), message);
                 handled = MessageCameFromLocalActor(message)
-                       && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
-                       || handled;
+                          && SendMessageAway(externalRoutingTable.FindRoutes(lookupRequest), message, scaleOutBackend)
+                          || handled;
             }
             else
             {
@@ -277,7 +277,12 @@ namespace kino.Routing
 
                     message.SetSocketIdentity(route.Node.SocketIdentity);
                     message.AddHop();
-                    message.PushRouterAddress(scaleOutConfigurationProvider.GetScaleOutAddress());
+                    var scaleOutAddress = scaleOutConfigurationProvider.GetScaleOutAddress();
+                    message.PushNodeAddress(new NodeAddress
+                                            {
+                                                Address = scaleOutAddress.Uri,
+                                                Identity = scaleOutAddress.Identity
+                                            });
 
                     message.SignMessage(securityProvider);
 
@@ -321,7 +326,7 @@ namespace kino.Routing
                         $"[{nameof(lookupRequest.ReceiverNodeIdentity)}:{lookupRequest.ReceiverNodeIdentity}]-" +
                         $"[{nameof(lookupRequest.ReceiverIdentity)}:{lookupRequest.ReceiverIdentity}]-" +
                         $"[{lookupRequest.Distribution}] " +
-                        $"Sent by:[{route?.Identity.GetAnyString()}@{route?.Uri}]");
+                        $"Sent by:[{route?.Identity.GetAnyString()}@{route?.Address}]");
 
             return true;
         }
