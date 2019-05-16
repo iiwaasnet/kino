@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Confluent.Kafka;
@@ -7,20 +9,49 @@ using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Kafka;
 using MessageIdentifier = kino.Messaging.Kafka.MessageIdentifier;
-using SocketEndpoint = kino.Messaging.Kafka.SocketEndpoint;
 
 namespace kino.Connectivity.Kafka
 {
     public class KafkaSender : ISender
     {
+        private readonly KafkaSenderConfiguration config;
+        private readonly ConcurrentDictionary<string, IProducer<Null, byte[]>> producers;
         private static readonly IMessageSerializer DefaultSerializer = new ProtobufMessageSerializer();
-        private readonly IProducer<Null, byte[]> sender;
         private ReceiverIdentifier socketIdentity;
         private static readonly TimeSpan DefaultFlushTimeout = TimeSpan.FromMilliseconds(500);
 
         public KafkaSender(KafkaSenderConfiguration config)
         {
+            this.config = config;
+            producers = new ConcurrentDictionary<string, IProducer<Null, byte[]>>();
             socketIdentity = ReceiverIdentifier.Create();
+        }
+
+        public void Send(string brokerName, string destination, IMessage message)
+        {
+            if (producers.TryGetValue(brokerName, out var producer))
+            {
+                Send(producer, destination, message);
+            }
+            else
+            {
+                throw new KeyNotFoundException(brokerName);
+            }
+        }
+
+        public void Connect(string brokerName)
+            => producers.GetOrAdd(brokerName, CreateProducer);
+
+        private IProducer<Null, byte[]> CreateProducer(string _)
+            => CreateKafkaProducer();
+
+        public void Disconnect(string brokerName)
+        {
+            throw new NotImplementedException();
+        }
+
+        private IProducer<Null, byte[]> CreateKafkaProducer()
+        {
             var consumerConfig = new ProducerConfig
                                  {
                                      BootstrapServers = config.BootstrapServers,
@@ -30,10 +61,10 @@ namespace kino.Connectivity.Kafka
                                      SocketKeepaliveEnable = config.SocketKeepAliveEnabled,
                                      ApiVersionRequest = true
                                  };
-            sender = new ProducerBuilder<Null, byte[]>(consumerConfig).Build();
+            return new ProducerBuilder<Null, byte[]>(consumerConfig).Build();
         }
 
-        public void Send(string destination, IMessage message)
+        private void Send(IProducer<Null, byte[]> producer, string destination, IMessage message)
         {
             var msg = message.As<Message>();
 
@@ -53,7 +84,7 @@ namespace kino.Connectivity.Kafka
                                   Signature = msg.Signature,
                                   Hops = msg.Hops,
                                   Routing = msg.GetMessageRouting()
-                                               .Select(r => new SocketEndpoint {BrokerUri = r.Uri, Identity = r.Identity})
+                                               .Select(r => new Messaging.Kafka.NodeAddress {Address = r.Address, Identity = r.Identity})
                                                .ToList(),
                                   CallbackPoint = msg.CallbackPoint
                                                      .Select(cp => new MessageIdentifier
@@ -76,12 +107,15 @@ namespace kino.Connectivity.Kafka
                                                  {KafkaMessageHeaders.DestinationNodeIdentity, msg.SocketIdentity}
                                              }
                                };
-            sender.Produce(destination, kafkaMessage);
+            producer.Produce(destination, kafkaMessage);
         }
 
         public void Dispose()
         {
-            sender.Flush(DefaultFlushTimeout);
+            foreach (var producer in producers.Values)
+            {
+                producer.Flush(DefaultFlushTimeout);
+            }
         }
     }
 }

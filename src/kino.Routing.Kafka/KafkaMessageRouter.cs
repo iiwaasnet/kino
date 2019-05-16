@@ -300,7 +300,7 @@ namespace kino.Routing.Kafka
                         $"[{nameof(lookupRequest.ReceiverNodeIdentity)}:{lookupRequest.ReceiverNodeIdentity}]-" +
                         $"[{nameof(lookupRequest.ReceiverIdentity)}:{lookupRequest.ReceiverIdentity}]-" +
                         $"[{lookupRequest.Distribution}] " +
-                        $"Sent by:[{route?.Identity.GetAnyString()}@{route?.Uri}]");
+                        $"Sent by:[{route?.Identity.GetAnyString()}@{route?.Address}]");
 
             return true;
         }
@@ -311,11 +311,11 @@ namespace kino.Routing.Kafka
         private static bool MessageCameFromOtherNode(IMessage message)
             => !MessageCameFromLocalActor(message);
 
-        private bool TryHandleServiceMessage(Message message, ISocket scaleOutBackend)
+        private bool TryHandleServiceMessage(Message message)
         {
             var serviceMessageHandler = serviceMessageHandlerRegistry.GetMessageHandler(message);
 
-            serviceMessageHandler?.Handle(message, scaleOutBackend);
+            serviceMessageHandler?.Handle(message);
 
             return serviceMessageHandler != null;
         }

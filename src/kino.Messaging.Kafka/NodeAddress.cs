@@ -1,8 +1,8 @@
 ﻿namespace kino.Messaging.Kafka
 {
-    public class SocketEndpoint
+    public class NodeAddress
     {
-        public string BrokerUri { get; set; }
+        public string Address { get; set; }
 
         public byte[] Identity { get; set; }
     }

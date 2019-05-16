@@ -19,13 +19,13 @@ namespace kino.Routing.Kafka
             // TODO: Optimize to compare only Topic and BrokerUri
             return Topic == other.Topic
                    && Queue == other.Queue
-                   && BrokerUri == other.BrokerUri;
+                   && BrokerName == other.BrokerName;
         }
 
         public override string ToString()
-            => $"{Topic}-{Queue}@{BrokerUri}";
+            => $"{Topic}-{Queue}@{BrokerName}";
 
-        public string BrokerUri { get; set; }
+        public string BrokerName { get; set; }
 
         public string Topic { get; set; }
 

@@ -5,6 +5,10 @@ namespace kino.Connectivity.Kafka
 {
     public interface ISender : IDisposable
     {
-        void Send(string destination, IMessage message);
+        void Send(string brokerName, string destination, IMessage message);
+
+        void Connect(string brokerName);
+
+        void Disconnect(string brokerName);
     }
 }

@@ -8,6 +8,12 @@ namespace kino.Connectivity.Kafka
     {
         IMessage Receive(CancellationToken token);
 
-        void Subscribe(string topic);
+        void Subscribe(string brokerName, string topic);
+
+        void Unsubscribe(string brokerName, string topic);
+
+        void Connect(string brokerName);
+
+        void Disconnect(string brokerName);
     }
 }

@@ -1,15 +1,11 @@
-﻿using kino.Core;
-
-namespace kino.Connectivity.Kafka
+﻿namespace kino.Connectivity.Kafka
 {
     public interface IKafkaConnectionFactory
     {
-        IListener GetListener(string uri, string groupId, string topic);
+        IListener CreateListener();
 
-        ISender GetSender(KafkaNode node);
+        IListener CreateListener(string groupId);
 
-        ISender CreateSender(KafkaSenderConfiguration config);
-
-        IListener CreateListener(KafkaListenerConfiguration config);
+        ISender CreateSender();
     }
 }

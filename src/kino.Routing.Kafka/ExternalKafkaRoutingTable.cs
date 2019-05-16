@@ -83,7 +83,7 @@ namespace kino.Routing.Kafka
         {
             var cluster = new KafkaAppCluster
                           {
-                              BrokerUri = connection.Node.BrokerName,
+                              BrokerName = connection.Node.BrokerName,
                               Topic = connection.Node.Topic,
                               Queue = connection.Node.Queue
                           };
@@ -244,7 +244,7 @@ namespace kino.Routing.Kafka
                        AppCluster = connection != null
                                         ? new KafkaAppCluster
                                           {
-                                              BrokerUri = connection.Node.BrokerName,
+                                              BrokerName = connection.Node.BrokerName,
                                               Topic = connection.Node.Topic,
                                               Queue = connection.Node.Queue
                                           }
@@ -256,7 +256,7 @@ namespace kino.Routing.Kafka
         {
             var cluster = new KafkaAppCluster
                           {
-                              BrokerUri = connection.Node.BrokerName,
+                              BrokerName = connection.Node.BrokerName,
                               Topic = connection.Node.Topic,
                               Queue = connection.Node.Queue
                           };
@@ -324,7 +324,7 @@ namespace kino.Routing.Kafka
                        AppCluster = connection != null
                                         ? new KafkaAppCluster
                                           {
-                                              BrokerUri = connection.Node.BrokerName,
+                                              BrokerName = connection.Node.BrokerName,
                                               Topic = connection.Node.Topic,
                                               Queue = connection.Node.Queue
                                           }
@@ -468,7 +468,7 @@ namespace kino.Routing.Kafka
             => clusterToNodeMap.SelectMany(uriNodes => uriNodes.Value.Select(node => (Identitifier: node, AppCluster: uriNodes.Key)))
                                .Select(node => new ExternalKafkaRoute
                                                {
-                                                   Node = new KafkaNode(node.AppCluster.BrokerUri,
+                                                   Node = new KafkaNode(node.AppCluster.BrokerName,
                                                                         node.AppCluster.Topic,
                                                                         node.AppCluster.Queue,
                                                                         node.Identitifier.Identity),

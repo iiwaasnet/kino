@@ -41,6 +41,6 @@ namespace kino.Messaging.Kafka
 
         public string Domain { get; set; }
 
-        public IEnumerable<SocketEndpoint> Routing { get; set; }
+        public IEnumerable<NodeAddress> Routing { get; set; }
     }
 }
