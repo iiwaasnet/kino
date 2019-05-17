@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using kino.Cluster.Kafka;
-using kino.Cluster.Kafka.Configuration;
 using kino.Connectivity;
 using kino.Connectivity.Kafka;
 using kino.Core;
@@ -11,6 +10,7 @@ using kino.Core.Diagnostics;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
+using kino.Routing.Kafka.ServiceMessageHandlers;
 using kino.Routing.ServiceMessageHandlers;
 using kino.Security;
 
@@ -21,11 +21,10 @@ namespace kino.Routing.Kafka
         private CancellationTokenSource cancellationTokenSource;
         private Thread localRouting;
         private readonly IInternalRoutingTable internalRoutingTable;
-        private readonly IExternalKafkaRoutingTable externalRoutingTable;
-        private readonly INodeIdentityProvider nodeIdentityProvider;
+        private readonly IKafkaExternalRoutingTable externalRoutingTable;
+        private readonly IKafkaScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly IKafkaClusterServices clusterServices;
-        private readonly IServiceMessageHandlerRegistry serviceMessageHandlerRegistry;
-        private readonly IKafkaConnectionFactory connectionFactory;
+        private readonly IKafkaServiceMessageHandlerRegistry serviceMessageHandlerRegistry;
         private readonly ILogger logger;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ISecurityProvider securityProvider;
@@ -35,25 +34,25 @@ namespace kino.Routing.Kafka
         private readonly IRoundRobinDestinationList roundRobinDestinationList;
         private byte[] thisNodeIdentity;
         private bool isStarted;
+        private readonly ISender sender;
 
         public KafkaMessageRouter(IKafkaConnectionFactory connectionFactory,
                                   ILocalSocketFactory localSocketFactory,
                                   IInternalRoutingTable internalRoutingTable,
-                                  IExternalKafkaRoutingTable externalRoutingTable,
-                                  INodeIdentityProvider nodeIdentityProvider,
+                                  IKafkaExternalRoutingTable externalRoutingTable,
+                                  IKafkaScaleOutConfigurationProvider scaleOutConfigurationProvider,
                                   IKafkaClusterServices clusterServices,
-                                  IServiceMessageHandlerRegistry serviceMessageHandlerRegistry,
+                                  IKafkaServiceMessageHandlerRegistry serviceMessageHandlerRegistry,
                                   IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                   ISecurityProvider securityProvider,
                                   IInternalMessageRouteRegistrationHandler internalRegistrationHandler,
                                   IRoundRobinDestinationList roundRobinDestinationList,
                                   ILogger logger)
         {
-            this.connectionFactory = connectionFactory;
             this.logger = logger;
             this.internalRoutingTable = internalRoutingTable;
             this.externalRoutingTable = externalRoutingTable;
-            this.nodeIdentityProvider = nodeIdentityProvider;
+            this.scaleOutConfigurationProvider = scaleOutConfigurationProvider;
             this.clusterServices = clusterServices;
             this.serviceMessageHandlerRegistry = serviceMessageHandlerRegistry;
             this.performanceCounterManager = performanceCounterManager;
@@ -64,6 +63,7 @@ namespace kino.Routing.Kafka
             localRouterSocket.ReceiveRate = performanceCounterManager.GetCounter(KinoPerformanceCounters.MessageRouterLocalSocketReceiveRate);
             this.internalRegistrationHandler = internalRegistrationHandler;
             this.roundRobinDestinationList = roundRobinDestinationList;
+            sender = connectionFactory.CreateSender();
         }
 
         public void Start()
@@ -97,7 +97,7 @@ namespace kino.Routing.Kafka
         }
 
         private byte[] GetLocalNodeIdentity()
-            => nodeIdentityProvider.GetNodeIdentity().Identity;
+            => scaleOutConfigurationProvider.GetScaleOutAddress().Identity;
 
         private void RouteLocalMessages(CancellationToken token, Barrier barrier)
         {
@@ -243,9 +243,9 @@ namespace kino.Routing.Kafka
             {
                 try
                 {
-                    var sender = connectionFactory.GetSender(route.Node);
                     if (!route.Connected)
                     {
+                        sender.Connect(route.Node.BrokerName);
                         route.Connected = true;
                         clusterServices.GetClusterHealthMonitor()
                                        .StartPeerMonitoring(route.Node, route.Health);
@@ -253,7 +253,7 @@ namespace kino.Routing.Kafka
 
                     message.SetSocketIdentity(route.Node.Identity);
                     message.AddHop();
-                    var node = nodeIdentityProvider.GetNodeIdentity();
+                    var node = scaleOutConfigurationProvider.GetScaleOutAddress();
                     message.PushNodeAddress(new NodeAddress
                                             {
                                                 Address = node.BrokerName,
@@ -262,8 +262,7 @@ namespace kino.Routing.Kafka
 
                     message.SignMessage(securityProvider);
 
-                    var destination = GetDestination(route.Node, message);
-                    sender.Send(destination, message);
+                    sender.Send(route.Node.BrokerName, SelectDestination(route.Node, message), message);
 
                     ForwardedToOtherNode(message);
                 }
@@ -276,7 +275,7 @@ namespace kino.Routing.Kafka
             return routes.Any();
         }
 
-        private static string GetDestination(KafkaNode node, Message message)
+        private static string SelectDestination(KafkaNode node, Message message)
             => message.ReceiverNodeIdentity.IsSet() || message.Distribution == DistributionPattern.Broadcast
                    ? node.Topic
                    : node.Queue;
@@ -315,7 +314,7 @@ namespace kino.Routing.Kafka
         {
             var serviceMessageHandler = serviceMessageHandlerRegistry.GetMessageHandler(message);
 
-            serviceMessageHandler?.Handle(message);
+            serviceMessageHandler?.Handle(message, sender);
 
             return serviceMessageHandler != null;
         }

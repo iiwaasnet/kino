@@ -5,7 +5,7 @@ namespace kino.Connectivity.Kafka
 {
     public class KafkaListenerConfiguration
     {
-        public string BootstrapServers { get; set; }
+        public string BrokerName { get; set; }
 
         public AutoOffsetReset AutoOffsetReset { get; set; }
 

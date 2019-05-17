@@ -14,14 +14,17 @@ namespace kino.Connectivity.Kafka
 {
     public class KafkaSender : ISender
     {
+        private readonly IKafkaBrokerAddressResolver brokerAddressResolver;
         private readonly KafkaSenderConfiguration config;
         private readonly ConcurrentDictionary<string, IProducer<Null, byte[]>> producers;
         private static readonly IMessageSerializer DefaultSerializer = new ProtobufMessageSerializer();
         private ReceiverIdentifier socketIdentity;
         private static readonly TimeSpan DefaultFlushTimeout = TimeSpan.FromMilliseconds(500);
 
-        public KafkaSender(KafkaSenderConfiguration config)
+        public KafkaSender(IKafkaBrokerAddressResolver brokerAddressResolver, 
+                           KafkaSenderConfiguration config)
         {
+            this.brokerAddressResolver = brokerAddressResolver;
             this.config = config;
             producers = new ConcurrentDictionary<string, IProducer<Null, byte[]>>();
             socketIdentity = ReceiverIdentifier.Create();
@@ -42,19 +45,19 @@ namespace kino.Connectivity.Kafka
         public void Connect(string brokerName)
             => producers.GetOrAdd(brokerName, CreateProducer);
 
-        private IProducer<Null, byte[]> CreateProducer(string _)
-            => CreateKafkaProducer();
+        private IProducer<Null, byte[]> CreateProducer(string brokerName)
+            => CreateKafkaProducer(brokerName);
 
         public void Disconnect(string brokerName)
         {
             throw new NotImplementedException();
         }
 
-        private IProducer<Null, byte[]> CreateKafkaProducer()
+        private IProducer<Null, byte[]> CreateKafkaProducer(string brokerName)
         {
             var consumerConfig = new ProducerConfig
                                  {
-                                     BootstrapServers = config.BootstrapServers,
+                                     BootstrapServers = brokerAddressResolver.GetBootstrapServers(brokerName),
                                      ClientId = $"{Environment.MachineName}-{Process.GetCurrentProcess().Id}",
                                      LingerMs = (int?) config.Linger?.TotalMilliseconds,
                                      LogConnectionClose = false,
@@ -104,7 +107,8 @@ namespace kino.Connectivity.Kafka
                                    Value = DefaultSerializer.Serialize(wireMessage),
                                    Headers = new Headers
                                              {
-                                                 {KafkaMessageHeaders.DestinationNodeIdentity, msg.SocketIdentity}
+                                                 {KafkaMessageHeaders.DestinationNodeIdentity, msg.SocketIdentity},
+                                                 {KafkaMessageHeaders.WireFormatVersion, Versioning.KafkaWireFormatV6.GetBytes()}
                                              }
                                };
             producer.Produce(destination, kafkaMessage);

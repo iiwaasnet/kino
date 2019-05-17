@@ -3,7 +3,7 @@ using kino.Core;
 
 namespace kino.Routing.Kafka
 {
-    public interface IExternalKafkaRoutingTable
+    public interface IKafkaExternalRoutingTable
     {
         KafkaPeerConnection AddMessageRoute(ExternalKafkaRouteRegistration routeRegistration);
 

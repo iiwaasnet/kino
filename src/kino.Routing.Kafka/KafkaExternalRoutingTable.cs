@@ -12,7 +12,7 @@ namespace kino.Routing.Kafka
 {
     //TODO: Create interface
 
-    public class ExternalKafkaRoutingTable : IExternalKafkaRoutingTable
+    public class KafkaExternalRoutingTable : IKafkaExternalRoutingTable
     {
         private readonly Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<ReceiverIdentifier>> nodeMessageHubs;
         private readonly Bcl.IDictionary<ReceiverIdentifier, Bcl.HashSet<ReceiverIdentifier>> nodeActors;
@@ -23,7 +23,7 @@ namespace kino.Routing.Kafka
         private readonly IRoundRobinDestinationList roundRobinList;
         private readonly ILogger logger;
 
-        public ExternalKafkaRoutingTable(IRoundRobinDestinationList roundRobinList, ILogger logger)
+        public KafkaExternalRoutingTable(IRoundRobinDestinationList roundRobinList, ILogger logger)
         {
             this.roundRobinList = roundRobinList;
             this.logger = logger;

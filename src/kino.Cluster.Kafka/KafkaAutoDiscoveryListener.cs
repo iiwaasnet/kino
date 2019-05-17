@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using kino.Cluster.Configuration;
 using kino.Connectivity;
 using kino.Connectivity.Kafka;
 using kino.Core.Diagnostics;
@@ -13,24 +12,17 @@ namespace kino.Cluster.Kafka
 {
     public class KafkaAutoDiscoveryListener : IAutoDiscoveryListener
     {
-        private readonly IScaleOutConfigurationProvider scaleOutConfigurationProvider;
+        private readonly IKafkaScaleOutConfigurationProvider scaleOutConfigurationProvider;
         private readonly KafkaRendezvousConfiguration config;
         private readonly IKafkaConnectionFactory connectionFactory;
         private readonly ILogger logger;
-        //private readonly IRendezvousCluster rendezvousCluster;
-        //private readonly IKafkaConnectionFactory connectionFactory;
-        //private readonly TimeSpan heartBeatSilenceBeforeRendezvousFailover;
-        //private readonly ManualResetEvent heartBeatReceived;
-        //private readonly ManualResetEvent newRendezvousConfiguration;
         private readonly IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager;
         private readonly ISendingSocket<IMessage> forwardingSocket;
 
         public KafkaAutoDiscoveryListener(KafkaRendezvousConfiguration config,
-                                          //IRendezvousCluster rendezvousCluster,
                                           IKafkaConnectionFactory connectionFactory,
                                           ILocalSocketFactory localSocketFactory,
-                                          IScaleOutConfigurationProvider scaleOutConfigurationProvider,
-                                          //ClusterMembershipConfiguration membershipConfiguration,
+                                          IKafkaScaleOutConfigurationProvider scaleOutConfigurationProvider,
                                           IPerformanceCounterManager<KinoPerformanceCounters> performanceCounterManager,
                                           ILogger logger)
 
@@ -41,10 +33,6 @@ namespace kino.Cluster.Kafka
             this.logger = logger;
             this.performanceCounterManager = performanceCounterManager;
             forwardingSocket = localSocketFactory.CreateNamed<IMessage>(NamedSockets.RouterLocalSocket);
-            //this.rendezvousCluster = rendezvousCluster;
-            //heartBeatSilenceBeforeRendezvousFailover = membershipConfiguration.HeartBeatSilenceBeforeRendezvousFailover;
-            //heartBeatReceived = new ManualResetEvent(false);
-            //newRendezvousConfiguration = new ManualResetEvent(false);
         }
 
         public void StartBlockingListenMessages(Action restartRequestHandler, CancellationToken token, Barrier gateway)
@@ -83,10 +71,10 @@ namespace kino.Cluster.Kafka
 
         private IListener CreateClusterListener()
         {
-            var listener = connectionFactory.CreateListener(config);
-            listener.Subscribe(config.Topic);
+            var listener = connectionFactory.CreateListener();
+            listener.Subscribe(config.BrokerName, config.Topic);
 
-            logger.Info($"Connected to Rendezvous {config.Topic}@{config.BootstrapServers}");
+            logger.Info($"Connected to Rendezvous {config.Topic}@{config.BrokerName}");
 
             return listener;
         }

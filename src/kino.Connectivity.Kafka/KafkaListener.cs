@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Confluent.Kafka;
+using kino.Core;
 using kino.Core.Diagnostics.Performance;
 using kino.Core.Framework;
 using kino.Messaging;
@@ -17,16 +18,20 @@ namespace kino.Connectivity.Kafka
     public class KafkaListener : IListener
     {
         private static readonly IMessageSerializer DefaultSerializer = new ProtobufMessageSerializer();
+        private readonly IKafkaBrokerAddressResolver brokerAddressResolver;
         private readonly KafkaListenerConfiguration config;
         private readonly string groupId;
         private readonly BlockingCollection<IMessage> receivedMessages;
         private readonly ConcurrentDictionary<string, ConsumerThreadData> consumers;
         private readonly ManualResetEventSlim receiveNewMessages;
         private readonly ManualResetEventSlim messageAvailable;
+        private ReceiverIdentifier identity;
 
-        public KafkaListener(KafkaListenerConfiguration config,
+        public KafkaListener(IKafkaBrokerAddressResolver brokerAddressResolver,
+                             KafkaListenerConfiguration config,
                              string groupId)
         {
+            this.brokerAddressResolver = brokerAddressResolver;
             this.config = config;
             this.groupId = groupId;
             consumers = new ConcurrentDictionary<string, ConsumerThreadData>();
@@ -107,6 +112,9 @@ namespace kino.Connectivity.Kafka
             }
         }
 
+        public void SetIdentity(byte[] identity)
+            => this.identity = new ReceiverIdentifier(identity);
+
         private ConsumerThreadData CreateConsumer(string brokerName)
         {
             var cancellationTokenSource = new CancellationTokenSource();
@@ -129,7 +137,8 @@ namespace kino.Connectivity.Kafka
 
                 ReceiveRate?.Increment();
 
-                var wireFormatVersion = res.Headers[0].GetValueBytes().GetUShort();
+                res.Headers.TryGetLastBytes(KafkaMessageHeaders.WireFormatVersion, out var bytes);
+                var wireFormatVersion = bytes.GetUShort();
 
                 var msg = DefaultSerializer.Deserialize<WireMessage>(res.Value);
 
@@ -182,7 +191,7 @@ namespace kino.Connectivity.Kafka
                                  {
                                      GroupId = groupId,
                                      AutoOffsetReset = config.AutoOffsetReset,
-                                     BootstrapServers = config.BootstrapServers,
+                                     BootstrapServers = brokerAddressResolver.GetBootstrapServers(config.BrokerName),
                                      ClientId = $"{Environment.MachineName}-{Process.GetCurrentProcess().Id}",
                                      SessionTimeoutMs = config.SessionTimeout.HasValue
                                                             ? (int?) config.SessionTimeout.Value.TotalMilliseconds

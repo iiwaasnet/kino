@@ -1,21 +1,21 @@
 ﻿using kino.Cluster;
-using kino.Connectivity;
+using kino.Connectivity.Kafka;
 using kino.Core;
 using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Security;
 
-namespace kino.Routing.ServiceMessageHandlers
+namespace kino.Routing.Kafka.ServiceMessageHandlers
 {
-    public class NodeUnregistrationHandler : IServiceMessageHandler
+    public class NodeUnregistrationHandler : IKafkaServiceMessageHandler
     {
         private readonly IClusterHealthMonitor clusterHealthMonitor;
-        private readonly IExternalRoutingTable externalRoutingTable;
+        private readonly IKafkaExternalRoutingTable externalRoutingTable;
         private readonly ISecurityProvider securityProvider;
 
         public NodeUnregistrationHandler(IClusterHealthMonitor clusterHealthMonitor,
-                                         IExternalRoutingTable externalRoutingTable,
+                                         IKafkaExternalRoutingTable externalRoutingTable,
                                          ISecurityProvider securityProvider)
         {
             this.clusterHealthMonitor = clusterHealthMonitor;
@@ -23,7 +23,7 @@ namespace kino.Routing.ServiceMessageHandlers
             this.securityProvider = securityProvider;
         }
 
-        public void Handle(IMessage message, ISocket scaleOutBackend)
+        public void Handle(IMessage message, ISender scaleOutBackend)
         {
             if (securityProvider.DomainIsAllowed(message.Domain))
             {
@@ -35,7 +35,7 @@ namespace kino.Routing.ServiceMessageHandlers
                 var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(nodeIdentifier);
                 if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
                 {
-                    scaleOutBackend.SafeDisconnect(peerRemoveResult.Uri);
+                    scaleOutBackend.Disconnect(peerRemoveResult.AppCluster.BrokerName);
                 }
                 if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
                 {

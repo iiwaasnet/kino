@@ -65,24 +65,24 @@ namespace kino.Messaging
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int CalculateMetaFrameSize(Message msg)
             => sizeof(ushort) // WireFormatV6
-             + GetArraySize(msg.Partition)
-             + sizeof(ushort) // Version
-             + GetArraySize(msg.Identity)
-             + GetArraySize(msg.ReceiverIdentity)
-             + GetArraySize(msg.ReceiverNodeIdentity)
-             + sizeof(ulong)
-             + GetArraySize(msg.CallbackReceiverNodeIdentity)
-             + sizeof(long)
-             + GetStringSize(msg.Domain)
-             + GetArraySize(msg.Signature)
-             + sizeof(ulong)
-             + GetMessageRoutingSize(msg)
-             + sizeof(ushort)
-             + GetCallbacksSize(msg)
-             + GetArraySize(msg.CallbackReceiverIdentity)
-             + GetArraySize(msg.CorrelationId)
-             + sizeof(long) // TTL
-             + sizeof(ulong);
+               + GetArraySize(msg.Partition)
+               + sizeof(ushort) // Version
+               + GetArraySize(msg.Identity)
+               + GetArraySize(msg.ReceiverIdentity)
+               + GetArraySize(msg.ReceiverNodeIdentity)
+               + sizeof(ulong)
+               + GetArraySize(msg.CallbackReceiverNodeIdentity)
+               + sizeof(long)
+               + GetStringSize(msg.Domain)
+               + GetArraySize(msg.Signature)
+               + sizeof(ulong)
+               + GetMessageRoutingSize(msg)
+               + sizeof(ushort)
+               + GetCallbacksSize(msg)
+               + GetArraySize(msg.CallbackReceiverIdentity)
+               + GetArraySize(msg.CorrelationId)
+               + sizeof(long) // TTL
+               + sizeof(ulong);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int GetCallbacksSize(Message msg)
@@ -91,9 +91,9 @@ namespace kino.Messaging
             foreach (var callback in msg.CallbackPoint)
             {
                 size += GetArraySize(callback.Partition)
-                      + sizeof(ushort)
-                      + GetArraySize(callback.Identity)
-                      + sizeof(int);
+                        + sizeof(ushort)
+                        + GetArraySize(callback.Identity)
+                        + sizeof(int);
             }
 
             return size;
@@ -105,9 +105,9 @@ namespace kino.Messaging
             var size = 0;
             foreach (var socketEndpoint in msg.GetMessageRouting())
             {
-                size += GetStringSize(socketEndpoint.Uri)
-                      + GetArraySize(socketEndpoint.Identity)
-                      + sizeof(int);
+                size += GetStringSize(socketEndpoint.Address)
+                        + GetArraySize(socketEndpoint.Identity)
+                        + sizeof(int);
             }
 
             return size;
@@ -117,9 +117,9 @@ namespace kino.Messaging
         {
             foreach (var callback in callbackPoints)
             {
-                var entrySize = (int) (GetArraySize(callback.Partition)
-                                     + sizeof(ushort)
-                                     + GetArraySize(callback.Identity));
+                var entrySize = GetArraySize(callback.Partition)
+                                + sizeof(ushort)
+                                + GetArraySize(callback.Identity);
                 destination = entrySize.GetBytes(destination);
 
                 destination = AddByteArray(destination, callback.Partition);
@@ -134,8 +134,8 @@ namespace kino.Messaging
         {
             foreach (var socketEndpoint in messageRouting)
             {
-                var entrySize = (int) (GetStringSize(socketEndpoint.Uri)
-                                     + GetArraySize(socketEndpoint.Identity));
+                var entrySize = GetStringSize(socketEndpoint.Uri)
+                                + GetArraySize(socketEndpoint.Identity);
                 destination = entrySize.GetBytes(destination);
 
                 destination = AddString(destination, socketEndpoint.Uri);
@@ -157,7 +157,7 @@ namespace kino.Messaging
         private static Span<byte> AddByteArray(Span<byte> destination, byte[] bytes)
         {
             bytes = bytes ?? EmptyFrame;
-            var length = (int) bytes.Length;
+            var length = bytes.Length;
 
             destination = length.GetBytes(destination);
 
@@ -165,13 +165,14 @@ namespace kino.Messaging
             {
                 destination[i] = bytes[i];
             }
+
             return destination.Slice(length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Span<byte> AddString(Span<byte> destination, string str)
         {
-            destination = ((int) str.Length).GetBytes(destination);
+            destination = str.Length.GetBytes(destination);
             return str.GetBytes(destination);
         }
 
@@ -223,7 +224,8 @@ namespace kino.Messaging
 
                 metaFrame = metaFrame.Slice(entrySize);
             }
-            message.CopyMessageRouting(socketEndpoints);
+
+            message.CopyMessageRouting(socketEndpoints.Select(se => new NodeAddress {Address = se.Uri, Identity = se.Identity}));
             // Callbacks
             metaFrame = metaFrame.GetUShort(out var callbackEntryCount);
             var callbacks = new List<MessageIdentifier>();
@@ -238,6 +240,7 @@ namespace kino.Messaging
 
                 metaFrame = metaFrame.Slice(entrySize);
             }
+
             message.CopyCallbackPoint(callbacks);
             //
             metaFrame = GetByteArray(metaFrame, out var callbackReceiverIdentity);

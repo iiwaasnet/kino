@@ -15,5 +15,7 @@ namespace kino.Connectivity.Kafka
         void Connect(string brokerName);
 
         void Disconnect(string brokerName);
+
+        void SetIdentity(byte[] identity);
     }
 }
