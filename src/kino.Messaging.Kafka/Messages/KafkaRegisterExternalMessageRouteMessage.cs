@@ -4,13 +4,13 @@ using ProtoBuf;
 namespace kino.Messaging.Kafka.Messages
 {
     [ProtoContract]
-    public class RegisterExternalKafkaMessageRouteMessage : KafkaPayload
+    public class KafkaRegisterExternalMessageRouteMessage : KafkaPayload
     {
         private static readonly byte[] MessageIdentity = BuildFullIdentity("REGEXTROUTE");
         private static readonly ushort MessageVersion = Message.CurrentVersion;
 
         [ProtoMember(1)]
-        public string BrokerUri { get; set; }
+        public string BrokerName { get; set; }
 
         [ProtoMember(2)]
         public byte[] NodeIdentity { get; set; }
