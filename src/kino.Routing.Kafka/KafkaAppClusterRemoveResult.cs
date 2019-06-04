@@ -4,6 +4,6 @@
     {
         public KafkaAppCluster AppCluster { get; set; }
 
-        public PeerConnectionAction ConnectionAction { get; set; }
+        public BrokerConnectionAction ConnectionAction { get; set; }
     }
 }

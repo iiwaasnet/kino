@@ -201,7 +201,7 @@ namespace kino.Routing.Kafka
 
         public KafkaAppClusterRemoveResult RemoveNodeRoute(ReceiverIdentifier nodeIdentifier)
         {
-            var connectionAction = PeerConnectionAction.NotFound;
+            var connectionAction = BrokerConnectionAction.NotFound;
 
             if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out var connection))
             {
@@ -252,7 +252,7 @@ namespace kino.Routing.Kafka
                    };
         }
 
-        private PeerConnectionAction RemovePeerNode(KafkaPeerConnection connection)
+        private BrokerConnectionAction RemovePeerNode(KafkaPeerConnection connection)
         {
             var cluster = new KafkaAppCluster
                           {
@@ -270,27 +270,27 @@ namespace kino.Routing.Kafka
 
                         logger.Debug($"Zero nodes left registered at {cluster}. Endpoint will be disconnected.");
 
-                        return PeerConnectionAction.Disconnect;
+                        return BrokerConnectionAction.Disconnect;
                     }
 
                     logger.Debug($"[{nodes.Count}] node(s) left at {cluster}.");
 
-                    return PeerConnectionAction.KeepConnection;
+                    return BrokerConnectionAction.KeepConnection;
                 }
             }
 
-            return PeerConnectionAction.NotFound;
+            return BrokerConnectionAction.NotFound;
         }
 
         public KafkaAppClusterRemoveResult RemoveMessageRoute(ExternalRouteRemoval routeRemoval)
         {
-            var connectionAction = PeerConnectionAction.NotFound;
+            var connectionAction = BrokerConnectionAction.NotFound;
 
             var nodeIdentifier = new ReceiverIdentifier(routeRemoval.NodeIdentifier);
 
             if (nodeToConnectionMap.TryGetValue(nodeIdentifier, out var connection))
             {
-                connectionAction = PeerConnectionAction.KeepConnection;
+                connectionAction = BrokerConnectionAction.KeepConnection;
 
                 if (routeRemoval.Route.Receiver.IsMessageHub())
                 {

@@ -33,11 +33,11 @@ namespace kino.Routing.Kafka.ServiceMessageHandlers
 
                 var nodeIdentifier = new ReceiverIdentifier(payload.ReceiverNodeIdentity);
                 var peerRemoveResult = externalRoutingTable.RemoveNodeRoute(nodeIdentifier);
-                if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
+                if (peerRemoveResult.ConnectionAction == BrokerConnectionAction.Disconnect)
                 {
                     scaleOutBackend.Disconnect(peerRemoveResult.AppCluster.BrokerName);
                 }
-                if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
+                if (peerRemoveResult.ConnectionAction != BrokerConnectionAction.KeepConnection)
                 {
                     clusterHealthMonitor.DeletePeer(nodeIdentifier);
                 }

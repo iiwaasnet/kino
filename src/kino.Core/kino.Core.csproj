@@ -18,9 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Diagnostics\Performance\PerformanceCounterInstaller.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Update="Diagnostics\Performance\PerformanceCounterInstaller.cs" />
   </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

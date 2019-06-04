@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq;
-using kino.Cluster;
+using kino.Cluster.Kafka;
 using kino.Connectivity.Kafka;
 using kino.Core;
 using kino.Core.Diagnostics;
 using kino.Core.Framework;
 using kino.Messaging;
+using kino.Messaging.Kafka.Messages;
 using kino.Messaging.Messages;
 using kino.Security;
-using Health = kino.Cluster.Health;
 
 namespace kino.Routing.Kafka.ServiceMessageHandlers
 {
@@ -17,11 +17,11 @@ namespace kino.Routing.Kafka.ServiceMessageHandlers
         private readonly IKafkaExternalRoutingTable externalRoutingTable;
         private readonly ILogger logger;
         private readonly ISecurityProvider securityProvider;
-        private readonly IClusterHealthMonitor clusterHealthMonitor;
+        private readonly IKafkaClusterHealthMonitor clusterHealthMonitor;
 
         public ExternalMessageRouteRegistrationHandler(IKafkaExternalRoutingTable externalRoutingTable,
                                                        ISecurityProvider securityProvider,
-                                                       IClusterHealthMonitor clusterHealthMonitor,
+                                                       IKafkaClusterHealthMonitor clusterHealthMonitor,
                                                        ILogger logger)
         {
             this.externalRoutingTable = externalRoutingTable;
@@ -36,11 +36,11 @@ namespace kino.Routing.Kafka.ServiceMessageHandlers
             {
                 message.As<Message>().VerifySignature(securityProvider);
 
-                var payload = message.GetPayload<RegisterExternalMessageRouteMessage>();
-                var peer = new Node(new Uri(payload.Uri), payload.NodeIdentity);
-                var health = new Health
+                var payload = message.GetPayload<KafkaRegisterExternalMessageRouteMessage>();
+                var peer = new KafkaNode(payload.BrokerName, payload.Topic, payload.Queue, payload.NodeIdentity);
+                var health = new Cluster.Kafka.Health
                              {
-                                 Uri = payload.Health.Uri,
+                                 Topic = payload.Health.Topic,
                                  HeartBeatInterval = payload.Health.HeartBeatInterval
                              };
                 var peerAddedForMonitoring = false;
@@ -67,10 +67,10 @@ namespace kino.Routing.Kafka.ServiceMessageHandlers
                                     peerAddedForMonitoring = true;
                                 }
 
-                                externalRoutingTable.AddMessageRoute(new ExternalRouteRegistration
+                                externalRoutingTable.AddMessageRoute(new ExternalKafkaRouteRegistration
                                                                      {
                                                                          Route = messageRoute,
-                                                                         Peer = peer,
+                                                                         Node = peer,
                                                                          Health = health
                                                                      });
                             }

@@ -75,13 +75,13 @@ namespace kino.Messaging
             }
         }
 
-        private static void AddRouting(List<byte[]> metaFrame, IEnumerable<SocketEndpoint> messageRouting)
+        private static void AddRouting(List<byte[]> metaFrame, IEnumerable<NodeAddress> messageRouting)
         {
             foreach (var socketEndpoint in messageRouting)
             {
                 var entryBuffer = new List<byte[]>();
 
-                AddString(entryBuffer, socketEndpoint.Uri);
+                AddString(entryBuffer, socketEndpoint.Address);
                 AddByteArray(entryBuffer, socketEndpoint.Identity);
 
                 metaFrame.Add(GetResultBufferSize(entryBuffer).GetBytes());
@@ -93,7 +93,7 @@ namespace kino.Messaging
         private static void AddByteArray(ICollection<byte[]> metaFrame, byte[] bytes)
         {
             bytes = bytes ?? EmptyFrame;
-            metaFrame.Add(((int) bytes.Length).GetBytes());
+            metaFrame.Add(bytes.Length.GetBytes());
             metaFrame.Add(bytes);
         }
 
@@ -101,7 +101,7 @@ namespace kino.Messaging
         private static void AddString(ICollection<byte[]> metaFrame, string str)
         {
             var bytes = str.GetBytes();
-            metaFrame.Add(((int) bytes.Length).GetBytes());
+            metaFrame.Add(bytes.Length.GetBytes());
             metaFrame.Add(bytes);
         }
 
@@ -167,17 +167,18 @@ namespace kino.Messaging
             metaFrame = metaFrame.GetULong(out tmp);
             var (routingEntryCount, hops) = tmp.Split32();
             message.SetHops(hops);
-            var socketEndpoints = new List<SocketEndpoint>();
+            var socketEndpoints = new List<NodeAddress>();
             for (var i = 0; i < routingEntryCount; i++)
             {
                 metaFrame = metaFrame.GetInt(out var entrySize);
-                var identityFrame = GetString(metaFrame, out var uri);
+                var identityFrame = GetString(metaFrame, out var address);
                 var _ = GetByteArray(identityFrame, out var id);
 
-                socketEndpoints.Add(SocketEndpoint.FromTrustedSource(uri, id));
+                socketEndpoints.Add(new NodeAddress {Address = address, Identity = id});
 
                 metaFrame = metaFrame.Slice(entrySize);
             }
+
             message.CopyMessageRouting(socketEndpoints);
             // Callbacks
             metaFrame = metaFrame.GetUShort(out var callbackEntryCount);
@@ -193,6 +194,7 @@ namespace kino.Messaging
 
                 metaFrame = metaFrame.Slice(entrySize);
             }
+
             message.CopyCallbackPoint(callbacks);
             //
             metaFrame = GetByteArray(metaFrame, out var callbackReceiverIdentity);

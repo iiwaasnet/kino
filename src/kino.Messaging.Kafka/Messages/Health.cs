@@ -10,9 +10,6 @@ namespace kino.Messaging.Kafka.Messages
         public string Topic { get; set; }
 
         [ProtoMember(2)]
-        public string GroupId { get; set; }
-
-        [ProtoMember(3)]
         public TimeSpan HeartBeatInterval { get; set; }
     }
 }

@@ -10,7 +10,7 @@ namespace kino.Cluster.Kafka
 
         void AddPeer(KafkaNode peer, Health health);
 
-        void DeletePeer(ReceiverIdentifier nodeIdentifier);
+        void DisconnectFromBroker(string brokerName);
 
         void Start();
 

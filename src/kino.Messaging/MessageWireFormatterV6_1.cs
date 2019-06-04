@@ -130,15 +130,15 @@ namespace kino.Messaging
             return destination;
         }
 
-        private static Span<byte> AddRouting(Span<byte> destination, IEnumerable<SocketEndpoint> messageRouting)
+        private static Span<byte> AddRouting(Span<byte> destination, IEnumerable<NodeAddress> messageRouting)
         {
             foreach (var socketEndpoint in messageRouting)
             {
-                var entrySize = GetStringSize(socketEndpoint.Uri)
+                var entrySize = GetStringSize(socketEndpoint.Address)
                                 + GetArraySize(socketEndpoint.Identity);
                 destination = entrySize.GetBytes(destination);
 
-                destination = AddString(destination, socketEndpoint.Uri);
+                destination = AddString(destination, socketEndpoint.Address);
                 destination = AddByteArray(destination, socketEndpoint.Identity);
             }
 

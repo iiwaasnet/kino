@@ -23,9 +23,10 @@ namespace kino.Messaging
             foreach (var route in msg.GetMessageRouting())
             {
                 // NOTE: New frames come here
-                frames.Add(route.Uri.GetBytes());
+                frames.Add(route.Address.GetBytes());
                 frames.Add(route.Identity);
             }
+
             foreach (var callback in msg.CallbackPoint)
             {
                 // NOTE: New frames come here
@@ -33,24 +34,25 @@ namespace kino.Messaging
                 frames.Add(callback.Version.GetBytes());
                 frames.Add(callback.Identity);
             }
+
             //TODO: Optimize calculation of body, callbacks and routing frames offsets
             frames.Add(msg.CallbackReceiverNodeIdentity ?? EmptyFrame); // 17
-            frames.Add(msg.CallbackKey.GetBytes()); // 16
-            frames.Add(msg.Domain.GetBytes()); // 15
-            frames.Add(msg.Signature ?? EmptyFrame); // 14
-            frames.Add(GetRoutingDescriptionFrame(msg)); // 13
-            frames.Add(GetCallbackDescriptionFrame(msg)); // 12
-            frames.Add(msg.ReceiverIdentity ?? EmptyFrame); // 11
-            frames.Add(msg.CallbackReceiverIdentity ?? EmptyFrame); // 10
-            frames.Add(msg.ReceiverNodeIdentity ?? EmptyFrame); // 9
-            frames.Add(msg.Partition ?? EmptyFrame); // 8
-            frames.Add(msg.Version.GetBytes()); // 7
-            frames.Add(msg.Identity); // 6
-            frames.Add(GetTraceOptionsDistributionFrame(msg)); // 5
-            frames.Add(msg.CorrelationId ?? EmptyFrame); // 4
-            frames.Add(msg.TTL.GetBytes()); // 3
-            frames.Add(GetMessageBodyDescriptionFrame(msg)); // 2
-            frames.Add(Versioning.WireFormatV5.GetBytes()); // 1
+            frames.Add(msg.CallbackKey.GetBytes());                     // 16
+            frames.Add(msg.Domain.GetBytes());                          // 15
+            frames.Add(msg.Signature ?? EmptyFrame);                    // 14
+            frames.Add(GetRoutingDescriptionFrame(msg));                // 13
+            frames.Add(GetCallbackDescriptionFrame(msg));               // 12
+            frames.Add(msg.ReceiverIdentity ?? EmptyFrame);             // 11
+            frames.Add(msg.CallbackReceiverIdentity ?? EmptyFrame);     // 10
+            frames.Add(msg.ReceiverNodeIdentity ?? EmptyFrame);         // 9
+            frames.Add(msg.Partition ?? EmptyFrame);                    // 8
+            frames.Add(msg.Version.GetBytes());                         // 7
+            frames.Add(msg.Identity);                                   // 6
+            frames.Add(GetTraceOptionsDistributionFrame(msg));          // 5
+            frames.Add(msg.CorrelationId ?? EmptyFrame);                // 4
+            frames.Add(msg.TTL.GetBytes());                             // 3
+            frames.Add(GetMessageBodyDescriptionFrame(msg));            // 2
+            frames.Add(Versioning.WireFormatV5.GetBytes());             // 1
 
             return frames;
         }
@@ -210,7 +212,7 @@ namespace kino.Messaging
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static (List<SocketEndpoint> routing, ushort hops) GetMessageRouting(IList<byte[]> frames)
+        private static (List<NodeAddress> routing, ushort hops) GetMessageRouting(IList<byte[]> frames)
         {
             var data = frames[frames.Count - ReversedFramesV5.RoutingDescription].GetULong();
 
@@ -218,16 +220,16 @@ namespace kino.Messaging
             var startIndex = frames.Count - offset;
             var frameCount = entryCount * frameDivisor;
 
-            var routing = new List<SocketEndpoint>();
+            var routing = new List<NodeAddress>();
             if (entryCount > 0)
             {
                 var endIndex = startIndex - frameCount;
                 while (startIndex > endIndex)
                 {
                     var identity = frames[startIndex];
-                    var uri = frames[startIndex - 1].GetString();
+                    var address = frames[startIndex - 1].GetString();
 
-                    routing.Add(SocketEndpoint.FromTrustedSource(uri, identity));
+                    routing.Add(new NodeAddress {Address = address, Identity = identity});
 
                     startIndex -= frameDivisor;
                 }

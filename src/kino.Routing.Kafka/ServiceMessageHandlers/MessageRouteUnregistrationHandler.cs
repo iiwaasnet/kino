@@ -40,12 +40,12 @@ namespace kino.Routing.Kafka.ServiceMessageHandlers
                 foreach (var route in GetUnregistrationRoutes(payload, message.Domain))
                 {
                     var peerRemoveResult = externalRoutingTable.RemoveMessageRoute(route);
-                    if (peerRemoveResult.ConnectionAction == PeerConnectionAction.Disconnect)
+                    if (peerRemoveResult.ConnectionAction == BrokerConnectionAction.Disconnect)
                     {
                         scaleOutBackend.Disconnect(peerRemoveResult.AppCluster.BrokerName);
                     }
 
-                    if (peerRemoveResult.ConnectionAction != PeerConnectionAction.KeepConnection)
+                    if (peerRemoveResult.ConnectionAction != BrokerConnectionAction.KeepConnection)
                     {
                         clusterHealthMonitor.DeletePeer(nodeIdentifier);
                     }

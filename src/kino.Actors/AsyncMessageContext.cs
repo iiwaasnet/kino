@@ -18,7 +18,7 @@ namespace kino.Actors
 
         public long CallbackKey { get; internal set; }
 
-        public IEnumerable<SocketEndpoint> MessageHops { get; internal set; }
+        public IEnumerable<NodeAddress> MessageHops { get; internal set; }
 
         public MessageTraceOptions TraceOptions { get; set; }
     }

@@ -6,8 +6,6 @@ namespace kino.Cluster.Kafka
     {
         public string Topic { get; set; }
 
-        public string GroupId { get; set; }
-
         public TimeSpan HeartBeatInterval { get; set; }
     }
 }
