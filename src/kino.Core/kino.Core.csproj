@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;net47</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;net47</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="C5" Version="2.5.3" />
-    <PackageReference Include="System.Memory" Version="4.5.2" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.5.0" />
-    <PackageReference Include="System.Security.Permissions" Version="4.5.0" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.7.0" />
+    <PackageReference Include="System.Security.Permissions" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net47'">
@@ -25,17 +25,8 @@
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
- <PropertyGroup Condition="'$(TargetFramework)'=='net47'">
+  <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
  </PropertyGroup>
-
- <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.1'">
-   <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
- </PropertyGroup>
-    
-    <PropertyGroup Condition="'$(TargetFramework)'=='netcoreapp2.2'">
-   <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
- </PropertyGroup>
-
 
 </Project>

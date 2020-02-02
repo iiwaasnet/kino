@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-      <TargetFrameworks>netcoreapp2.1;net47</TargetFrameworks>
+      <TargetFrameworks>netstandard2.1;net47</TargetFrameworks>
       <Copyright>Copyright © 2015 Sergey Ivasenko</Copyright>
       <PackageLicenseUrl>https://github.com/iiwaasnet/kino/blob/master/LICENSE</PackageLicenseUrl>
       <PackageProjectUrl>https://github.com/iiwaasnet/kino</PackageProjectUrl>
@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.8.1" />
+    <PackageReference Include="Autofac" Version="5.0.0" />
   </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

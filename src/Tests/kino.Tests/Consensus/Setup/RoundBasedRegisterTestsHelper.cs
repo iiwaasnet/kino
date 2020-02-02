@@ -49,7 +49,7 @@ namespace kino.Tests.Consensus.Setup
             var performanceCounterManager = new Mock<IPerformanceCounterManager<KinoPerformanceCounters>>();
             var synodConfigProvider = new SynodConfigurationProvider(appConfig.Synod);
             var messageWireFormatterV7 =
-#if NETCOREAPP2_1
+#if !NET47
                 new MessageWireFormatterV6_1();
 #endif
 #if NET47

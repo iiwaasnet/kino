@@ -2,13 +2,13 @@
 
   <PropertyGroup>
       <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.1;net47</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net47</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.8.1" />
-    <PackageReference Include="NLog" Version="4.5.11" />
-    <PackageReference Include="TypedConfigProvider" Version="2.2.0" />
+    <PackageReference Include="Autofac" Version="5.0.0" />
+    <PackageReference Include="NLog" Version="4.6.8" />
+    <PackageReference Include="TypedConfigProvider" Version="3.0.1" />
     <PackageReference Include="WindowsService.Host" Version="0.0.0.7" />
   </ItemGroup>
 
@@ -21,7 +21,10 @@
     </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\kino.Core\kino.Core.csproj" />
+    <ProjectReference Include="..\kino.Messaging\kino.Messaging.csproj" />
     <ProjectReference Include="..\kino.Rendezvous\kino.Rendezvous.csproj" />
+    <ProjectReference Include="..\kino.Security\kino.Security.csproj" />
   </ItemGroup>
 
   <ItemGroup>
