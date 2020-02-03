@@ -3,5 +3,5 @@ using kino.Messaging;
 
 namespace kino.Actors
 {
-    public delegate Task<IActorResult> MessageHandler(IMessage message);
+    public delegate ValueTask<IActorResult> MessageHandler(IMessage message);
 }

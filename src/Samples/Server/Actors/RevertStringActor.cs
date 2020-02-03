@@ -8,7 +8,7 @@ namespace Server.Actors
     public class RevertStringActor : Actor
     {
         [MessageHandlerDefinition(typeof(HelloMessage))]
-        private async Task<IActorResult> StartProcess(IMessage message)
+        private async ValueTask<IActorResult> StartProcess(IMessage message)
         {
             //Console.WriteLine($"Received by {Identifier}");
             var hello = message.GetPayload<HelloMessage>();

@@ -14,13 +14,13 @@ namespace kino.Actors.Diagnostics
             => this.logger = logger;
 
         [MessageHandlerDefinition(typeof(ExceptionMessage), keepRegistrationLocal: true)]
-        public Task<IActorResult> HandleException(IMessage message)
+        public ValueTask<IActorResult> HandleException(IMessage message)
         {
             var payload = message.GetPayload<ExceptionMessage>();
 
             logger.Error(new KinoException(payload.Message, payload.ExceptionType, payload.StackTrace));
 
-            return null;
+            return default;
         }
     }
 }

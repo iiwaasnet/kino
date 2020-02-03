@@ -8,7 +8,7 @@ namespace kino.Tests.Actors.Setup
     public class ExceptionActor : Actor
     {
         [MessageHandlerDefinition(typeof(SimpleMessage))]
-        private async Task<IActorResult> Process(IMessage messageIn)
+        private async ValueTask<IActorResult> Process(IMessage messageIn)
         {
             var message = messageIn.GetPayload<SimpleMessage>().Content;
 
@@ -16,7 +16,7 @@ namespace kino.Tests.Actors.Setup
         }
 
         [MessageHandlerDefinition(typeof(AsyncExceptionMessage))]
-        private async Task<IActorResult> AsyncProcess(IMessage messageIn)
+        private async ValueTask<IActorResult> AsyncProcess(IMessage messageIn)
         {
             var error = messageIn.GetPayload<AsyncExceptionMessage>();
 

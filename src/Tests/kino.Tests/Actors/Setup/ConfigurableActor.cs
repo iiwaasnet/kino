@@ -8,9 +8,7 @@ namespace kino.Tests.Actors.Setup
         private readonly IEnumerable<MessageHandlerDefinition> interfaceDefinition;
 
         public ConfigurableActor(IEnumerable<MessageHandlerDefinition> interfaceDefinition)
-        {
-            this.interfaceDefinition = interfaceDefinition;
-        }
+            => this.interfaceDefinition = interfaceDefinition;
 
         public override IEnumerable<MessageHandlerDefinition> GetInterfaceDefinition()
             => interfaceDefinition;

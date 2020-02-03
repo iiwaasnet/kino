@@ -3,9 +3,7 @@
     public class CallbackKey
     {
         public CallbackKey(long value)
-        {
-            Value = value;
-        }
+            => Value = value;
 
         public long Value { get; }
     }

@@ -237,9 +237,9 @@ namespace kino.Actors
             }
         }
 
-        private void HandleTaskResult(CancellationToken token, Task<IActorResult> task, Message messageIn)
+        private void HandleTaskResult(CancellationToken token, ValueTask<IActorResult> task, Message messageIn)
         {
-            if (task != null)
+            if (task != default)
             {
                 if (task.IsCompleted)
                 {
@@ -269,7 +269,8 @@ namespace kino.Actors
                 }
                 else
                 {
-                    task.ContinueWith(completed => SyntaxSugar.SafeExecuteUntilCanceled(() => EnqueueTaskForCompletion(token, completed, messageIn), logger), token)
+                    task.AsTask()
+                        .ContinueWith(completed => SyntaxSugar.SafeExecuteUntilCanceled(() => EnqueueTaskForCompletion(token, completed, messageIn), logger), token)
                         .ConfigureAwait(false);
                 }
             }
@@ -313,39 +314,47 @@ namespace kino.Actors
         }
 
         private IActorResult CreateTaskResultMessage(Task<IActorResult> task)
+            => task.IsCanceled
+                   ? CreateCancelledTaskResultMessage()
+                   : task.IsFaulted
+                       ? CreateFaultedTaskResultMessage(task.Exception?.GetBaseException()
+                                                     ?? new Exception("Task failed for an unknown reason!"))
+                       : task.Result ?? ActorResult.Empty;
+
+        private IActorResult CreateTaskResultMessage(ValueTask<IActorResult> task)
+            => task.IsCanceled
+                   ? CreateCancelledTaskResultMessage()
+                   : task.IsFaulted
+                       ? CreateFaultedTaskResultMessage(task.AsTask().Exception?.GetBaseException()
+                                                     ?? new Exception("Task failed for an unknown reason!"))
+                       : task.Result ?? ActorResult.Empty;
+
+        private IActorResult CreateFaultedTaskResultMessage(Exception err)
         {
-            if (task.IsCanceled)
-            {
-                var err = new OperationCanceledException();
-                var message = Message.Create(new ExceptionMessage
-                                             {
-                                                 Message = err.Message,
-                                                 ExceptionType = err.GetType().ToString(),
-                                                 StackTrace = err.StackTrace
-                                             })
-                                     .As<Message>();
-                message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
-                return new ActorResult(message);
-            }
+            var message = Message.Create(new ExceptionMessage
+                                         {
+                                             Message = err.Message,
+                                             ExceptionType = err.GetType().ToString(),
+                                             StackTrace = err.StackTrace
+                                         })
+                                 .As<Message>();
+            message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
+            return new ActorResult(message);
+        }
 
-            if (task.IsFaulted)
-            {
-                var err = task.Exception?.InnerException
-                          ?? task.Exception
-                          ?? new Exception("Task failed for an unknown reason!");
+        private IActorResult CreateCancelledTaskResultMessage()
+        {
+            var err = new OperationCanceledException();
+            var message = Message.Create(new ExceptionMessage
+                                         {
+                                             Message = err.Message,
+                                             ExceptionType = err.GetType().ToString(),
+                                             StackTrace = err.StackTrace
+                                         })
+                                 .As<Message>();
+            message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
 
-                var message = Message.Create(new ExceptionMessage
-                                             {
-                                                 Message = err.Message,
-                                                 ExceptionType = err.GetType().ToString(),
-                                                 StackTrace = err.StackTrace
-                                             })
-                                     .As<Message>();
-                message.SetDomain(securityProvider.GetDomain(KinoMessages.Exception.Identity));
-                return new ActorResult(message);
-            }
-
-            return task.Result ?? ActorResult.Empty;
+            return new ActorResult(message);
         }
     }
 }

@@ -7,11 +7,11 @@ namespace kino.Tests.Actors.Setup
     public class NullActor : Actor
     {
         [MessageHandlerDefinition(typeof(NullMessage))]
-        private Task<IActorResult> Process(IMessage messageIn)
+        private ValueTask<IActorResult> Process(IMessage messageIn)
         {
             var message = messageIn.GetPayload<NullMessage>();
 
-            return null;
+            return default;
         }
     }
 }

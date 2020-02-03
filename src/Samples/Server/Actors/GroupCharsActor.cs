@@ -9,7 +9,7 @@ namespace Server.Actors
     public class GroupCharsActor : Actor
     {
         [MessageHandlerDefinition(typeof(EhlloMessage))]
-        private async Task<IActorResult> StartProcess(IMessage message)
+        private async ValueTask<IActorResult> StartProcess(IMessage message)
         {
             var ehllo = message.GetPayload<EhlloMessage>();
 

@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using kino.Cluster.Configuration;
 using kino.Core;
-using kino.Core.Framework;
 using kino.Messaging;
 using kino.Messaging.Messages;
 using kino.Routing;
@@ -27,7 +26,7 @@ namespace kino.Actors.Internal
         }
 
         [MessageHandlerDefinition(typeof(RequestMessageRoutesMessage), true)]
-        public async Task<IActorResult> GetMessageExternalRoutes(IMessage message)
+        public async ValueTask<IActorResult> GetMessageExternalRoutes(IMessage message)
         {
             var payload = message.GetPayload<RequestMessageRoutesMessage>();
             var messageContract = payload.MessageContract;
@@ -75,7 +74,7 @@ namespace kino.Actors.Internal
         }
 
         [MessageHandlerDefinition(typeof(RequestExternalRoutesMessage), true)]
-        public async Task<IActorResult> GetExternalRoutes(IMessage _)
+        public async ValueTask<IActorResult> GetExternalRoutes(IMessage _)
         {
             var routes = externalRoutingTable.GetAllRoutes();
 
@@ -110,7 +109,7 @@ namespace kino.Actors.Internal
         }
 
         [MessageHandlerDefinition(typeof(RequestInternalRoutesMessage), true)]
-        public async Task<IActorResult> GetInternalRoutes(IMessage _)
+        public async ValueTask<IActorResult> GetInternalRoutes(IMessage _)
         {
             var routes = internalRoutingTable.GetAllRoutes();
 

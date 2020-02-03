@@ -7,7 +7,7 @@ namespace kino.Tests.Actors.Setup
     public class EchoActor : Actor
     {
         [MessageHandlerDefinition(typeof(SimpleMessage))]
-        private async Task<IActorResult> Process(IMessage messageIn)
+        private async ValueTask<IActorResult> Process(IMessage messageIn)
         {
             var messageOut = Message.Create(new SimpleMessage
                                             {
@@ -20,7 +20,7 @@ namespace kino.Tests.Actors.Setup
         }
 
         [MessageHandlerDefinition(typeof(AsyncMessage))]
-        private async Task<IActorResult> AsyncProcess(IMessage messageIn)
+        private async ValueTask<IActorResult> AsyncProcess(IMessage messageIn)
         {
             var delay = messageIn.GetPayload<AsyncMessage>().Delay;
             var messageOut = Message.Create(new AsyncMessage
@@ -34,7 +34,7 @@ namespace kino.Tests.Actors.Setup
         }
 
         [MessageHandlerDefinition(typeof(LocalMessage), keepRegistrationLocal: true)]
-        private async Task<IActorResult> ProcessLocalMessage(IMessage messageIn)
+        private async ValueTask<IActorResult> ProcessLocalMessage(IMessage messageIn)
             => null;
     }
 }
