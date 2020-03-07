@@ -9,9 +9,7 @@ namespace kino.Core.Framework
         private readonly BlockingCollection<T> asyncResponses;
 
         public AsyncQueue()
-        {
-            asyncResponses = new BlockingCollection<T>(new ConcurrentQueue<T>());
-        }
+            => asyncResponses = new BlockingCollection<T>(new ConcurrentQueue<T>());
 
         public IEnumerable<T> GetConsumingEnumerable(CancellationToken cancellationToken)
             => asyncResponses.GetConsumingEnumerable(cancellationToken);

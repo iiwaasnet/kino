@@ -15,7 +15,7 @@ namespace kino.Client
         internal Promise(long callbackKey)
         {
             isDisposed = false;
-            result = new TaskCompletionSource<IMessage>();
+            result = new TaskCompletionSource<IMessage>(TaskCreationOptions.RunContinuationsAsynchronously);
             CallbackKey = new CallbackKey(callbackKey);
         }
 

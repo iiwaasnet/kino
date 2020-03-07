@@ -1,7 +1,10 @@
-﻿namespace kino.Core.Framework
+﻿using System.Runtime.CompilerServices;
+
+namespace kino.Core.Framework
 {
     public static class Unsafe
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ComputeHash(this byte[] data)
             => data?.Length ?? 0;
 

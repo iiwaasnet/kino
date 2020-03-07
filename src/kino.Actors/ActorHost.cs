@@ -237,13 +237,13 @@ namespace kino.Actors
             }
         }
 
-        private void HandleTaskResult(CancellationToken token, ValueTask<IActorResult> task, Message messageIn)
+        private async Task HandleTaskResult(CancellationToken token, ValueTask<IActorResult> task, Message messageIn)
         {
             if (task != default)
             {
                 if (task.IsCompleted)
                 {
-                    var response = CreateTaskResultMessage(task).Messages;
+                    var response = (await CreateTaskResultMessage(task)).Messages;
 
                     MessageProcessed(messageIn, response);
 
@@ -269,9 +269,7 @@ namespace kino.Actors
                 }
                 else
                 {
-                    task.AsTask()
-                        .ContinueWith(completed => SyntaxSugar.SafeExecuteUntilCanceled(() => EnqueueTaskForCompletion(token, completed, messageIn), logger), token)
-                        .ConfigureAwait(false);
+                    SyntaxSugar.SafeExecuteUntilCanceled(() => EnqueueTaskForCompletion(token, task, messageIn), logger);
                 }
             }
         }
@@ -297,11 +295,11 @@ namespace kino.Actors
             localRouterSocket.Send(messageOut);
         }
 
-        private void EnqueueTaskForCompletion(CancellationToken token, Task<IActorResult> task, Message messageIn)
+        private async Task EnqueueTaskForCompletion(CancellationToken token, ValueTask<IActorResult> task, Message messageIn)
         {
             var asyncMessageContext = new AsyncMessageContext
                                       {
-                                          OutMessages = CreateTaskResultMessage(task).Messages,
+                                          OutMessages = (await CreateTaskResultMessage(task)).Messages,
                                           CallbackPoint = messageIn.CallbackPoint,
                                           CallbackKey = messageIn.CallbackKey,
                                           CallbackReceiverIdentity = messageIn.CallbackReceiverIdentity,
@@ -313,21 +311,31 @@ namespace kino.Actors
             asyncQueue.Enqueue(asyncMessageContext, token);
         }
 
-        private IActorResult CreateTaskResultMessage(Task<IActorResult> task)
-            => task.IsCanceled
-                   ? CreateCancelledTaskResultMessage()
-                   : task.IsFaulted
-                       ? CreateFaultedTaskResultMessage(task.Exception?.GetBaseException()
-                                                     ?? new Exception("Task failed for an unknown reason!"))
-                       : task.Result ?? ActorResult.Empty;
+        //private IActorResult CreateTaskResultMessage(Task<IActorResult> task)
+        //    => task.IsCanceled
+        //           ? CreateCancelledTaskResultMessage()
+        //           : task.IsFaulted
+        //               ? CreateFaultedTaskResultMessage(task.Exception?.GetBaseException()
+        //                                             ?? new Exception("Task failed for an unknown reason!"))
+        //               : task.Result ?? ActorResult.Empty;
 
-        private IActorResult CreateTaskResultMessage(ValueTask<IActorResult> task)
-            => task.IsCanceled
-                   ? CreateCancelledTaskResultMessage()
-                   : task.IsFaulted
-                       ? CreateFaultedTaskResultMessage(task.AsTask().Exception?.GetBaseException()
-                                                     ?? new Exception("Task failed for an unknown reason!"))
-                       : task.Result ?? ActorResult.Empty;
+        private async Task<IActorResult> CreateTaskResultMessage(ValueTask<IActorResult> task)
+        {
+            try
+            {
+                var res = await task;
+
+                return res ?? ActorResult.Empty;
+            }
+            catch (OperationCanceledException)
+            {
+                return CreateCancelledTaskResultMessage();
+            }
+            catch (Exception e)
+            {
+                return CreateFaultedTaskResultMessage(e.GetBaseException());
+            }
+        }
 
         private IActorResult CreateFaultedTaskResultMessage(Exception err)
         {
