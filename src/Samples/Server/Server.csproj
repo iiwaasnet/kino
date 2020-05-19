@@ -13,7 +13,7 @@
   <ItemGroup>
       <PackageReference Include="Autofac" Version="5.0.0" />
       <PackageReference Include="NLog" Version="4.6.8" />
-      <PackageReference Include="protobuf-net" Version="2.4.4" />
+      <PackageReference Include="protobuf-net" Version="3.0.0-alpha.133" />
       <PackageReference Include="TypedConfigProvider" Version="3.0.1" />
   </ItemGroup>
 
